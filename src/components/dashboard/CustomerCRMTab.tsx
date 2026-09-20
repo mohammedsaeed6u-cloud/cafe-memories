@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { CUSTOMER_PERSONAS } from '@/lib/constants/photobooth-presets';
 import { CustomerPersonaKey } from '@/types/photobooth';
+import { CooldownService } from '@/lib/services/cooldown.service';
 import {
   Users,
   Search,
@@ -13,7 +14,8 @@ import {
   Image as ImageIcon,
   Check,
   Calendar,
-  ExternalLink,
+  Unlock,
+  Sparkles,
 } from 'lucide-react';
 
 export interface CustomerVisitRecord {
@@ -32,16 +34,19 @@ interface CustomerCRMTabProps {
   customers: CustomerVisitRecord[];
   onExportCsv: () => void;
   brandName?: string;
+  cafeSlug?: string;
 }
 
 export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
   customers,
   onExportCsv,
   brandName = 'Memories',
+  cafeSlug = 'espresso-lab',
 }) => {
   const [selectedPersona, setSelectedPersona] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+  const [unlockedNotice, setUnlockedNotice] = useState<string | null>(null);
   const [selectedStripModal, setSelectedStripModal] = useState<CustomerVisitRecord | null>(null);
 
   // Filter customers by persona and search query
@@ -58,6 +63,13 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
     navigator.clipboard.writeText(phone);
     setCopiedPhone(phone);
     setTimeout(() => setCopiedPhone(null), 2000);
+  };
+
+  // Barista unlocks customer's 24h cooldown
+  const handleUnlockCustomer = (customer: CustomerVisitRecord) => {
+    CooldownService.unlockForCustomer(customer.phone, cafeSlug);
+    setUnlockedNotice(`تم فك قفل الـ 24 ساعة للعميل (${customer.name}) بنجاح! يمكنه التصوير فوراً.`);
+    setTimeout(() => setUnlockedNotice(null), 4000);
   };
 
   const getPersonaBadge = (roleKey: CustomerPersonaKey) => {
@@ -97,6 +109,13 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
           </button>
         </div>
       </div>
+
+      {unlockedNotice && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl text-xs font-bold flex items-center gap-2 animate-in fade-in shadow-sm">
+          <Sparkles className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          <span>{unlockedNotice}</span>
+        </div>
+      )}
 
       {/* Filter Bar: Search + Persona Chips */}
       <div className="bg-white p-5 rounded-3xl border border-stone-200 shadow-sm space-y-4">
@@ -161,13 +180,14 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
                 <th className="py-4 px-5">رقم الموبايل والتواصل</th>
                 <th className="py-4 px-5">الزيارات والصورة</th>
                 <th className="py-4 px-5">آخر زيارة</th>
+                <th className="py-4 px-5">فك قفل 24h</th>
                 <th className="py-4 px-5">الإجراء السريع</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 text-sm">
               {filteredCustomers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-stone-400">
+                  <td colSpan={7} className="py-12 text-center text-stone-400">
                     لا يوجد عملاء يطابقون هذا البحث والتصنيف
                   </td>
                 </tr>
@@ -242,6 +262,18 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
                           })}
                         </span>
                       </div>
+                    </td>
+
+                    {/* Barista Manual Unlock Cooldown */}
+                    <td className="py-4 px-5">
+                      <button
+                        onClick={() => handleUnlockCustomer(customer)}
+                        className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 flex items-center gap-1.5 transition"
+                        title="السماح للعميل بجلسة تصوير إضافية اليوم"
+                      >
+                        <Unlock className="w-3.5 h-3.5 text-amber-600" />
+                        <span>فك القيد اليوم</span>
+                      </button>
                     </td>
 
                     {/* Direct Marketing Action Buttons */}

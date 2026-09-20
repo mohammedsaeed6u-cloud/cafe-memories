@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Café Memories',
-  description: 'The digital memory & loyalty layer for cafés',
+  title: 'Memories • موميريز',
+  description: 'منظومة كبائن التصوير والذكريات وبطاقات الولاء والهدايا الفورية',
 };
 
 export default function RootLayout({

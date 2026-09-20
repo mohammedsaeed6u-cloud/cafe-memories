@@ -3,18 +3,22 @@
 import React from 'react';
 import { PhotoboothFrame, BusinessBranding, FreeGiftOffer } from '@/types/photobooth';
 import { PhotoboothStripCard } from './PhotoboothStripCard';
-import { Gift, Printer, Download, Sparkles, CheckCircle, X } from 'lucide-react';
+import { LoyaltyCardWidget } from './LoyaltyCardWidget';
+import { ShareStoryWidget } from './ShareStoryWidget';
+import { Gift, Printer, Sparkles, CheckCircle, X } from 'lucide-react';
 
 interface PrintGiftModalProps {
   isOpen: boolean;
   onClose: () => void;
   photos: string[];
+  stripDataUrl?: string;
   frame: PhotoboothFrame;
   branding: BusinessBranding;
   freeGiftOffer: FreeGiftOffer;
   giftCode: string;
   customerName: string;
   customerRoleLabel?: string;
+  visitCount?: number;
   onPrintStrip?: () => void;
 }
 
@@ -22,12 +26,14 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
   isOpen,
   onClose,
   photos,
+  stripDataUrl,
   frame,
   branding,
   freeGiftOffer,
   giftCode,
   customerName,
   customerRoleLabel,
+  visitCount = 1,
   onPrintStrip,
 }) => {
   if (!isOpen) return null;
@@ -52,7 +58,7 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
         </button>
 
         {/* Header Congratulation */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-5">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-100 text-amber-700 mb-3 shadow-inner">
             <Sparkles className="w-7 h-7 animate-bounce" />
           </div>
@@ -70,7 +76,7 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
         </div>
 
         {/* Realistic Strip Preview */}
-        <div className="flex justify-center mb-6 overflow-x-auto py-2">
+        <div className="flex justify-center mb-5 overflow-x-auto py-2">
           <PhotoboothStripCard
             photos={photos}
             frame={frame}
@@ -79,8 +85,17 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
           />
         </div>
 
+        {/* Story Share & Download HD Actions */}
+        <div className="mb-5">
+          <ShareStoryWidget
+            stripDataUrl={stripDataUrl || photos[0]}
+            brandName={branding.name}
+            cafeHandle={`@${branding.name?.toLowerCase().replace(/\s+/g, '') || 'memories'}`}
+          />
+        </div>
+
         {/* Gift Redemption Voucher Card */}
-        <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300/80 mb-6 text-center shadow-sm">
+        <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300/80 mb-5 text-center shadow-sm">
           <div className="flex items-center justify-center gap-2 text-amber-800 font-extrabold text-sm mb-1">
             <Gift className="w-4 h-4 text-amber-600" />
             <span>{freeGiftOffer.title || 'هدية فورية مجانية'}</span>
@@ -95,6 +110,14 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
               {giftCode}
             </span>
           </div>
+        </div>
+
+        {/* Integrated Loyalty Stamp Card */}
+        <div className="mb-5">
+          <LoyaltyCardWidget
+            currentVisitCount={visitCount}
+            brandName={branding.name}
+          />
         </div>
 
         {/* Action Buttons */}
