@@ -1,188 +1,530 @@
+﻿'use client';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Coffee, Camera, Tv, Gift, ShieldCheck, Sparkles, ArrowRight, Smartphone, Users, QrCode } from 'lucide-react';
+import {
+  Coffee,
+  Camera,
+  Tv,
+  Gift,
+  ShieldCheck,
+  Sparkles,
+  ArrowRight,
+  Smartphone,
+  Users,
+  QrCode,
+  TrendingUp,
+  Share2,
+  Check,
+  ChevronDown,
+  Star,
+  ExternalLink,
+  Flame
+} from 'lucide-react';
 
 export default function HomePage() {
+  const [dailyCups, setDailyCups] = useState(250);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  // ROI Calculations
+  const repeatGain = Math.round(dailyCups * 0.22);
+  const monthlyExtraRevenue = Math.round(repeatGain * 30 * 3.5); // ~$3.50 per specialty cup
+  const monthlyMemories = Math.round(dailyCups * 30 * 0.35);
+
+  const faqs = [
+    {
+      q: 'Do customers need to download an app from the App Store or Google Play?',
+      a: 'Zero app downloads. Customers simply point their native phone camera at any table or counter QR code. The high-speed PWA launches instantly in Safari or Chrome in under 2 seconds.'
+    },
+    {
+      q: 'How does the Live Wall screen connect to our in-store TV?',
+      a: 'Any TV with a built-in web browser (Samsung Tizen, LG webOS, Google TV, Apple TV, Fire TV, or HDMI stick) opens our full-screen URL (/wall/[screenId]). It syncs approved memories and CTA slides in real time without extra hardware.'
+    },
+    {
+      q: 'Can customers post inappropriate photos on our café screen?',
+      a: 'Never. Every photo submitted goes through our merchant moderation queue with optional AI pre-filtering. You have 1-tap Approve/Hide controls from any smartphone or tablet.'
+    },
+    {
+      q: 'How does anti-fraud protect against repeat scan abuse?',
+      a: 'Each table QR code utilizes cryptographic cooldowns (default 30 minutes) and device fingerprinting. Patrons cannot spam scans to fraudulently earn loyalty stamps in a single visit.'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-[#090705] text-stone-100 selection:bg-amber-500 selection:text-black font-sans relative overflow-x-hidden">
+      {/* Warm Ambient Radial Lighting */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-amber-600/15 via-amber-500/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+
       {/* Navigation */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-stone-950/80 border-b border-stone-800/60 px-6 py-4">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#090705]/80 border-b border-stone-800/60 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-stone-950 shadow-lg shadow-amber-500/20">
+          <div className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-white">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-stone-950 shadow-lg shadow-amber-500/25">
               <Coffee className="w-5 h-5" />
             </div>
-            <span>Café Memories</span>
+            <div className="flex flex-col">
+              <span className="leading-tight text-lg font-black text-white">Café Memories</span>
+              <span className="text-[10px] text-amber-400 tracking-wider uppercase font-semibold">Specialty Coffee Layer</span>
+            </div>
           </div>
-          <nav className="flex items-center gap-4">
+
+          <nav className="flex items-center gap-3 sm:gap-6">
             <Link
               href="/c/espresso-lab"
-              className="text-sm font-medium text-stone-400 hover:text-white transition-colors hidden sm:inline-block"
+              className="text-xs sm:text-sm font-semibold text-stone-300 hover:text-white transition-colors"
             >
-              Customer Demo
+              Guest Demo
             </Link>
             <Link
               href="/wall/screen-101"
-              className="text-sm font-medium text-stone-400 hover:text-white transition-colors hidden sm:inline-block"
+              className="text-xs sm:text-sm font-semibold text-stone-300 hover:text-white transition-colors hidden sm:inline-block"
             >
-              Live Wall
+              TV Wall
+            </Link>
+            <Link
+              href="/dashboard"
+              className="text-xs sm:text-sm font-semibold text-stone-300 hover:text-white transition-colors hidden md:inline-block"
+            >
+              Merchant Panel
             </Link>
             <Link
               href="/login"
-              className="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold text-sm transition-all shadow-md shadow-amber-500/10 hover:shadow-amber-500/25"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-xs sm:text-sm transition-all shadow-lg shadow-amber-500/20 hover:scale-[1.02]"
             >
-              Merchant Portal
+              Sign In
             </Link>
           </nav>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative px-6 pt-20 pb-28 max-w-5xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium mb-8">
-          <Sparkles className="w-3.5 h-3.5" />
+      <section className="relative px-6 pt-16 pb-24 max-w-6xl mx-auto text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-bold mb-8 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span>The Digital Memory & Loyalty Layer for Cafés</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
         </div>
 
-        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight sm:leading-tight">
-          Turn every coffee visit into a{' '}
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white max-w-5xl mx-auto leading-[1.1]">
+          Turn everyday coffee runs into{' '}
           <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-orange-400 bg-clip-text text-transparent">
-            shared memory
+            shared memories
           </span>{' '}
-          & loyal regular.
+          & loyal regulars.
         </h1>
 
-        <p className="mt-6 text-lg sm:text-xl text-stone-400 max-w-2xl mx-auto leading-relaxed">
-          Not just digital stamps. Customers scan a table QR, capture their café moment, see it appear on your in-store Live Wall, and earn rewards on every return.
+        <p className="mt-6 text-lg sm:text-xl text-stone-400 max-w-3xl mx-auto leading-relaxed font-normal">
+          Not boring paper punch cards. Guests scan their table QR, snap their specialty coffee moment, see it broadcast across your in-store TV Live Wall, and earn rewards on every visit.
         </p>
 
         {/* Live CTA Buttons */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-xl mx-auto">
           <Link
             href="/c/espresso-lab"
-            className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-base flex items-center justify-center gap-2 shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.02]"
+            className="w-full sm:w-auto flex-1 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-stone-950 font-black text-base flex items-center justify-center gap-2.5 shadow-xl shadow-amber-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            <Smartphone className="w-5 h-5" />
+            <Smartphone className="w-5 h-5 text-stone-950" />
             <span>Try Mobile Customer Flow</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/wall/screen-101"
-            className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-700 text-white font-semibold text-base flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+            className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-stone-900/90 hover:bg-stone-800 border border-stone-800 text-white font-bold text-base flex items-center justify-center gap-2.5 transition-all hover:scale-[1.02] shadow-lg"
           >
             <Tv className="w-5 h-5 text-amber-400" />
-            <span>View Live TV Wall</span>
-          </Link>
-          <Link
-            href="/dashboard"
-            className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-stone-900/50 hover:bg-stone-800 border border-stone-800 text-stone-300 hover:text-white font-medium text-base flex items-center justify-center gap-2 transition-all"
-          >
-            <Users className="w-5 h-5" />
-            <span>Merchant Dashboard</span>
+            <span>Launch TV Live Wall</span>
           </Link>
         </div>
 
-        {/* Loop Diagram */}
-        <div className="mt-16 p-6 rounded-2xl bg-stone-900/40 border border-stone-800/80 backdrop-blur-sm max-w-3xl mx-auto">
-          <div className="text-xs uppercase font-bold tracking-widest text-amber-400 mb-4">
-            The Growth Loop
+        {/* Live In-Action Dual Showcase */}
+        <div className="mt-16 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-5xl mx-auto">
+          {/* Mobile Showcase Card (Left) */}
+          <div className="lg:col-span-5 rounded-3xl bg-gradient-to-b from-stone-900/90 to-stone-950 border border-stone-800 p-6 text-left shadow-2xl relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Smartphone className="w-4 h-4" />
+                Customer Mobile Screen
+              </span>
+              <span className="text-[10px] bg-stone-800 px-2 py-0.5 rounded text-stone-300 font-mono">No App Required</span>
+            </div>
+
+            {/* Mini Simulated Phone Card */}
+            <div className="rounded-2xl bg-stone-950 border border-stone-800 p-4 space-y-4 shadow-inner">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-bold text-xs">☕</div>
+                <div>
+                  <div className="font-bold text-xs text-white">Espresso Lab • Main Branch</div>
+                  <div className="text-[10px] text-amber-400 font-medium">3 / 5 Visits • 2 until Free Drink</div>
+                </div>
+              </div>
+
+              {/* 5 Cup Stamps */}
+              <div className="flex items-center justify-between gap-1.5 bg-stone-900/80 p-2.5 rounded-xl border border-stone-800">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div
+                    key={i}
+                    className={`flex-1 aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] font-bold ${
+                      i <= 3
+                        ? 'bg-amber-500 text-stone-950 shadow-sm'
+                        : i === 5
+                        ? 'bg-stone-800 text-amber-400 border border-amber-500/40'
+                        : 'bg-stone-800 text-stone-500'
+                    }`}
+                  >
+                    {i <= 3 ? '✓' : i === 5 ? '🎁' : `#${i}`}
+                  </div>
+                ))}
+              </div>
+
+              {/* Uploaded Moment Preview */}
+              <div className="rounded-xl overflow-hidden aspect-video relative bg-stone-900">
+                <img
+                  src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80"
+                  alt="Customer Cortado"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-2 left-2 right-2 p-2 rounded-lg bg-black/80 backdrop-blur-md text-[11px] text-white">
+                  &ldquo;Best cortado in Cairo! Celebrating visit #3 ☕✨&rdquo;
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/c/espresso-lab"
+              className="mt-4 flex items-center justify-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300"
+            >
+              <span>Test Interactive Check-in Flow</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-2 text-sm font-medium text-stone-300">
-            <span className="px-3 py-1.5 rounded-lg bg-stone-800/90 text-white border border-stone-700">QR Scan</span>
-            <span className="text-amber-500">→</span>
-            <span className="px-3 py-1.5 rounded-lg bg-stone-800/90 text-white border border-stone-700">Capture Moment</span>
-            <span className="text-amber-500">→</span>
-            <span className="px-3 py-1.5 rounded-lg bg-stone-800/90 text-white border border-stone-700">Live Wall Broadcast</span>
-            <span className="text-amber-500">→</span>
-            <span className="px-3 py-1.5 rounded-lg bg-stone-800/90 text-white border border-stone-700">Story Card Share</span>
-            <span className="text-amber-500">→</span>
-            <span className="px-3 py-1.5 rounded-lg bg-stone-800/90 text-amber-300 border border-amber-500/30">Free Reward</span>
+
+          {/* TV Live Wall Showcase (Right) */}
+          <div className="lg:col-span-7 rounded-3xl bg-gradient-to-b from-stone-900/90 to-stone-950 border border-stone-800 p-6 text-left shadow-2xl relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Tv className="w-4 h-4" />
+                In-Store 4K TV Live Wall
+              </span>
+              <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                Realtime Broadcast
+              </span>
+            </div>
+
+            {/* Mini TV Screen */}
+            <div className="rounded-2xl bg-black border border-stone-800 aspect-video relative overflow-hidden flex items-center justify-between p-4 shadow-inner">
+              <img
+                src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80"
+                alt="Live Wall Photo"
+                className="w-3/5 h-full object-cover rounded-xl"
+              />
+              <div className="w-2/5 pl-4 flex flex-col justify-between h-full">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Today&apos;s Regular</span>
+                  <div className="font-extrabold text-sm text-white leading-tight">
+                    &ldquo;Weekend work session with single origin V60 🥐&rdquo;
+                  </div>
+                  <div className="text-[11px] text-stone-400">Sarah Mansour • Visit #5</div>
+                </div>
+
+                <div className="bg-stone-900/90 p-2 rounded-lg border border-stone-800 text-[10px] text-amber-300 flex items-center justify-between">
+                  <span>Scan to Join Live Wall</span>
+                  <QrCode className="w-4 h-4 text-white" />
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/wall/screen-101"
+              className="mt-4 flex items-center justify-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300"
+            >
+              <span>View Fullscreen Live TV Screen</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* 4 Pillars Section */}
-      <section className="px-6 py-20 bg-stone-900/30 border-t border-stone-800/50">
+      {/* 4 Steps Visual Timeline */}
+      <section className="px-6 py-20 bg-stone-900/30 border-t border-stone-800/60">
         <div className="max-w-6xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-white tracking-tight">
-              Everything your café needs to build a community of regulars
+            <span className="text-xs uppercase font-bold tracking-widest text-amber-400 mb-2 block">
+              The Frictionless Loop
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              From Table QR to In-Store Celebrity in 15 Seconds
             </h2>
-            <p className="mt-4 text-stone-400">
-              Designed specifically for coffee shops, specialty roasters, and local spaces.
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Card 1 */}
-            <div className="p-6 rounded-2xl bg-stone-900/70 border border-stone-800 hover:border-amber-500/40 transition-colors flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-4">
-                  <Camera className="w-6 h-6" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="p-6 rounded-3xl bg-stone-900/80 border border-stone-800 hover:border-amber-500/40 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
+                  1
                 </div>
-                <h3 className="font-semibold text-lg text-white mb-2">Visual Memories</h3>
-                <p className="text-sm text-stone-400 leading-relaxed">
-                  Guests capture authentic café photos. Every visit becomes part of their personal coffee journey.
+                <h3 className="font-bold text-lg text-white">Table QR Scan</h3>
+                <p className="text-xs text-stone-400 leading-relaxed">
+                  Patron sits at their table, points their camera at the branded acrylic stand. Zero download required.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-stone-800/60 text-xs text-stone-400">
-                Zero app download required
+              <div className="mt-6 pt-4 border-t border-stone-800 text-[11px] text-amber-400 font-semibold">
+                Instant Safari & Chrome launch
               </div>
             </div>
 
-            {/* Card 2 */}
-            <div className="p-6 rounded-2xl bg-stone-900/70 border border-stone-800 hover:border-amber-500/40 transition-colors flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center mb-4">
-                  <Tv className="w-6 h-6" />
+            <div className="p-6 rounded-3xl bg-stone-900/80 border border-stone-800 hover:border-amber-500/40 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
+                  2
                 </div>
-                <h3 className="font-semibold text-lg text-white mb-2">Café Live Wall</h3>
-                <p className="text-sm text-stone-400 leading-relaxed">
-                  Turn any TV into a cinematic social display. Approved guest moments broadcast in real time across the room.
+                <h3 className="font-bold text-lg text-white">Capture & Filter</h3>
+                <p className="text-xs text-stone-400 leading-relaxed">
+                  Guest snaps their latte art or coffee table scene. 1-tap warm roaster filters ensure aesthetic perfection.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-stone-800/60 text-xs text-stone-400">
-                Full-screen Smart TV ready
+              <div className="mt-6 pt-4 border-t border-stone-800 text-[11px] text-amber-400 font-semibold">
+                Granular consent toggles
               </div>
             </div>
 
-            {/* Card 3 */}
-            <div className="p-6 rounded-2xl bg-stone-900/70 border border-stone-800 hover:border-amber-500/40 transition-colors flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-4">
-                  <Gift className="w-6 h-6" />
+            <div className="p-6 rounded-3xl bg-stone-900/80 border border-stone-800 hover:border-amber-500/40 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
+                  3
                 </div>
-                <h3 className="font-semibold text-lg text-white mb-2">Smart Loyalty</h3>
-                <p className="text-sm text-stone-400 leading-relaxed">
-                  Configurable rewards like "5 visits = Free Special Drink". Anti-fraud cooldowns prevent scan abuse.
+                <h3 className="font-bold text-lg text-white">In-Store Live TV</h3>
+                <p className="text-xs text-stone-400 leading-relaxed">
+                  Moments broadcast in real-time on your café TV screens. Patrons smile, point, and take photos of the screen.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-stone-800/60 text-xs text-stone-400">
-                Immutable reward ledger
+              <div className="mt-6 pt-4 border-t border-stone-800 text-[11px] text-amber-400 font-semibold">
+                Merchant moderation control
               </div>
             </div>
 
-            {/* Card 4 */}
-            <div className="p-6 rounded-2xl bg-stone-900/70 border border-stone-800 hover:border-amber-500/40 transition-colors flex flex-col justify-between">
-              <div>
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4">
-                  <ShieldCheck className="w-6 h-6" />
+            <div className="p-6 rounded-3xl bg-stone-900/80 border border-stone-800 hover:border-amber-500/40 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
+                  4
                 </div>
-                <h3 className="font-semibold text-lg text-white mb-2">Privacy & Consent</h3>
-                <p className="text-sm text-stone-400 leading-relaxed">
-                  First-class legal consent controls. Merchant approval queue ensures only safe, brand-safe photos hit the screen.
+                <h3 className="font-bold text-lg text-white">Loyalty & Story Share</h3>
+                <p className="text-xs text-stone-400 leading-relaxed">
+                  Visits accumulate toward free drinks. Patrons share branded 9:16 Instagram Story Cards, bringing new friends.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-stone-800/60 text-xs text-stone-400">
-                Granular opt-in & instant takedown
+              <div className="mt-6 pt-4 border-t border-stone-800 text-[11px] text-amber-400 font-semibold">
+                Viral word-of-mouth loop
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive ROI & Revenue Calculator */}
+      <section className="px-6 py-20 max-w-4xl mx-auto text-center">
+        <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-stone-900 to-stone-950 border border-stone-800 shadow-2xl">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 text-xs font-bold mb-4">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>Café Revenue Impact Estimator</span>
+          </div>
+
+          <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+            See how much repeat revenue you gain with Café Memories
+          </h2>
+          <p className="text-sm text-stone-400 mt-2 max-w-lg mx-auto">
+            Adjust your café&apos;s daily volume to estimate monthly repeat visits and organic social moments.
+          </p>
+
+          <div className="mt-8 space-y-4 max-w-md mx-auto">
+            <div className="flex justify-between text-sm font-bold text-white">
+              <span>Daily Cups Served</span>
+              <span className="text-amber-400 font-mono text-base">{dailyCups} cups/day</span>
+            </div>
+            <input
+              type="range"
+              min="50"
+              max="1000"
+              step="25"
+              value={dailyCups}
+              onChange={e => setDailyCups(Number(e.target.value))}
+              className="w-full h-2 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+            <div className="p-5 rounded-2xl bg-stone-950/80 border border-stone-800">
+              <div className="text-xs text-stone-400 font-medium">Extra Monthly Visits</div>
+              <div className="text-3xl font-black text-white mt-1">+{repeatGain * 30}</div>
+              <div className="text-[11px] text-emerald-400 mt-0.5">+22% regular retention</div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-stone-950/80 border border-stone-800">
+              <div className="text-xs text-stone-400 font-medium">Est. Added Monthly Revenue</div>
+              <div className="text-3xl font-black text-amber-400 mt-1">${monthlyExtraRevenue.toLocaleString()}</div>
+              <div className="text-[11px] text-stone-400 mt-0.5">Based on $3.50 avg cup</div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-stone-950/80 border border-stone-800">
+              <div className="text-xs text-stone-400 font-medium">Organic Memories Shared</div>
+              <div className="text-3xl font-black text-white mt-1">{monthlyMemories.toLocaleString()}</div>
+              <div className="text-[11px] text-amber-400 mt-0.5">Photos on Wall & Stories</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="px-6 py-20 bg-stone-900/30 border-t border-stone-800/60">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-xl mx-auto mb-16">
+            <span className="text-xs uppercase font-bold tracking-widest text-amber-400 mb-2 block">
+              Transparent Pricing
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              Invest in Regulars, Not Paper Punch Cards
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Plan 1 */}
+            <div className="p-8 rounded-3xl bg-stone-900/80 border border-stone-800 flex flex-col justify-between">
+              <div className="space-y-4">
+                <h3 className="font-bold text-lg text-white">Starter Roaster</h3>
+                <p className="text-xs text-stone-400">Perfect for boutique single-location coffee bars.</p>
+                <div className="text-3xl font-black text-white">
+                  $39 <span className="text-xs font-normal text-stone-400">/ month</span>
+                </div>
+                <ul className="space-y-2.5 text-xs text-stone-300 pt-4 border-t border-stone-800">
+                  <li className="flex items-center gap-2">✓ 1 Connected Live TV Screen</li>
+                  <li className="flex items-center gap-2">✓ Up to 1,000 monthly memories</li>
+                  <li className="flex items-center gap-2">✓ Configurable 5-stamp loyalty perk</li>
+                  <li className="flex items-center gap-2">✓ Merchant Mobile Moderation</li>
+                </ul>
+              </div>
+              <Link
+                href="/login"
+                className="mt-8 w-full py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-white font-bold text-xs text-center transition-colors block"
+              >
+                Start Free 14-Day Trial
+              </Link>
+            </div>
+
+            {/* Plan 2 - Featured */}
+            <div className="p-8 rounded-3xl bg-gradient-to-b from-stone-900 via-stone-900 to-stone-950 border-2 border-amber-500 shadow-2xl shadow-amber-500/10 flex flex-col justify-between relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-500 text-stone-950 text-[10px] font-black uppercase tracking-wider">
+                Most Popular
+              </div>
+              <div className="space-y-4">
+                <h3 className="font-bold text-lg text-white">Growth Barista</h3>
+                <p className="text-xs text-stone-400">For high-traffic specialty cafés and community spaces.</p>
+                <div className="text-3xl font-black text-white">
+                  $89 <span className="text-xs font-normal text-stone-400">/ month</span>
+                </div>
+                <ul className="space-y-2.5 text-xs text-stone-300 pt-4 border-t border-stone-800">
+                  <li className="flex items-center gap-2 font-semibold text-amber-300">✓ Up to 3 TV Live Screens</li>
+                  <li className="flex items-center gap-2">✓ Unlimited guest memories</li>
+                  <li className="flex items-center gap-2">✓ Branded Instagram Story Card generator</li>
+                  <li className="flex items-center gap-2">✓ Anti-fraud device fingerprinting</li>
+                  <li className="flex items-center gap-2">✓ Realtime CRM & Regulars leaderboards</li>
+                </ul>
+              </div>
+              <Link
+                href="/login"
+                className="mt-8 w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs text-center transition-all shadow-lg shadow-amber-500/20 block"
+              >
+                Start Free 14-Day Trial
+              </Link>
+            </div>
+
+            {/* Plan 3 */}
+            <div className="p-8 rounded-3xl bg-stone-900/80 border border-stone-800 flex flex-col justify-between">
+              <div className="space-y-4">
+                <h3 className="font-bold text-lg text-white">Multi-Branch Empire</h3>
+                <p className="text-xs text-stone-400">For regional coffee chains & roasteries.</p>
+                <div className="text-3xl font-black text-white">
+                  $199 <span className="text-xs font-normal text-stone-400">/ month</span>
+                </div>
+                <ul className="space-y-2.5 text-xs text-stone-300 pt-4 border-t border-stone-800">
+                  <li className="flex items-center gap-2">✓ Unlimited TV Screens & Branches</li>
+                  <li className="flex items-center gap-2">✓ Centralized Org Management</li>
+                  <li className="flex items-center gap-2">✓ Custom Domain & White-labeling</li>
+                  <li className="flex items-center gap-2">✓ Dedicated Account Manager</li>
+                </ul>
+              </div>
+              <Link
+                href="/login"
+                className="mt-8 w-full py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-white font-bold text-xs text-center transition-colors block"
+              >
+                Contact Sales
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Accordion */}
+      <section className="px-6 py-20 max-w-3xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-black text-white tracking-tight">Frequently Asked Questions</h2>
+        </div>
+
+        <div className="space-y-3">
+          {faqs.map((faq, i) => (
+            <div
+              key={i}
+              className="rounded-2xl bg-stone-900/80 border border-stone-800 overflow-hidden transition-all"
+            >
+              <button
+                onClick={() => setActiveFaq(activeFaq === i ? null : i)}
+                className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-white"
+              >
+                <span>{faq.q}</span>
+                <ChevronDown
+                  className={`w-4 h-4 text-stone-400 shrink-0 transition-transform ${
+                    activeFaq === i ? 'rotate-180 text-amber-400' : ''
+                  }`}
+                />
+              </button>
+              {activeFaq === i && (
+                <div className="px-5 pb-5 text-xs text-stone-400 leading-relaxed border-t border-stone-800/60 pt-3">
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Final Call to Action */}
+      <section className="px-6 py-20 text-center border-t border-stone-800/80 bg-gradient-to-b from-transparent to-stone-950">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+            Ready to give your café a digital heartbeat?
+          </h2>
+          <p className="text-stone-400 text-base">
+            Join forward-thinking roasters turning daily caffeine runs into loyal brand ambassadors.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            <Link
+              href="/c/espresso-lab"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.02]"
+            >
+              Try Interactive Guest Demo
+            </Link>
+            <Link
+              href="/dashboard"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-white font-bold text-sm transition-all"
+            >
+              Enter Merchant Dashboard
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-stone-900 text-center text-xs text-stone-400">
-        <p>© 2026 Café Memories. Built for modern cafés & specialty roasters.</p>
+      <footer className="py-8 border-t border-stone-900 text-center text-xs text-stone-500">
+        <p>© 2026 Café Memories. The Digital Memory & Loyalty Layer for Modern Specialty Cafés.</p>
       </footer>
     </div>
   );

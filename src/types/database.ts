@@ -94,26 +94,38 @@ export interface Database {
         Row: {
           id: string;
           customer_id: string;
+          organization_id: string;
           branch_id: string;
-          image_url: string;
+          visit_id: string | null;
+          original_url: string;
+          optimized_url: string | null;
+          thumbnail_url: string | null;
           caption: string | null;
-          status: MemoryStatus;
+          status: string;
+          visibility: string;
           created_at: string;
           updated_at: string;
+          expires_at?: string | null;
+          deleted_at?: string | null;
         };
-        Insert: Omit<Database['public']['Tables']['memories']['Row'], 'id' | 'created_at' | 'updated_at' | 'status'>;
-        Update: Partial<Database['public']['Tables']['memories']['Insert']>;
+        Insert: Partial<Database['public']['Tables']['memories']['Row']>;
+        Update: Partial<Database['public']['Tables']['memories']['Row']>;
       };
       memory_consents: {
         Row: {
           id: string;
           memory_id: string;
-          agreed_to_terms: boolean;
-          agreed_to_marketing: boolean;
-          created_at: string;
+          customer_id: string;
+          save_consent: boolean;
+          social_share_consent: boolean;
+          live_wall_consent: boolean;
+          marketing_consent: boolean;
+          consent_version: number;
+          consented_at: string;
+          revoked_at?: string | null;
         };
-        Insert: Omit<Database['public']['Tables']['memory_consents']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['memory_consents']['Insert']>;
+        Insert: Partial<Database['public']['Tables']['memory_consents']['Row']>;
+        Update: Partial<Database['public']['Tables']['memory_consents']['Row']>;
       };
       reward_rules: {
         Row: {
