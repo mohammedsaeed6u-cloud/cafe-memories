@@ -40,6 +40,20 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     day: 'numeric',
   });
 
+  const shape = frame.frameShape || 'rounded';
+  const outerRadiusClass =
+    shape === 'sharp'
+      ? 'rounded-lg'
+      : shape === 'polaroid'
+      ? 'rounded-2xl pb-10'
+      : 'rounded-3xl';
+  const slotRadiusClass =
+    shape === 'sharp'
+      ? 'rounded-sm'
+      : shape === 'polaroid'
+      ? 'rounded-md'
+      : 'rounded-2xl';
+
   return (
     <div className={`flex flex-col items-center ${className}`}>
       {/* Printable 2x6 Physical Photobooth Card */}
@@ -50,7 +64,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           borderColor: frame.borderColor || '#E7E2D9',
           color: frame.textColor || '#1C1917',
         }}
-        className={`relative transition-all duration-300 select-none shadow-[0_16px_48px_rgba(0,0,0,0.08)] border-[3px] rounded-3xl overflow-hidden print:shadow-none print:border-none ${
+        className={`relative transition-all duration-300 select-none shadow-[0_16px_48px_rgba(0,0,0,0.08)] border-[3px] ${outerRadiusClass} overflow-hidden print:shadow-none print:border-none ${
           isHorizontal ? 'w-full max-w-[480px] p-5' : 'w-[280px] sm:w-[310px] p-4 py-6'
         }`}
       >
@@ -121,7 +135,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
                 <div
                   key={slotIdx}
                   style={{ borderColor: frame.borderColor || '#E7E2D9' }}
-                  className={`relative overflow-hidden rounded-2xl border bg-stone-100 shadow-inner ${
+                  className={`relative overflow-hidden ${slotRadiusClass} border bg-stone-100 shadow-inner ${
                     isHorizontal ? 'aspect-[4/3]' : 'aspect-square'
                   }`}
                 >
@@ -145,7 +159,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
                 <div
                   key={slotIdx}
                   style={{ borderColor: frame.accentColor || '#D97706' }}
-                  className={`relative overflow-hidden rounded-2xl border-2 border-dashed bg-gradient-to-br from-amber-50 to-orange-50/60 p-4 flex flex-col items-center justify-center text-center shadow-inner ${
+                  className={`relative overflow-hidden ${slotRadiusClass} border-2 border-dashed bg-gradient-to-br from-amber-50 to-orange-50/60 p-4 flex flex-col items-center justify-center text-center shadow-inner ${
                     isHorizontal ? 'aspect-[4/3]' : 'aspect-square'
                   }`}
                 >
@@ -170,7 +184,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
               <div
                 key={slotIdx}
                 style={{ borderColor: frame.borderColor || '#E7E2D9' }}
-                className={`relative overflow-hidden rounded-2xl border-2 border-dashed bg-stone-50/60 flex flex-col items-center justify-center text-stone-400 text-center ${
+                className={`relative overflow-hidden ${slotRadiusClass} border-2 border-dashed bg-stone-50/60 flex flex-col items-center justify-center text-stone-400 text-center ${
                   isHorizontal ? 'aspect-[4/3]' : 'aspect-square'
                 }`}
               >

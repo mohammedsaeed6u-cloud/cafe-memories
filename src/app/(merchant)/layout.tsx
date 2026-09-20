@@ -6,7 +6,7 @@ export default function MerchantLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-[#FAF8F5] text-stone-900">
       {children}
     </div>
   );

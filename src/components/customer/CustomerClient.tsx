@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BusinessSettings, PhotoboothFrame } from '@/types/photobooth';
+import { BusinessSettings, PhotoboothFrame, CardColorPalette } from '@/types/photobooth';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { CooldownService } from '@/lib/services/cooldown.service';
 import { PrintService } from '@/lib/services/print.service';
 import { CameraViewfinder } from '@/components/photobooth/CameraViewfinder';
 import { PhotoboothStripCard } from '@/components/photobooth/PhotoboothStripCard';
-import { FrameSelector } from '@/components/photobooth/FrameSelector';
+import { CardColorPicker } from '@/components/photobooth/CardColorPicker';
 import { PrintGiftModal } from '@/components/photobooth/PrintGiftModal';
 import { StripComposerService } from '@/lib/services/strip-composer.service';
+import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
+import { PRESET_COLOR_PALETTES } from '@/lib/constants/photobooth-presets';
 import {
   Sparkles,
   Gift,
@@ -25,6 +27,7 @@ import {
   Camera,
   User,
   UserCheck,
+  Palette,
 } from 'lucide-react';
 
 export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
@@ -33,11 +36,20 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     BusinessSettingsService.getSettings(cafeSlug)
   );
 
+  const [selectedPaletteId, setSelectedPaletteId] = useState<string>(() => {
+    return settings.activeColorPaletteId || 'classic-latte';
+  });
+
   const [selectedFrame, setSelectedFrame] = useState<PhotoboothFrame>(() => {
-    return (
+    const base =
       settings.frames.find((f) => f.id === settings.activeFrameId) ||
-      settings.frames[0]
-    );
+      settings.frames[0];
+    return {
+      ...base,
+      shotCount: settings.defaultShotCount,
+      orientation: settings.defaultOrientation,
+      frameShape: settings.defaultFrameShape || 'rounded',
+    };
   });
 
   // Cooldown / 24-hour limit state
@@ -157,26 +169,62 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     };
   }, [cafeSlug, customerPhone]);
 
-  const handleStartCustomerSession = (e: React.FormEvent) => {
-    e.preventDefault();
+  const [recognizedCustomer, setRecognizedCustomer] = useState<{
+    name: string;
+    totalVisits: number;
+    photos?: string[];
+  } | null>(null);
+  const [showNameInput, setShowNameInput] = useState<boolean>(false);
+
+  // Real-time lookup as customer types their phone
+  useEffect(() => {
+    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
+    if (clean.length >= 8) {
+      const lookup = CustomerRegistryService.lookupCustomer(clean, cafeSlug);
+      if (lookup.exists && lookup.name) {
+        setRecognizedCustomer({
+          name: lookup.name,
+          totalVisits: lookup.totalVisits || 1,
+          photos: lookup.photos,
+        });
+        setCustomerName(lookup.name);
+        if (lookup.role) setCustomerProfession(lookup.role);
+        setShowNameInput(false);
+      } else {
+        setRecognizedCustomer(null);
+        setShowNameInput(true);
+      }
+    } else {
+      setRecognizedCustomer(null);
+      setShowNameInput(false);
+    }
+  }, [customerPhone, cafeSlug]);
+
+  const handleStartCustomerSession = (e?: React.FormEvent, directName?: string) => {
+    if (e) e.preventDefault();
     const clean = customerPhone.trim().replace(/[^0-9]/g, '');
     if (!clean || clean.length < 8) {
       alert('من فضلك أدخل رقم موبايل صحيح (8 أرقام على الأقل)');
       return;
     }
-    if (!customerName.trim()) {
-      alert('من فضلك أدخل اسمك الكريم');
+
+    const lookup = CustomerRegistryService.lookupCustomer(clean, cafeSlug);
+    const finalName = directName || (lookup.exists && lookup.name ? lookup.name : customerName.trim());
+
+    if (!finalName) {
+      setShowNameInput(true);
       return;
     }
 
-    try {
-      localStorage.setItem('memories_customer_phone', clean);
-      localStorage.setItem('memories_customer_name', customerName.trim());
-    } catch {}
+    // Register or update customer permanently
+    CustomerRegistryService.registerCustomer(clean, finalName, customerProfession, cafeSlug);
 
     // Load isolated photos for this customer
     const phoneKey = `memories_card_photos_${cafeSlug}_${clean}`;
     try {
+      localStorage.setItem('memories_customer_phone', clean);
+      localStorage.setItem('memories_customer_name', finalName);
+
       const stored = localStorage.getItem(phoneKey);
       if (stored) {
         const parsed = JSON.parse(stored);
@@ -216,6 +264,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     setCustomerPhone('');
     setCustomerName('');
     setCustomerProfession('');
+    setRecognizedCustomer(null);
+    setShowNameInput(false);
     setIsLockedByCooldown(false);
     setExtraShots(0);
     try {
@@ -246,16 +296,28 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     setIsPrintGiftModalOpen(false);
   };
 
-  const handleFrameChange = async (frame: PhotoboothFrame) => {
-    setSelectedFrame(frame);
+  const handleColorPaletteChange = async (palette: CardColorPalette) => {
+    setSelectedPaletteId(palette.id);
+    const updatedFrame: PhotoboothFrame = {
+      ...selectedFrame,
+      bgColor: palette.bgColor,
+      borderColor: palette.borderColor,
+      textColor: palette.textColor,
+      accentColor: palette.accentColor,
+      shotCount: settings.defaultShotCount,
+      orientation: settings.defaultOrientation,
+      frameShape: settings.defaultFrameShape || 'rounded',
+    };
+    setSelectedFrame(updatedFrame);
+
     const currentPhotos = todayPhoto ? [...accumulatedPhotos, todayPhoto] : accumulatedPhotos;
     if (currentPhotos.length > 0) {
-      const slots = Math.max(frame.shotCount || 3, 1);
+      const slots = Math.max(settings.defaultShotCount || 3, 1);
       try {
         const stripUrl = await StripComposerService.composeStrip({
           photos: currentPhotos,
           totalSlots: slots,
-          frame,
+          frame: updatedFrame,
           branding: settings.branding,
           freeGiftOffer: settings.freeGiftOffer,
           giftCode: giftCode || 'GIFT-MEMO',
@@ -507,29 +569,70 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1.5 text-right">
-                  الاسم الكريم *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="مثال: أحمد سامي"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none text-base text-right bg-stone-50/50 transition"
-                />
-              </div>
+              {recognizedCustomer ? (
+                /* 1. Existing Registered Customer: Direct 1-Click Auto-Login */
+                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 text-center animate-in fade-in space-y-2.5">
+                  <div className="flex items-center justify-center gap-2">
+                    <UserCheck className="w-5 h-5 text-emerald-600" />
+                    <p className="text-base font-black text-stone-900">
+                      أهلاً بك مجدداً، {recognizedCustomer.name}! ☕✨
+                    </p>
+                  </div>
+                  <p className="text-xs text-stone-600">
+                    تم التعرّف على كارتك الخاص تلقائياً ({recognizedCustomer.photos?.length || 0} لقطات محفوظة)
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleStartCustomerSession(undefined, recognizedCustomer.name)}
+                    className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-black text-sm sm:text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-2 active:scale-[0.98]"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span>دخول مباشر إلى كارتك وبدء التصوير 📸</span>
+                  </button>
+                </div>
+              ) : showNameInput || customerPhone.trim().length >= 8 ? (
+                /* 2. New Customer: Enter Name once */
+                <div className="animate-in fade-in space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1.5 text-right">
+                      الاسم الكريم (تسجيل لأول مرة) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: أحمد سامي"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none text-base text-right bg-stone-50/50 transition"
+                      autoFocus
+                    />
+                    <p className="text-[10px] text-stone-400 mt-1 text-right">
+                      سيُحفظ اسمك برقمك لتسجيل الدخول المباشر في الزيارات القادمة
+                    </p>
+                  </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-black text-sm sm:text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-2 active:scale-[0.98]"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>فتح كارت الذكريات وبدء التصوير 📸</span>
-                </button>
-              </div>
+                  <div className="pt-1">
+                    <button
+                      type="submit"
+                      className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-black text-sm sm:text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-2 active:scale-[0.98]"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <span>حفظ الاسم وفتح كارت الذكريات 📸</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* 3. Initial state before phone completion */
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full py-4 px-6 rounded-2xl bg-stone-900 hover:bg-black text-white font-black text-sm sm:text-base shadow-lg transition flex items-center justify-center gap-2 active:scale-[0.98]"
+                  >
+                    <ArrowRight className="w-4 h-4 text-amber-400 rotate-180" />
+                    <span>متابعة للتعرف على كارتك</span>
+                  </button>
+                </div>
+              )}
 
               <div className="flex items-center justify-center gap-1.5 text-[11px] text-stone-500 pt-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -734,12 +837,20 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   />
                 </div>
 
-                {/* Frame Style Selector */}
-                <FrameSelector
-                  frames={settings.frames}
-                  selectedFrameId={selectedFrame.id}
-                  onSelectFrame={handleFrameChange}
-                />
+                {/* Customer Allowed Color Picker (Strictly Controlled by Business Owner) */}
+                {settings.allowCustomerColorChoice && (
+                  <CardColorPicker
+                    palettes={
+                      settings.allowedColorIds && settings.allowedColorIds.length > 0
+                        ? PRESET_COLOR_PALETTES.filter((p) =>
+                            settings.allowedColorIds?.includes(p.id)
+                          )
+                        : PRESET_COLOR_PALETTES
+                    }
+                    selectedPaletteId={selectedPaletteId}
+                    onSelectPalette={handleColorPaletteChange}
+                  />
+                )}
 
                 {/* CTA: Proceed to Lead Form */}
                 <button

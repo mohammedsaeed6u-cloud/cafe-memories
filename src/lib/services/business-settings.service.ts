@@ -17,13 +17,44 @@ export class BusinessSettingsService {
       const stored = localStorage.getItem(this.getStorageKey(cafeSlug));
       if (stored) {
         const parsed = JSON.parse(stored);
+        const defaultShotCount = Math.max(
+          Number(parsed.defaultShotCount) || DEFAULT_BUSINESS_SETTINGS.defaultShotCount,
+          1
+        );
+        const defaultOrientation =
+          parsed.defaultOrientation || DEFAULT_BUSINESS_SETTINGS.defaultOrientation;
+        const defaultFrameShape =
+          parsed.defaultFrameShape || DEFAULT_BUSINESS_SETTINGS.defaultFrameShape || 'rounded';
+
+        const rawFrames =
+          parsed.frames && parsed.frames.length > 0
+            ? parsed.frames
+            : DEFAULT_BUSINESS_SETTINGS.frames;
+
+        // Strictly normalize all frames to have the merchant's authoritative shotCount and orientation
+        const normalizedFrames = rawFrames.map((f: PhotoboothFrame) => ({
+          ...f,
+          shotCount: defaultShotCount,
+          orientation: defaultOrientation,
+          frameShape: defaultFrameShape,
+        }));
+
         return {
           ...DEFAULT_BUSINESS_SETTINGS,
           ...parsed,
           cafeSlug: cafeSlug || parsed.cafeSlug || DEFAULT_BUSINESS_SETTINGS.cafeSlug,
           branding: { ...DEFAULT_BUSINESS_SETTINGS.branding, ...(parsed.branding || {}) },
           freeGiftOffer: { ...DEFAULT_BUSINESS_SETTINGS.freeGiftOffer, ...(parsed.freeGiftOffer || {}) },
-          frames: parsed.frames && parsed.frames.length > 0 ? parsed.frames : DEFAULT_BUSINESS_SETTINGS.frames,
+          defaultShotCount,
+          defaultOrientation,
+          defaultFrameShape,
+          frames: normalizedFrames,
+          activeColorPaletteId:
+            parsed.activeColorPaletteId || DEFAULT_BUSINESS_SETTINGS.activeColorPaletteId,
+          allowCustomerColorChoice:
+            parsed.allowCustomerColorChoice ?? DEFAULT_BUSINESS_SETTINGS.allowCustomerColorChoice,
+          allowedColorIds:
+            parsed.allowedColorIds || DEFAULT_BUSINESS_SETTINGS.allowedColorIds,
         };
       }
     } catch (err) {
@@ -64,14 +95,13 @@ export class BusinessSettingsService {
     return updated;
   }
 
-  static updateShotCount(cafeSlug: string, shotCount: ShotCount): BusinessSettings {
+  static updateShotCount(cafeSlug: string, shotCount: number): BusinessSettings {
     const current = this.getSettings(cafeSlug);
+    const validCount = Math.max(Number(shotCount) || 1, 1);
     const updated: BusinessSettings = {
       ...current,
-      defaultShotCount: shotCount,
-      frames: current.frames.map((f) => 
-        f.id === current.activeFrameId ? { ...f, shotCount } : f
-      ),
+      defaultShotCount: validCount,
+      frames: current.frames.map((f) => ({ ...f, shotCount: validCount })),
     };
     this.saveSettings(updated);
     return updated;
@@ -82,9 +112,36 @@ export class BusinessSettingsService {
     const updated: BusinessSettings = {
       ...current,
       defaultOrientation: orientation,
-      frames: current.frames.map((f) => 
-        f.id === current.activeFrameId ? { ...f, orientation } : f
-      ),
+      frames: current.frames.map((f) => ({ ...f, orientation })),
+    };
+    this.saveSettings(updated);
+    return updated;
+  }
+
+  static updateFrameShape(cafeSlug: string, frameShape: any): BusinessSettings {
+    const current = this.getSettings(cafeSlug);
+    const updated: BusinessSettings = {
+      ...current,
+      defaultFrameShape: frameShape,
+      frames: current.frames.map((f) => ({ ...f, frameShape })),
+    };
+    this.saveSettings(updated);
+    return updated;
+  }
+
+  static updateColorSettings(
+    cafeSlug: string,
+    data: {
+      activeColorPaletteId?: string;
+      allowCustomerColorChoice?: boolean;
+      allowedColorIds?: string[];
+      customPalette?: any;
+    }
+  ): BusinessSettings {
+    const current = this.getSettings(cafeSlug);
+    const updated: BusinessSettings = {
+      ...current,
+      ...data,
     };
     this.saveSettings(updated);
     return updated;

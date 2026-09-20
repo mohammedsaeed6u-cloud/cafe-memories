@@ -19,6 +19,17 @@ export interface FreeGiftOffer {
   icon: string;
 }
 
+export type FrameShapeStyle = 'rounded' | 'sharp' | 'polaroid';
+
+export interface CardColorPalette {
+  id: string;
+  nameAr: string;
+  bgColor: string;
+  textColor: string;
+  borderColor: string;
+  accentColor: string;
+}
+
 export interface PhotoboothFrame {
   id: string;
   name: string;
@@ -29,7 +40,8 @@ export interface PhotoboothFrame {
   accentColor?: string;
   cornerEmojis: CornerEmojiConfig;
   orientation: StripOrientation;
-  shotCount: number; // Configurable freely by merchant (e.g. 3, 4, 5...)
+  shotCount: number; // Configurable freely by merchant (e.g. 2, 3, 4, 5...)
+  frameShape?: FrameShapeStyle;
   badgeText?: string;
   isCustom?: boolean;
 }
@@ -46,12 +58,18 @@ export interface BusinessSettings {
   cafeSlug: string;
   cafeName: string;
   branding: BusinessBranding;
-  defaultShotCount: number;
-  defaultOrientation: StripOrientation;
+  defaultShotCount: number; // Strictly determined by merchant
+  defaultOrientation: StripOrientation; // Strictly determined by merchant
+  defaultFrameShape?: FrameShapeStyle; // Rounded, sharp, or polaroid
   freeGiftOffer: FreeGiftOffer;
   activeFrameId: string;
   frames: PhotoboothFrame[];
   wallSettings?: WallDisplaySettings;
+  // Color controls:
+  activeColorPaletteId?: string;
+  allowCustomerColorChoice?: boolean;
+  allowedColorIds?: string[];
+  customPalette?: CardColorPalette;
 }
 
 export type CustomerPersonaKey = string;
