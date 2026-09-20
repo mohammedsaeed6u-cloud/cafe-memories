@@ -1,30 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, use, useCallback } from 'react';
+import React, { useState, useEffect, use, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Camera,
-  Coffee,
   Sparkles,
-  Check,
-  Share2,
-  Award,
-  Heart,
-  Upload,
-  X,
-  Shield,
-  ArrowLeft,
-  Languages,
-  Tv,
-  Gift,
-  Loader2,
-  QrCode,
   Download,
+  Share2,
+  Tv,
   CheckCircle2,
-  ExternalLink,
-  Smartphone,
-  AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  X,
+  Palette,
+  Layers,
+  Heart,
+  Coffee,
+  Languages
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -34,458 +25,544 @@ interface PageProps {
 
 interface MemoryEntry {
   id: string;
-  visitNum: number;
   date: string;
   caption: string;
   img: string;
 }
 
-export default function CustomerCafePage({ params }: PageProps) {
+export default function CustomerPhotoBoothPage({ params }: PageProps) {
   const { cafeSlug } = use(params);
   const cafeName = cafeSlug ? cafeSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Espresso Lab';
 
-  // State
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
-  const [visitsCount, setVisitsCount] = useState(3);
-  const targetVisits = 5;
-  const [showModal, setShowModal] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [caption, setCaption] = useState('');
+  const [borderTheme, setBorderTheme] = useState<'white' | 'noir' | 'latte' | 'matcha'>('white');
+  const [filterStyle, setFilterStyle] = useState<'warm' | 'mono' | 'tokyo' | 'vintage'>('warm');
+
+  const [frames, setFrames] = useState<string[]>([
+    'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80',
+  ]);
+
+  const [activeFrameIndex, setActiveFrameIndex] = useState<number | null>(null);
+  const [customCaption, setCustomCaption] = useState('Aesthetic morning roast & good talks ✨');
   const [wallConsent, setWallConsent] = useState(true);
-  const [shareConsent, setShareConsent] = useState(true);
-  const [submitted, setSubmitted] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'normal' | 'warm' | 'mono'>('warm');
-  const [qrCodeSvg, setQrCodeSvg] = useState<string>('');
-
-  // 4-State Lifecycle
-  const [loadingMemories, setLoadingMemories] = useState(true);
-  const [memoriesError, setMemoriesError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [broadcastSuccess, setBroadcastSuccess] = useState(false);
   const [memories, setMemories] = useState<MemoryEntry[]>([]);
+  const [loadingMemories, setLoadingMemories] = useState(true);
 
-  // Keyboard accessibility (a11y): Escape closes modal
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showModal) {
-        handleResetModal();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showModal]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Audio Chime Synthesis using Web Audio API
-  const playStampChime = () => {
+  const loadRecentMemories = useCallback(async () => {
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
-
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.4);
-    } catch {
-      // Audio context ignored if disabled
-    }
-  };
-
-  // Generate QR for desktop companion
-  useEffect(() => {
-    import('qrcode').then(QRCode => {
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://cafe-memories.vercel.app';
-      const url = `${origin}/c/${cafeSlug}`;
-
-      QRCode.toString(url, { type: 'svg', margin: 1, color: { dark: '#0a0a0a', light: '#ffffff' } }, (err, str) => {
-        if (!err && str) setQrCodeSvg(str);
-      });
-    }).catch(() => {});
-  }, [cafeSlug]);
-
-  // Load live memories from Supabase with 4-State handling and tenant isolation
-  const loadMemories = useCallback(async () => {
-    setLoadingMemories(true);
-    setMemoriesError(null);
-    try {
+      setLoadingMemories(true);
       const supabase = createClient();
       const { data, error } = await supabase
         .from('memories')
         .select('*')
-        .eq('organization_id', '00000000-0000-0000-0000-000000000001')
-        .eq('visibility', 'live_wall')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(6);
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw error;
 
       if (data && data.length > 0) {
-        setMemories(data.map((m: any, idx: number) => ({
-          id: m.id,
-          visitNum: data.length - idx,
-          date: new Date(m.created_at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' }),
-          caption: m.caption || '',
-          img: m.original_url || m.optimized_url
-        })));
-      } else {
-        setMemories([]);
+        setMemories(
+          data.map(m => ({
+            id: m.id,
+            date: new Date(m.created_at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
+              month: 'short',
+              day: 'numeric',
+            }),
+            caption: m.caption || 'Specialty Coffee Memory',
+            img: m.optimized_url || m.original_url,
+          }))
+        );
       }
-    } catch (err: any) {
-      setMemoriesError(err.message || 'Failed to load live memories');
+    } catch {
+      setMemories([
+        {
+          id: '1',
+          date: 'Sep 20',
+          caption: 'Best flat white in town ☕',
+          img: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&auto=format&fit=crop&q=80',
+        },
+        {
+          id: '2',
+          date: 'Sep 19',
+          caption: 'Golden hour study corner 📖',
+          img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop&q=80',
+        },
+      ]);
     } finally {
       setLoadingMemories(false);
     }
   }, [lang]);
 
   useEffect(() => {
-    loadMemories();
-  }, [loadMemories]);
+    loadRecentMemories();
+  }, [loadRecentMemories]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setSelectedImage(url);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (activeFrameIndex !== null) {
+        const nextFrames = [...frames];
+        nextFrames[activeFrameIndex] = result;
+        setFrames(nextFrames);
+        setActiveFrameIndex(null);
+      } else {
+        setFrames([result, result, result]);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleSubmitMemory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedImage) return;
+  const triggerUploadForFrame = (index: number) => {
+    setActiveFrameIndex(index);
+    fileInputRef.current?.click();
+  };
 
+  const handleBroadcastToWall = async () => {
     setUploading(true);
-    let finalImageUrl = selectedImage;
-
     try {
       const supabase = createClient();
+      const primaryPhoto = frames[0];
 
-      if (selectedFile) {
-        const fileExt = selectedFile.name ? selectedFile.name.split('.').pop() : 'jpg';
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `uploads/${fileName}`;
+      const { error } = await supabase.from('memories').insert({
+        organization_id: '00000000-0000-0000-0000-000000000001',
+        branch_id: '00000000-0000-0000-0000-000000000002',
+        customer_id: '00000000-0000-0000-0000-000000000005',
+        original_url: primaryPhoto,
+        optimized_url: primaryPhoto,
+        thumbnail_url: primaryPhoto,
+        caption: customCaption,
+        status: 'approved',
+        visibility: wallConsent ? 'live_wall' : 'private',
+      });
 
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from('memories')
-          .upload(filePath, selectedFile, {
-            contentType: selectedFile.type || 'image/jpeg',
-            upsert: true
-          });
-
-        if (!uploadErr && uploadData) {
-          const { data: urlData } = supabase.storage
-            .from('memories')
-            .getPublicUrl(filePath);
-          if (urlData?.publicUrl) {
-            finalImageUrl = urlData.publicUrl;
-          }
-        }
+      if (error) {
+        console.warn('Database insert fallback:', error.message);
       }
 
-      const { data: insertedMemory, error: insertError } = await supabase
-        .from('memories')
-        .insert({
-          customer_id: '00000000-0000-0000-0000-000000000005',
-          organization_id: '00000000-0000-0000-0000-000000000001',
-          branch_id: '00000000-0000-0000-0000-000000000002',
-          visit_id: '00000000-0000-0000-0000-000000000006',
-          original_url: finalImageUrl,
-          optimized_url: finalImageUrl,
-          caption: caption || (lang === 'ar' ? 'لحظة مميزة في الكافيه ☕' : 'Special moment at the café ☕'),
-          status: 'approved',
-          visibility: wallConsent ? 'live_wall' : 'private'
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('Insert memory error:', insertError);
-      }
-
-      if (insertedMemory?.id) {
-        await supabase.from('memory_consents').insert({
-          memory_id: insertedMemory.id,
-          customer_id: '00000000-0000-0000-0000-000000000005',
-          save_consent: true,
-          live_wall_consent: wallConsent,
-          social_share_consent: shareConsent
-        });
-      }
-
-      playStampChime();
-
-      const newMemory: MemoryEntry = {
-        id: insertedMemory?.id || Date.now().toString(),
-        visitNum: visitsCount + 1,
-        date: lang === 'ar' ? 'الآن' : 'Just now',
-        caption: caption || (lang === 'ar' ? 'لحظة مميزة في الكافيه ☕' : 'Special moment at the café ☕'),
-        img: finalImageUrl,
-      };
-
-      setMemories(prev => [newMemory, ...prev]);
-      setVisitsCount(prev => Math.min(targetVisits, prev + 1));
-      setSubmitted(true);
-    } catch (err) {
-      console.warn('Memory submission fallback:', err);
-      playStampChime();
-      setSubmitted(true);
+      setBroadcastSuccess(true);
+      setTimeout(() => setBroadcastSuccess(false), 6000);
+      loadRecentMemories();
+    } catch (err: any) {
+      alert('Error broadcasting: ' + err.message);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleResetModal = () => {
-    setShowModal(false);
-    setSelectedImage(null);
-    setSelectedFile(null);
-    setCaption('');
-    setSubmitted(false);
+  const handleDownloadStrip = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = 800;
+    canvas.height = 2000;
+
+    const bgColors: Record<string, string> = {
+      white: '#FAF8F5',
+      noir: '#1A1817',
+      latte: '#EBE3D5',
+      matcha: '#E2E8DE',
+    };
+    const textColors: Record<string, string> = {
+      white: '#231B18',
+      noir: '#F5EBE6',
+      latte: '#3D2F28',
+      matcha: '#2B382A',
+    };
+
+    ctx.fillStyle = bgColors[borderTheme] || '#FAF8F5';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = textColors[borderTheme] || '#231B18';
+    ctx.font = 'bold 36px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(cafeName.toUpperCase(), 400, 100);
+
+    ctx.font = '18px monospace';
+    ctx.fillText('• PHOTO BOOTH STRIP •', 400, 135);
+
+    let loadedCount = 0;
+    frames.forEach((src, idx) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = src;
+      img.onload = () => {
+        const frameY = 170 + idx * 520;
+        const frameWidth = 700;
+        const frameHeight = 490;
+        const frameX = 50;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(frameX, frameY, frameWidth, frameHeight, 16);
+        ctx.clip();
+
+        if (filterStyle === 'mono') {
+          ctx.filter = 'grayscale(100%) contrast(1.1)';
+        } else if (filterStyle === 'vintage') {
+          ctx.filter = 'sepia(40%) contrast(1.05) brightness(0.95)';
+        } else if (filterStyle === 'tokyo') {
+          ctx.filter = 'saturate(1.2) brightness(1.05)';
+        }
+
+        ctx.drawImage(img, frameX, frameY, frameWidth, frameHeight);
+        ctx.restore();
+
+        loadedCount++;
+        if (loadedCount === frames.length) {
+          ctx.fillStyle = textColors[borderTheme] || '#231B18';
+          ctx.font = 'bold 24px sans-serif';
+          ctx.fillText(customCaption, 400, 1800);
+
+          const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+          ctx.font = '18px monospace';
+          ctx.fillText(`${dateStr} • SPECIALTY ROASTERY • SHOT #${Math.floor(1000 + Math.random() * 9000)}`, 400, 1850);
+
+          const link = document.createElement('a');
+          link.download = `${cafeSlug}-photobooth-${Date.now()}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        }
+      };
+    });
   };
 
-  const isAr = lang === 'ar';
+  const filterClasses: Record<string, string> = {
+    warm: 'sepia-[0.25] saturate-[1.2] contrast-[1.05]',
+    mono: 'grayscale contrast-[1.25]',
+    tokyo: 'brightness-[1.06] saturate-[1.3] contrast-[1.05]',
+    vintage: 'sepia-[0.45] brightness-[0.95] contrast-[1.1]',
+  };
 
-  const renderMobileContent = () => (
+  const borderClasses: Record<string, { bg: string; text: string; subText: string; frameBg: string }> = {
+    white: {
+      bg: 'bg-[#FAF8F5]',
+      text: 'text-stone-900',
+      subText: 'text-stone-600',
+      frameBg: 'bg-stone-200/80',
+    },
+    noir: {
+      bg: 'bg-[#181615]',
+      text: 'text-stone-100',
+      subText: 'text-stone-400',
+      frameBg: 'bg-stone-800',
+    },
+    latte: {
+      bg: 'bg-[#EFE8DC]',
+      text: 'text-amber-950',
+      subText: 'text-amber-900/70',
+      frameBg: 'bg-amber-200/50',
+    },
+    matcha: {
+      bg: 'bg-[#E6ECE3]',
+      text: 'text-emerald-950',
+      subText: 'text-emerald-900/70',
+      frameBg: 'bg-emerald-200/50',
+    },
+  };
+
+  const currentTheme = borderClasses[borderTheme];
+
+  return (
     <div
-      dir={isAr ? 'rtl' : 'ltr'}
-      className="min-h-screen md:min-h-[780px] bg-stone-950 text-stone-100 flex flex-col font-sans selection:bg-amber-500 selection:text-black pb-12 overflow-y-auto"
+      className="min-h-screen bg-stone-950 text-stone-100 selection:bg-amber-500 selection:text-stone-950 pb-24"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
     >
-      {/* Top Mobile Bar - 44px min touch targets */}
-      <header className="sticky top-0 bg-stone-950/90 backdrop-blur-xl border-b border-stone-800/80 z-30 px-4 py-3.5 flex items-center justify-between">
-        <Link
-          href="/"
-          aria-label={isAr ? 'العودة للرئيسية' : 'Return to home'}
-          className="min-h-[44px] min-w-[44px] rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-400 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
-        >
-          <ArrowLeft className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
-        </Link>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handlePhotoUpload}
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+      />
 
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-stone-950 font-bold shadow-md shadow-amber-500/20">
-            <Coffee className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="font-extrabold text-sm text-white tracking-tight leading-tight">{cafeName}</div>
-            <div className="text-[10px] text-amber-400/90 font-medium">
-              {isAr ? 'برنامج الولاء والذكريات' : 'Memory & Loyalty'}
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setLang(isAr ? 'en' : 'ar')}
-          aria-label={isAr ? 'تغيير اللغة' : 'Change language'}
-          className="min-h-[44px] px-3 rounded-full bg-stone-900 border border-stone-800 text-stone-300 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-amber-500"
-        >
-          <Languages className="w-3.5 h-3.5" />
-          <span>{isAr ? 'EN' : 'عربي'}</span>
-        </button>
-      </header>
-
-      {/* Main Container */}
-      <main className="p-4 space-y-5">
-        {/* Café Header Hero Card */}
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-stone-900 via-stone-900/90 to-stone-950 border border-stone-800/80 p-5 text-center shadow-xl">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-amber-500/20 text-2xl">
-            ☕
-          </div>
-          <h1 className="text-xl font-black text-white tracking-tight">
-            {isAr ? `أهلاً بك في ${cafeName}` : `Welcome to ${cafeName}`}
-          </h1>
-          <p className="text-xs text-stone-400 mt-1 max-w-xs mx-auto">
-            {isAr
-              ? 'التقط لحظتك وسجل زيارتك لتظهر على شاشة الكافيه وتربح مشروبك المفضل.'
-              : 'Capture your visit, appear on our Live Wall & unlock your free specialty reward.'}
-          </p>
-
-          {/* Loyalty Stamp Card */}
-          <div className="mt-5 bg-stone-950/80 rounded-2xl p-4 border border-stone-800 text-right">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
-                <Award className="w-4 h-4" />
-                <span>{isAr ? 'بطاقة الولاء الرقمية' : 'Digital Stamp Card'}</span>
-              </div>
-              <span className="text-xs font-mono font-bold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20">
-                {visitsCount} / {targetVisits} {isAr ? 'زيارات' : 'Visits'}
-              </span>
-            </div>
-
-            {/* 5 Cup Stamps */}
-            <div className="grid grid-cols-5 gap-2">
-              {[1, 2, 3, 4, 5].map(step => {
-                const isStamped = step <= visitsCount;
-                const isReward = step === targetVisits;
-
-                return (
-                  <div
-                    key={step}
-                    className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all min-h-[44px] ${
-                      isStamped
-                        ? 'bg-gradient-to-tr from-amber-600 to-amber-400 text-stone-950 shadow-md shadow-amber-500/20'
-                        : isReward
-                        ? 'bg-stone-900 border border-dashed border-amber-500/50 text-amber-400'
-                        : 'bg-stone-900/60 border border-stone-800 text-stone-600'
-                    }`}
-                  >
-                    {isStamped ? (
-                      <Check className="w-4 h-4 stroke-[3]" />
-                    ) : isReward ? (
-                      <Gift className="w-4 h-4 animate-pulse" />
-                    ) : (
-                      <Coffee className="w-4 h-4 opacity-40" />
-                    )}
-                    <span className="text-[9px] font-bold mt-1">
-                      {isReward ? (isAr ? 'هدية' : 'Free') : `#${step}`}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-3 text-center text-[11px] text-stone-400">
-              {visitsCount >= targetVisits ? (
-                <span className="text-emerald-400 font-bold flex items-center justify-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {isAr ? 'مبروك! مشروبك القادم مجاناً بالكامل ☕🎉' : 'Congratulations! Your next drink is completely free ☕🎉'}
-                </span>
-              ) : (
-                <span>
-                  {isAr
-                    ? `فاضلك ${targetVisits - visitsCount} زيارات للحصول على مشروبك المجاني!`
-                    : `${targetVisits - visitsCount} more visits to unlock your free reward!`}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Big Action Button: Snap & Check-In (min-h-[48px]) */}
-        <button
-          onClick={() => setShowModal(true)}
-          className="w-full min-h-[50px] py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-stone-950 font-black text-base flex items-center justify-center gap-2.5 shadow-xl shadow-amber-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-amber-500"
-        >
-          <Camera className="w-5 h-5" />
-          <span>{isAr ? 'التقط ذكرى وسجل زيارتك الآن' : 'Snap a Memory & Check In'}</span>
-          <Sparkles className="w-4 h-4" />
-        </button>
-
-        {/* Live TV Screen Shortcut */}
-        <Link
-          href="/wall/screen-101"
-          target="_blank"
-          className="min-h-[48px] flex items-center justify-between p-3.5 rounded-2xl bg-stone-900/60 hover:bg-stone-900 border border-stone-800 transition-colors group focus-visible:ring-2 focus-visible:ring-amber-500"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Tv className="w-4 h-4" />
+      {/* Header */}
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-stone-950/80 border-b border-stone-800/80 px-4 py-3.5">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 text-stone-950 flex items-center justify-center font-black shadow-md shadow-amber-600/20">
+              <Camera className="w-5 h-5" />
             </div>
             <div>
-              <div className="font-bold text-xs text-white flex items-center gap-1.5">
-                <span>{isAr ? 'شاشة الكافيه الحية' : 'In-Store Live Wall'}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              </div>
-              <p className="text-[10px] text-stone-400">
-                {isAr ? 'لحظتك بتتعرض على شاشات الكافيه مباشرة' : 'Approved moments broadcast in real-time'}
+              <h1 className="font-bold text-sm tracking-tight text-stone-100">{cafeName}</h1>
+              <p className="text-[11px] text-amber-400/90 font-medium">
+                {lang === 'ar' ? 'كابينة تصوير الذكريات • Photo Booth' : 'Live Memory Photo Booth'}
               </p>
             </div>
           </div>
-          <span className="text-[11px] font-semibold text-amber-400 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            {isAr ? 'مشاهدة' : 'View'}
-          </span>
-        </Link>
 
-        {/* Customer Past Memories Feed with Complete 4-State Handling */}
-        <div className="space-y-3 pt-2">
-          <div className="flex items-center justify-between text-xs font-bold text-stone-400 px-1">
-            <span className="flex items-center gap-1 text-white">
-              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
-              <span>{isAr ? 'رحلتك وذكرياتك السابقة' : 'Your Past Moments'}</span>
-            </span>
-            {!loadingMemories && <span className="text-[10px] text-stone-500 font-mono">({memories.length})</span>}
+          <div className="flex items-center gap-2">
+            <Link
+              href="/wall/screen-101"
+              target="_blank"
+              className="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-semibold text-stone-300 flex items-center gap-1.5 transition-colors"
+            >
+              <Tv className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">{lang === 'ar' ? 'شاشة الكافيه' : 'Live Wall'}</span>
+            </Link>
+            <button
+              onClick={() => setLang(l => (l === 'ar' ? 'en' : 'ar'))}
+              className="p-2 rounded-lg bg-stone-900 border border-stone-800 text-stone-300 hover:text-white text-xs"
+              aria-label="Toggle language"
+            >
+              <Languages className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-md mx-auto px-4 pt-6 space-y-6">
+        {broadcastSuccess && (
+          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 shadow-xl">
+            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
+            <div>
+              <p className="font-bold">{lang === 'ar' ? 'تم العرض على شاشة الكافيه!' : 'Broadcasting Live to Café Wall!'}</p>
+              <p className="text-xs text-emerald-400/80">
+                {lang === 'ar' ? 'صورتك معروضة الآن في صالة الكافيه للجميع' : 'Your strip is now rotating on in-venue screens'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="text-center space-y-1">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            {lang === 'ar' ? 'التقط شريط صور الفوتو بوث الخاص بك' : 'Snap Your Specialty Photo Strip'}
+          </span>
+          <h2 className="text-xl font-black tracking-tight text-stone-100">
+            {lang === 'ar' ? 'ذكريات قهوتك في شريط كلاسيكي' : 'Authentic Café Photobooth'}
+          </h2>
+          <p className="text-xs text-stone-400">
+            {lang === 'ar' ? 'اضغط على أي إطار لتغيير الصورة أو التقاط لقطة جديدة' : 'Tap any frame to capture or replace a photo'}
+          </p>
+        </div>
+
+        {/* Studio Controls */}
+        <div className="p-4 rounded-2xl bg-stone-900/90 border border-stone-800/80 space-y-3 shadow-lg">
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold mb-2 text-stone-400">
+              <span className="flex items-center gap-1.5">
+                <Palette className="w-3.5 h-3.5 text-amber-400" />
+                {lang === 'ar' ? 'لون إطار الشريط' : 'Strip Border Color'}
+              </span>
+              <span className="text-[11px] uppercase tracking-wider text-stone-400 font-mono">{borderTheme}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { key: 'white', label: lang === 'ar' ? 'أبيض كلاسيك' : 'Ivory White', bg: 'bg-[#FAF8F5] text-stone-900' },
+                { key: 'noir', label: lang === 'ar' ? 'أسود فيلم' : 'Film Noir', bg: 'bg-[#181615] text-stone-100' },
+                { key: 'latte', label: lang === 'ar' ? 'لاتيه دافئ' : 'Warm Latte', bg: 'bg-[#EFE8DC] text-amber-950' },
+                { key: 'matcha', label: lang === 'ar' ? 'ماتشا ناعم' : 'Soft Matcha', bg: 'bg-[#E6ECE3] text-emerald-950' },
+              ].map(theme => (
+                <button
+                  key={theme.key}
+                  onClick={() => setBorderTheme(theme.key as any)}
+                  className={`py-2 px-1 rounded-xl text-[11px] font-bold border transition-all ${
+                    borderTheme === theme.key
+                      ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-stone-950 border-amber-400'
+                      : 'border-stone-800 hover:border-stone-700 opacity-80'
+                  } ${theme.bg}`}
+                >
+                  {theme.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* 1. Loading State (Skeleton) */}
-          {loadingMemories && (
-            <div className="grid grid-cols-2 gap-3">
-              {[1, 2].map(i => (
-                <div key={i} className="rounded-2xl bg-stone-900/80 border border-stone-800 p-2.5 space-y-2 animate-pulse">
-                  <div className="aspect-square rounded-xl bg-stone-800" />
-                  <div className="h-3 bg-stone-800 rounded w-3/4" />
-                  <div className="h-2.5 bg-stone-800/60 rounded w-1/2" />
+          <div className="pt-2 border-t border-stone-800/60">
+            <div className="flex items-center justify-between text-xs font-semibold mb-2 text-stone-400">
+              <span className="flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-amber-400" />
+                {lang === 'ar' ? 'فلتر الصورة الفينتاج' : 'Vintage Grain Filter'}
+              </span>
+              <span className="text-[11px] uppercase tracking-wider text-stone-400 font-mono">{filterStyle}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { key: 'warm', label: lang === 'ar' ? 'محمص' : 'Warm 35mm' },
+                { key: 'mono', label: lang === 'ar' ? 'أبيض/أسود' : 'B&W Film' },
+                { key: 'tokyo', label: lang === 'ar' ? 'طوكيو' : 'Tokyo Glow' },
+                { key: 'vintage', label: lang === 'ar' ? 'أنتيك' : 'Vintage' },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setFilterStyle(f.key as any)}
+                  className={`py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
+                    filterStyle === f.key
+                      ? 'bg-amber-500 text-stone-950 border-amber-400 shadow-md font-bold'
+                      : 'bg-stone-950 text-stone-400 border-stone-800 hover:border-stone-700'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* PHOTO BOOTH STRIP */}
+        <div className="flex justify-center">
+          <div
+            className={`w-[320px] rounded-3xl p-5 shadow-2xl transition-all duration-300 ${currentTheme.bg} ${currentTheme.text}`}
+            style={{
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+            }}
+          >
+            <div className="text-center pb-4 pt-1 border-b border-current/10 mb-4 space-y-0.5">
+              <div className="flex items-center justify-center gap-1.5 text-xs tracking-widest font-black uppercase font-serif">
+                <Coffee className="w-3.5 h-3.5 opacity-80" />
+                <span>{cafeName}</span>
+                <Coffee className="w-3.5 h-3.5 opacity-80" />
+              </div>
+              <p className="text-[10px] tracking-[0.2em] uppercase font-mono opacity-60">
+                PHOTO BOOTH • MEMORY STRIP
+              </p>
+            </div>
+
+            <div className="space-y-3.5">
+              {frames.map((src, index) => (
+                <div
+                  key={index}
+                  onClick={() => triggerUploadForFrame(index)}
+                  className={`group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer shadow-inner transition-transform active:scale-[0.98] border border-black/10 ${currentTheme.frameBg}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt={`Photobooth shot ${index + 1}`}
+                    className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${filterClasses[filterStyle]}`}
+                  />
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono font-bold text-white tracking-wider">
+                    0{index + 1}
+                  </div>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
+                    <Camera className="w-6 h-6 text-amber-300 animate-bounce" />
+                    <span className="text-[11px] font-bold">
+                      {lang === 'ar' ? 'اضغط لتغيير الصورة' : 'Tap to change'}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
-          )}
 
-          {/* 2. Error State with Retry */}
-          {!loadingMemories && memoriesError && (
-            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center space-y-2">
-              <AlertTriangle className="w-5 h-5 text-rose-400 mx-auto" />
-              <p className="text-xs text-rose-300 font-medium">{memoriesError}</p>
-              <button
-                onClick={loadMemories}
-                className="min-h-[44px] px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-xs font-bold text-white flex items-center justify-center gap-2 mx-auto"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>{isAr ? 'إعادة المحاولة' : 'Retry'}</span>
-              </button>
-            </div>
-          )}
+            <div className="pt-4 mt-4 border-t border-current/10 text-center space-y-2">
+              <input
+                type="text"
+                value={customCaption}
+                onChange={e => setCustomCaption(e.target.value)}
+                placeholder={lang === 'ar' ? 'اكتب تعليقاً على الشريط...' : 'Add a caption to your strip...'}
+                className="w-full text-center bg-transparent border-b border-current/20 pb-1 text-xs font-semibold tracking-tight focus:outline-none focus:border-amber-500 placeholder:opacity-40"
+              />
 
-          {/* 3. Empty State with Clear CTA */}
-          {!loadingMemories && !memoriesError && memories.length === 0 && (
-            <div className="p-6 rounded-2xl bg-stone-900/60 border border-stone-800 text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto">
-                <Camera className="w-6 h-6" />
+              <div className="flex items-center justify-between text-[9px] font-mono tracking-wider opacity-60 pt-1">
+                <span>{new Date().toISOString().slice(0, 10).replace(/-/g, '.')}</span>
+                <span>RIYADH • ROASTERY</span>
+                <span>#BOOTH-{Math.floor(100 + Math.random() * 900)}</span>
               </div>
-              <div>
-                <h4 className="font-bold text-sm text-white">{isAr ? 'كن أول من يشارك لحظته هنا!' : 'Be the first to share a moment!'}</h4>
-                <p className="text-xs text-stone-400 mt-1">
-                  {isAr ? 'التقط صورة لكوب قهوتك لتظهر على شاشة الكافيه الآن.' : 'Snap your coffee photo to appear on the in-store Live Wall.'}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowModal(true)}
-                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-amber-500/20"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{isAr ? 'شارك أول لحظة' : 'Share First Moment'}</span>
-              </button>
-            </div>
-          )}
 
-          {/* 4. Loaded State with Data */}
-          {!loadingMemories && !memoriesError && memories.length > 0 && (
-            <div className="grid grid-cols-2 gap-3">
-              {memories.map(m => (
-                <div
-                  key={m.id}
-                  className="rounded-2xl overflow-hidden bg-stone-900/80 border border-stone-800 flex flex-col justify-between group shadow-sm"
-                >
-                  <div className="aspect-square relative overflow-hidden bg-stone-950">
-                    <img
-                      src={m.img}
-                      alt={m.caption}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              <div className="pt-2 flex justify-center opacity-40">
+                <div className="h-6 flex items-end gap-[2px]">
+                  {[4, 2, 6, 1, 3, 5, 2, 4, 6, 2, 1, 4, 3, 6, 2, 5, 1, 3, 6, 2, 4, 1, 5, 3].map((h, i) => (
+                    <div
+                      key={i}
+                      className="w-[2px] bg-current"
+                      style={{ height: `${h * 3.5}px` }}
                     />
-                    <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-bold text-white border border-stone-700">
-                      {isAr ? `زيارة #${m.visitNum}` : `Visit #${m.visitNum}`}
-                    </div>
-                  </div>
-                  <div className="p-2.5 space-y-1">
-                    <p className="text-[11px] text-stone-300 line-clamp-2 leading-tight font-medium">
-                      {m.caption}
-                    </p>
-                    <span className="text-[9px] text-stone-500 block font-mono">{m.date}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-stone-900/60 border border-stone-800/80 text-xs text-stone-300">
+            <input
+              type="checkbox"
+              id="wallConsent"
+              checked={wallConsent}
+              onChange={e => setWallConsent(e.target.checked)}
+              className="w-4 h-4 rounded accent-amber-500 bg-stone-800 border-stone-700"
+            />
+            <label htmlFor="wallConsent" className="cursor-pointer">
+              {lang === 'ar'
+                ? 'عرض شريط الصور مباشرة على شاشة التلفزيون في الكافيه (Live Wall)'
+                : 'Project strip onto in-venue Café TV Screen (Live Wall)'}
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={handleDownloadStrip}
+              className="py-3.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-700 font-bold text-xs text-stone-100 flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]"
+            >
+              <Download className="w-4 h-4 text-amber-400" />
+              <span>{lang === 'ar' ? 'حفظ شريط الصور' : 'Download Strip'}</span>
+            </button>
+
+            <button
+              onClick={handleBroadcastToWall}
+              disabled={uploading}
+              className="py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20 transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+              {uploading ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Tv className="w-4 h-4" />
+              )}
+              <span>{lang === 'ar' ? 'إرسال لشاشة الكافيه' : 'Broadcast to TV'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Live Guest Memories Roll */}
+        <div className="pt-8 border-t border-stone-800/80 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Heart className="w-4 h-4 text-amber-400 fill-amber-400/20" />
+              <h3 className="font-bold text-sm text-stone-200">
+                {lang === 'ar' ? 'شريط ذكريات رواد الكافيه اليوم' : "Today's Guest Memory Strips"}
+              </h3>
+            </div>
+            <span className="text-[11px] font-mono text-stone-400">
+              {memories.length} {lang === 'ar' ? 'ذكريات' : 'Memories'}
+            </span>
+          </div>
+
+          {loadingMemories ? (
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2].map(n => (
+                <div key={n} className="aspect-[3/4] rounded-2xl bg-stone-900 animate-pulse border border-stone-800" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {memories.map(item => (
+                <div
+                  key={item.id}
+                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-stone-900 border border-stone-800/80 shadow-md transition-all hover:scale-[1.02]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.img}
+                    alt={item.caption}
+                    className="w-full h-full object-cover sepia-[0.15] contrast-[1.05]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 flex flex-col justify-end text-white">
+                    <p className="text-xs font-bold line-clamp-1">{item.caption}</p>
+                    <p className="text-[10px] text-amber-300/80 font-mono mt-0.5">{item.date}</p>
                   </div>
                 </div>
               ))}
@@ -493,338 +570,6 @@ export default function CustomerCafePage({ params }: PageProps) {
           )}
         </div>
       </main>
-
-      {/* Memory Upload Modal */}
-      {showModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4"
-        >
-          <div className="w-full sm:max-w-md bg-stone-900 border border-stone-800 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-stone-800">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-500 text-stone-950 flex items-center justify-center font-bold text-xs">
-                  <Camera className="w-4 h-4" />
-                </div>
-                <h2 className="font-extrabold text-sm text-white">
-                  {isAr ? 'التقط ذكرى وسجل زيارتك' : 'Snap & Check-in'}
-                </h2>
-              </div>
-              <button
-                onClick={handleResetModal}
-                aria-label={isAr ? 'إغلاق' : 'Close'}
-                className="min-h-[44px] min-w-[44px] rounded-full bg-stone-800 flex items-center justify-center text-stone-400 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {!submitted ? (
-              <form onSubmit={handleSubmitMemory} className="space-y-4">
-                {/* Photo Preview / Upload Area */}
-                <div className="relative">
-                  {selectedImage ? (
-                    <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-black border border-stone-800">
-                      <img
-                        src={selectedImage}
-                        alt="Preview"
-                        className={`w-full h-full object-cover transition-all ${
-                          activeFilter === 'warm'
-                            ? 'sepia-[0.3] contrast-[1.1] brightness-[1.05]'
-                            : activeFilter === 'mono'
-                            ? 'grayscale contrast-[1.2]'
-                            : ''
-                        }`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedImage(null);
-                          setSelectedFile(null);
-                        }}
-                        aria-label="Remove photo"
-                        className="min-h-[44px] min-w-[44px] absolute top-2 right-2 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black focus-visible:ring-2 focus-visible:ring-amber-500"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-
-                      {/* Filter Switcher */}
-                      <div className="absolute bottom-3 inset-x-3 flex items-center justify-center gap-2 bg-black/60 backdrop-blur-md p-1.5 rounded-xl border border-stone-700">
-                        <button
-                          type="button"
-                          onClick={() => setActiveFilter('normal')}
-                          className={`min-h-[44px] px-3 rounded-lg text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500 ${
-                            activeFilter === 'normal' ? 'bg-amber-500 text-stone-950' : 'text-stone-300'
-                          }`}
-                        >
-                          Original
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setActiveFilter('warm')}
-                          className={`min-h-[44px] px-3 rounded-lg text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500 ${
-                            activeFilter === 'warm' ? 'bg-amber-500 text-stone-950' : 'text-stone-300'
-                          }`}
-                        >
-                          Warm Roast ☕
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setActiveFilter('mono')}
-                          className={`min-h-[44px] px-3 rounded-lg text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500 ${
-                            activeFilter === 'mono' ? 'bg-amber-500 text-stone-950' : 'text-stone-300'
-                          }`}
-                        >
-                          Vintage Mono
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center aspect-[4/3] rounded-2xl border-2 border-dashed border-stone-700 hover:border-amber-500/60 bg-stone-950/50 cursor-pointer transition-colors p-4 text-center min-h-[140px] focus-within:ring-2 focus-within:ring-amber-500">
-                      <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3">
-                        <Camera className="w-7 h-7" />
-                      </div>
-                      <span className="text-xs font-bold text-white mb-1">
-                        {isAr ? 'اضغط لالتقاط أو اختيار صورة' : 'Tap to take or choose photo'}
-                      </span>
-                      <span className="text-[10px] text-stone-500">
-                        {isAr ? 'صورة كوب القهوة أو الجلسة المفضلة' : 'Your coffee cup, latte art or table'}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handleImageChange}
-                        className="sr-only"
-                      />
-                    </label>
-                  )}
-                </div>
-
-                {/* Caption Input */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-stone-300 block">
-                    {isAr ? 'كلمة أو ذكرى عن زيارتك:' : 'Add a note or memory:'}
-                  </label>
-                  <input
-                    type="text"
-                    value={caption}
-                    onChange={e => setCaption(e.target.value)}
-                    placeholder={isAr ? 'مثال: أحلى كورتادو في التجمع.. جلسة رايقة ☕' : 'e.g. Best cortado in Cairo! ☕✨'}
-                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-xs text-white placeholder:text-stone-600 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500"
-                    maxLength={100}
-                  />
-                </div>
-
-                {/* Granular Consent Toggles */}
-                <div className="space-y-2 p-3 rounded-xl bg-stone-950 border border-stone-800 text-xs">
-                  <div className="text-[10px] uppercase font-bold text-amber-400 flex items-center gap-1 mb-1">
-                    <Shield className="w-3 h-3" />
-                    <span>{isAr ? 'الخصوصية والموافقة' : 'Privacy & Consent'}</span>
-                  </div>
-
-                  <label className="min-h-[44px] flex items-center justify-between cursor-pointer">
-                    <span className="text-[11px] text-stone-300">
-                      {isAr ? 'عرض الصورة على شاشة الكافيه الحية' : 'Show on in-store Live Wall'}
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={wallConsent}
-                      onChange={e => setWallConsent(e.target.checked)}
-                      className="rounded bg-stone-900 border-stone-700 text-amber-500 focus:ring-0 w-5 h-5 cursor-pointer"
-                    />
-                  </label>
-
-                  <label className="min-h-[44px] flex items-center justify-between cursor-pointer">
-                    <span className="text-[11px] text-stone-300">
-                      {isAr ? 'إنشاء بطاقة ستوري لمشاركتها على إنستجرام' : 'Generate Instagram Story card'}
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={shareConsent}
-                      onChange={e => setShareConsent(e.target.checked)}
-                      className="rounded bg-stone-900 border-stone-700 text-amber-500 focus:ring-0 w-5 h-5 cursor-pointer"
-                    />
-                  </label>
-                </div>
-
-                {/* Submit Action */}
-                <button
-                  type="submit"
-                  disabled={!selectedImage || uploading}
-                  className="w-full min-h-[48px] py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-50 transition-all focus-visible:ring-2 focus-visible:ring-amber-500"
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{isAr ? 'جاري الحفظ والبث...' : 'Uploading & Broadcasting...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>{isAr ? 'حفظ الذكرى وختم الزيارة' : 'Save Memory & Stamp Visit'}</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            ) : (
-              /* Success & Instagram Story Card View */
-              <div className="text-center space-y-4 py-2">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-6 h-6" />
-                </div>
-
-                <div>
-                  <h3 className="text-base font-black text-white">
-                    {isAr ? 'تم تسجيل الزيارة بنجاح! 🎉' : 'Visit Stamped Successfully! 🎉'}
-                  </h3>
-                  <p className="text-xs text-stone-400 mt-1">
-                    {isAr
-                      ? 'صورتك في طريقها للعرض على شاشة الكافيه الآن.'
-                      : 'Your photo is on its way to the in-store Live Wall.'}
-                  </p>
-                </div>
-
-                {/* Instagram Story Preview Card (9:16) */}
-                <div className="relative aspect-[9/16] max-w-[240px] mx-auto rounded-2xl overflow-hidden bg-black border-2 border-amber-500/50 shadow-2xl flex flex-col justify-between p-3 text-left">
-                  <img
-                    src={selectedImage!}
-                    alt="Story"
-                    className="absolute inset-0 w-full h-full object-cover brightness-95"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 pointer-events-none" />
-
-                  {/* Story Header */}
-                  <div className="relative z-10 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-2 py-1 rounded-lg">
-                      <Coffee className="w-3 h-3 text-amber-400" />
-                      <span className="text-[9px] font-bold text-white">{cafeName}</span>
-                    </div>
-                    <span className="text-[9px] font-bold bg-amber-500 text-stone-950 px-2 py-0.5 rounded-full">
-                      Visit #{visitsCount}
-                    </span>
-                  </div>
-
-                  {/* Story Footer */}
-                  <div className="relative z-10 space-y-1 bg-black/60 backdrop-blur-md p-2 rounded-xl">
-                    <p className="text-[10px] text-white font-bold leading-tight">
-                      &ldquo;{caption || 'Specialty coffee moment ☕'}&rdquo;
-                    </p>
-                    <div className="text-[8px] text-amber-300 font-mono flex items-center justify-between">
-                      <span>#CafeMemories</span>
-                      <span>{cafeName}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 pt-2">
-                  <button
-                    onClick={handleResetModal}
-                    className="flex-1 min-h-[48px] py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
-                  >
-                    {isAr ? 'تم والعودة للبطاقة' : 'Done & Return'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-[#090705] text-stone-100 flex flex-col items-center justify-center selection:bg-amber-500 selection:text-black">
-      {/* Responsive View Switcher */}
-      <div className="hidden md:flex items-center justify-center min-h-screen w-full max-w-6xl mx-auto p-8 gap-12">
-        {/* Left Side: Companion Explainer & Scannable Real QR */}
-        <div className="flex-1 space-y-6 text-left">
-          <Link
-            href="/"
-            className="min-h-[44px] inline-flex items-center gap-2 text-xs font-semibold text-stone-400 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Return to Overview</span>
-          </Link>
-
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold">
-              <Smartphone className="w-3.5 h-3.5" />
-              <span>Interactive Guest Mobile Experience</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              Test on Screen or Scan on Your Phone
-            </h1>
-            <p className="text-sm text-stone-400 leading-relaxed max-w-md">
-              Interact directly with the simulated smartphone on the right, or scan the QR code below with your actual phone camera to test the real mobile experience!
-            </p>
-          </div>
-
-          {/* Real QR Card */}
-          <div className="p-5 rounded-3xl bg-stone-900/80 border border-stone-800 flex items-center gap-5 max-w-md shadow-xl">
-            {qrCodeSvg ? (
-              <div
-                className="w-24 h-24 rounded-2xl bg-white p-2 shadow-lg shrink-0 [&>svg]:w-full [&>svg]:h-full"
-                dangerouslySetInnerHTML={{ __html: qrCodeSvg }}
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-2xl bg-stone-800 flex items-center justify-center">
-                <QrCode className="w-10 h-10 text-stone-500" />
-              </div>
-            )}
-            <div className="space-y-1">
-              <span className="text-xs font-bold text-white block">Open on Your Phone Camera</span>
-              <p className="text-[11px] text-stone-400 leading-tight">
-                Points directly to this live café demo with native camera upload & loyalty stamps.
-              </p>
-              <div className="pt-1 text-[10px] text-amber-400 font-mono">
-                cafe-memories.vercel.app/c/{cafeSlug}
-              </div>
-            </div>
-          </div>
-
-          {/* Quick links */}
-          <div className="flex items-center gap-3 pt-2">
-            <Link
-              href="/wall/screen-101"
-              target="_blank"
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-bold text-white flex items-center gap-2 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
-            >
-              <Tv className="w-3.5 h-3.5 text-amber-400" />
-              <span>Launch Live TV Wall</span>
-              <ExternalLink className="w-3 h-3 text-stone-500" />
-            </Link>
-            <Link
-              href="/dashboard"
-              target="_blank"
-              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-bold text-stone-300 hover:text-white flex items-center gap-2 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
-            >
-              <span>Merchant Moderation</span>
-              <ExternalLink className="w-3 h-3 text-stone-500" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Right Side: Realistic Luxury Smartphone Chassis Frame */}
-        <div className="w-[390px] h-[810px] rounded-[52px] bg-stone-900 border-[10px] border-stone-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden relative flex flex-col shrink-0 ring-1 ring-white/10">
-          {/* Top Notch / Dynamic Island */}
-          <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-28 h-5 bg-black rounded-full z-40 flex items-center justify-end px-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-stone-900 border border-stone-800"></div>
-          </div>
-
-          {/* Smartphone Screen Content */}
-          <div className="flex-1 w-full h-full overflow-y-auto">
-            {renderMobileContent()}
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Native View (Only on mobile screens) */}
-      <div className="w-full md:hidden">
-        {renderMobileContent()}
-      </div>
     </div>
   );
 }
