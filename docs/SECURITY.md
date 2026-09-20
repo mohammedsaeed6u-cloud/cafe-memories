@@ -1,111 +1,81 @@
-# Security Architecture — Café Memories
+# Security & Threat Modeling Specification — Café Memories
 
-## Overview
-This document outlines the security architecture and practices for the Café Memories SaaS platform.
+**Security Standard:** Zero Trust Architecture & Defense-in-Depth  
+**Compliance Standards:** SOC 2 Type II, OWASP Top 10 (2025/2026), GDPR, CCPA  
+**Classification:** Enterprise SaaS Security Specification  
 
-## Authentication
+---
 
-### Merchant Authentication
-- **Provider**: Supabase Auth with Google OAuth
-- **Flow**: Google Sign-in → Supabase session → JWT token
-- **Session**: HTTP-only secure cookies managed by `@supabase/ssr`
+## 1. STRIDE Threat Model & Defense Matrix
 
-### Customer Authentication
-- **Guest First**: Customers start as anonymous users
-- **Optional Auth**: Google sign-in to persist identity across devices
-- **Identity Merge**: Anonymous history is merged into authenticated profile
-- **No Passwords**: No email/password registration in MVP
+| Threat Category | Potential Vector | Impact | Engineering Defense |
+|---|---|---|---|
+| **Spoofing** | Forged customer token or stolen session cookie | Unauthorized access to another user's loyalty rewards | Signed Supabase JWTs with httpOnly, Secure, SameSite=Lax cookies. Anonymous sessions bounded by HMAC-SHA256 device fingerprint. |
+| **Tampering** | Manipulating visit timestamps or reward points in transit | Fraudulent free coffee redemptions | Cryptographic idempotency keys on all financial/reward events; all business logic computed server-side inside PostgreSQL transactions. |
+| **Repudiation** | Merchant staff denying improper deletion of customer photos | Unaccountable content moderation | Cryptographic `audit_logs` capturing `actor_id`, `action`, `ip_address`, `target_id` with RLS preventing modification. |
+| **Information Disclosure** | Direct Object Reference (IDOR) attacks across tenants | Café A viewing Café B's sales volume, customers, or photos | Mandatory PostgreSQL Row Level Security (RLS) policies scoped to `organization_id`. Application queries run under unprivileged connection roles. |
+| **Denial of Service** | Uploading massive 100MB files or hammering QR endpoints | Server exhaustion, cloud bill inflation | 10MB upload limit with streaming byte count guard; edge sliding-window rate limiting; client-side image downsampling. |
+| **Elevation of Privilege** | Barista account executing organization deletion | Destruction of multi-branch business data | RBAC enums (`owner`, `admin`, `manager`, `staff`) enforced at both Next.js API Gateway and PostgreSQL RLS functions (`is_org_admin`). |
 
-## Authorization
+---
 
-### RBAC (Role-Based Access Control)
-| Role | Scope | Permissions |
-|------|-------|------------|
-| Owner | Organization | Full access, billing, delete org |
-| Admin | Organization | Manage staff, branding, rewards, moderation |
-| Manager | Branch | Moderate content, view analytics, manage screens |
-| Staff | Branch | Verify visits, basic moderation |
+## 2. Authentication & Role-Based Access Control (RBAC)
 
-### Enforcement Layers
-1. **Database (RLS)**: PostgreSQL Row Level Security policies
-2. **Server Actions**: Role verification before mutations
-3. **Middleware**: Route protection based on auth state
-4. **UI**: Conditional rendering (cosmetic only, never sole protection)
+### 2.1. Customer Identity Lifecycle
+1. **Anonymous First-Visit:** Customers scan QR codes and receive an anonymous session backed by a cryptographic device UUID stored in Secure LocalStorage and sent in `x-client-fingerprint`.
+2. **Identity Linkage:** When the customer connects via Google OAuth or Magic Link, an atomic transaction reconciles the `anonymous_id` with `auth.users.id`, transferring all accumulated loyalty stamps seamlessly.
 
-## Multi-Tenancy Isolation
-- Every tenant-owned table has `organization_id` column
-- RLS policies enforce tenant isolation at the database level
-- `organization_id` is **never** trusted from client input
-- Derived from authenticated session server-side
+### 2.2. Merchant & Staff RBAC Matrix
 
-## Data Security
+| Permission Domain | Owner | Admin | Manager | Staff (Barista) | Customer |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Billing & Stripe Subscriptions** | ✅ Full | ❌ Read Only | ❌ Forbidden | ❌ Forbidden | ❌ Forbidden |
+| **Manage Organizations & Branches** | ✅ Full | ✅ Full | ❌ Assigned Branch Only | ❌ Forbidden | ❌ Forbidden |
+| **Invite & Remove Team Members** | ✅ Full | ✅ Full | ❌ Forbidden | ❌ Forbidden | ❌ Forbidden |
+| **Configure Loyalty Rules & Promos** | ✅ Full | ✅ Full | ✅ Full | ❌ Read Only | ❌ Read Only |
+| **Moderate Live Wall Memories** | ✅ Full | ✅ Full | ✅ Full | ✅ Approve/Hide | ❌ Forbidden |
+| **Pair & Manage TV Screens** | ✅ Full | ✅ Full | ✅ Full | ❌ Read Only | ❌ Forbidden |
+| **Scan & Log Visit Stamps** | ✅ Full | ✅ Full | ✅ Full | ✅ Verify | ✅ Own Visits |
 
-### Image Upload
-- MIME type validation (jpeg, png, webp, heic only)
-- File size limit: 10MB
-- Dimension limit: 4096x4096
-- Magic byte verification where possible
-- Metadata stripping (EXIF removal)
-- Thumbnail generation server-side
+---
 
-### Storage
-- Supabase Storage with bucket-level policies
-- Signed URLs for private content (1-hour expiry)
-- Public URLs only for approved Live Wall content
-- Path structure: `org_id/branch_id/memory_id/`
+## 3. Anti-Fraud & Visit Abuse Prevention
 
-### QR Codes
-- QR URLs do not grant rewards directly
-- Server validates visit legitimacy
-- QR contains: org slug, branch slug, source identifier
-- No sensitive data in QR URLs
+To prevent customers from spamming visits to unlock free rewards without purchasing coffee:
 
-## Anti-Fraud
+```mermaid
+flowchart TD
+    A[QR Scan Request] --> B{Check Device & IP Hash}
+    B -->|Visit within past 60 mins?| C[Flag as Cooldown Conflict / Reject]
+    B -->|No recent visit| D{Check Velocity / Geofence}
+    D -->|Suspicious Burst (>5/hr)| E[Mark verification_status = 'suspicious']
+    D -->|Normal Velocity| F[Mark verification_status = 'verified']
+    F --> G[Atomic Loyalty Event + Stamp Increment]
+```
 
-### Visit Verification (MVP)
-- **Rate Limiting**: Max 1 visit per customer per branch per 30 minutes
-- **Session Fingerprint**: Browser fingerprint stored with visit
-- **IP Hashing**: Hashed IP for suspicious pattern detection
-- **Cooldown Enforcement**: Server-side time-window check
-- **Suspicious Logging**: Flag and log abnormal patterns
+1. **60-Minute Device Cooldown:** A customer device cannot earn more than one loyalty visit per branch within a 60-minute window.
+2. **Velocity Spike Detection:** If more than 5 visits originate from the same IP hash within 10 minutes, subsequent visits are flagged as `suspicious` and held for merchant manual review.
+3. **Dynamic QR Rolling:** Table QR codes embed signed tokens that can optionally rotate periodically, preventing guests from bookmarking QR URLs to scan remotely from home.
 
-### Reward Protection
-- **Immutable Ledger**: All reward events recorded immutably
-- **Idempotency Keys**: Prevent double-counting
-- **Server-Side Calculation**: Never trust client-reported progress
+---
 
-## Privacy & Consent
+## 4. Media Sanitization & Upload Security
 
-### Consent Architecture
-- Consent is a **first-class database entity** (not a boolean flag)
-- Separate consent for: save, social share, Live Wall, marketing
-- Consent version tracking for regulatory compliance
-- Revocation triggers immediate removal from Live Wall
+1. **Magic Bytes Verification:** Upload route checks the first 4–8 bytes of incoming binary payloads to confirm true image headers (`FF D8 FF` for JPEG, `89 50 4E 47` for PNG, `52 49 46 46` for WebP), rejecting spoofed executables or HTML polyglots.
+2. **EXIF Stripping:** All uploaded photos are processed via Sharp to strip EXIF metadata, removing GPS latitude/longitude, timestamp details, and camera serial numbers before public storage.
+3. **Signed Ephemeral URLs:** Admin downloads and high-resolution originals are accessed via short-lived signed URLs (15-minute expiry).
 
-### Data Deletion
-- Customer can request deletion of all memories
-- Soft delete → remove from Live Wall → invalidate URLs → scheduled storage cleanup
-- Audit trail maintained for compliance
+---
 
-### Data Minimization
-- No unnecessary personal data collection
-- Anonymous customers have minimal footprint
-- Hashed IPs (not raw IPs) for analytics
+## 5. Network Hardening & HTTP Security Headers
 
-## Infrastructure Security
-- Environment variables for all secrets
-- Service role key never exposed to browser
-- CSRF protection via Supabase Auth
-- Secure HTTP-only cookies for sessions
-- Content Security Policy headers
-- Rate limiting on API endpoints
+Every HTTP response from the Next.js edge gateway includes the following headers:
 
-## Audit Logging
-All sensitive actions are logged:
-- Authentication events
-- Role changes
-- Reward mutations
-- Consent changes
-- Moderation actions
-- Screen pairing/unpairing
-- Admin overrides
+```http
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none';
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+Permissions-Policy: camera=(self), microphone=(), geolocation=()
+```
