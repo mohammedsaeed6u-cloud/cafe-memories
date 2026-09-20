@@ -1,7 +1,13 @@
 'use client';
 
 import React from 'react';
-import { PhotoboothFrame, BusinessBranding, FreeGiftOffer } from '@/types/photobooth';
+import {
+  PhotoboothFrame,
+  BusinessBranding,
+  FreeGiftOffer,
+  PhotoboothCardMode,
+  PlacedSticker,
+} from '@/types/photobooth';
 import { PhotoboothStripCard } from './PhotoboothStripCard';
 import { ShareStoryWidget } from './ShareStoryWidget';
 import { Gift, Printer, Sparkles, CheckCircle, X, Camera } from 'lucide-react';
@@ -22,6 +28,8 @@ interface PrintGiftModalProps {
   onPrintStrip?: () => void;
   extraShots?: number;
   onTakeNextPhoto?: () => void;
+  cardMode?: PhotoboothCardMode;
+  stickers?: PlacedSticker[];
 }
 
 export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
@@ -35,10 +43,12 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
   giftCode,
   customerName,
   customerRoleLabel,
-  visitCount = 1,
+  visitCount,
   onPrintStrip,
   extraShots = 0,
   onTakeNextPhoto,
+  cardMode,
+  stickers,
 }) => {
   if (!isOpen) return null;
 
@@ -96,6 +106,8 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
             branding={branding}
             freeGiftOffer={freeGiftOffer}
             giftCode={giftCode}
+            cardMode={cardMode}
+            stickers={stickers}
           />
         </div>
 
@@ -108,25 +120,57 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
           />
         </div>
 
-        {/* Gift Redemption Voucher Card */}
-        <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300/80 mb-5 text-center shadow-sm">
-          <div className="flex items-center justify-center gap-2 text-amber-800 font-extrabold text-sm mb-1">
-            <Gift className="w-4 h-4 text-amber-600" />
-            <span>{freeGiftOffer.title || 'هدية فورية مجانية'}</span>
-          </div>
-          <p className="text-xs text-stone-600 mb-3">
-            {isCardComplete
-              ? 'أظهر هذا الكود للباريستا لاستلام هديتك فوراً مع شريط الصور المطبوع'
-              : freeGiftOffer.subtitle || 'تُمنح هديتك فور اكتمال خانات كارت الذكريات'}
-          </p>
+        {/* Gift Redemption Voucher Card: ONLY SHOWN WHEN CARD IS 100% COMPLETE */}
+        {isCardComplete ? (
+          <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 mb-5 text-center shadow-sm animate-in zoom-in-95">
+            <div className="flex items-center justify-center gap-2 text-amber-800 font-extrabold text-sm mb-1">
+              <Gift className="w-4 h-4 text-amber-600 animate-bounce" />
+              <span>{freeGiftOffer.title || 'مشروب مجاني أو هدية فورية'}</span>
+            </div>
+            <p className="text-xs text-stone-600 mb-3">
+              🎉 مبروك! اكتمل كارت ذكرياتك بالكامل. أظهر هذا الكود للباريستا لاستلام هديتك مع الصورة المطبوعة:
+            </p>
 
-          <div className="inline-flex items-center gap-2 bg-white px-5 py-2 rounded-xl border border-amber-300 shadow-inner">
-            <span className="text-[11px] text-stone-500 font-bold">كود كارتك:</span>
-            <span className="font-mono text-xl font-black tracking-wider text-stone-900">
-              {giftCode}
-            </span>
+            <div className="inline-flex items-center gap-2 bg-white px-5 py-2.5 rounded-xl border border-amber-300 shadow-inner">
+              <span className="text-[11px] text-stone-500 font-bold">كود كارتك:</span>
+              <span className="font-mono text-xl font-black tracking-wider text-amber-900">
+                {giftCode || 'GIFT-FREE'}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          /* Incomplete Card: Show Progress toward the Gift Milestone (NO gift code issued yet) */
+          <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 mb-5 text-center space-y-2.5">
+            <div className="flex items-center justify-center gap-2 text-stone-800 font-bold text-xs">
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>تقدم كارت الذكريات: {photos.length} من أصل {totalSlots} لقطات</span>
+            </div>
+
+            {/* Visual Step Dots */}
+            <div className="flex items-center justify-center gap-2 py-1">
+              {Array.from({ length: totalSlots }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold border transition-all ${
+                    idx < photos.length
+                      ? 'bg-amber-600 text-white border-amber-600'
+                      : idx === totalSlots - 1
+                      ? 'bg-amber-100 text-amber-800 border-amber-400 animate-pulse'
+                      : 'bg-stone-200 text-stone-500 border-stone-300'
+                  }`}
+                >
+                  {idx + 1}
+                </div>
+              ))}
+            </div>
+
+            <p className="text-xs text-stone-600 leading-relaxed">
+              تم حفظ لقطة اليوم بنجاح في كارتك!
+              <br />
+              متبقي <span className="font-bold text-amber-800">{totalSlots - photos.length} زيارات</span> لاكتمال الكارت بالكامل واستحقاق هديتك: <span className="font-bold text-stone-900">{freeGiftOffer.title}</span>.
+            </p>
+          </div>
+        )}
 
         {/* Order Shots Loop Button: If customer has remaining extra shots, let them snap next photo */}
         {extraShots > 0 && onTakeNextPhoto && (

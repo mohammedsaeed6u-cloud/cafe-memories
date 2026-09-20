@@ -214,6 +214,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   defaultShotCount: 3,
   defaultOrientation: 'vertical',
   defaultFrameShape: 'rounded',
+  defaultCardMode: 'korean_noir',
   freeGiftOffer: {
     title: 'مشروب مجاني أو هدية فورية',
     subtitle: 'أظهر هذا الشريط للباريستا لاستلام هديتك مع الصورة المطبوعة',
@@ -223,6 +224,9 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   activeColorPaletteId: 'classic-latte',
   allowCustomerColorChoice: true,
   allowedColorIds: ['classic-latte', 'noir-korean', 'warm-amber', 'ivory-cream', 'terracotta-clay'],
+  allowCustomerStickers: true,
+  allowCustomerModeChoice: true,
+  allowedModes: ['korean_noir', 'cafe_latte', 'retro_film', 'sakura_y2k', 'polaroid_classic'],
   frames: DEFAULT_PHOTOBOOTH_FRAMES,
 };
 
@@ -235,4 +239,86 @@ export const PRESET_EMOJI_PAIRS = [
   { label: 'كرز وفراشة', topRight: '🍒', bottomLeft: '🦋' },
   { label: 'دبدوب وعسل', topRight: '🧸', bottomLeft: '🍯' },
   { label: 'كأس وتاج', topRight: '👑', bottomLeft: '🥂' },
+];
+
+export interface PhotoboothModeInfo {
+  id: 'korean_noir' | 'cafe_latte' | 'retro_film' | 'sakura_y2k' | 'polaroid_classic';
+  nameAr: string;
+  nameEn: string;
+  icon: string;
+  description: string;
+  defaultBg: string;
+  defaultBorder: string;
+  defaultText: string;
+  defaultAccent: string;
+  filmBadge: string;
+}
+
+export const PHOTOBOOTH_CARD_MODES: PhotoboothModeInfo[] = [
+  {
+    id: 'korean_noir',
+    nameAr: '🖤 كوريان 4-كتس (Seoul Studio)',
+    nameEn: 'Korean 4-Cuts',
+    icon: '⚡',
+    description: 'أسود نوار فخم، خطوط استوديو سيول المودرن مع باركود وأرقام كلاسيكية',
+    defaultBg: '#18181B',
+    defaultBorder: '#27272A',
+    defaultText: '#FAFAFA',
+    defaultAccent: '#A1A1AA',
+    filmBadge: 'SEOUL 4-CUTS • PHOTO STUDIO',
+  },
+  {
+    id: 'cafe_latte',
+    nameAr: '☕ كافيه لاتيه سبيشالتي',
+    nameEn: 'Cafe Specialty',
+    icon: '☕',
+    description: 'ورق كريمي دافئ ملمسي، ترويسة روستري الحرفية، ونصوص اسبريسو',
+    defaultBg: '#F5F0EB',
+    defaultBorder: '#E6DCCF',
+    defaultText: '#2A1810',
+    defaultAccent: '#C67D34',
+    filmBadge: 'SPECIALTY ROASTERS • MEMORIES',
+  },
+  {
+    id: 'retro_film',
+    nameAr: '🎞️ فيلم 35mm ريترو سينمائي',
+    nameEn: 'Retro 35mm Film',
+    icon: '🎞️',
+    description: 'طابع شرائط الأفلام التناظرية مع ثقوب وعلامات الكوداك والـ 35 مم',
+    defaultBg: '#231F20',
+    defaultBorder: '#3F3B3C',
+    defaultText: '#F7F4EB',
+    defaultAccent: '#EA580C',
+    filmBadge: 'SAFETY FILM • 35MM ISO 400',
+  },
+  {
+    id: 'sakura_y2k',
+    nameAr: '🌸 ساكورا بوب وكيوت',
+    nameEn: 'Sakura & Y2K Pop',
+    icon: '🎀',
+    description: 'درجات الوردي الباستيل والقلوب والفيونكات وطابع طوكيو ستيكرز',
+    defaultBg: '#FFF0F3',
+    defaultBorder: '#FFCCD5',
+    defaultText: '#591C2B',
+    defaultAccent: '#E11D48',
+    filmBadge: 'TOKYO PHOTOBOOTH • KAWAII',
+  },
+  {
+    id: 'polaroid_classic',
+    nameAr: '📸 بولارويد كلاسيك فوري',
+    nameEn: 'Minimal Polaroid',
+    icon: '📸',
+    description: 'إطار الكاميرا الفورية الأبيض النقي مع حافة سفلية عريضة للملاحظات',
+    defaultBg: '#FFFFFF',
+    defaultBorder: '#E2DDD5',
+    defaultText: '#1C1917',
+    defaultAccent: '#0284C7',
+    filmBadge: 'INSTANT FILM • MEMORIES',
+  },
+];
+
+export const CURATED_STICKER_SET = [
+  '✨', '💖', '☕', '🌸', '📸', '🎀', '⚡', '🖤',
+  '🥐', '🍒', '🧸', '👑', '🥂', '🍵', '🌿', '💫',
+  '💌', '🐾', '🎞️', '🌻', '🍓', '🫧', '🌙', '🪐',
 ];

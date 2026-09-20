@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BusinessSettings, PhotoboothFrame, CardColorPalette } from '@/types/photobooth';
+import { BusinessSettings, PhotoboothFrame, CardColorPalette, PhotoboothCardMode, PlacedSticker } from '@/types/photobooth';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { CooldownService } from '@/lib/services/cooldown.service';
 import { PrintService } from '@/lib/services/print.service';
@@ -11,7 +11,8 @@ import { CardColorPicker } from '@/components/photobooth/CardColorPicker';
 import { PrintGiftModal } from '@/components/photobooth/PrintGiftModal';
 import { StripComposerService } from '@/lib/services/strip-composer.service';
 import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
-import { PRESET_COLOR_PALETTES } from '@/lib/constants/photobooth-presets';
+import { PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
+import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
 import {
   Sparkles,
   Gift,
@@ -39,6 +40,25 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [selectedPaletteId, setSelectedPaletteId] = useState<string>(() => {
     return settings.activeColorPaletteId || 'classic-latte';
   });
+
+  const [stickers, setStickers] = useState<PlacedSticker[]>([]);
+  const [cardMode, setCardMode] = useState<PhotoboothCardMode>(
+    settings.defaultCardMode || 'korean_noir'
+  );
+
+  const handleAddSticker = (emoji: string) => {
+    if (!emoji.trim()) return;
+    const randomOffset = (Math.random() - 0.5) * 20;
+    const newSticker: PlacedSticker = {
+      id: `stk_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      emoji: emoji.trim(),
+      x: Math.max(15, Math.min(85, 50 + randomOffset)),
+      y: Math.max(15, Math.min(85, 40 + randomOffset)),
+      rotation: Math.round((Math.random() - 0.5) * 30),
+      scale: 1,
+    };
+    setStickers((prev) => [...prev, newSticker]);
+  };
 
   const [selectedFrame, setSelectedFrame] = useState<PhotoboothFrame>(() => {
     const base =
@@ -357,7 +377,9 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         frame: selectedFrame,
         branding: settings.branding,
         freeGiftOffer: settings.freeGiftOffer,
-        giftCode: 'GIFT-MEMO',
+        giftCode: '',
+        cardMode: cardMode,
+        stickers: stickers,
       });
       setComposedStripUrl(stripUrl);
     } catch (err) {
@@ -376,12 +398,12 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     if (!customerName || !customerPhone || !todayPhoto) return;
 
     setIsSubmitting(true);
-    const code = `GIFT-${Math.floor(1000 + Math.random() * 9000)}`;
-    setGiftCode(code);
-
     const updatedCardPhotos = [...accumulatedPhotos, todayPhoto];
     setAccumulatedPhotos(updatedCardPhotos);
     const slots = Math.max(selectedFrame.shotCount || 3, 1);
+    const isCompleted = updatedCardPhotos.length >= slots;
+    const code = isCompleted ? `GIFT-${Math.floor(1000 + Math.random() * 9000)}` : '';
+    setGiftCode(code);
 
     const cleanPhone = customerPhone.trim().replace(/[^0-9]/g, '');
     const phoneKey = `memories_card_photos_${cafeSlug}_${cleanPhone}`;
@@ -421,6 +443,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         branding: settings.branding,
         freeGiftOffer: settings.freeGiftOffer,
         giftCode: code,
+        cardMode: cardMode,
+        stickers: stickers,
       });
       setComposedStripUrl(finalStrip);
     } catch {
@@ -827,15 +851,73 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   </button>
                 </div>
 
-                {/* Aesthetic Card Strip */}
+                {/* Photobooth Mode Selector (5 Authentic Open-Source Modes) */}
+                {settings.allowCustomerModeChoice !== false && (
+                  <div className="bg-white/90 backdrop-blur-md rounded-2xl p-3 border border-stone-200/90 shadow-2xs">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black text-stone-800 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                        <span>ستايل شريط الصور (Photobooth Style):</span>
+                      </span>
+                      <span className="text-[10px] text-stone-400 font-mono">
+                        {PHOTOBOOTH_CARD_MODES.find((m) => m.id === cardMode)?.nameEn}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {PHOTOBOOTH_CARD_MODES.map((mode) => (
+                        <button
+                          key={mode.id}
+                          type="button"
+                          onClick={() => {
+                            setCardMode(mode.id);
+                            setSelectedFrame((prev) => ({
+                              ...prev,
+                              cardMode: mode.id,
+                              bgColor: mode.defaultBg,
+                              borderColor: mode.defaultBorder,
+                              textColor: mode.defaultText,
+                              accentColor: mode.defaultAccent,
+                              badgeText: mode.filmBadge,
+                            }));
+                          }}
+                          className={`px-2.5 py-2 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition ${
+                            cardMode === mode.id
+                              ? 'bg-amber-500/10 border-amber-500 text-amber-900 shadow-2xs scale-[1.02]'
+                              : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
+                          }`}
+                        >
+                          <span className="text-base">{mode.icon}</span>
+                          <span className="text-[11px] truncate w-full text-center leading-tight">
+                            {mode.nameEn}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Aesthetic Card Strip with Interactive Draggable Stickers */}
                 <div className="flex justify-center py-2">
                   <PhotoboothStripCard
                     photos={currentDisplayPhotos}
                     frame={selectedFrame}
                     branding={settings.branding}
                     freeGiftOffer={settings.freeGiftOffer}
+                    cardMode={cardMode}
+                    stickers={stickers}
+                    onUpdateStickers={setStickers}
+                    isStickersInteractive={true}
                   />
                 </div>
+
+                {/* Draggable Sticker & Emoji Control Tray */}
+                {settings.allowCustomerStickers !== false && (
+                  <StickerControlTray
+                    onAddSticker={handleAddSticker}
+                    stickersCount={stickers.length}
+                    onClearAll={() => setStickers([])}
+                  />
+                )}
 
                 {/* Customer Allowed Color Picker (Strictly Controlled by Business Owner) */}
                 {settings.allowCustomerColorChoice && (
@@ -1099,6 +1181,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         }}
         extraShots={extraShots}
         onTakeNextPhoto={handleTakeNextOrderPhoto}
+        cardMode={cardMode}
+        stickers={stickers}
       />
     </div>
   );

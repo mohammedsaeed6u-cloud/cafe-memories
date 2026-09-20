@@ -21,6 +21,22 @@ export interface FreeGiftOffer {
 
 export type FrameShapeStyle = 'rounded' | 'sharp' | 'polaroid';
 
+export type PhotoboothCardMode =
+  | 'korean_noir'
+  | 'cafe_latte'
+  | 'retro_film'
+  | 'sakura_y2k'
+  | 'polaroid_classic';
+
+export interface PlacedSticker {
+  id: string;
+  emoji: string;
+  x: number; // percentage 0 - 100
+  y: number; // percentage 0 - 100
+  rotation?: number; // rotation in degrees
+  scale?: number;
+}
+
 export interface CardColorPalette {
   id: string;
   nameAr: string;
@@ -42,6 +58,8 @@ export interface PhotoboothFrame {
   orientation: StripOrientation;
   shotCount: number; // Configurable freely by merchant (e.g. 2, 3, 4, 5...)
   frameShape?: FrameShapeStyle;
+  cardMode?: PhotoboothCardMode;
+  stickers?: PlacedSticker[];
   badgeText?: string;
   isCustom?: boolean;
 }
@@ -61,15 +79,19 @@ export interface BusinessSettings {
   defaultShotCount: number; // Strictly determined by merchant
   defaultOrientation: StripOrientation; // Strictly determined by merchant
   defaultFrameShape?: FrameShapeStyle; // Rounded, sharp, or polaroid
+  defaultCardMode?: PhotoboothCardMode; // Korean, Latte, Film, Sakura, Polaroid
   freeGiftOffer: FreeGiftOffer;
   activeFrameId: string;
   frames: PhotoboothFrame[];
   wallSettings?: WallDisplaySettings;
-  // Color controls:
+  // Color & Mode controls:
   activeColorPaletteId?: string;
   allowCustomerColorChoice?: boolean;
   allowedColorIds?: string[];
   customPalette?: CardColorPalette;
+  allowCustomerStickers?: boolean;
+  allowCustomerModeChoice?: boolean;
+  allowedModes?: PhotoboothCardMode[];
 }
 
 export type CustomerPersonaKey = string;

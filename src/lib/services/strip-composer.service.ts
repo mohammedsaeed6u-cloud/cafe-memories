@@ -1,4 +1,11 @@
-import { PhotoboothFrame, BusinessBranding, FreeGiftOffer } from '@/types/photobooth';
+import {
+  PhotoboothFrame,
+  BusinessBranding,
+  FreeGiftOffer,
+  PhotoboothCardMode,
+  PlacedSticker,
+} from '@/types/photobooth';
+import { PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
 
 export interface ComposeStripOptions {
   photos: string[]; // Base64 data URLs
@@ -8,6 +15,8 @@ export interface ComposeStripOptions {
   freeGiftOffer?: FreeGiftOffer;
   giftCode?: string;
   timestamp?: string;
+  cardMode?: PhotoboothCardMode;
+  stickers?: PlacedSticker[];
 }
 
 export class StripComposerService {
@@ -24,9 +33,15 @@ export class StripComposerService {
         subtitle: 'هدية فورية عند اكتمال كارت ذكرياتك',
         icon: '🎁',
       },
-      giftCode = 'MEMO-FREE',
+      giftCode = '',
       timestamp = new Date().toISOString(),
+      cardMode = frame.cardMode || 'korean_noir',
+      stickers = frame.stickers || [],
     } = options;
+
+    const modeInfo =
+      PHOTOBOOTH_CARD_MODES.find((m) => m.id === cardMode) ||
+      PHOTOBOOTH_CARD_MODES[0];
 
     const isHorizontal = frame.orientation === 'horizontal';
     const totalSlots = Math.max(options.totalSlots || frame.shotCount || 3, 1);
@@ -42,15 +57,40 @@ export class StripComposerService {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get 2d context for canvas');
 
+    const effectiveBg = frame.bgColor || modeInfo.defaultBg;
+    const effectiveBorder = frame.borderColor || modeInfo.defaultBorder;
+    const effectiveText = frame.textColor || modeInfo.defaultText;
+    const effectiveAccent = frame.accentColor || modeInfo.defaultAccent;
+
+    const isKorean = cardMode === 'korean_noir';
+    const isRetro = cardMode === 'retro_film';
+    const isPolaroid = cardMode === 'polaroid_classic';
+
     // 1. Draw frame background
-    ctx.fillStyle = frame.bgColor || '#FAF8F5';
+    ctx.fillStyle = effectiveBg;
     ctx.fillRect(0, 0, width, height);
 
     // Outer subtle border
-    ctx.strokeStyle = frame.borderColor || '#E7E2D9';
+    ctx.strokeStyle = effectiveBorder;
     ctx.lineWidth = 6;
-    this.roundRect(ctx, 16, 16, width - 32, height - 32, 28);
+    this.roundRect(ctx, 16, 16, width - 32, height - 32, isPolaroid ? 16 : 28);
     ctx.stroke();
+
+    // Retro 35mm Sprocket Holes on side margins
+    if (isRetro) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      const sprocketH = 26;
+      const sprocketW = 16;
+      const count = 18;
+      const step = (height - 80) / count;
+      for (let i = 0; i < count; i++) {
+        const sy = 40 + i * step;
+        this.roundRect(ctx, 24, sy, sprocketW, sprocketH, 4);
+        ctx.fill();
+        this.roundRect(ctx, width - 24 - sprocketW, sy, sprocketW, sprocketH, 4);
+        ctx.fill();
+      }
+    }
 
     // 2. Load all captured photos
     const loadedImages = await Promise.all(
@@ -94,23 +134,24 @@ export class StripComposerService {
       const lh = logoImg.height * scale;
       ctx.drawImage(logoImg, width / 2 - lw / 2, headerY - 20, lw, lh);
     } else {
-      ctx.fillStyle = frame.textColor || '#1C1917';
+      ctx.fillStyle = effectiveText;
       ctx.font = 'bold 30px sans-serif';
       ctx.fillText(branding.name || 'Memories Studio', width / 2, headerY);
-      ctx.fillStyle = frame.accentColor || '#D97706';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillText((branding.name ? `${branding.name} • MEMORIES` : 'MEMORIES STUDIO').toUpperCase(), width / 2, headerY + 26);
     }
 
-    // 5. Draw Corner Emojis/Stickers
+    // Header Mode Film Badge
+    ctx.fillStyle = effectiveAccent;
+    ctx.font = 'bold 12px monospace';
+    const badgeText = frame.badgeText || modeInfo.filmBadge;
+    ctx.fillText(badgeText.toUpperCase(), width / 2, headerY + 26);
+
+    // 5. Draw Corner Emojis/Stickers (from frame config)
     if (frame.cornerEmojis && frame.cornerEmojis.enabled) {
       ctx.font = '40px sans-serif';
-      // Top-Right emoji
       if (frame.cornerEmojis.topRight) {
         ctx.textAlign = 'right';
         ctx.fillText(frame.cornerEmojis.topRight, width - 40, 75);
       }
-      // Bottom-Left emoji
       if (frame.cornerEmojis.bottomLeft) {
         ctx.textAlign = 'left';
         ctx.fillText(frame.cornerEmojis.bottomLeft, 40, height - 55);
@@ -119,22 +160,23 @@ export class StripComposerService {
 
     // 6. Draw Slots (Multi-visit photos + Last slot reward milestone)
     const photoAreaTop = 130;
-    const photoAreaBottom = height - 90;
+    const photoAreaBottom = isPolaroid ? height - 140 : height - 90;
     const photoAreaHeight = photoAreaBottom - photoAreaTop;
 
     let slotW: number;
     let slotH: number;
     const gapX = 20;
     const gapY = 18;
+    const marginSide = isRetro ? 52 : 36;
 
     if (isHorizontal) {
       const cols = 2;
       const rows = Math.ceil(totalSlots / cols);
-      slotW = (width - 72 - (cols - 1) * gapX) / cols;
+      slotW = (width - marginSide * 2 - (cols - 1) * gapX) / cols;
       slotH = (photoAreaHeight - (rows - 1) * gapY) / rows;
     } else {
       const totalGap = gapY * (totalSlots - 1);
-      slotW = width - 72;
+      slotW = width - marginSide * 2;
       slotH = (photoAreaHeight - totalGap) / totalSlots;
     }
 
@@ -145,10 +187,10 @@ export class StripComposerService {
       if (isHorizontal) {
         const col = slotIdx % 2;
         const row = Math.floor(slotIdx / 2);
-        slotX = 36 + col * (slotW + gapX);
+        slotX = marginSide + col * (slotW + gapX);
         slotY = photoAreaTop + row * (slotH + gapY);
       } else {
-        slotX = 36;
+        slotX = marginSide;
         slotY = photoAreaTop + slotIdx * (slotH + gapY);
       }
 
@@ -158,6 +200,7 @@ export class StripComposerService {
       const photo = loadedImages[slotIdx];
       const isLastSlot = slotIdx === totalSlots - 1;
       const visitNumber = slotIdx + 1;
+      const slotNumStr = String(visitNumber).padStart(2, '0');
 
       if (photo && photo.width) {
         // Filled Photo Slot
@@ -168,12 +211,22 @@ export class StripComposerService {
         ctx.restore();
 
         // Photo border
-        ctx.strokeStyle = frame.borderColor || '#E7E2D9';
+        ctx.strokeStyle = effectiveBorder;
         ctx.lineWidth = 3;
         this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
         ctx.stroke();
 
-        // Badge: الزيارة #N
+        // Film Frame Number (#01, #02...)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+        this.roundRect(ctx, slotX + 10, slotY + 10, 52, 24, 6);
+        ctx.fill();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('#' + slotNumStr, slotX + 36, slotY + 26);
+
+        // Visit Badge: الزيارة #N
         ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
         this.roundRect(ctx, slotX + slotW - 120, slotY + slotH - 36, 110, 26, 8);
         ctx.fill();
@@ -181,19 +234,25 @@ export class StripComposerService {
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 14px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`الزيارة #${visitNumber}`, slotX + slotW - 65, slotY + slotH - 18);
+        ctx.fillText('الزيارة #' + visitNumber, slotX + slotW - 65, slotY + slotH - 18);
       } else if (isLastSlot) {
         // The LAST Slot: Grand Gift / Reward Milestone!
         ctx.fillStyle = '#FFFDF7';
         this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
         ctx.fill();
 
-        ctx.strokeStyle = frame.accentColor || '#D97706';
+        ctx.strokeStyle = effectiveAccent;
         ctx.lineWidth = 3;
         ctx.setLineDash([8, 6]);
         this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
         ctx.stroke();
         ctx.setLineDash([]);
+
+        // Slot number on milestone
+        ctx.fillStyle = effectiveAccent;
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('#' + slotNumStr, slotX + 14, slotY + 24);
 
         // Gift Icon
         ctx.font = isHorizontal ? '32px sans-serif' : '42px sans-serif';
@@ -201,9 +260,9 @@ export class StripComposerService {
         ctx.fillText('🎁', slotCenterX, slotCenterY - (isHorizontal ? 18 : 25));
 
         // Milestone Label
-        ctx.fillStyle = frame.accentColor || '#D97706';
+        ctx.fillStyle = effectiveAccent;
         ctx.font = 'bold 14px sans-serif';
-        ctx.fillText(`الخانة الأخيرة • الزيارة #${visitNumber}`, slotCenterX, slotCenterY + (isHorizontal ? 6 : 10));
+        ctx.fillText('الخانة الأخيرة • الزيارة #' + visitNumber, slotCenterX, slotCenterY + (isHorizontal ? 6 : 10));
 
         // Gift Title
         ctx.fillStyle = '#1C1917';
@@ -216,11 +275,11 @@ export class StripComposerService {
         ctx.fillText('اكتمال الكارت والطباعة', slotCenterX, slotCenterY + (isHorizontal ? 44 : 58));
       } else {
         // Upcoming middle slot placeholder
-        ctx.fillStyle = '#FAF8F5';
+        ctx.fillStyle = effectiveBg;
         this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
         ctx.fill();
 
-        ctx.strokeStyle = frame.borderColor || '#E7E2D9';
+        ctx.strokeStyle = effectiveBorder;
         ctx.lineWidth = 2;
         ctx.setLineDash([6, 6]);
         this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
@@ -230,23 +289,64 @@ export class StripComposerService {
         ctx.fillStyle = '#A8A29E';
         ctx.font = 'bold 18px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`الزيارة القادمة #${visitNumber}`, slotCenterX, slotCenterY + 6);
+        ctx.fillText('الزيارة القادمة #' + visitNumber, slotCenterX, slotCenterY + 6);
       }
     }
 
-    // 7. Draw Clean Minimal Footer (Date & Brand Name - NO BARCODE!)
-    const footerY = height - 42;
-    ctx.textAlign = 'center';
+    // 7. Draw Draggable Stickers/Emojis at Exact Coordinates
+    if (stickers && stickers.length > 0) {
+      for (const sticker of stickers) {
+        const posX = (sticker.x / 100) * width;
+        const posY = (sticker.y / 100) * height;
 
+        ctx.save();
+        ctx.translate(posX, posY);
+        if (sticker.rotation) {
+          ctx.rotate((sticker.rotation * Math.PI) / 180);
+        }
+        const stickerFontSize = Math.round(50 * (sticker.scale || 1));
+        ctx.font = stickerFontSize + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(sticker.emoji, 0, 0);
+        ctx.restore();
+      }
+    }
+
+    // 8. Draw Clean Minimal Footer (Date & Brand Name & Barcode)
+    const footerY = height - 42;
     const dateStr = new Date(timestamp).toLocaleDateString('ar-EG', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
 
-    ctx.fillStyle = '#78716C';
-    ctx.font = '14px sans-serif';
-    ctx.fillText(`${dateStr} • ${branding.name ? `${branding.name} • Memories` : 'Memories'}`, width / 2, footerY);
+    // Barcode on footer for Korean / Retro modes
+    if (isKorean || isRetro) {
+      ctx.fillStyle = effectiveText;
+      const barX = marginSide;
+      const barY = footerY - 14;
+      const bars = [3, 1, 4, 1, 2, 4, 1, 3, 2, 1];
+      let curX = barX;
+      for (const b of bars) {
+        ctx.fillRect(curX, barY, b, 16);
+        curX += b + 2;
+      }
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('4-CUT', curX + 4, barY + 12);
+    }
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = effectiveText;
+    ctx.font = '13px sans-serif';
+    ctx.fillText(dateStr + ' • ' + (branding.name ? branding.name + ' • Memories' : 'Memories'), width / 2, footerY);
+
+    if (isPolaroid) {
+      ctx.font = 'italic 13px serif';
+      ctx.fillStyle = effectiveText;
+      ctx.fillText('memories together ♡', width / 2, footerY + 22);
+    }
 
     return canvas.toDataURL('image/png', 0.95);
   }

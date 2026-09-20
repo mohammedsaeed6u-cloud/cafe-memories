@@ -8,7 +8,9 @@ import {
   FrameShapeStyle,
   CardColorPalette,
 } from '@/types/photobooth';
-import { PRESET_EMOJI_PAIRS, PRESET_COLOR_PALETTES } from '@/lib/constants/photobooth-presets';
+import { PRESET_EMOJI_PAIRS, PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
+import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
+import { PhotoboothCardMode, PlacedSticker } from '@/types/photobooth';
 import { PhotoboothStripCard } from '@/components/photobooth/PhotoboothStripCard';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import {
@@ -67,6 +69,31 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
       'terracotta-clay',
     ]
   );
+  const [cardMode, setCardMode] = useState<PhotoboothCardMode>(
+    activeFrame.cardMode || settings.defaultCardMode || 'korean_noir'
+  );
+  const [allowCustomerModes, setAllowCustomerModes] = useState<boolean>(
+    settings.allowCustomerModeChoice ?? true
+  );
+  const [allowCustomerStickers, setAllowCustomerStickers] = useState<boolean>(
+    settings.allowCustomerStickers ?? true
+  );
+  const [previewStickers, setPreviewStickers] = useState<PlacedSticker[]>([]);
+
+  const handlePreviewAddSticker = (emoji: string) => {
+    if (!emoji.trim()) return;
+    const randomOffset = (Math.random() - 0.5) * 20;
+    const newSticker: PlacedSticker = {
+      id: `stk_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      emoji: emoji.trim(),
+      x: Math.max(15, Math.min(85, 50 + randomOffset)),
+      y: Math.max(15, Math.min(85, 40 + randomOffset)),
+      rotation: Math.round((Math.random() - 0.5) * 30),
+      scale: 1,
+    };
+    setPreviewStickers((prev) => [...prev, newSticker]);
+  };
+
   const [frameShape, setFrameShape] = useState<FrameShapeStyle>(
     settings.defaultFrameShape || 'rounded'
   );
@@ -340,7 +367,76 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 </div>
               </div>
 
-              {/* Shape Style */}
+              {/* Section 2.5: Photobooth Modes */}
+            <div className="pt-3 border-t border-stone-100">
+              <label className="block text-xs font-bold text-stone-700 mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>مود وستايل الكارت الأساسي (Photobooth Mode):</span>
+                </span>
+                <span className="text-[10px] text-amber-700 font-mono font-bold">5 أنماط احترافية</span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {PHOTOBOOTH_CARD_MODES.map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => {
+                      setCardMode(mode.id);
+                      setActiveFrame((prev) => ({
+                        ...prev,
+                        cardMode: mode.id,
+                        bgColor: mode.defaultBg,
+                        borderColor: mode.defaultBorder,
+                        textColor: mode.defaultText,
+                        accentColor: mode.defaultAccent,
+                        badgeText: mode.filmBadge,
+                      }));
+                    }}
+                    className={`p-3 rounded-2xl border text-right transition flex items-start gap-2.5 ${
+                      cardMode === mode.id
+                        ? 'border-amber-500 bg-amber-50/80 shadow-xs'
+                        : 'border-stone-200 hover:bg-stone-50'
+                    }`}
+                  >
+                    <span className="text-xl p-2 bg-white rounded-xl shadow-2xs shrink-0">{mode.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-stone-900">{mode.nameAr}</span>
+                        {cardMode === mode.id && <Check className="w-4 h-4 text-amber-600 shrink-0" />}
+                      </div>
+                      <p className="text-[10px] text-stone-500 mt-0.5 line-clamp-1">{mode.description}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Permissions checkboxes */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 mt-3 border-t border-stone-100 text-xs">
+                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-stone-200 bg-stone-50/60 cursor-pointer hover:bg-amber-50/40 transition">
+                  <input
+                    type="checkbox"
+                    checked={allowCustomerModes}
+                    onChange={(e) => setAllowCustomerModes(e.target.checked)}
+                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+                  />
+                  <span className="font-bold text-stone-700">السماح للعميل بتغيير المود بحرية</span>
+                </label>
+
+                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-stone-200 bg-stone-50/60 cursor-pointer hover:bg-amber-50/40 transition">
+                  <input
+                    type="checkbox"
+                    checked={allowCustomerStickers}
+                    onChange={(e) => setAllowCustomerStickers(e.target.checked)}
+                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+                  />
+                  <span className="font-bold text-stone-700">السماح بإضافة وتحريك ستيكرز وإيموجيز</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Shape Style */}
               <div>
                 <label className="block text-xs font-bold text-stone-700 mb-1.5 flex items-center gap-1.5">
                   <Sliders className="w-3.5 h-3.5 text-amber-600" />
@@ -796,8 +892,21 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             frame={activeFrame}
             branding={branding}
             freeGiftOffer={freeGift}
+            cardMode={cardMode}
+            stickers={previewStickers}
+            onUpdateStickers={setPreviewStickers}
+            isStickersInteractive={true}
             onPrint={() => PrintService.printElement('printable-strip')}
           />
+
+          {/* Sticker Test Tray in Studio Preview */}
+          <div className="w-full mt-4">
+            <StickerControlTray
+              onAddSticker={handlePreviewAddSticker}
+              stickersCount={previewStickers.length}
+              onClearAll={() => setPreviewStickers([])}
+            />
+          </div>
 
           <p className="text-[11px] text-stone-500 mt-4 text-center font-medium leading-relaxed">
             يملأ العميل صورة في كل زيارة، وتظهر هديته المحددة في الخانة الأخيرة لتحفيزه على إكمال الكارت.

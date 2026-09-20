@@ -1,9 +1,17 @@
 'use client';
 
-import React from 'react';
-import { PhotoboothFrame, BusinessBranding, FreeGiftOffer } from '@/types/photobooth';
+import React, { useRef } from 'react';
+import {
+  PhotoboothFrame,
+  BusinessBranding,
+  FreeGiftOffer,
+  PhotoboothCardMode,
+  PlacedSticker,
+} from '@/types/photobooth';
 import { Gift, Printer, Check } from 'lucide-react';
 import { PrintService } from '@/lib/services/print.service';
+import { DraggableStickerLayer } from './DraggableStickerLayer';
+import { PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
 
 interface PhotoboothStripCardProps {
   photos: string[]; // Photos taken so far
@@ -15,6 +23,10 @@ interface PhotoboothStripCardProps {
   onPrint?: () => void;
   className?: string;
   isCompleted?: boolean;
+  cardMode?: PhotoboothCardMode;
+  stickers?: PlacedSticker[];
+  onUpdateStickers?: (stickers: PlacedSticker[]) => void;
+  isStickersInteractive?: boolean;
 }
 
 export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
@@ -29,10 +41,14 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   timestamp = new Date().toISOString(),
   onPrint,
   className = '',
+  cardMode = frame.cardMode || 'korean_noir',
+  stickers = [],
+  onUpdateStickers,
+  isStickersInteractive = false,
 }) => {
+  const cardContainerRef = useRef<HTMLDivElement>(null);
   const isHorizontal = frame.orientation === 'horizontal';
   const totalSlots = Math.max(frame.shotCount || 3, 1);
-  const isCardComplete = photos.length >= totalSlots;
 
   const dateFormatted = new Date(timestamp).toLocaleDateString('ar-EG', {
     year: 'numeric',
@@ -40,35 +56,74 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     day: 'numeric',
   });
 
-  const shape = frame.frameShape || 'rounded';
+  const modeInfo =
+    PHOTOBOOTH_CARD_MODES.find((m) => m.id === cardMode) ||
+    PHOTOBOOTH_CARD_MODES[0];
+
+  // Derive mode-specific styles
+  const isKorean = cardMode === 'korean_noir';
+  const isRetro = cardMode === 'retro_film';
+  const isSakura = cardMode === 'sakura_y2k';
+  const isPolaroid = cardMode === 'polaroid_classic';
+
+  const shape = frame.frameShape || (isPolaroid ? 'polaroid' : 'rounded');
   const outerRadiusClass =
     shape === 'sharp'
-      ? 'rounded-lg'
-      : shape === 'polaroid'
+      ? 'rounded-md'
+      : shape === 'polaroid' || isPolaroid
       ? 'rounded-2xl pb-10'
       : 'rounded-3xl';
+
   const slotRadiusClass =
     shape === 'sharp'
-      ? 'rounded-sm'
-      : shape === 'polaroid'
+      ? 'rounded-xs'
+      : shape === 'polaroid' || isPolaroid
       ? 'rounded-md'
       : 'rounded-2xl';
+
+  // Card background & text colors based on frame/mode
+  const effectiveBg = frame.bgColor || modeInfo.defaultBg;
+  const effectiveBorder = frame.borderColor || modeInfo.defaultBorder;
+  const effectiveText = frame.textColor || modeInfo.defaultText;
+  const effectiveAccent = frame.accentColor || modeInfo.defaultAccent;
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
       {/* Printable 2x6 Physical Photobooth Card */}
       <div
         id="printable-strip"
+        ref={cardContainerRef}
         style={{
-          backgroundColor: frame.bgColor || '#FAF8F5',
-          borderColor: frame.borderColor || '#E7E2D9',
-          color: frame.textColor || '#1C1917',
+          backgroundColor: effectiveBg,
+          borderColor: effectiveBorder,
+          color: effectiveText,
         }}
-        className={`relative transition-all duration-300 select-none shadow-[0_16px_48px_rgba(0,0,0,0.08)] border-[3px] ${outerRadiusClass} overflow-hidden print:shadow-none print:border-none ${
+        className={`relative transition-all duration-300 select-none shadow-[0_20px_50px_rgba(0,0,0,0.12)] border-[3px] ${outerRadiusClass} overflow-hidden print:shadow-none print:border-none ${
           isHorizontal ? 'w-full max-w-[480px] p-5' : 'w-[280px] sm:w-[310px] p-4 py-6'
         }`}
       >
-        {/* Subtle Corner Stickers/Emojis (Minimal, Aesthetic Photobooth) */}
+        {/* Retro Film Sprocket Holes Edge (Analog 35mm styling) */}
+        {isRetro && (
+          <>
+            <div className="absolute top-0 bottom-0 left-1.5 flex flex-col justify-around py-4 pointer-events-none z-10 opacity-30">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="w-2 h-3.5 rounded-xs bg-white/40 mb-1" />
+              ))}
+            </div>
+            <div className="absolute top-0 bottom-0 right-1.5 flex flex-col justify-around py-4 pointer-events-none z-10 opacity-30">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="w-2 h-3.5 rounded-xs bg-white/40 mb-1" />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Sakura Y2K Sparkle Glow Accents */}
+        {isSakura && (
+          <div className="absolute inset-0 bg-gradient-to-b from-pink-100/30 via-transparent to-rose-100/30 pointer-events-none z-0" />
+        )}
+
+        {/* Subtle Corner Stickers/Emojis (from frame preset) */}
         {frame.cornerEmojis && frame.cornerEmojis.enabled && (
           <>
             {frame.cornerEmojis.topRight && (
@@ -90,34 +145,38 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           </>
         )}
 
-        {/* Top Header: Clean Minimal Branding */}
-        <div className="flex flex-col items-center justify-center mb-4 text-center">
+        {/* Top Header: Authentic Minimal Photobooth Branding */}
+        <div className="relative z-10 flex flex-col items-center justify-center mb-3 text-center">
           {branding.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={branding.logoUrl}
               alt={branding.name}
-              className="h-10 object-contain mb-1 max-w-[130px]"
+              className="h-9 object-contain mb-1 max-w-[130px]"
             />
           ) : (
-            <h3 className="font-extrabold text-sm sm:text-base tracking-wide text-stone-900">
+            <h3
+              style={{ color: effectiveText }}
+              className="font-black text-sm sm:text-base tracking-wide"
+            >
               {branding.name || 'Memories • موميريز'}
             </h3>
           )}
 
-          {frame.badgeText && (
+          {/* Mode-specific Badge */}
+          <div className="flex items-center gap-1.5 mt-0.5">
             <span
-              style={{ color: frame.accentColor || '#D97706' }}
-              className="text-[9px] font-black uppercase tracking-widest mt-0.5"
+              style={{ color: effectiveAccent }}
+              className="text-[9px] font-black uppercase tracking-widest font-mono"
             >
-              {frame.badgeText}
+              {frame.badgeText || modeInfo.filmBadge}
             </span>
-          )}
+          </div>
         </div>
 
         {/* Multi-Visit Slots Grid or Vertical Strip */}
         <div
-          className={`w-full ${
+          className={`relative z-10 w-full ${
             isHorizontal
               ? 'grid grid-cols-2 gap-3 my-2'
               : 'flex flex-col gap-3 my-1'
@@ -125,17 +184,17 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         >
           {Array.from({ length: totalSlots }).map((_, slotIdx) => {
             const photo = photos[slotIdx];
-            const isCurrentSlot = slotIdx === photos.length - 1 && photo;
             const isLastSlot = slotIdx === totalSlots - 1;
             const visitNumber = slotIdx + 1;
+            const slotNumberFormatted = String(visitNumber).padStart(2, '0');
 
             // 1. Slot is already filled with a photo
             if (photo) {
               return (
                 <div
                   key={slotIdx}
-                  style={{ borderColor: frame.borderColor || '#E7E2D9' }}
-                  className={`relative overflow-hidden ${slotRadiusClass} border bg-stone-100 shadow-inner ${
+                  style={{ borderColor: effectiveBorder }}
+                  className={`relative overflow-hidden ${slotRadiusClass} border bg-stone-100 shadow-inner group ${
                     isHorizontal ? 'aspect-[4/3]' : 'aspect-square'
                   }`}
                 >
@@ -145,7 +204,15 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
                     alt={`Visit ${visitNumber}`}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/50 text-white text-[10px] font-bold rounded-md backdrop-blur-xs flex items-center gap-1">
+
+                  {/* Authentic Film Slot Number (01, 02, 03...) */}
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-mono font-black rounded-sm flex items-center gap-1 shadow-xs select-none">
+                    <span className="text-amber-400">#</span>
+                    <span>{slotNumberFormatted}</span>
+                  </div>
+
+                  {/* Checkmark Tag */}
+                  <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold rounded-md flex items-center gap-1 shadow-xs select-none">
                     <Check className="w-2.5 h-2.5 text-emerald-400" />
                     <span>الزيارة #{visitNumber}</span>
                   </div>
@@ -158,21 +225,32 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
               return (
                 <div
                   key={slotIdx}
-                  style={{ borderColor: frame.accentColor || '#D97706' }}
-                  className={`relative overflow-hidden ${slotRadiusClass} border-2 border-dashed bg-gradient-to-br from-amber-50 to-orange-50/60 p-4 flex flex-col items-center justify-center text-center shadow-inner ${
+                  style={{ borderColor: effectiveAccent }}
+                  className={`relative overflow-hidden ${slotRadiusClass} border-2 border-dashed bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-4 flex flex-col items-center justify-center text-center shadow-inner ${
                     isHorizontal ? 'aspect-[4/3]' : 'aspect-square'
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-2 shadow-xs">
+                  {/* Slot number on milestone */}
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-amber-500/20 text-amber-500 text-[9px] font-mono font-black rounded-sm">
+                    #{slotNumberFormatted}
+                  </div>
+
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center mb-1.5 shadow-xs">
                     <Gift className="w-5 h-5 animate-bounce" />
                   </div>
-                  <span className="text-[10px] font-black uppercase text-amber-800 tracking-wider">
+                  <span
+                    style={{ color: effectiveAccent }}
+                    className="text-[10px] font-black uppercase tracking-wider"
+                  >
                     الخانة الأخيرة • الزيارة #{visitNumber}
                   </span>
-                  <p className="text-xs font-black text-stone-900 mt-1 leading-tight px-2">
+                  <p
+                    style={{ color: effectiveText }}
+                    className="text-xs font-black mt-1 leading-tight px-2"
+                  >
                     {freeGiftOffer.title}
                   </p>
-                  <span className="text-[9px] text-amber-700/90 font-medium mt-1">
+                  <span className="text-[9px] opacity-70 font-medium mt-1">
                     اكتمال الكارت والطباعة
                   </span>
                 </div>
@@ -183,15 +261,15 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             return (
               <div
                 key={slotIdx}
-                style={{ borderColor: frame.borderColor || '#E7E2D9' }}
-                className={`relative overflow-hidden ${slotRadiusClass} border-2 border-dashed bg-stone-50/60 flex flex-col items-center justify-center text-stone-400 text-center ${
+                style={{ borderColor: effectiveBorder }}
+                className={`relative overflow-hidden ${slotRadiusClass} border-2 border-dashed bg-black/5 dark:bg-white/5 flex flex-col items-center justify-center opacity-60 text-center ${
                   isHorizontal ? 'aspect-[4/3]' : 'aspect-square'
                 }`}
               >
-                <span className="w-7 h-7 rounded-full bg-stone-200/60 flex items-center justify-center text-xs font-bold text-stone-500 mb-1">
-                  {visitNumber}
+                <span className="w-7 h-7 rounded-full bg-stone-300/40 flex items-center justify-center text-xs font-mono font-bold mb-1">
+                  {slotNumberFormatted}
                 </span>
-                <span className="text-[11px] font-bold text-stone-500">
+                <span className="text-[11px] font-bold">
                   الزيارة القادمة
                 </span>
               </div>
@@ -199,13 +277,47 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           })}
         </div>
 
-        {/* Clean Minimalist Footer (NO fake barcode, NO ugly clutter!) */}
-        <div className="mt-4 pt-3 border-t border-stone-200/60 flex items-center justify-between text-[11px] text-stone-400 font-medium px-2">
-          <span>{dateFormatted}</span>
-          <span className="tracking-widest uppercase text-[9px] font-bold text-stone-500">
-            {branding.name ? `${branding.name} • Memories` : 'Memories'}
+        {/* Interactive / Static Draggable Stickers Layer Overlay */}
+        {(stickers.length > 0 || isStickersInteractive) && (
+          <DraggableStickerLayer
+            stickers={stickers}
+            onUpdateStickers={onUpdateStickers || (() => {})}
+            isInteractive={isStickersInteractive}
+            cardContainerRef={cardContainerRef}
+          />
+        )}
+
+        {/* Authentic Photobooth Footer */}
+        <div
+          style={{ borderColor: effectiveBorder }}
+          className="relative z-10 mt-4 pt-3 border-t flex items-center justify-between text-[10px] opacity-70 font-medium px-2"
+        >
+          <div className="flex items-center gap-2">
+            {/* Authentic Open Source Studio Barcode for Korean Noir & Retro Film */}
+            {(isKorean || isRetro) && (
+              <div className="flex items-center gap-0.5 font-mono text-[8px] tracking-tighter opacity-80 select-none">
+                <span className="w-0.5 h-3 bg-current inline-block" />
+                <span className="w-1 h-3 bg-current inline-block" />
+                <span className="w-0.5 h-3 bg-current inline-block" />
+                <span className="w-1.5 h-3 bg-current inline-block" />
+                <span className="w-0.5 h-3 bg-current inline-block" />
+                <span className="ml-1 text-[8px] font-mono">4-CUT</span>
+              </div>
+            )}
+            <span>{dateFormatted}</span>
+          </div>
+
+          <span className="tracking-widest uppercase text-[9px] font-black font-mono">
+            {branding.name ? `${branding.name} • MEMORIES` : 'MEMORIES STUDIO'}
           </span>
         </div>
+
+        {/* Polaroid chin handwritten note line */}
+        {isPolaroid && (
+          <div className="mt-2 text-center text-[10px] italic font-serif opacity-60 tracking-wider">
+            memories together ♡
+          </div>
+        )}
       </div>
 
       {/* Print Action Button */}
