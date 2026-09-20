@@ -9,7 +9,15 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+  const code = searchParams.get('code');
+
+  // If OAuth provider redirected to / or any page with a code, forward to callback handler
+  if (code && pathname !== '/auth/callback') {
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = '/auth/callback';
+    return NextResponse.redirect(callbackUrl);
+  }
 
   const isPublicRoute = 
     pathname === '/' ||
