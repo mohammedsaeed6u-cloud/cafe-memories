@@ -279,7 +279,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             {extraShots > 0 && (
               <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full text-xs font-bold shadow-xs animate-pulse">
                 <Coffee className="w-3.5 h-3.5" />
-                <span>+${extraShots} صور أوردرات</span>
+                <span>+{extraShots} صور أوردرات</span>
               </div>
             )}
             <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 rounded-full border border-amber-200 text-xs font-bold">
@@ -689,6 +689,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         customerRoleLabel={customerProfession || 'زائر مميز'}
         visitCount={currentDisplayPhotos.length}
         onPrintStrip={() => PrintService.printElement('printable-strip')}
+        extraShots={extraShots}
+        onTakeNextPhoto={handleTakeNextOrderPhoto}
       />
     </div>
   );
