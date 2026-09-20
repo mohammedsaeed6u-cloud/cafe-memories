@@ -15,6 +15,7 @@ import {
   Save,
   Image as ImageIcon,
 } from 'lucide-react';
+import { PrintService } from '@/lib/services/print.service';
 
 interface FrameStudioTabProps {
   settings: BusinessSettings;
@@ -414,7 +415,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             frame={activeFrame}
             branding={branding}
             freeGiftOffer={freeGift}
-            onPrint={() => window.print()}
+            onPrint={() => PrintService.printElement('printable-strip')}
           />
 
           <p className="text-[11px] text-stone-500 mt-4 text-center font-medium">

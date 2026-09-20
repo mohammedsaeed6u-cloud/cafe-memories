@@ -152,13 +152,16 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const handleCaptureComplete = async (photo: string) => {
     setTodayPhoto(photo);
     const updated = [...accumulatedPhotos, photo];
+    const slots = Math.max(selectedFrame.shotCount || 3, 1);
 
     // Compose canvas strip in background
     try {
       const stripUrl = await StripComposerService.composeStrip({
         photos: updated,
+        totalSlots: slots,
         frame: selectedFrame,
         branding: settings.branding,
+        freeGiftOffer: settings.freeGiftOffer,
         giftCode: 'GIFT-MEMO',
       });
       setComposedStripUrl(stripUrl);
@@ -183,6 +186,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
     const updatedCardPhotos = [...accumulatedPhotos, todayPhoto];
     setAccumulatedPhotos(updatedCardPhotos);
+    const slots = Math.max(selectedFrame.shotCount || 3, 1);
 
     // Save card progress locally
     try {
@@ -195,8 +199,10 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     try {
       const finalStrip = await StripComposerService.composeStrip({
         photos: updatedCardPhotos,
+        totalSlots: slots,
         frame: selectedFrame,
         branding: settings.branding,
+        freeGiftOffer: settings.freeGiftOffer,
         giftCode: code,
       });
       setComposedStripUrl(finalStrip);
@@ -688,7 +694,13 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         customerName={customerName}
         customerRoleLabel={customerProfession || 'زائر مميز'}
         visitCount={currentDisplayPhotos.length}
-        onPrintStrip={() => PrintService.printElement('printable-strip')}
+        onPrintStrip={() => {
+          if (composedStripUrl) {
+            PrintService.printStripImage(composedStripUrl);
+          } else {
+            PrintService.printElement('printable-strip');
+          }
+        }}
         extraShots={extraShots}
         onTakeNextPhoto={handleTakeNextOrderPhoto}
       />

@@ -1,9 +1,11 @@
-import { PhotoboothFrame, BusinessBranding } from '@/types/photobooth';
+import { PhotoboothFrame, BusinessBranding, FreeGiftOffer } from '@/types/photobooth';
 
 export interface ComposeStripOptions {
   photos: string[]; // Base64 data URLs
+  totalSlots?: number;
   frame: PhotoboothFrame;
   branding: BusinessBranding;
+  freeGiftOffer?: FreeGiftOffer;
   giftCode?: string;
   timestamp?: string;
 }
@@ -13,12 +15,24 @@ export class StripComposerService {
    * Composes a complete photobooth strip on an HTML canvas and returns a high-resolution base64 PNG data URL.
    */
   static async composeStrip(options: ComposeStripOptions): Promise<string> {
-    const { photos, frame, branding, giftCode = 'MEMO-FREE', timestamp = new Date().toISOString() } = options;
+    const {
+      photos,
+      frame,
+      branding,
+      freeGiftOffer = {
+        title: 'مشروب مجاني مميز + طباعة الكارت 2x6',
+        subtitle: 'هدية فورية عند اكتمال كارت ذكرياتك',
+        icon: '🎁',
+      },
+      giftCode = 'MEMO-FREE',
+      timestamp = new Date().toISOString(),
+    } = options;
 
     const isHorizontal = frame.orientation === 'horizontal';
+    const totalSlots = Math.max(options.totalSlots || frame.shotCount || 3, 1);
     const canvas = document.createElement('canvas');
 
-    // High resolution canvas dimensions
+    // High resolution canvas dimensions (Exact 1:3 2x6 strip at 300 DPI)
     const width = isHorizontal ? 1200 : 600;
     const height = isHorizontal ? 800 : 1800;
 
@@ -32,20 +46,21 @@ export class StripComposerService {
     ctx.fillStyle = frame.bgColor || '#FAF8F5';
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle inner border
+    // Outer subtle border
     ctx.strokeStyle = frame.borderColor || '#E7E2D9';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(12, 12, width - 24, height - 24);
+    ctx.lineWidth = 6;
+    this.roundRect(ctx, 16, 16, width - 32, height - 32, 28);
+    ctx.stroke();
 
-    // 2. Load all photo images
+    // 2. Load all captured photos
     const loadedImages = await Promise.all(
       photos.map(
         (src) =>
-          new Promise<HTMLImageElement>((resolve, reject) => {
+          new Promise<HTMLImageElement>((resolve) => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error('Failed to load capture photo'));
+            img.onerror = () => resolve(img);
             img.src = src;
           })
       )
@@ -55,7 +70,7 @@ export class StripComposerService {
     let logoImg: HTMLImageElement | null = null;
     if (branding.logoUrl) {
       try {
-        logoImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        logoImg = await new Promise<HTMLImageElement>((resolve) => {
           const img = new Image();
           img.crossOrigin = 'anonymous';
           img.onload = () => resolve(img);
@@ -68,123 +83,145 @@ export class StripComposerService {
     }
 
     // 4. Draw Header
-    const headerY = 50;
+    const headerY = 70;
     ctx.textAlign = 'center';
 
-    if (logoImg) {
-      const maxLogoW = 120;
-      const maxLogoH = 48;
+    if (logoImg && logoImg.width) {
+      const maxLogoW = 160;
+      const maxLogoH = 55;
       const scale = Math.min(maxLogoW / logoImg.width, maxLogoH / logoImg.height);
       const lw = logoImg.width * scale;
       const lh = logoImg.height * scale;
-      ctx.drawImage(logoImg, width / 2 - lw / 2, headerY - 15, lw, lh);
+      ctx.drawImage(logoImg, width / 2 - lw / 2, headerY - 20, lw, lh);
     } else {
       ctx.fillStyle = frame.textColor || '#1C1917';
-      ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(branding.name || 'Memories • موميريز', width / 2, headerY + 10);
-    }
-
-    if (frame.badgeText) {
+      ctx.font = 'bold 30px sans-serif';
+      ctx.fillText(branding.name || 'Memories Studio', width / 2, headerY);
       ctx.fillStyle = frame.accentColor || '#D97706';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.fillText(frame.badgeText.toUpperCase(), width / 2, headerY + 36);
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText((branding.name ? `${branding.name} • MEMORIES` : 'MEMORIES STUDIO').toUpperCase(), width / 2, headerY + 26);
     }
 
     // 5. Draw Corner Emojis/Stickers
     if (frame.cornerEmojis && frame.cornerEmojis.enabled) {
-      ctx.font = '36px sans-serif';
+      ctx.font = '40px sans-serif';
       // Top-Right emoji
       if (frame.cornerEmojis.topRight) {
         ctx.textAlign = 'right';
-        ctx.fillText(frame.cornerEmojis.topRight, width - 28, 55);
+        ctx.fillText(frame.cornerEmojis.topRight, width - 40, 75);
       }
       // Bottom-Left emoji
       if (frame.cornerEmojis.bottomLeft) {
         ctx.textAlign = 'left';
-        ctx.fillText(frame.cornerEmojis.bottomLeft, 28, height - 35);
+        ctx.fillText(frame.cornerEmojis.bottomLeft, 40, height - 55);
       }
     }
 
-    // 6. Draw Photos in Grid or Strip
-    const photoAreaTop = 100;
-    const photoAreaBottom = height - 120;
+    // 6. Draw Slots (Multi-visit photos + Last slot reward milestone)
+    const photoAreaTop = 130;
+    const photoAreaBottom = height - 90;
     const photoAreaHeight = photoAreaBottom - photoAreaTop;
-    const count = loadedImages.length;
 
-    if (!isHorizontal) {
-      // Classic Vertical Strip
-      const gap = 16;
-      const totalGap = gap * (count - 1);
-      const photoH = (photoAreaHeight - totalGap) / count;
-      const photoW = width - 64;
-      const photoX = 32;
+    const gap = 18;
+    const totalGap = gap * (totalSlots - 1);
+    const slotH = (photoAreaHeight - totalGap) / totalSlots;
+    const slotW = width - 72;
+    const slotX = 36;
 
-      loadedImages.forEach((img, idx) => {
-        const photoY = photoAreaTop + idx * (photoH + gap);
+    for (let slotIdx = 0; slotIdx < totalSlots; slotIdx++) {
+      const slotY = photoAreaTop + slotIdx * (slotH + gap);
+      const photo = loadedImages[slotIdx];
+      const isLastSlot = slotIdx === totalSlots - 1;
+      const visitNumber = slotIdx + 1;
 
-        // Draw photo with rounded corners
+      if (photo && photo.width) {
+        // Filled Photo Slot
         ctx.save();
-        this.roundRect(ctx, photoX, photoY, photoW, photoH, 12);
+        this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
         ctx.clip();
-        this.drawCoverImage(ctx, img, photoX, photoY, photoW, photoH);
+        this.drawCoverImage(ctx, photo, slotX, slotY, slotW, slotH);
         ctx.restore();
 
         // Photo border
         ctx.strokeStyle = frame.borderColor || '#E7E2D9';
-        ctx.lineWidth = 2;
-        this.roundRect(ctx, photoX, photoY, photoW, photoH, 12);
+        ctx.lineWidth = 3;
+        this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
         ctx.stroke();
-      });
-    } else {
-      // Horizontal / Grid Format
-      const cols = count >= 4 ? 2 : count;
-      const rows = Math.ceil(count / cols);
-      const gap = 16;
-      const photoW = (width - 64 - gap * (cols - 1)) / cols;
-      const photoH = (photoAreaHeight - gap * (rows - 1)) / rows;
 
-      loadedImages.forEach((img, idx) => {
-        const c = idx % cols;
-        const r = Math.floor(idx / cols);
-        const photoX = 32 + c * (photoW + gap);
-        const photoY = photoAreaTop + r * (photoH + gap);
+        // Badge: الزيارة #N
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+        this.roundRect(ctx, slotX + slotW - 120, slotY + slotH - 36, 110, 26, 8);
+        ctx.fill();
 
-        ctx.save();
-        this.roundRect(ctx, photoX, photoY, photoW, photoH, 12);
-        ctx.clip();
-        this.drawCoverImage(ctx, img, photoX, photoY, photoW, photoH);
-        ctx.restore();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`الزيارة #${visitNumber}`, slotX + slotW - 65, slotY + slotH - 18);
+      } else if (isLastSlot) {
+        // The LAST Slot: Grand Gift / Reward Milestone!
+        ctx.fillStyle = '#FFFDF7';
+        this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
+        ctx.fill();
+
+        ctx.strokeStyle = frame.accentColor || '#D97706';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Gift Icon
+        ctx.font = '42px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎁', width / 2, slotY + slotH / 2 - 25);
+
+        // Milestone Label
+        ctx.fillStyle = frame.accentColor || '#D97706';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(`الخانة الأخيرة • الزيارة #${visitNumber}`, width / 2, slotY + slotH / 2 + 10);
+
+        // Gift Title
+        ctx.fillStyle = '#1C1917';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText(freeGiftOffer.title || 'مشروب مجاني أو هدية فورية', width / 2, slotY + slotH / 2 + 35);
+
+        // Completion Note
+        ctx.fillStyle = '#78716C';
+        ctx.font = '13px sans-serif';
+        ctx.fillText('اكتمال الكارت والطباعة', width / 2, slotY + slotH / 2 + 58);
+      } else {
+        // Upcoming middle slot placeholder
+        ctx.fillStyle = '#FAF8F5';
+        this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
+        ctx.fill();
 
         ctx.strokeStyle = frame.borderColor || '#E7E2D9';
         ctx.lineWidth = 2;
-        this.roundRect(ctx, photoX, photoY, photoW, photoH, 12);
+        ctx.setLineDash([6, 6]);
+        this.roundRect(ctx, slotX, slotY, slotW, slotH, 20);
         ctx.stroke();
-      });
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#A8A29E';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`الزيارة القادمة #${visitNumber}`, width / 2, slotY + slotH / 2 + 6);
+      }
     }
 
-    // 7. Draw Footer (Date, Gift Voucher, Barcode)
-    const footerY = height - 70;
+    // 7. Draw Clean Minimal Footer (Date & Brand Name - NO BARCODE!)
+    const footerY = height - 42;
     ctx.textAlign = 'center';
 
-    // Gift Voucher Badge
-    ctx.fillStyle = frame.accentColor || '#D97706';
-    ctx.font = 'bold 15px sans-serif';
-    ctx.fillText(`🎁 هدية فورية: ${giftCode}`, width / 2, footerY);
-
-    // Formatted date
     const dateStr = new Date(timestamp).toLocaleDateString('ar-EG', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
     });
-    ctx.fillStyle = frame.textColor || '#1C1917';
-    ctx.font = '12px sans-serif';
-    ctx.fillText(`${dateStr} • Memories`, width / 2, footerY + 22);
 
-    // Barcode lines simulation
-    this.drawBarcode(ctx, width / 2 - 90, footerY + 34, 180, 16, frame.textColor || '#1C1917');
+    ctx.fillStyle = '#78716C';
+    ctx.font = '14px sans-serif';
+    ctx.fillText(`${dateStr} • ${branding.name ? `${branding.name} • Memories` : 'Memories'}`, width / 2, footerY);
 
     return canvas.toDataURL('image/png', 0.95);
   }
@@ -230,28 +267,5 @@ export class StripComposerService {
     }
 
     ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-  }
-
-  private static drawBarcode(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    color: string
-  ) {
-    ctx.fillStyle = color;
-    let currX = x;
-    const endX = x + w;
-    let isBar = true;
-
-    while (currX < endX) {
-      const barW = Math.random() > 0.6 ? 3 : 1.5;
-      if (isBar) {
-        ctx.fillRect(currX, y, Math.min(barW, endX - currX), h);
-      }
-      currX += barW + (Math.random() > 0.5 ? 2 : 1);
-      isBar = !isBar;
-    }
   }
 }

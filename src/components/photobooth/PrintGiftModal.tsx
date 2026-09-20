@@ -46,9 +46,12 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
   const isCardComplete = photos.length >= totalSlots;
 
   const handlePrint = () => {
-    PrintService.printElement('printable-strip');
     if (onPrintStrip) {
       onPrintStrip();
+    } else if (stripDataUrl) {
+      PrintService.printStripImage(stripDataUrl);
+    } else {
+      PrintService.printElement('printable-strip');
     }
   };
 
