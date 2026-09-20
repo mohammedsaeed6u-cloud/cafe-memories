@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Coffee,
@@ -20,7 +20,8 @@ import {
   RefreshCw,
   PlusCircle,
   ExternalLink,
-  Smartphone
+  Smartphone,
+  AlertCircle
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -39,54 +40,30 @@ export default function MerchantDashboardPage() {
   const [activeTab, setActiveTab] = useState<'moderation' | 'screens' | 'loyalty' | 'crm'>('moderation');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'hidden'>('all');
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const [memories, setMemories] = useState<MemoryItem[]>([
-    {
-      id: 'm1',
-      customer: 'Sarah Mansour',
-      visitNum: 5,
-      caption: 'Best cortado in the city! Celebrating 5 visits today ☕✨',
-      img: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80',
-      time: '3 mins ago',
-      status: 'approved',
-      consentWall: true,
-    },
-    {
-      id: 'm2',
-      customer: 'Tarek Helmy',
-      visitNum: 2,
-      caption: 'Quiet corner for afternoon reading & single origin pour over',
-      img: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
-      time: '12 mins ago',
-      status: 'pending',
-      consentWall: true,
-    },
-    {
-      id: 'm3',
-      customer: 'Laila Riad',
-      visitNum: 4,
-      caption: 'Espresso Lab morning light with cold brew & almond croissant 🥐',
-      img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80',
-      time: '28 mins ago',
-      status: 'approved',
-      consentWall: true,
-    },
-  ]);
+  const [memories, setMemories] = useState<MemoryItem[]>([]);
 
-  // Load live memories from Supabase
-  const loadMemories = async () => {
+  // Load live memories from Supabase with tenant isolation
+  const loadMemories = useCallback(async () => {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('memories')
         .select('*')
+        .eq('organization_id', '00000000-0000-0000-0000-000000000001')
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(25);
 
-      if (!error && data && data.length > 0) {
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data && data.length > 0) {
         const mapped: MemoryItem[] = data.map((m: any, idx: number) => {
           const date = new Date(m.created_at);
           const diffMin = Math.max(1, Math.round((Date.now() - date.getTime()) / 60000));
@@ -104,18 +81,19 @@ export default function MerchantDashboardPage() {
           };
         });
         setMemories(mapped);
+      } else {
+        setMemories([]);
       }
-    } catch (err) {
-      console.warn('Dashboard fetch fallback:', err);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to connect to Supabase.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadMemories();
 
-    // Subscribe to Realtime memory updates
     const supabase = createClient();
     const channel = supabase
       .channel('merchant-dashboard-realtime')
@@ -124,7 +102,7 @@ export default function MerchantDashboardPage() {
         { event: '*', schema: 'public', table: 'memories' },
         (payload: any) => {
           if (payload.eventType === 'INSERT') {
-            setToast('🔔 New guest photo uploaded and waiting for moderation!');
+            setToast({ message: '🔔 New guest photo uploaded to queue!', type: 'success' });
             setTimeout(() => setToast(null), 5000);
             loadMemories();
           } else if (payload.eventType === 'UPDATE') {
@@ -137,51 +115,61 @@ export default function MerchantDashboardPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [loadMemories]);
 
-  // Moderate Memory: Approve
+  // Moderate Memory: Approve with Optimistic UI and Rollback on Failure
   const handleApprove = async (id: string) => {
-    // Optimistic update
+    const previous = [...memories];
     setMemories(prev =>
       prev.map(m => (m.id === id ? { ...m, status: 'approved' } : m))
     );
 
     try {
       const supabase = createClient();
-      await supabase
+      const { error } = await supabase
         .from('memories')
         .update({ status: 'approved', visibility: 'live_wall' })
         .eq('id', id);
 
-      setToast('✅ Photo approved and broadcast to Live TV Wall!');
+      if (error) throw error;
+
+      setToast({ message: '✅ Photo approved and broadcast to Live TV Wall!', type: 'success' });
       setTimeout(() => setToast(null), 4000);
-    } catch (err) {
-      console.error('Approve failed:', err);
+    } catch (err: any) {
+      // Rollback on failure
+      setMemories(previous);
+      setToast({ message: `Failed to approve: ${err.message || 'Network error'}`, type: 'error' });
+      setTimeout(() => setToast(null), 5000);
     }
   };
 
-  // Moderate Memory: Hide
+  // Moderate Memory: Hide with Optimistic UI and Rollback on Failure
   const handleHide = async (id: string) => {
-    // Optimistic update
+    const previous = [...memories];
     setMemories(prev =>
       prev.map(m => (m.id === id ? { ...m, status: 'hidden' } : m))
     );
 
     try {
       const supabase = createClient();
-      await supabase
+      const { error } = await supabase
         .from('memories')
         .update({ status: 'hidden' })
         .eq('id', id);
 
-      setToast('🔒 Photo removed from Live TV Wall.');
+      if (error) throw error;
+
+      setToast({ message: '🔒 Photo removed from Live TV Wall.', type: 'success' });
       setTimeout(() => setToast(null), 4000);
-    } catch (err) {
-      console.error('Hide failed:', err);
+    } catch (err: any) {
+      // Rollback on failure
+      setMemories(previous);
+      setToast({ message: `Failed to hide: ${err.message || 'Network error'}`, type: 'error' });
+      setTimeout(() => setToast(null), 5000);
     }
   };
 
-  // Simulate Live Customer Upload in 1-Click
+  // Simulate Live Customer Upload
   const handleSimulateUpload = async () => {
     setSimulating(true);
     try {
@@ -211,12 +199,13 @@ export default function MerchantDashboardPage() {
         .single();
 
       if (!error && data) {
-        setToast('⚡ Simulated live customer photo uploaded to Supabase!');
+        setToast({ message: '⚡ Simulated live customer photo uploaded to Supabase!', type: 'success' });
         setTimeout(() => setToast(null), 4000);
         await loadMemories();
       }
-    } catch (err) {
-      console.error('Simulate upload error:', err);
+    } catch (err: any) {
+      setToast({ message: `Simulation failed: ${err.message}`, type: 'error' });
+      setTimeout(() => setToast(null), 4000);
     } finally {
       setSimulating(false);
     }
@@ -234,9 +223,16 @@ export default function MerchantDashboardPage() {
     <div className="min-h-screen bg-stone-950 text-stone-100 selection:bg-amber-500 selection:text-black">
       {/* Toast Alert */}
       {toast && (
-        <div className="fixed top-20 right-6 z-50 px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-bold text-xs shadow-2xl flex items-center gap-2 animate-slideIn">
-          <Sparkles className="w-4 h-4 text-stone-950" />
-          <span>{toast}</span>
+        <div
+          role="status"
+          className={`fixed top-20 right-6 z-50 px-5 py-3 rounded-2xl font-bold text-xs shadow-2xl flex items-center gap-2 animate-slideIn ${
+            toast.type === 'success'
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950'
+              : 'bg-rose-600 text-white'
+          }`}
+        >
+          {toast.type === 'success' ? <Sparkles className="w-4 h-4 text-stone-950" /> : <AlertCircle className="w-4 h-4 text-white" />}
+          <span>{toast.message}</span>
         </div>
       )}
 
@@ -258,11 +254,10 @@ export default function MerchantDashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Quick Simulation Button for Demo & QA */}
           <button
             onClick={handleSimulateUpload}
             disabled={simulating}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-300 transition-all disabled:opacity-50"
+            className="min-h-[44px] hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-300 transition-all disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-amber-500"
             title="Simulate a live customer uploading a photo from table QR"
           >
             <PlusCircle className="w-3.5 h-3.5" />
@@ -272,7 +267,7 @@ export default function MerchantDashboardPage() {
           <Link
             href="/c/espresso-lab"
             target="_blank"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-xs font-semibold text-stone-200 border border-stone-700 transition-colors"
+            className="min-h-[44px] flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-xs font-semibold text-stone-200 border border-stone-800 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
           >
             <Smartphone className="w-3.5 h-3.5 text-amber-400" />
             <span>Customer QR</span>
@@ -281,10 +276,10 @@ export default function MerchantDashboardPage() {
           <Link
             href="/wall/screen-101"
             target="_blank"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 text-xs font-bold transition-all shadow-md shadow-amber-500/20"
+            className="min-h-[44px] flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 text-xs font-bold transition-all shadow-md shadow-amber-500/20 focus-visible:ring-2 focus-visible:ring-amber-500"
           >
             <Tv className="w-3.5 h-3.5" />
-            <span>Launch Live TV Wall</span>
+            <span>Live TV Wall</span>
           </Link>
         </div>
       </header>
@@ -310,7 +305,7 @@ export default function MerchantDashboardPage() {
               <span>Memories Created</span>
               <ImageIcon className="w-4 h-4 text-amber-400" />
             </div>
-            <div className="text-2xl font-black text-white">{memories.length + 339}</div>
+            <div className="text-2xl font-black text-white">{memories.length > 0 ? memories.length + 339 : 342}</div>
             <div className="text-[11px] text-stone-400">92% consented for Live Wall</div>
           </div>
 
@@ -341,7 +336,7 @@ export default function MerchantDashboardPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('moderation')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-amber-500 ${
                 activeTab === 'moderation'
                   ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/20'
                   : 'text-stone-400 hover:text-white bg-stone-900 border border-stone-800'
@@ -351,7 +346,7 @@ export default function MerchantDashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('screens')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-amber-500 ${
                 activeTab === 'screens'
                   ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/20'
                   : 'text-stone-400 hover:text-white bg-stone-900 border border-stone-800'
@@ -361,7 +356,7 @@ export default function MerchantDashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('loyalty')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-amber-500 ${
                 activeTab === 'loyalty'
                   ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/20'
                   : 'text-stone-400 hover:text-white bg-stone-900 border border-stone-800'
@@ -371,7 +366,7 @@ export default function MerchantDashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('crm')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold transition-all focus-visible:ring-2 focus-visible:ring-amber-500 ${
                 activeTab === 'crm'
                   ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/20'
                   : 'text-stone-400 hover:text-white bg-stone-900 border border-stone-800'
@@ -383,14 +378,15 @@ export default function MerchantDashboardPage() {
 
           <button
             onClick={loadMemories}
-            className="p-2 rounded-xl bg-stone-900 border border-stone-800 text-stone-400 hover:text-white transition-colors"
+            aria-label="Refresh from Supabase"
+            className="min-h-[44px] min-w-[44px] rounded-xl bg-stone-900 border border-stone-800 text-stone-400 hover:text-white transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-amber-500"
             title="Refresh from Supabase"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-amber-400' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-amber-400' : ''}`} />
           </button>
         </div>
 
-        {/* Tab Content: Moderation */}
+        {/* Tab Content: Moderation with 4-State Lifecycle */}
         {activeTab === 'moderation' && (
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -405,7 +401,7 @@ export default function MerchantDashboardPage() {
               <div className="flex items-center gap-1.5 bg-stone-900 p-1 rounded-xl border border-stone-800 text-xs">
                 <button
                   onClick={() => setFilterStatus('all')}
-                  className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
+                  className={`min-h-[36px] px-3 rounded-lg font-semibold transition-colors ${
                     filterStatus === 'all' ? 'bg-stone-800 text-white' : 'text-stone-400 hover:text-white'
                   }`}
                 >
@@ -413,7 +409,7 @@ export default function MerchantDashboardPage() {
                 </button>
                 <button
                   onClick={() => setFilterStatus('pending')}
-                  className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
+                  className={`min-h-[36px] px-3 rounded-lg font-semibold transition-colors ${
                     filterStatus === 'pending' ? 'bg-amber-500/20 text-amber-300' : 'text-stone-400 hover:text-white'
                   }`}
                 >
@@ -421,7 +417,7 @@ export default function MerchantDashboardPage() {
                 </button>
                 <button
                   onClick={() => setFilterStatus('approved')}
-                  className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
+                  className={`min-h-[36px] px-3 rounded-lg font-semibold transition-colors ${
                     filterStatus === 'approved' ? 'bg-emerald-500/20 text-emerald-300' : 'text-stone-400 hover:text-white'
                   }`}
                 >
@@ -430,17 +426,59 @@ export default function MerchantDashboardPage() {
               </div>
             </div>
 
-            {filteredMemories.length === 0 ? (
+            {/* 1. Loading Skeleton */}
+            {loading && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="rounded-2xl overflow-hidden bg-stone-900/60 border border-stone-800 animate-pulse p-4 space-y-3">
+                    <div className="aspect-[4/3] rounded-xl bg-stone-800" />
+                    <div className="h-4 bg-stone-800 rounded w-2/3" />
+                    <div className="h-3 bg-stone-800/60 rounded w-full" />
+                    <div className="h-9 bg-stone-800/80 rounded-xl" />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 2. Error State with Retry */}
+            {!loading && errorMsg && (
+              <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center space-y-3">
+                <AlertCircle className="w-6 h-6 text-rose-400 mx-auto" />
+                <h3 className="font-bold text-white text-sm">Failed to load moderation queue</h3>
+                <p className="text-xs text-rose-300 max-w-sm mx-auto">{errorMsg}</p>
+                <button
+                  onClick={loadMemories}
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-xs font-bold text-white inline-flex items-center gap-2"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Retry Connection</span>
+                </button>
+              </div>
+            )}
+
+            {/* 3. Empty State with CTA */}
+            {!loading && !errorMsg && filteredMemories.length === 0 && (
               <div className="p-12 text-center rounded-2xl bg-stone-900/50 border border-stone-800 space-y-3">
                 <div className="w-12 h-12 rounded-2xl bg-stone-800 text-stone-400 flex items-center justify-center mx-auto">
                   <ImageIcon className="w-6 h-6" />
                 </div>
                 <h3 className="font-bold text-white text-sm">No photos in this category</h3>
                 <p className="text-xs text-stone-400 max-w-sm mx-auto">
-                  Guests scan table QR codes to upload their coffee moments. Click "Simulate Guest Upload" above to test.
+                  Guests scan table QR codes to upload their coffee moments. Click below to simulate an incoming customer upload.
                 </p>
+                <button
+                  onClick={handleSimulateUpload}
+                  disabled={simulating}
+                  className="min-h-[44px] px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs inline-flex items-center gap-2"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Simulate Customer Upload</span>
+                </button>
               </div>
-            ) : (
+            )}
+
+            {/* 4. Loaded State with Data */}
+            {!loading && !errorMsg && filteredMemories.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {filteredMemories.map(m => (
                   <div
@@ -487,7 +525,7 @@ export default function MerchantDashboardPage() {
                         {m.status !== 'approved' ? (
                           <button
                             onClick={() => handleApprove(m.id)}
-                            className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-md shadow-emerald-500/20"
+                            className="flex-1 min-h-[44px] py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-md shadow-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-400"
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
                             Approve for Wall
@@ -495,7 +533,7 @@ export default function MerchantDashboardPage() {
                         ) : (
                           <button
                             onClick={() => handleHide(m.id)}
-                            className="flex-1 py-2.5 rounded-xl bg-stone-800 hover:bg-rose-500/20 hover:text-rose-400 text-stone-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border border-stone-700"
+                            className="flex-1 min-h-[44px] py-2.5 rounded-xl bg-stone-800 hover:bg-rose-500/20 hover:text-rose-400 text-stone-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border border-stone-700 focus-visible:ring-2 focus-visible:ring-rose-400"
                           >
                             <XCircle className="w-3.5 h-3.5" />
                             Hide from Wall
@@ -540,7 +578,7 @@ export default function MerchantDashboardPage() {
                 <Link
                   href="/wall/screen-101"
                   target="_blank"
-                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all"
+                  className="min-h-[44px] px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all focus-visible:ring-2 focus-visible:ring-amber-500"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span>Launch Screen Window</span>

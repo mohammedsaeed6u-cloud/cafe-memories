@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Camera,
@@ -22,12 +22,22 @@ import {
   Download,
   CheckCircle2,
   ExternalLink,
-  Smartphone
+  Smartphone,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface PageProps {
   params: Promise<{ cafeSlug: string }>;
+}
+
+interface MemoryEntry {
+  id: string;
+  visitNum: number;
+  date: string;
+  caption: string;
+  img: string;
 }
 
 export default function CustomerCafePage({ params }: PageProps) {
@@ -49,29 +59,21 @@ export default function CustomerCafePage({ params }: PageProps) {
   const [activeFilter, setActiveFilter] = useState<'normal' | 'warm' | 'mono'>('warm');
   const [qrCodeSvg, setQrCodeSvg] = useState<string>('');
 
-  const [memories, setMemories] = useState([
-    {
-      id: '1',
-      visitNum: 1,
-      date: '12 سبتمبر',
-      caption: 'أول تجربة للـ V60 هنا.. القهوة ممتازة ☕',
-      img: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: '2',
-      visitNum: 2,
-      date: '16 سبتمبر',
-      caption: 'جلسة شغل هادية ومشروب كولد برو رائع',
-      img: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: '3',
-      visitNum: 3,
-      date: 'اليوم',
-      caption: 'صباح الخير من مكاني المفضل ✨',
-      img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80',
-    }
-  ]);
+  // 4-State Lifecycle
+  const [loadingMemories, setLoadingMemories] = useState(true);
+  const [memoriesError, setMemoriesError] = useState<string | null>(null);
+  const [memories, setMemories] = useState<MemoryEntry[]>([]);
+
+  // Keyboard accessibility (a11y): Escape closes modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showModal) {
+        handleResetModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showModal]);
 
   // Audio Chime Synthesis using Web Audio API
   const playStampChime = () => {
@@ -81,8 +83,8 @@ export default function CustomerCafePage({ params }: PageProps) {
       const gain = audioCtx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
 
       gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
@@ -92,8 +94,8 @@ export default function CustomerCafePage({ params }: PageProps) {
 
       osc.start();
       osc.stop(audioCtx.currentTime + 0.4);
-    } catch (e) {
-      // Audio context ignored if blocked
+    } catch {
+      // Audio context ignored if disabled
     }
   };
 
@@ -109,33 +111,45 @@ export default function CustomerCafePage({ params }: PageProps) {
     }).catch(() => {});
   }, [cafeSlug]);
 
-  // Load live memories from Supabase
-  useEffect(() => {
-    async function loadMemories() {
-      try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('memories')
-          .select('*')
-          .eq('visibility', 'live_wall')
-          .order('created_at', { ascending: false })
-          .limit(10);
+  // Load live memories from Supabase with 4-State handling and tenant isolation
+  const loadMemories = useCallback(async () => {
+    setLoadingMemories(true);
+    setMemoriesError(null);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('memories')
+        .select('*')
+        .eq('organization_id', '00000000-0000-0000-0000-000000000001')
+        .eq('visibility', 'live_wall')
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-        if (!error && data && data.length > 0) {
-          setMemories(data.map((m: any, idx: number) => ({
-            id: m.id,
-            visitNum: data.length - idx,
-            date: new Date(m.created_at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' }),
-            caption: m.caption || '',
-            img: m.original_url || m.optimized_url
-          })));
-        }
-      } catch (err) {
-        console.warn('Fallback to local memories:', err);
+      if (error) {
+        throw new Error(error.message);
       }
+
+      if (data && data.length > 0) {
+        setMemories(data.map((m: any, idx: number) => ({
+          id: m.id,
+          visitNum: data.length - idx,
+          date: new Date(m.created_at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' }),
+          caption: m.caption || '',
+          img: m.original_url || m.optimized_url
+        })));
+      } else {
+        setMemories([]);
+      }
+    } catch (err: any) {
+      setMemoriesError(err.message || 'Failed to load live memories');
+    } finally {
+      setLoadingMemories(false);
     }
-    loadMemories();
   }, [lang]);
+
+  useEffect(() => {
+    loadMemories();
+  }, [loadMemories]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -156,7 +170,6 @@ export default function CustomerCafePage({ params }: PageProps) {
     try {
       const supabase = createClient();
 
-      // Upload file to Supabase Storage if user selected an actual file
       if (selectedFile) {
         const fileExt = selectedFile.name ? selectedFile.name.split('.').pop() : 'jpg';
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -179,8 +192,7 @@ export default function CustomerCafePage({ params }: PageProps) {
         }
       }
 
-      // Insert record into Supabase memories table
-      const { data: insertedMemory } = await supabase
+      const { data: insertedMemory, error: insertError } = await supabase
         .from('memories')
         .insert({
           customer_id: '00000000-0000-0000-0000-000000000005',
@@ -196,6 +208,10 @@ export default function CustomerCafePage({ params }: PageProps) {
         .select()
         .single();
 
+      if (insertError) {
+        console.error('Insert memory error:', insertError);
+      }
+
       if (insertedMemory?.id) {
         await supabase.from('memory_consents').insert({
           memory_id: insertedMemory.id,
@@ -208,7 +224,7 @@ export default function CustomerCafePage({ params }: PageProps) {
 
       playStampChime();
 
-      const newMemory = {
+      const newMemory: MemoryEntry = {
         id: insertedMemory?.id || Date.now().toString(),
         visitNum: visitsCount + 1,
         date: lang === 'ar' ? 'الآن' : 'Just now',
@@ -243,11 +259,12 @@ export default function CustomerCafePage({ params }: PageProps) {
       dir={isAr ? 'rtl' : 'ltr'}
       className="min-h-screen md:min-h-[780px] bg-stone-950 text-stone-100 flex flex-col font-sans selection:bg-amber-500 selection:text-black pb-12 overflow-y-auto"
     >
-      {/* Top Mobile Bar */}
+      {/* Top Mobile Bar - 44px min touch targets */}
       <header className="sticky top-0 bg-stone-950/90 backdrop-blur-xl border-b border-stone-800/80 z-30 px-4 py-3.5 flex items-center justify-between">
         <Link
           href="/"
-          className="w-8 h-8 rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-400 hover:text-white transition-colors"
+          aria-label={isAr ? 'العودة للرئيسية' : 'Return to home'}
+          className="min-h-[44px] min-w-[44px] rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-400 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
         >
           <ArrowLeft className={`w-4 h-4 ${isAr ? 'rotate-180' : ''}`} />
         </Link>
@@ -266,7 +283,8 @@ export default function CustomerCafePage({ params }: PageProps) {
 
         <button
           onClick={() => setLang(isAr ? 'en' : 'ar')}
-          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-stone-900 border border-stone-800 text-stone-300 hover:text-white transition-colors"
+          aria-label={isAr ? 'تغيير اللغة' : 'Change language'}
+          className="min-h-[44px] px-3 rounded-full bg-stone-900 border border-stone-800 text-stone-300 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-amber-500"
         >
           <Languages className="w-3.5 h-3.5" />
           <span>{isAr ? 'EN' : 'عربي'}</span>
@@ -310,7 +328,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                 return (
                   <div
                     key={step}
-                    className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all ${
+                    className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all min-h-[44px] ${
                       isStamped
                         ? 'bg-gradient-to-tr from-amber-600 to-amber-400 text-stone-950 shadow-md shadow-amber-500/20'
                         : isReward
@@ -350,10 +368,10 @@ export default function CustomerCafePage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Big Action Button: Snap & Check-In */}
+        {/* Big Action Button: Snap & Check-In (min-h-[48px]) */}
         <button
           onClick={() => setShowModal(true)}
-          className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-stone-950 font-black text-base flex items-center justify-center gap-2.5 shadow-xl shadow-amber-500/25 transition-all hover:scale-[1.01] active:scale-[0.99]"
+          className="w-full min-h-[50px] py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:brightness-110 text-stone-950 font-black text-base flex items-center justify-center gap-2.5 shadow-xl shadow-amber-500/25 transition-all hover:scale-[1.01] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-amber-500"
         >
           <Camera className="w-5 h-5" />
           <span>{isAr ? 'التقط ذكرى وسجل زيارتك الآن' : 'Snap a Memory & Check In'}</span>
@@ -364,7 +382,7 @@ export default function CustomerCafePage({ params }: PageProps) {
         <Link
           href="/wall/screen-101"
           target="_blank"
-          className="flex items-center justify-between p-3.5 rounded-2xl bg-stone-900/60 hover:bg-stone-900 border border-stone-800 transition-colors group"
+          className="min-h-[48px] flex items-center justify-between p-3.5 rounded-2xl bg-stone-900/60 hover:bg-stone-900 border border-stone-800 transition-colors group focus-visible:ring-2 focus-visible:ring-amber-500"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -385,47 +403,104 @@ export default function CustomerCafePage({ params }: PageProps) {
           </span>
         </Link>
 
-        {/* Customer Past Memories Feed */}
+        {/* Customer Past Memories Feed with Complete 4-State Handling */}
         <div className="space-y-3 pt-2">
           <div className="flex items-center justify-between text-xs font-bold text-stone-400 px-1">
             <span className="flex items-center gap-1 text-white">
               <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
               <span>{isAr ? 'رحلتك وذكرياتك السابقة' : 'Your Past Moments'}</span>
             </span>
-            <span className="text-[10px] text-stone-500 font-mono">({memories.length})</span>
+            {!loadingMemories && <span className="text-[10px] text-stone-500 font-mono">({memories.length})</span>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {memories.map(m => (
-              <div
-                key={m.id}
-                className="rounded-2xl overflow-hidden bg-stone-900/80 border border-stone-800 flex flex-col justify-between group shadow-sm"
+          {/* 1. Loading State (Skeleton) */}
+          {loadingMemories && (
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2].map(i => (
+                <div key={i} className="rounded-2xl bg-stone-900/80 border border-stone-800 p-2.5 space-y-2 animate-pulse">
+                  <div className="aspect-square rounded-xl bg-stone-800" />
+                  <div className="h-3 bg-stone-800 rounded w-3/4" />
+                  <div className="h-2.5 bg-stone-800/60 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 2. Error State with Retry */}
+          {!loadingMemories && memoriesError && (
+            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center space-y-2">
+              <AlertTriangle className="w-5 h-5 text-rose-400 mx-auto" />
+              <p className="text-xs text-rose-300 font-medium">{memoriesError}</p>
+              <button
+                onClick={loadMemories}
+                className="min-h-[44px] px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-xs font-bold text-white flex items-center justify-center gap-2 mx-auto"
               >
-                <div className="aspect-square relative overflow-hidden bg-stone-950">
-                  <img
-                    src={m.img}
-                    alt={m.caption}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-bold text-white border border-stone-700">
-                    {isAr ? `زيارة #${m.visitNum}` : `Visit #${m.visitNum}`}
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>{isAr ? 'إعادة المحاولة' : 'Retry'}</span>
+              </button>
+            </div>
+          )}
+
+          {/* 3. Empty State with Clear CTA */}
+          {!loadingMemories && !memoriesError && memories.length === 0 && (
+            <div className="p-6 rounded-2xl bg-stone-900/60 border border-stone-800 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto">
+                <Camera className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-white">{isAr ? 'كن أول من يشارك لحظته هنا!' : 'Be the first to share a moment!'}</h4>
+                <p className="text-xs text-stone-400 mt-1">
+                  {isAr ? 'التقط صورة لكوب قهوتك لتظهر على شاشة الكافيه الآن.' : 'Snap your coffee photo to appear on the in-store Live Wall.'}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowModal(true)}
+                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-amber-500/20"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{isAr ? 'شارك أول لحظة' : 'Share First Moment'}</span>
+              </button>
+            </div>
+          )}
+
+          {/* 4. Loaded State with Data */}
+          {!loadingMemories && !memoriesError && memories.length > 0 && (
+            <div className="grid grid-cols-2 gap-3">
+              {memories.map(m => (
+                <div
+                  key={m.id}
+                  className="rounded-2xl overflow-hidden bg-stone-900/80 border border-stone-800 flex flex-col justify-between group shadow-sm"
+                >
+                  <div className="aspect-square relative overflow-hidden bg-stone-950">
+                    <img
+                      src={m.img}
+                      alt={m.caption}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-bold text-white border border-stone-700">
+                      {isAr ? `زيارة #${m.visitNum}` : `Visit #${m.visitNum}`}
+                    </div>
+                  </div>
+                  <div className="p-2.5 space-y-1">
+                    <p className="text-[11px] text-stone-300 line-clamp-2 leading-tight font-medium">
+                      {m.caption}
+                    </p>
+                    <span className="text-[9px] text-stone-500 block font-mono">{m.date}</span>
                   </div>
                 </div>
-                <div className="p-2.5 space-y-1">
-                  <p className="text-[11px] text-stone-300 line-clamp-2 leading-tight font-medium">
-                    {m.caption}
-                  </p>
-                  <span className="text-[9px] text-stone-500 block font-mono">{m.date}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
       {/* Memory Upload Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4"
+        >
           <div className="w-full sm:max-w-md bg-stone-900 border border-stone-800 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-stone-800">
@@ -439,7 +514,8 @@ export default function CustomerCafePage({ params }: PageProps) {
               </div>
               <button
                 onClick={handleResetModal}
-                className="w-7 h-7 rounded-full bg-stone-800 flex items-center justify-center text-stone-400 hover:text-white"
+                aria-label={isAr ? 'إغلاق' : 'Close'}
+                className="min-h-[44px] min-w-[44px] rounded-full bg-stone-800 flex items-center justify-center text-stone-400 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -468,7 +544,8 @@ export default function CustomerCafePage({ params }: PageProps) {
                           setSelectedImage(null);
                           setSelectedFile(null);
                         }}
-                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black"
+                        aria-label="Remove photo"
+                        className="min-h-[44px] min-w-[44px] absolute top-2 right-2 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black focus-visible:ring-2 focus-visible:ring-amber-500"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -478,7 +555,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                         <button
                           type="button"
                           onClick={() => setActiveFilter('normal')}
-                          className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
+                          className={`min-h-[44px] px-3 rounded-lg text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500 ${
                             activeFilter === 'normal' ? 'bg-amber-500 text-stone-950' : 'text-stone-300'
                           }`}
                         >
@@ -487,7 +564,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                         <button
                           type="button"
                           onClick={() => setActiveFilter('warm')}
-                          className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
+                          className={`min-h-[44px] px-3 rounded-lg text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500 ${
                             activeFilter === 'warm' ? 'bg-amber-500 text-stone-950' : 'text-stone-300'
                           }`}
                         >
@@ -496,7 +573,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                         <button
                           type="button"
                           onClick={() => setActiveFilter('mono')}
-                          className={`px-3 py-1 rounded-lg text-[10px] font-bold ${
+                          className={`min-h-[44px] px-3 rounded-lg text-xs font-bold focus-visible:ring-2 focus-visible:ring-amber-500 ${
                             activeFilter === 'mono' ? 'bg-amber-500 text-stone-950' : 'text-stone-300'
                           }`}
                         >
@@ -505,7 +582,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                       </div>
                     </div>
                   ) : (
-                    <label className="flex flex-col items-center justify-center aspect-[4/3] rounded-2xl border-2 border-dashed border-stone-700 hover:border-amber-500/60 bg-stone-950/50 cursor-pointer transition-colors p-4 text-center">
+                    <label className="flex flex-col items-center justify-center aspect-[4/3] rounded-2xl border-2 border-dashed border-stone-700 hover:border-amber-500/60 bg-stone-950/50 cursor-pointer transition-colors p-4 text-center min-h-[140px] focus-within:ring-2 focus-within:ring-amber-500">
                       <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3">
                         <Camera className="w-7 h-7" />
                       </div>
@@ -520,7 +597,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                         accept="image/*"
                         capture="environment"
                         onChange={handleImageChange}
-                        className="hidden"
+                        className="sr-only"
                       />
                     </label>
                   )}
@@ -536,7 +613,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                     value={caption}
                     onChange={e => setCaption(e.target.value)}
                     placeholder={isAr ? 'مثال: أحلى كورتادو في التجمع.. جلسة رايقة ☕' : 'e.g. Best cortado in Cairo! ☕✨'}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-xs text-white placeholder:text-stone-600 focus:outline-none focus:border-amber-500"
+                    className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-xs text-white placeholder:text-stone-600 focus:outline-none focus:border-amber-500 focus-visible:ring-2 focus-visible:ring-amber-500"
                     maxLength={100}
                   />
                 </div>
@@ -548,7 +625,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                     <span>{isAr ? 'الخصوصية والموافقة' : 'Privacy & Consent'}</span>
                   </div>
 
-                  <label className="flex items-center justify-between cursor-pointer">
+                  <label className="min-h-[44px] flex items-center justify-between cursor-pointer">
                     <span className="text-[11px] text-stone-300">
                       {isAr ? 'عرض الصورة على شاشة الكافيه الحية' : 'Show on in-store Live Wall'}
                     </span>
@@ -556,11 +633,11 @@ export default function CustomerCafePage({ params }: PageProps) {
                       type="checkbox"
                       checked={wallConsent}
                       onChange={e => setWallConsent(e.target.checked)}
-                      className="rounded bg-stone-900 border-stone-700 text-amber-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                      className="rounded bg-stone-900 border-stone-700 text-amber-500 focus:ring-0 w-5 h-5 cursor-pointer"
                     />
                   </label>
 
-                  <label className="flex items-center justify-between cursor-pointer">
+                  <label className="min-h-[44px] flex items-center justify-between cursor-pointer">
                     <span className="text-[11px] text-stone-300">
                       {isAr ? 'إنشاء بطاقة ستوري لمشاركتها على إنستجرام' : 'Generate Instagram Story card'}
                     </span>
@@ -568,7 +645,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                       type="checkbox"
                       checked={shareConsent}
                       onChange={e => setShareConsent(e.target.checked)}
-                      className="rounded bg-stone-900 border-stone-700 text-amber-500 focus:ring-0 w-4 h-4 cursor-pointer"
+                      className="rounded bg-stone-900 border-stone-700 text-amber-500 focus:ring-0 w-5 h-5 cursor-pointer"
                     />
                   </label>
                 </div>
@@ -577,7 +654,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                 <button
                   type="submit"
                   disabled={!selectedImage || uploading}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-50 transition-all"
+                  className="w-full min-h-[48px] py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-50 transition-all focus-visible:ring-2 focus-visible:ring-amber-500"
                 >
                   {uploading ? (
                     <>
@@ -645,7 +722,7 @@ export default function CustomerCafePage({ params }: PageProps) {
                 <div className="flex items-center gap-2 pt-2">
                   <button
                     onClick={handleResetModal}
-                    className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs transition-colors"
+                    className="flex-1 min-h-[48px] py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
                   >
                     {isAr ? 'تم والعودة للبطاقة' : 'Done & Return'}
                   </button>
@@ -660,13 +737,13 @@ export default function CustomerCafePage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-[#090705] text-stone-100 flex flex-col items-center justify-center selection:bg-amber-500 selection:text-black">
-      {/* Desktop Companion Wrapper (md and up) */}
+      {/* Responsive View Switcher */}
       <div className="hidden md:flex items-center justify-center min-h-screen w-full max-w-6xl mx-auto p-8 gap-12">
         {/* Left Side: Companion Explainer & Scannable Real QR */}
         <div className="flex-1 space-y-6 text-left">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-stone-400 hover:text-white transition-colors"
+            className="min-h-[44px] inline-flex items-center gap-2 text-xs font-semibold text-stone-400 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Return to Overview</span>
@@ -713,7 +790,7 @@ export default function CustomerCafePage({ params }: PageProps) {
             <Link
               href="/wall/screen-101"
               target="_blank"
-              className="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-bold text-white flex items-center gap-2 transition-colors"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-bold text-white flex items-center gap-2 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
             >
               <Tv className="w-3.5 h-3.5 text-amber-400" />
               <span>Launch Live TV Wall</span>
@@ -722,7 +799,7 @@ export default function CustomerCafePage({ params }: PageProps) {
             <Link
               href="/dashboard"
               target="_blank"
-              className="px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-bold text-stone-300 hover:text-white flex items-center gap-2 transition-colors"
+              className="min-h-[44px] px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-bold text-stone-300 hover:text-white flex items-center gap-2 transition-colors focus-visible:ring-2 focus-visible:ring-amber-500"
             >
               <span>Merchant Moderation</span>
               <ExternalLink className="w-3 h-3 text-stone-500" />
