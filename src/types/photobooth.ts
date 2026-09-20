@@ -57,7 +57,9 @@ export type PhotoboothLayoutType =
   | 'polaroid_square'   // 3.5x4.2 in (8.8x10.7 cm) - 1 square cut with chin
   | 'polaroid_wide'     // 4.2x3.5 in (10.7x8.8 cm) - 1 wide cut with chin
   | 'cinema_horizontal' // 6x2 in (15x5 cm) - 3 widescreen cuts
-  | 'film_35mm';        // 2x6 in (5x15 cm) - 4 cuts with 35mm sprocket holes
+  | 'film_35mm'
+  | 'wide_duo_2cut'    // 4x3 in (10x7.6 cm) - Wide short card with 2 photos side by side
+  | 'wide_duo_4cut';   // 4x3.5 in - Wide compact card with 4 photos (2x2)        // 2x6 in (5x15 cm) - 4 cuts with 35mm sprocket holes
 
 export interface PhotoboothFrameTemplate {
   id: string;

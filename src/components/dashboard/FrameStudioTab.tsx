@@ -197,6 +197,14 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
     }));
   };
 
+
+  const handleToggleOrientation = (orientation: StripOrientation) => {
+    setActiveFrame((prev) => ({
+      ...prev,
+      orientation,
+    }));
+  };
+
   // Corner Emojis Preset Pick
   const handleSelectEmojiPair = (topRight: string, bottomLeft: string) => {
     setActiveFrame((prev) => ({
@@ -341,6 +349,43 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
               <Lock className="w-3 h-3 text-amber-600" />
               <span>تحكم التاجر الحصري</span>
             </span>
+          </div>
+
+          
+          {/* Quick Orientation Switcher: Vertical vs Horizontal */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 bg-stone-50 rounded-2xl border border-stone-200/80 mb-4">
+            <div className="flex items-center gap-2">
+              <Layout className="w-4 h-4 text-amber-600 shrink-0" />
+              <div>
+                <span className="text-xs font-black text-stone-900 block">توجيه الكارت الأساسي (Orientation):</span>
+                <span className="text-[10px] text-stone-500">اختر عرض الكارت كشريط رأسي أو كارت أفقي عريض</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-stone-200 self-stretch sm:self-auto justify-center">
+              <button
+                type="button"
+                onClick={() => handleToggleOrientation('vertical')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none text-center ${
+                  activeFrame.orientation === 'vertical'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                📱 رأسي (Vertical)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleOrientation('horizontal')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none text-center ${
+                  activeFrame.orientation === 'horizontal'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                🖼️ أفقي عريض (Horizontal)
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
