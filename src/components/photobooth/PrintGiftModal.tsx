@@ -102,9 +102,9 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
         {/* Story Share & Download HD Actions */}
         <div className="mb-5">
           <ShareStoryWidget
-            stripDataUrl={stripDataUrl || photos[0]}
-            brandName={branding.name}
-            cafeHandle={`@${branding.name?.toLowerCase().replace(/\s+/g, '') || 'memories'}`}
+            stripDataUrl={stripDataUrl || photos[0] || ''}
+            brandName={branding.name || 'Memories'}
+            cafeHandle={branding.name ? `@${branding.name.toLowerCase().replace(/\s+/g, '')}` : '@memories'}
           />
         </div>
 

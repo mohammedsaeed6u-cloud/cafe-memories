@@ -12,7 +12,6 @@ import { PrintGiftModal } from '@/components/photobooth/PrintGiftModal';
 import { StripComposerService } from '@/lib/services/strip-composer.service';
 import {
   Sparkles,
-  Camera,
   Gift,
   CheckCircle,
   ArrowRight,
@@ -22,6 +21,7 @@ import {
   RefreshCw,
   Coffee,
   Heart,
+  X,
 } from 'lucide-react';
 
 export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
@@ -50,10 +50,25 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [isPrintGiftModalOpen, setIsPrintGiftModalOpen] = useState(false);
   const [giftCode, setGiftCode] = useState('');
 
-  // Customer profile form state
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerProfession, setCustomerProfession] = useState('');
+  // Customer profile form state (persisted for returning visits)
+  const [customerName, setCustomerName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('memories_customer_name') || '';
+    }
+    return '';
+  });
+  const [customerPhone, setCustomerPhone] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('memories_customer_phone') || '';
+    }
+    return '';
+  });
+  const [customerProfession, setCustomerProfession] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('memories_customer_role') || '';
+    }
+    return '';
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visitCount, setVisitCount] = useState(1);
   const [extraShots, setExtraShots] = useState<number>(0);
@@ -88,10 +103,18 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     const checkLock = () => {
       const targetId = id || '';
       const access = CooldownService.checkAccess(targetId, cafeSlug);
-      setExtraShots(access.extraShotsAvailable);
-      if (!access.allowed) {
+      const storedPhone = typeof window !== 'undefined' ? localStorage.getItem('memories_customer_phone') : null;
+      const phoneToCheck = customerPhone.trim() || storedPhone || '';
+      const accessPhone = phoneToCheck ? CooldownService.checkAccess(phoneToCheck, cafeSlug) : null;
+
+      const totalExtra = (access.extraShotsAvailable || 0) + (accessPhone?.extraShotsAvailable || 0);
+      setExtraShots(totalExtra);
+
+      if (totalExtra > 0) {
+        setIsLockedByCooldown(false);
+      } else if (!access.allowed || (accessPhone && !accessPhone.allowed)) {
         setIsLockedByCooldown(true);
-        setRemainingCooldownHours(access.remainingHours || 24);
+        setRemainingCooldownHours(Math.max(access.remainingHours || 0, accessPhone?.remainingHours || 0, 1));
       } else {
         setIsLockedByCooldown(false);
       }
@@ -112,7 +135,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       window.removeEventListener('memories-order-shots-updated', handleUnlocked);
       window.removeEventListener('storage', handleUnlocked);
     };
-  }, [cafeSlug]);
+  }, [cafeSlug, customerPhone]);
 
   const handleVerifyPinAndAddShots = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,6 +155,27 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const handleTakeNextOrderPhoto = () => {
     setTodayPhoto(null);
     setIsPrintGiftModalOpen(false);
+  };
+
+  const handleFrameChange = async (frame: PhotoboothFrame) => {
+    setSelectedFrame(frame);
+    const currentPhotos = todayPhoto ? [...accumulatedPhotos, todayPhoto] : accumulatedPhotos;
+    if (currentPhotos.length > 0) {
+      const slots = Math.max(frame.shotCount || 3, 1);
+      try {
+        const stripUrl = await StripComposerService.composeStrip({
+          photos: currentPhotos,
+          totalSlots: slots,
+          frame,
+          branding: settings.branding,
+          freeGiftOffer: settings.freeGiftOffer,
+          giftCode: giftCode || 'GIFT-MEMO',
+        });
+        setComposedStripUrl(stripUrl);
+      } catch (err) {
+        console.warn('Canvas re-composition fallback', err);
+      }
+    }
   };
 
   // Sync settings when updated in storage or another tab
@@ -188,9 +232,14 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     setAccumulatedPhotos(updatedCardPhotos);
     const slots = Math.max(selectedFrame.shotCount || 3, 1);
 
-    // Save card progress locally
+    // Save card progress & profile locally
     try {
       localStorage.setItem(`memories_card_photos_${cafeSlug}`, JSON.stringify(updatedCardPhotos));
+      localStorage.setItem('memories_customer_name', customerName);
+      localStorage.setItem('memories_customer_phone', customerPhone);
+      if (customerProfession) {
+        localStorage.setItem('memories_customer_role', customerProfession);
+      }
     } catch {
       // ignore
     }
@@ -210,11 +259,16 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       // keep previous
     }
 
-    // Record 24h limit
+    // Record session / deduct order shot
     if (deviceId) {
       CooldownService.recordSession(deviceId, cafeSlug);
-      CooldownService.recordSession(customerPhone, cafeSlug);
     }
+    if (customerPhone.trim()) {
+      CooldownService.recordSession(customerPhone.trim(), cafeSlug);
+    }
+
+    // CRITICAL: Reset todayPhoto to null so it does not duplicate on re-render!
+    setTodayPhoto(null);
 
     try {
       const res = await fetch('/api/v1/photobooth/capture', {
@@ -241,7 +295,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         }
       }
     } catch (err) {
-      console.warn('Could not sync with Supabase, proceeding locally', err);
+      console.warn('Proceeding locally (static mode)', err);
     } finally {
       setIsSubmitting(false);
       setIsLeadModalOpen(false);
@@ -461,7 +515,10 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   </div>
 
                   <button
-                    onClick={() => setTodayPhoto(null)}
+                    onClick={() => {
+                      setTodayPhoto(null);
+                      setComposedStripUrl(undefined);
+                    }}
                     className="px-3.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1.5 transition"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -483,7 +540,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 <FrameSelector
                   frames={settings.frames}
                   selectedFrameId={selectedFrame.id}
-                  onSelectFrame={(frame) => setSelectedFrame(frame)}
+                  onSelectFrame={handleFrameChange}
                 />
 
                 {/* CTA: Proceed to Lead Form */}
@@ -509,6 +566,16 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       {isLeadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/80 backdrop-blur-md animate-in fade-in">
           <div className="relative w-full max-w-md bg-[#FAF8F5] rounded-3xl p-6 sm:p-8 shadow-2xl border border-stone-200 text-stone-900">
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setIsLeadModalOpen(false)}
+              className="absolute top-5 left-5 w-8 h-8 rounded-full bg-stone-200/80 hover:bg-stone-300 text-stone-700 flex items-center justify-center transition"
+              title="إغلاق"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 mb-2">
                 <Heart className="w-6 h-6" />
@@ -550,7 +617,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 />
               </div>
 
-              {/* Clean, Single Input for Profession / Field (NO ugly cluttered buttons!) */}
+              {/* Clean, Single Input for Profession / Field */}
               <div>
                 <label className="block text-xs font-bold text-stone-700 mb-1">
                   مجالك أو اهتمامك (اختياري)
@@ -577,11 +644,11 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 flex gap-2">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 px-6 rounded-2xl bg-stone-900 hover:bg-black text-white font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition disabled:opacity-50"
+                  className="flex-1 py-3.5 px-6 rounded-2xl bg-stone-900 hover:bg-black text-white font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <span>جاري حفظ الكارت...</span>
@@ -591,6 +658,13 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                       <span>تأكيد وحفظ الكارت</span>
                     </>
                   )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsLeadModalOpen(false)}
+                  className="py-3.5 px-5 rounded-2xl bg-stone-200/80 hover:bg-stone-300 text-stone-700 font-bold text-sm transition"
+                >
+                  إلغاء
                 </button>
               </div>
 
@@ -652,7 +726,6 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   value={baristaPin}
                   onChange={(e) => setBaristaPin(e.target.value)}
                   className="w-full text-center tracking-widest font-mono text-lg py-2.5 px-4 rounded-xl border border-stone-300 focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"
-                  autoFocus
                 />
                 {pinError && (
                   <p className="text-[10px] text-red-600 font-bold text-center mt-1">
@@ -670,7 +743,11 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsBaristaPinModalOpen(false)}
+                  onClick={() => {
+                    setIsBaristaPinModalOpen(false);
+                    setBaristaPin('');
+                    setPinError(null);
+                  }}
                   className="py-3 px-4 rounded-2xl bg-stone-200/80 hover:bg-stone-300 text-stone-700 text-xs font-bold transition"
                 >
                   إلغاء
@@ -684,8 +761,18 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       {/* Print & Gift Modal */}
       <PrintGiftModal
         isOpen={isPrintGiftModalOpen}
-        onClose={() => setIsPrintGiftModalOpen(false)}
-        photos={currentDisplayPhotos}
+        onClose={() => {
+          setIsPrintGiftModalOpen(false);
+          setTodayPhoto(null);
+          const targetId = customerPhone.trim() || deviceId;
+          const access = CooldownService.checkAccess(targetId, cafeSlug);
+          setExtraShots(access.extraShotsAvailable);
+          if (!access.allowed) {
+            setIsLockedByCooldown(true);
+            setRemainingCooldownHours(access.remainingHours || 24);
+          }
+        }}
+        photos={accumulatedPhotos.length > 0 ? accumulatedPhotos : (todayPhoto ? [todayPhoto] : [])}
         stripDataUrl={composedStripUrl}
         frame={selectedFrame}
         branding={settings.branding}
@@ -693,7 +780,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         giftCode={giftCode}
         customerName={customerName}
         customerRoleLabel={customerProfession || 'زائر مميز'}
-        visitCount={currentDisplayPhotos.length}
+        visitCount={accumulatedPhotos.length}
         onPrintStrip={() => {
           if (composedStripUrl) {
             PrintService.printStripImage(composedStripUrl);

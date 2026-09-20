@@ -20,6 +20,7 @@ export class BusinessSettingsService {
         return {
           ...DEFAULT_BUSINESS_SETTINGS,
           ...parsed,
+          cafeSlug: cafeSlug || parsed.cafeSlug || DEFAULT_BUSINESS_SETTINGS.cafeSlug,
           branding: { ...DEFAULT_BUSINESS_SETTINGS.branding, ...(parsed.branding || {}) },
           freeGiftOffer: { ...DEFAULT_BUSINESS_SETTINGS.freeGiftOffer, ...(parsed.freeGiftOffer || {}) },
           frames: parsed.frames && parsed.frames.length > 0 ? parsed.frames : DEFAULT_BUSINESS_SETTINGS.frames,
@@ -68,7 +69,9 @@ export class BusinessSettingsService {
     const updated: BusinessSettings = {
       ...current,
       defaultShotCount: shotCount,
-      frames: current.frames.map((f) => ({ ...f, shotCount })),
+      frames: current.frames.map((f) => 
+        f.id === current.activeFrameId ? { ...f, shotCount } : f
+      ),
     };
     this.saveSettings(updated);
     return updated;
@@ -79,7 +82,9 @@ export class BusinessSettingsService {
     const updated: BusinessSettings = {
       ...current,
       defaultOrientation: orientation,
-      frames: current.frames.map((f) => ({ ...f, orientation })),
+      frames: current.frames.map((f) => 
+        f.id === current.activeFrameId ? { ...f, orientation } : f
+      ),
     };
     this.saveSettings(updated);
     return updated;
@@ -107,9 +112,11 @@ export class BusinessSettingsService {
 
   static setActiveFrame(cafeSlug: string, frameId: string): BusinessSettings {
     const current = this.getSettings(cafeSlug);
+    const frameExists = current.frames.some((f) => f.id === frameId);
+    const activeFrameId = frameExists ? frameId : current.activeFrameId;
     const updated: BusinessSettings = {
       ...current,
-      activeFrameId: frameId,
+      activeFrameId,
     };
     this.saveSettings(updated);
     return updated;

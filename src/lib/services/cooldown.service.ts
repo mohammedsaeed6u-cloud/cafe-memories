@@ -85,10 +85,14 @@ export class CooldownService {
 
     // Condition 1: Extra shots from orders available
     if (extraShots > 0) {
+      const diffMs = now - (entry.lastSessionTime || 0);
+      const cooldownMs = COOLDOWN_HOURS * 60 * 60 * 1000;
+      const freeDailyAvailable = !entry.lastSessionTime || diffMs >= cooldownMs;
+
       return {
         allowed: true,
         extraShotsAvailable: extraShots,
-        freeDailyAvailable: false,
+        freeDailyAvailable,
         hasExtraShots: true,
         canShootNow: true,
       };
@@ -109,7 +113,7 @@ export class CooldownService {
     const diffMs = now - (entry.lastSessionTime || 0);
     const cooldownMs = COOLDOWN_HOURS * 60 * 60 * 1000;
 
-    if (diffMs < cooldownMs) {
+    if (entry.lastSessionTime && diffMs < cooldownMs) {
       const remainingHours = Math.ceil((cooldownMs - diffMs) / (60 * 60 * 1000));
       return {
         allowed: false,
@@ -140,15 +144,14 @@ export class CooldownService {
     if (!identifier) return;
     const store = this.getStore();
     const key = this.makeKey(identifier, cafeSlug);
-    const existing = store[key] || { lastSessionTime: Date.now() };
+    const existing = store[key] || { lastSessionTime: 0 };
 
     const extraShots = existing.extraShotsAvailable || 0;
 
     if (extraShots > 0) {
-      // Consume 1 order shot
+      // Consume 1 order shot without resetting daily visit cooldown
       store[key] = {
         ...existing,
-        lastSessionTime: Date.now(),
         extraShotsAvailable: Math.max(0, extraShots - 1),
       };
     } else {
@@ -163,9 +166,15 @@ export class CooldownService {
     this.saveStore(store);
 
     if (typeof window !== 'undefined') {
+      const remaining = store[key].extraShotsAvailable ?? 0;
       window.dispatchEvent(
         new CustomEvent('memories-order-shots-updated', {
-          detail: { identifier, cafeSlug, remainingExtraShots: store[key].extraShotsAvailable },
+          detail: { 
+            identifier, 
+            cafeSlug, 
+            remainingExtraShots: remaining,
+            extraShotsAvailable: remaining 
+          },
         })
       );
     }
@@ -184,7 +193,7 @@ export class CooldownService {
     if (!identifier || shotsCount <= 0) return 0;
     const store = this.getStore();
     const key = this.makeKey(identifier, cafeSlug);
-    const existing = store[key] || { lastSessionTime: Date.now() };
+    const existing = store[key] || { lastSessionTime: 0 };
 
     const currentShots = existing.extraShotsAvailable || 0;
     const currentOrders = existing.ordersCount || 0;
@@ -201,7 +210,12 @@ export class CooldownService {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
         new CustomEvent('memories-order-shots-updated', {
-          detail: { identifier, cafeSlug, extraShotsAvailable: newShotsTotal },
+          detail: { 
+            identifier, 
+            cafeSlug, 
+            extraShotsAvailable: newShotsTotal,
+            remainingExtraShots: newShotsTotal 
+          },
         })
       );
       window.dispatchEvent(
@@ -236,7 +250,7 @@ export class CooldownService {
     const key = this.makeKey(identifier, cafeSlug);
 
     store[key] = {
-      ...(store[key] || { lastSessionTime: Date.now() }),
+      ...(store[key] || { lastSessionTime: 0 }),
       unlockedUntil: Date.now() + overrideHours * 60 * 60 * 1000,
     };
 

@@ -8,7 +8,6 @@ import {
   Users,
   Coffee,
   Plus,
-  ShieldCheck,
   Search,
   Download,
   Copy,
@@ -374,17 +373,23 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-2">
                         {/* WhatsApp */}
-                        <a
-                          href={`https://wa.me/${customer.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                            `أهلاً يا ${customer.name}! يسعدنا دائماً زيارتك في ${brandName}.`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition"
-                          title="مراسلة عبر واتساب"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                        </a>
+                        {(() => {
+                          const digits = customer.phone.replace(/[^0-9]/g, '');
+                          const waPhone = digits.startsWith('0') ? `2${digits}` : digits;
+                          return (
+                            <a
+                              href={`https://wa.me/${waPhone}?text=${encodeURIComponent(
+                                `أهلاً يا ${customer.name}! يسعدنا دائماً زيارتك في ${brandName}.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition"
+                              title="مراسلة عبر واتساب"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </a>
+                          );
+                        })()}
 
                         {/* Call */}
                         <a

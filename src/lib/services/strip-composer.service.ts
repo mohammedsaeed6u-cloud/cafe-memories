@@ -122,14 +122,39 @@ export class StripComposerService {
     const photoAreaBottom = height - 90;
     const photoAreaHeight = photoAreaBottom - photoAreaTop;
 
-    const gap = 18;
-    const totalGap = gap * (totalSlots - 1);
-    const slotH = (photoAreaHeight - totalGap) / totalSlots;
-    const slotW = width - 72;
-    const slotX = 36;
+    let slotW: number;
+    let slotH: number;
+    const gapX = 20;
+    const gapY = 18;
+
+    if (isHorizontal) {
+      const cols = 2;
+      const rows = Math.ceil(totalSlots / cols);
+      slotW = (width - 72 - (cols - 1) * gapX) / cols;
+      slotH = (photoAreaHeight - (rows - 1) * gapY) / rows;
+    } else {
+      const totalGap = gapY * (totalSlots - 1);
+      slotW = width - 72;
+      slotH = (photoAreaHeight - totalGap) / totalSlots;
+    }
 
     for (let slotIdx = 0; slotIdx < totalSlots; slotIdx++) {
-      const slotY = photoAreaTop + slotIdx * (slotH + gap);
+      let slotX: number;
+      let slotY: number;
+
+      if (isHorizontal) {
+        const col = slotIdx % 2;
+        const row = Math.floor(slotIdx / 2);
+        slotX = 36 + col * (slotW + gapX);
+        slotY = photoAreaTop + row * (slotH + gapY);
+      } else {
+        slotX = 36;
+        slotY = photoAreaTop + slotIdx * (slotH + gapY);
+      }
+
+      const slotCenterX = slotX + slotW / 2;
+      const slotCenterY = slotY + slotH / 2;
+
       const photo = loadedImages[slotIdx];
       const isLastSlot = slotIdx === totalSlots - 1;
       const visitNumber = slotIdx + 1;
@@ -171,24 +196,24 @@ export class StripComposerService {
         ctx.setLineDash([]);
 
         // Gift Icon
-        ctx.font = '42px sans-serif';
+        ctx.font = isHorizontal ? '32px sans-serif' : '42px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('🎁', width / 2, slotY + slotH / 2 - 25);
+        ctx.fillText('🎁', slotCenterX, slotCenterY - (isHorizontal ? 18 : 25));
 
         // Milestone Label
         ctx.fillStyle = frame.accentColor || '#D97706';
         ctx.font = 'bold 14px sans-serif';
-        ctx.fillText(`الخانة الأخيرة • الزيارة #${visitNumber}`, width / 2, slotY + slotH / 2 + 10);
+        ctx.fillText(`الخانة الأخيرة • الزيارة #${visitNumber}`, slotCenterX, slotCenterY + (isHorizontal ? 6 : 10));
 
         // Gift Title
         ctx.fillStyle = '#1C1917';
-        ctx.font = 'bold 18px sans-serif';
-        ctx.fillText(freeGiftOffer.title || 'مشروب مجاني أو هدية فورية', width / 2, slotY + slotH / 2 + 35);
+        ctx.font = isHorizontal ? 'bold 15px sans-serif' : 'bold 18px sans-serif';
+        ctx.fillText(freeGiftOffer.title || 'مشروب مجاني أو هدية فورية', slotCenterX, slotCenterY + (isHorizontal ? 26 : 35));
 
         // Completion Note
         ctx.fillStyle = '#78716C';
-        ctx.font = '13px sans-serif';
-        ctx.fillText('اكتمال الكارت والطباعة', width / 2, slotY + slotH / 2 + 58);
+        ctx.font = '12px sans-serif';
+        ctx.fillText('اكتمال الكارت والطباعة', slotCenterX, slotCenterY + (isHorizontal ? 44 : 58));
       } else {
         // Upcoming middle slot placeholder
         ctx.fillStyle = '#FAF8F5';
@@ -205,7 +230,7 @@ export class StripComposerService {
         ctx.fillStyle = '#A8A29E';
         ctx.font = 'bold 18px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`الزيارة القادمة #${visitNumber}`, width / 2, slotY + slotH / 2 + 6);
+        ctx.fillText(`الزيارة القادمة #${visitNumber}`, slotCenterX, slotCenterY + 6);
       }
     }
 

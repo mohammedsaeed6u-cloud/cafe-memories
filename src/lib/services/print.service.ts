@@ -20,10 +20,10 @@ export class PrintService {
     const iframe = document.createElement('iframe');
     iframe.id = 'memories-print-frame';
     iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
+    iframe.style.left = '-9999px';
+    iframe.style.top = '0';
+    iframe.style.width = '800px';
+    iframe.style.height = '1200px';
     iframe.style.border = '0';
     iframe.style.opacity = '0';
     iframe.style.pointerEvents = 'none';
@@ -107,12 +107,23 @@ export class PrintService {
     const triggerPrint = () => {
       setTimeout(() => {
         try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
+          const win = iframe.contentWindow;
+          const cleanup = () => {
+            setTimeout(() => {
+              try { iframe.remove(); } catch {}
+            }, 1000);
+          };
+          if (win) {
+            win.addEventListener('afterprint', cleanup);
+            setTimeout(cleanup, 60000); // 60s fallback
+            win.focus();
+            win.print();
+          } else {
+            iframe.remove();
+          }
         } catch (err) {
           console.error('[PrintService] Print execution error', err);
-        } finally {
-          setTimeout(() => iframe.remove(), 4000);
+          iframe.remove();
         }
       }, 250);
     };
@@ -133,17 +144,9 @@ export class PrintService {
   static printElement(elementId: string = 'printable-strip'): void {
     if (typeof window === 'undefined') return;
 
-    // Check if element has an img or canvas inside or if we can read dataUrl
     const sourceEl = document.getElementById(elementId);
     if (!sourceEl) {
       window.print();
-      return;
-    }
-
-    // If an img tag is inside the strip, prefer image print
-    const firstImg = sourceEl.querySelector('img');
-    if (firstImg && firstImg.src && firstImg.src.startsWith('data:image')) {
-      this.printStripImage(firstImg.src);
       return;
     }
 
@@ -154,10 +157,10 @@ export class PrintService {
     const iframe = document.createElement('iframe');
     iframe.id = 'memories-print-frame';
     iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
+    iframe.style.left = '-9999px';
+    iframe.style.top = '0';
+    iframe.style.width = '800px';
+    iframe.style.height = '1200px';
     iframe.style.border = '0';
     iframe.style.opacity = '0';
     iframe.style.pointerEvents = 'none';
@@ -235,12 +238,23 @@ export class PrintService {
 
     setTimeout(() => {
       try {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
+        const win = iframe.contentWindow;
+        const cleanup = () => {
+          setTimeout(() => {
+            try { iframe.remove(); } catch {}
+          }, 1000);
+        };
+        if (win) {
+          win.addEventListener('afterprint', cleanup);
+          setTimeout(cleanup, 60000);
+          win.focus();
+          win.print();
+        } else {
+          iframe.remove();
+        }
       } catch (err) {
         console.error('[PrintService] Print execution error', err);
-      } finally {
-        setTimeout(() => iframe.remove(), 4000);
+        iframe.remove();
       }
     }, 400);
   }
