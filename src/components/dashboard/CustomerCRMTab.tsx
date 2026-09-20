@@ -72,15 +72,22 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
     setTimeout(() => setUnlockedNotice(null), 4000);
   };
 
-  const getPersonaBadge = (roleKey: CustomerPersonaKey) => {
-    const persona = CUSTOMER_PERSONAS.find((p) => p.key === roleKey);
-    if (!persona) return null;
+  const getPersonaBadge = (roleKey: string) => {
+    const persona = CUSTOMER_PERSONAS.find((p) => p.key === roleKey || p.label === roleKey);
+    if (persona) {
+      return (
+        <span
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${persona.badgeColor}`}
+        >
+          <span>{persona.icon}</span>
+          <span>{persona.label}</span>
+        </span>
+      );
+    }
     return (
-      <span
-        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${persona.badgeColor}`}
-      >
-        <span>{persona.icon}</span>
-        <span>{persona.label}</span>
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border bg-stone-100 text-stone-800 border-stone-300">
+        <span>✨</span>
+        <span>{roleKey || 'زائر مميز'}</span>
       </span>
     );
   };

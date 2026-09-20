@@ -1,5 +1,5 @@
 export type StripOrientation = 'vertical' | 'horizontal';
-export type ShotCount = 1 | 2 | 3 | 4 | 6;
+export type ShotCount = number;
 
 export interface CornerEmojiConfig {
   topRight: string;
@@ -29,7 +29,7 @@ export interface PhotoboothFrame {
   accentColor?: string;
   cornerEmojis: CornerEmojiConfig;
   orientation: StripOrientation;
-  shotCount: ShotCount;
+  shotCount: number; // Configurable freely by merchant (e.g. 3, 4, 5...)
   badgeText?: string;
   isCustom?: boolean;
 }
@@ -38,23 +38,17 @@ export interface BusinessSettings {
   cafeSlug: string;
   cafeName: string;
   branding: BusinessBranding;
-  defaultShotCount: ShotCount;
+  defaultShotCount: number;
   defaultOrientation: StripOrientation;
   freeGiftOffer: FreeGiftOffer;
   activeFrameId: string;
   frames: PhotoboothFrame[];
 }
 
-export type CustomerPersonaKey =
-  | 'tech_freelancer'
-  | 'creator_creative'
-  | 'student_researcher'
-  | 'business_founder'
-  | 'coffee_lover'
-  | 'other';
+export type CustomerPersonaKey = string;
 
 export interface CustomerPersonaInfo {
-  key: CustomerPersonaKey;
+  key: string;
   label: string;
   icon: string;
   badgeColor: string;

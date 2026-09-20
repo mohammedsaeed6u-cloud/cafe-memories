@@ -81,6 +81,7 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
             photos={photos}
             frame={frame}
             branding={branding}
+            freeGiftOffer={freeGiftOffer}
             giftCode={giftCode}
           />
         </div>
