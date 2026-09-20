@@ -8,7 +8,7 @@ import {
   FrameShapeStyle,
   CardColorPalette,
 } from '@/types/photobooth';
-import { PRESET_EMOJI_PAIRS, PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
+import { PRESET_EMOJI_PAIRS, PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
 import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
 import { PhotoboothCardMode, PlacedSticker } from '@/types/photobooth';
 import { PhotoboothStripCard } from '@/components/photobooth/PhotoboothStripCard';
@@ -69,6 +69,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
       'terracotta-clay',
     ]
   );
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(activeFrame.templateId || 'korean_noir_2x6');
   const [cardMode, setCardMode] = useState<PhotoboothCardMode>(
     activeFrame.cardMode || settings.defaultCardMode || 'korean_noir'
   );
@@ -167,6 +168,35 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
     });
   };
 
+  // 10 Pinterest Photobooth Frame Templates Handler
+  const handleSelectTemplate = (templateId: string) => {
+    const tmpl = PHOTOBOOTH_FRAME_TEMPLATES.find((t) => t.id === templateId);
+    if (!tmpl) return;
+
+    setSelectedTemplateId(templateId);
+
+    const newMode: PhotoboothCardMode =
+      templateId === 'retro_film_35mm' ? 'retro_film' :
+      templateId === 'polaroid_classic' || templateId === 'polaroid_wide' ? 'polaroid_classic' :
+      templateId === 'classic_latte_2x6' ? 'cafe_latte' : 'korean_noir';
+
+    setCardMode(newMode);
+
+    setActiveFrame((prev) => ({
+      ...prev,
+      templateId: tmpl.id,
+      layoutType: tmpl.layoutType,
+      shotCount: tmpl.shotCount,
+      orientation: tmpl.orientation,
+      cardMode: newMode,
+      bgColor: tmpl.defaultBg,
+      borderColor: tmpl.defaultBorder,
+      textColor: tmpl.defaultText,
+      accentColor: tmpl.defaultAccent,
+      badgeText: tmpl.badge,
+    }));
+  };
+
   // Corner Emojis Preset Pick
   const handleSelectEmojiPair = (topRight: string, bottomLeft: string) => {
     setActiveFrame((prev) => ({
@@ -200,6 +230,8 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
       branding,
       freeGiftOffer: freeGift,
       activeFrameId: activeFrame.id,
+      defaultTemplateId: selectedTemplateId || activeFrame.templateId,
+      defaultLayoutType: activeFrame.layoutType,
       defaultShotCount: shotCount,
       defaultOrientation: orientation,
       defaultFrameShape: frameShape,
@@ -289,7 +321,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
           </div>
         </div>
 
-        {/* Section 2: Frame Size, Shot Count & Shape */}
+                {/* Section 2: 10 Pinterest Photobooth Frame Templates */}
         <div className="p-6 bg-white rounded-3xl border border-stone-200/90 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -298,176 +330,92 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
               </div>
               <div>
                 <h3 className="font-extrabold text-stone-900 text-base">
-                  حجم وشكل الفريم (خاص بالتاجر)
+                  قوالب وتصميمات الفريمات (10 أشكال بنترست وكوريا)
                 </h3>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  حدد طول وعرض وشكل الفريم وعدد الصور لجميع كروت العملاء
+                </p>
               </div>
             </div>
             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200/70 flex items-center gap-1">
               <Lock className="w-3 h-3 text-amber-600" />
-              <span>محدد حصرياً من التاجر</span>
+              <span>تحكم التاجر الحصري</span>
             </span>
           </div>
 
-          <div className="space-y-4">
-            {/* Free Shot Count Input */}
-            <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1.5 flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5 text-amber-600" />
-                <span>اكتب عدد الصور في كارت العميل:</span>
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={activeFrame.shotCount || 3}
-                  onChange={(e) => handleShotCountChange(parseInt(e.target.value) || 1)}
-                  className="w-24 text-center font-mono font-black text-xl py-2 px-3 rounded-xl border border-stone-300 focus:ring-2 focus:ring-amber-500 focus:outline-none bg-stone-50/50"
-                />
-                <span className="text-xs text-stone-500 font-medium">
-                  صور (صورة واحدة لكل زيارة، والهدية توضع تلقائياً في الخانة الأخيرة)
-                </span>
-              </div>
-              <p className="text-[11px] text-amber-800 font-medium mt-1 bg-amber-50/60 p-2 rounded-lg border border-amber-100">
-                🔒 هذا الرقم موحد وثابت على جميع كروت العملاء في هذا الكافيه، ولا يمكن للعميل التلاعب بحجم الكارت.
-              </p>
-            </div>
-
-            {/* Frame Orientation & Shape */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-stone-100">
-              {/* Orientation */}
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1.5 flex items-center gap-1.5">
-                  <Layout className="w-3.5 h-3.5 text-amber-600" />
-                  <span>توجيه الكارت:</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleOrientationChange('vertical')}
-                    className={`py-2 rounded-xl text-xs font-bold border transition ${
-                      activeFrame.orientation === 'vertical'
-                        ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
-                        : 'bg-stone-50 hover:bg-stone-100 text-stone-700 border-stone-200'
-                    }`}
-                  >
-                    رأسي (شريط 2x6)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleOrientationChange('horizontal')}
-                    className={`py-2 rounded-xl text-xs font-bold border transition ${
-                      activeFrame.orientation === 'horizontal'
-                        ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
-                        : 'bg-stone-50 hover:bg-stone-100 text-stone-700 border-stone-200'
-                    }`}
-                  >
-                    أفقي (كارت بريدي)
-                  </button>
-                </div>
-              </div>
-
-              {/* Section 2.5: Photobooth Modes */}
-            <div className="pt-3 border-t border-stone-100">
-              <label className="block text-xs font-bold text-stone-700 mb-2 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  <span>مود وستايل الكارت الأساسي (Photobooth Mode):</span>
-                </span>
-                <span className="text-[10px] text-amber-700 font-mono font-bold">5 أنماط احترافية</span>
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {PHOTOBOOTH_CARD_MODES.map((mode) => (
-                  <button
-                    key={mode.id}
-                    type="button"
-                    onClick={() => {
-                      setCardMode(mode.id);
-                      setActiveFrame((prev) => ({
-                        ...prev,
-                        cardMode: mode.id,
-                        bgColor: mode.defaultBg,
-                        borderColor: mode.defaultBorder,
-                        textColor: mode.defaultText,
-                        accentColor: mode.defaultAccent,
-                        badgeText: mode.filmBadge,
-                      }));
-                    }}
-                    className={`p-3 rounded-2xl border text-right transition flex items-start gap-2.5 ${
-                      cardMode === mode.id
-                        ? 'border-amber-500 bg-amber-50/80 shadow-xs'
-                        : 'border-stone-200 hover:bg-stone-50'
-                    }`}
-                  >
-                    <span className="text-xl p-2 bg-white rounded-xl shadow-2xs shrink-0">{mode.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-stone-900">{mode.nameAr}</span>
-                        {cardMode === mode.id && <Check className="w-4 h-4 text-amber-600 shrink-0" />}
-                      </div>
-                      <p className="text-[10px] text-stone-500 mt-0.5 line-clamp-1">{mode.description}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {PHOTOBOOTH_FRAME_TEMPLATES.map((tmpl) => {
+              const isSelected = (selectedTemplateId || activeFrame.templateId) === tmpl.id;
+              return (
+                <button
+                  key={tmpl.id}
+                  type="button"
+                  onClick={() => handleSelectTemplate(tmpl.id)}
+                  className={`p-3.5 rounded-2xl border text-right transition flex items-start gap-3 relative ${
+                    isSelected
+                      ? "border-amber-500 bg-amber-50/80 shadow-xs ring-1 ring-amber-500/50"
+                      : "border-stone-200 hover:bg-stone-50"
+                  }`}
+                >
+                  <span className="text-2xl p-2 bg-white rounded-xl shadow-2xs shrink-0 border border-stone-100">
+                    {tmpl.icon}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-stone-900 leading-tight">
+                        {tmpl.nameAr}
+                      </span>
+                      {isSelected && <Check className="w-4 h-4 text-amber-600 shrink-0" />}
                     </div>
-                  </button>
-                ))}
-              </div>
 
-              {/* Permissions checkboxes */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-3 mt-3 border-t border-stone-100 text-xs">
-                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-stone-200 bg-stone-50/60 cursor-pointer hover:bg-amber-50/40 transition">
-                  <input
-                    type="checkbox"
-                    checked={allowCustomerModes}
-                    onChange={(e) => setAllowCustomerModes(e.target.checked)}
-                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
-                  />
-                  <span className="font-bold text-stone-700">السماح للعميل بتغيير المود بحرية</span>
-                </label>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-stone-100 text-stone-700 rounded-md">
+                        {tmpl.dimensions} ({tmpl.dimensionsCm})
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-700">
+                        {tmpl.shotCount} {tmpl.shotCount === 1 ? "لقطة" : "صور"}
+                      </span>
+                      <span className="text-[9px] text-stone-400 font-medium">
+                        • {tmpl.orientation === "vertical" ? "طولي" : "عرضي"}
+                      </span>
+                    </div>
 
-                <label className="flex items-center gap-2 p-2.5 rounded-xl border border-stone-200 bg-stone-50/60 cursor-pointer hover:bg-amber-50/40 transition">
-                  <input
-                    type="checkbox"
-                    checked={allowCustomerStickers}
-                    onChange={(e) => setAllowCustomerStickers(e.target.checked)}
-                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
-                  />
-                  <span className="font-bold text-stone-700">السماح بإضافة وتحريك ستيكرز وإيموجيز</span>
-                </label>
-              </div>
-            </div>
+                    <p className="text-[10px] text-stone-500 mt-1 line-clamp-2 leading-relaxed">
+                      {tmpl.description}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
 
-            {/* Shape Style */}
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1.5 flex items-center gap-1.5">
-                  <Sliders className="w-3.5 h-3.5 text-amber-600" />
-                  <span>شكل وحواف الفريم:</span>
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {[
-                    { id: 'rounded', label: 'مودرن ناعم' },
-                    { id: 'sharp', label: 'كلاسيك حاد' },
-                    { id: 'polaroid', label: 'بولارويد' },
-                  ].map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => handleFrameShapeChange(s.id as FrameShapeStyle)}
-                      className={`py-2 px-1 text-center rounded-xl text-[11px] font-bold border transition ${
-                        frameShape === s.id
-                          ? 'bg-stone-900 text-white border-stone-900 shadow-xs'
-                          : 'bg-stone-50 hover:bg-stone-100 text-stone-700 border-stone-200'
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {/* Permissions checkboxes for Customer */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4 mt-4 border-t border-stone-100 text-xs">
+            <label className="flex items-center gap-2 p-3 rounded-xl border border-stone-200 bg-stone-50/60 cursor-pointer hover:bg-amber-50/40 transition">
+              <input
+                type="checkbox"
+                checked={allowCustomerColors}
+                onChange={(e) => setAllowCustomerColors(e.target.checked)}
+                className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+              />
+              <span className="font-bold text-stone-700">السماح للعميل باختيار ألوان الفريم المحددة</span>
+            </label>
+
+            <label className="flex items-center gap-2 p-3 rounded-xl border border-stone-200 bg-stone-50/60 cursor-pointer hover:bg-amber-50/40 transition">
+              <input
+                type="checkbox"
+                checked={allowCustomerStickers}
+                onChange={(e) => setAllowCustomerStickers(e.target.checked)}
+                className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+              />
+              <span className="font-bold text-stone-700">السماح بإضافة وتحريك ستيكرز وإيموجيز</span>
+            </label>
           </div>
         </div>
 
         {/* Section 3: Color Studio & Merchant Allowed Colors */}
+
+
         <div className="p-6 bg-white rounded-3xl border border-stone-200/90 shadow-xs">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">

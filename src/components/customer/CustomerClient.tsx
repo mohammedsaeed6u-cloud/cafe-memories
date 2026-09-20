@@ -66,8 +66,10 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       settings.frames[0];
     return {
       ...base,
-      shotCount: settings.defaultShotCount,
-      orientation: settings.defaultOrientation,
+      templateId: settings.defaultTemplateId || base?.templateId || 'korean_noir_2x6',
+      layoutType: settings.defaultLayoutType || base?.layoutType,
+      shotCount: settings.defaultShotCount || base?.shotCount || 4,
+      orientation: settings.defaultOrientation || base?.orientation || 'vertical',
       frameShape: settings.defaultFrameShape || 'rounded',
     };
   });

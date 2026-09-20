@@ -46,6 +46,37 @@ export interface CardColorPalette {
   accentColor: string;
 }
 
+
+export type PhotoboothLayoutType =
+  | 'strip_4'           // 2x6 in (5x15 cm) - 4 vertical cuts
+  | 'strip_3'           // 2x6 in (5x15 cm) - 3 vertical cuts
+  | 'strip_2'           // 2x6 in (5x15 cm) - 2 vertical cuts (Double Shot)
+  | 'grid_2x2'          // 4x6 in (10x15 cm) - 4 cuts grid (2x2)
+  | 'grid_2x3'          // 4x6 in (10x15 cm) - 6 cuts grid (2x3)
+  | 'twin_strip'        // 4x6 in (10x15 cm) - Dual 2x6 strips with cut line
+  | 'polaroid_square'   // 3.5x4.2 in (8.8x10.7 cm) - 1 square cut with chin
+  | 'polaroid_wide'     // 4.2x3.5 in (10.7x8.8 cm) - 1 wide cut with chin
+  | 'cinema_horizontal' // 6x2 in (15x5 cm) - 3 widescreen cuts
+  | 'film_35mm';        // 2x6 in (5x15 cm) - 4 cuts with 35mm sprocket holes
+
+export interface PhotoboothFrameTemplate {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+  dimensions: string;
+  dimensionsCm: string;
+  orientation: StripOrientation;
+  shotCount: number;
+  layoutType: PhotoboothLayoutType;
+  description: string;
+  badge: string;
+  icon: string;
+  defaultBg: string;
+  defaultBorder: string;
+  defaultText: string;
+  defaultAccent: string;
+}
+
 export interface PhotoboothFrame {
   id: string;
   name: string;
@@ -61,6 +92,8 @@ export interface PhotoboothFrame {
   cardMode?: PhotoboothCardMode;
   stickers?: PlacedSticker[];
   badgeText?: string;
+  templateId?: string;
+  layoutType?: PhotoboothLayoutType;
   isCustom?: boolean;
 }
 
@@ -79,7 +112,9 @@ export interface BusinessSettings {
   defaultShotCount: number; // Strictly determined by merchant
   defaultOrientation: StripOrientation; // Strictly determined by merchant
   defaultFrameShape?: FrameShapeStyle; // Rounded, sharp, or polaroid
-  defaultCardMode?: PhotoboothCardMode; // Korean, Latte, Film, Sakura, Polaroid
+  defaultCardMode?: PhotoboothCardMode;
+  defaultTemplateId?: string;
+  defaultLayoutType?: PhotoboothLayoutType; // Korean, Latte, Film, Sakura, Polaroid
   freeGiftOffer: FreeGiftOffer;
   activeFrameId: string;
   frames: PhotoboothFrame[];

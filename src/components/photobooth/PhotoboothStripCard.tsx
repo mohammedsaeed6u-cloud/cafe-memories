@@ -7,10 +7,11 @@ import {
   FreeGiftOffer,
   PhotoboothCardMode,
   PlacedSticker,
+  PhotoboothLayoutType,
 } from '@/types/photobooth';
-import { Check } from 'lucide-react';
+import { Check, Gift, Scissors } from 'lucide-react';
 import { DraggableStickerLayer } from './DraggableStickerLayer';
-import { PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
+import { PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
 
 interface PhotoboothStripCardProps {
   photos: string[];
@@ -33,7 +34,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   frame,
   branding,
   freeGiftOffer = {
-    title: 'مشروب مجاني مميز + طباعة الكارت 2x6',
+    title: 'مشروب مجاني مميز + طباعة الكارت',
     subtitle: 'هدية فورية عند اكتمال كارت ذكرياتك',
     icon: '🎁',
   },
@@ -46,34 +47,102 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   isStickersInteractive = false,
 }) => {
   const cardContainerRef = useRef<HTMLDivElement>(null);
-  const isHorizontal = frame.orientation === 'horizontal';
-  const totalSlots = Math.max(frame.shotCount || 3, 1);
 
-  // Date format: 2026.09.20
+  // Determine layout type from frame.layoutType or templateId or fallback
+  const template = PHOTOBOOTH_FRAME_TEMPLATES.find(
+    (t) => t.id === frame.templateId || t.layoutType === frame.layoutType
+  );
+  const layoutType: PhotoboothLayoutType =
+    frame.layoutType || template?.layoutType || (frame.shotCount === 4 ? 'strip_4' : frame.shotCount === 2 ? 'strip_2' : frame.shotCount === 1 ? 'polaroid_square' : frame.orientation === 'horizontal' ? 'grid_2x2' : 'strip_3');
+
+  const totalSlots = template?.shotCount || Math.max(frame.shotCount || 3, 1);
+
+  // Format date as 2026.09.20
   const dateObj = new Date(timestamp);
   const dateFormatted = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
 
-  const modeInfo =
-    PHOTOBOOTH_CARD_MODES.find((m) => m.id === cardMode) ||
-    PHOTOBOOTH_CARD_MODES[0];
+  const modeInfo = PHOTOBOOTH_CARD_MODES.find((m) => m.id === cardMode) || PHOTOBOOTH_CARD_MODES[0];
 
-  // Derive mode-specific styles
-  const isKorean = cardMode === 'korean_noir';
-  const isRetro = cardMode === 'retro_film';
-  const isSakura = cardMode === 'sakura_y2k';
-  const isPolaroid = cardMode === 'polaroid_classic';
+  const isRetro = layoutType === 'film_35mm' || cardMode === 'retro_film';
+  const isPolaroid = layoutType === 'polaroid_square' || layoutType === 'polaroid_wide' || cardMode === 'polaroid_classic' || frame.frameShape === 'polaroid';
+  const isKorean = cardMode === 'korean_noir' || layoutType === 'strip_4';
+  const isCinema = layoutType === 'cinema_horizontal';
+  const isTwin = layoutType === 'twin_strip';
 
-  const outerRadiusClass = isPolaroid ? 'rounded-xl pb-10' : 'rounded-xl';
+  const effectiveBg = frame.bgColor || template?.defaultBg || modeInfo.defaultBg;
+  const effectiveBorder = frame.borderColor || template?.defaultBorder || modeInfo.defaultBorder;
+  const effectiveText = frame.textColor || template?.defaultText || modeInfo.defaultText;
+  const effectiveAccent = frame.accentColor || template?.defaultAccent || modeInfo.defaultAccent;
 
-  // Card background & text colors based on frame/mode
-  const effectiveBg = frame.bgColor || modeInfo.defaultBg;
-  const effectiveBorder = frame.borderColor || modeInfo.defaultBorder;
-  const effectiveText = frame.textColor || modeInfo.defaultText;
-  const effectiveAccent = frame.accentColor || modeInfo.defaultAccent;
+  // Card container sizing by layout type
+  let cardWidthClass = 'w-[300px] sm:w-[330px] p-4 py-5';
+  if (layoutType === 'grid_2x2') {
+    cardWidthClass = 'w-[350px] sm:w-[390px] p-5 py-5';
+  } else if (layoutType === 'grid_2x3') {
+    cardWidthClass = 'w-[380px] sm:w-[440px] p-5 py-5';
+  } else if (layoutType === 'twin_strip') {
+    cardWidthClass = 'w-[420px] sm:w-[500px] p-4 py-5';
+  } else if (layoutType === 'cinema_horizontal') {
+    cardWidthClass = 'w-[380px] sm:w-[450px] p-4 py-5';
+  } else if (layoutType === 'polaroid_wide') {
+    cardWidthClass = 'w-[350px] sm:w-[390px] p-5 pb-9';
+  } else if (layoutType === 'polaroid_square') {
+    cardWidthClass = 'w-[310px] sm:w-[340px] p-5 pb-10';
+  }
+
+  const outerRadiusClass = isPolaroid ? 'rounded-2xl' : 'rounded-xl';
+
+  // Render single photo slot with high-end photobooth styling
+  const renderPhotoSlot = (slotIdx: number, aspect = 'aspect-[3/4]') => {
+    const photo = photos[slotIdx];
+    const isLastSlot = slotIdx === totalSlots - 1;
+    const visitNumber = slotIdx + 1;
+    const slotFormatted = String(visitNumber).padStart(2, '0');
+
+    return (
+      <div
+        key={slotIdx}
+        style={{ borderColor: effectiveBorder }}
+        className={`relative overflow-hidden bg-white/90 shadow-2xs ${aspect} rounded-sm border`}
+      >
+        <div className="absolute inset-[3px] bg-stone-100 flex items-center justify-center overflow-hidden rounded-xs">
+          {photo ? (
+            <>
+              <img
+                src={photo}
+                alt={`Shot ${visitNumber}`}
+                className="w-full h-full object-cover filter contrast-[1.04] saturate-[0.96]"
+              />
+              <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/50 backdrop-blur-xs text-white text-[8px] font-bold rounded-xs flex items-center gap-1 select-none">
+                <Check className="w-2.5 h-2.5 text-emerald-300 stroke-[3]" />
+                <span>#{slotFormatted}</span>
+              </div>
+            </>
+          ) : isLastSlot ? (
+            <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-stone-50/80">
+              <span style={{ color: effectiveAccent }} className="text-lg mb-1">🎁</span>
+              <span className="text-[10px] font-bold opacity-80 leading-tight">هدية فورية</span>
+              <span className="text-[8px] text-stone-400 mt-0.5">الخانة الأخيرة #{slotFormatted}</span>
+            </div>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-black/[0.02] text-stone-400">
+              <span className="text-xs font-mono font-bold">#{slotFormatted}</span>
+              <span className="text-[9px] font-medium mt-0.5 opacity-60">في الانتظار</span>
+            </div>
+          )}
+        </div>
+
+        {/* Micro film rebate numbering */}
+        <div className="absolute top-1 left-1.5 text-[7px] font-mono font-bold tracking-tighter opacity-60 select-none z-10 pointer-events-none mix-blend-difference text-white">
+          #{slotFormatted}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      {/* Printable 2x6 Physical Photobooth Card */}
+      {/* Main Printable Card */}
       <div
         id="printable-strip"
         ref={cardContainerRef}
@@ -82,148 +151,130 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           borderColor: effectiveBorder,
           color: effectiveText,
         }}
-        className={`relative transition-all duration-300 select-none shadow-[0_4px_20px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.04)] border-[1px] ${outerRadiusClass} overflow-hidden print:shadow-none print:border-none ${
-          isHorizontal ? 'w-full max-w-[480px] p-5' : 'w-[300px] sm:w-[340px] p-4 py-5'
-        }`}
+        className={`relative transition-all duration-300 select-none shadow-[0_6px_24px_rgba(0,0,0,0.09),0_1px_3px_rgba(0,0,0,0.05)] border ${outerRadiusClass} overflow-hidden print:shadow-none print:border-none ${cardWidthClass}`}
       >
-        {/* Paper Texture Overlay */}
-        <div 
-          className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-[0.15] z-0"
-          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}
+        {/* Subtle Paper Noise Texture */}
+        <div
+          className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-[0.14] z-0"
+          style={{
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E")'
+          }}
         />
 
-        {/* Retro Film Sprocket Holes Edge (Analog 35mm styling) */}
+        {/* Analog 35mm Sprocket Holes */}
         {isRetro && (
           <>
-            <div className="absolute top-0 bottom-0 left-1.5 flex flex-col justify-around py-4 pointer-events-none z-10 opacity-30">
+            <div className="absolute top-0 bottom-0 left-1.5 flex flex-col justify-around py-3 pointer-events-none z-10 opacity-30">
               {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="w-2 h-3.5 rounded-sm bg-white/40 mb-1" />
+                <div key={i} className="w-1.5 h-3 rounded-xs bg-white/50 mb-1" />
               ))}
             </div>
-            <div className="absolute top-0 bottom-0 right-1.5 flex flex-col justify-around py-4 pointer-events-none z-10 opacity-30">
+            <div className="absolute top-0 bottom-0 right-1.5 flex flex-col justify-around py-3 pointer-events-none z-10 opacity-30">
               {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="w-2 h-3.5 rounded-sm bg-white/40 mb-1" />
+                <div key={i} className="w-1.5 h-3 rounded-xs bg-white/50 mb-1" />
               ))}
             </div>
           </>
         )}
 
-        {/* Sakura Y2K Sparkle Glow Accents */}
-        {isSakura && (
-          <div className="absolute inset-0 bg-gradient-to-b from-pink-200/20 via-transparent to-rose-200/20 pointer-events-none z-0" />
-        )}
-
-        {/* Subtle Corner Stickers/Emojis (from frame preset) */}
-        {frame.cornerEmojis && frame.cornerEmojis.enabled && (
-          <>
-            {frame.cornerEmojis.topRight && (
-              <div
-                className="absolute top-4 right-4 text-2xl filter drop-shadow-sm select-none z-20 pointer-events-none"
-                title="Corner Sticker"
-              >
-                {frame.cornerEmojis.topRight}
-              </div>
-            )}
-            {frame.cornerEmojis.bottomLeft && (
-              <div
-                className="absolute bottom-4 left-4 text-2xl filter drop-shadow-sm select-none z-20 pointer-events-none"
-                title="Corner Sticker"
-              >
-                {frame.cornerEmojis.bottomLeft}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Top Header: Authentic Minimal Photobooth Branding */}
+        {/* Header Branding */}
         <div className="relative z-10 flex flex-col items-center justify-center mb-3 text-center">
           {branding.logoUrl ? (
             <img
               src={branding.logoUrl}
               alt={branding.name}
-              className="h-8 object-contain mb-1 max-w-[120px]"
+              className="h-7 object-contain mb-1 max-w-[120px]"
             />
           ) : (
             <h3
               style={{ color: effectiveText }}
-              className="font-black text-[13px] tracking-wide uppercase"
+              className="font-black text-xs tracking-wider uppercase"
             >
-              {branding.name || 'Memories • موميريز'}
+              {branding.name || 'MEMORIES STUDIO'}
             </h3>
           )}
 
-          {/* Mode-specific Badge */}
-          <div className="flex items-center gap-1.5 mt-1">
+          <div className="flex items-center gap-1.5 mt-0.5">
             <span
               style={{ color: effectiveAccent }}
               className="text-[8px] font-black uppercase tracking-[0.2em] font-mono opacity-80"
             >
-              {frame.badgeText || modeInfo.filmBadge}
+              {frame.badgeText || template?.badge || modeInfo.filmBadge}
             </span>
           </div>
         </div>
 
-        {/* Multi-Visit Slots Grid or Vertical Strip */}
-        <div
-          className={`relative z-10 w-full ${
-            isHorizontal
-              ? 'grid grid-cols-2 gap-3 my-2'
-              : 'flex flex-col gap-2 my-1'
-          }`}
-        >
-          {Array.from({ length: totalSlots }).map((_, slotIdx) => {
-            const photo = photos[slotIdx];
-            const isLastSlot = slotIdx === totalSlots - 1;
-            const visitNumber = slotIdx + 1;
-            const slotNumberFormatted = String(visitNumber).padStart(2, '0');
+        {/* Dynamic Photo Slot Layouts */}
+        <div className="relative z-10 w-full my-1.5">
+          {/* 1. Grid 2x2 (Postcard) */}
+          {layoutType === 'grid_2x2' && (
+            <div className="grid grid-cols-2 gap-2.5">
+              {Array.from({ length: 4 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[4/3]'))}
+            </div>
+          )}
 
-            // Aspect ratio depends on orientation, typically 3:4 for vertical strips, 4:3 for horizontal
-            const aspectClass = isHorizontal ? 'aspect-[4/3]' : 'aspect-[3/4]';
+          {/* 2. Grid 2x3 (Friends Mini Grid) */}
+          {layoutType === 'grid_2x3' && (
+            <div className="grid grid-cols-3 gap-2">
+              {Array.from({ length: 6 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[4/3]'))}
+            </div>
+          )}
 
-            return (
-              <div
-                key={slotIdx}
-                style={{ borderColor: effectiveBorder }}
-                className={`relative overflow-hidden bg-white ${aspectClass}`}
-              >
-                {/* Inner white border / photo margin */}
-                <div className="absolute inset-1 bg-stone-100 flex items-center justify-center overflow-hidden">
-                  {photo ? (
-                    <>
-                      <img
-                        src={photo}
-                        alt={`Visit ${visitNumber}`}
-                        className="w-full h-full object-cover filter contrast-105 saturate-[0.95]"
-                      />
-                      {/* Checkmark Tag (minimal) */}
-                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/40 backdrop-blur-sm text-white text-[9px] font-bold rounded-sm flex items-center gap-1 shadow-sm select-none">
-                        <Check className="w-2.5 h-2.5 text-emerald-300 stroke-[3]" />
-                      </div>
-                    </>
-                  ) : isLastSlot ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-b from-black/5 to-black/10 dark:from-white/5 dark:to-white/10 text-center">
-                       <span style={{ color: effectiveAccent }} className="text-xl mb-2 opacity-80">🎁</span>
-                       <span className="text-[11px] font-bold opacity-80">هدية عند الاكتمال</span>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-black/5 dark:bg-white/5 opacity-50">
-                      <span className="text-[10px] font-bold uppercase tracking-wider">
-                        الزيارة {visitNumber}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Authentic Film Slot Number */}
-                <div className="absolute top-1.5 left-2 text-[8px] font-mono font-bold tracking-tighter opacity-50 select-none z-10 pointer-events-none mix-blend-difference text-white">
-                  #{slotNumberFormatted}
-                </div>
+          {/* 3. Twin Strip (Dual 2x6 with Perforation) */}
+          {layoutType === 'twin_strip' && (
+            <div className="grid grid-cols-2 gap-4 relative">
+              {/* Center Cut Line */}
+              <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex flex-col items-center justify-between pointer-events-none z-20">
+                <Scissors className="w-3 h-3 text-stone-400 rotate-90 mb-1" />
+                <div className="w-0 flex-1 border-r border-dashed border-stone-300 dark:border-stone-600" />
+                <span className="text-[7px] font-mono text-stone-400 mt-1 uppercase tracking-tighter">CUT</span>
               </div>
-            );
-          })}
+              {/* Left Strip */}
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: 4 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[3/4]'))}
+              </div>
+              {/* Right Strip (Duplicate or remaining) */}
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: 4 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[3/4]'))}
+              </div>
+            </div>
+          )}
+
+          {/* 4. Cinema Horizontal 3 Cuts */}
+          {layoutType === 'cinema_horizontal' && (
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: 3 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[16/9]'))}
+              <div className="text-center text-[8px] font-mono text-stone-400 italic mt-1 tracking-wider">
+                — A warm coffee moment worth remembering —
+              </div>
+            </div>
+          )}
+
+          {/* 5. Polaroid Square 1 Cut */}
+          {layoutType === 'polaroid_square' && (
+            <div className="w-full flex justify-center">
+              <div className="w-full">{renderPhotoSlot(0, 'aspect-square')}</div>
+            </div>
+          )}
+
+          {/* 6. Polaroid Wide 1 Cut */}
+          {layoutType === 'polaroid_wide' && (
+            <div className="w-full flex justify-center">
+              <div className="w-full">{renderPhotoSlot(0, 'aspect-[4/3]')}</div>
+            </div>
+          )}
+
+          {/* 7. Default Vertical Strips (strip_4, strip_3, strip_2, film_35mm) */}
+          {(layoutType === 'strip_4' || layoutType === 'strip_3' || layoutType === 'strip_2' || layoutType === 'film_35mm') && (
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: totalSlots }).map((_, idx) =>
+                renderPhotoSlot(idx, layoutType === 'strip_3' ? 'aspect-[4/3]' : 'aspect-[3/4]')
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Interactive / Static Draggable Stickers Layer Overlay */}
+        {/* Draggable Stickers Layer */}
         {(stickers.length > 0 || isStickersInteractive) && (
           <DraggableStickerLayer
             stickers={stickers}
@@ -236,13 +287,10 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         {/* Authentic Photobooth Footer */}
         <div
           style={{ borderColor: effectiveBorder }}
-          className="relative z-10 mt-5 pt-2 border-t-[0.5px] flex items-center justify-between text-[9px] opacity-80 font-mono px-1"
+          className="relative z-10 mt-4 pt-2 border-t-[0.5px] flex items-center justify-between text-[9px] opacity-80 font-mono px-1"
         >
-          <div className="flex items-center gap-3">
-            {/* Date in typewriter format */}
+          <div className="flex items-center gap-2.5">
             <span className="tracking-tight">{dateFormatted}</span>
-            
-            {/* Open Source Studio Barcode for Korean Noir & Retro Film */}
             {(isKorean || isRetro) && (
               <div className="flex items-center gap-[1px] opacity-60 select-none">
                 <span className="w-[1px] h-2.5 bg-current inline-block" />
@@ -254,15 +302,15 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             )}
           </div>
 
-          <span className="tracking-widest uppercase font-bold">
-            {branding.name ? branding.name : 'MEMORIES'}
+          <span className="tracking-widest uppercase font-bold text-[8px]">
+            {template?.dimensions || '2x6 IN'}
           </span>
         </div>
 
-        {/* Polaroid chin handwritten note line */}
+        {/* Polaroid Handwritten Chin */}
         {isPolaroid && (
-          <div className="mt-3 text-center text-[10px] italic font-serif opacity-60 tracking-wider">
-            memories together ♡
+          <div className="mt-2.5 text-center text-[10px] italic font-serif opacity-70 tracking-wider">
+            special coffee memory ♡
           </div>
         )}
       </div>
