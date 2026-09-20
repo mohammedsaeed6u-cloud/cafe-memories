@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { BusinessSettings, PhotoboothFrame } from '@/types/photobooth';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { CooldownService } from '@/lib/services/cooldown.service';
+import { PrintService } from '@/lib/services/print.service';
 import { CameraViewfinder } from '@/components/photobooth/CameraViewfinder';
 import { PhotoboothStripCard } from '@/components/photobooth/PhotoboothStripCard';
 import { FrameSelector } from '@/components/photobooth/FrameSelector';
@@ -55,6 +56,11 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [customerProfession, setCustomerProfession] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visitCount, setVisitCount] = useState(1);
+  const [extraShots, setExtraShots] = useState<number>(0);
+  const [isBaristaPinModalOpen, setIsBaristaPinModalOpen] = useState<boolean>(false);
+  const [baristaPin, setBaristaPin] = useState<string>('');
+  const [pinShotsCount, setPinShotsCount] = useState<number>(1);
+  const [pinError, setPinError] = useState<string | null>(null);
 
   // Initialize device ID, check 24-hour cooldown & load saved card
   useEffect(() => {
@@ -80,7 +86,9 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     }
 
     const checkLock = () => {
-      const access = CooldownService.checkAccess(id!, cafeSlug);
+      const targetId = id || '';
+      const access = CooldownService.checkAccess(targetId, cafeSlug);
+      setExtraShots(access.extraShotsAvailable);
       if (!access.allowed) {
         setIsLockedByCooldown(true);
         setRemainingCooldownHours(access.remainingHours || 24);
@@ -96,8 +104,35 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     };
 
     window.addEventListener('memories-cooldown-unlocked', handleUnlocked);
-    return () => window.removeEventListener('memories-cooldown-unlocked', handleUnlocked);
+    window.addEventListener('memories-order-shots-updated', handleUnlocked);
+    window.addEventListener('storage', handleUnlocked);
+
+    return () => {
+      window.removeEventListener('memories-cooldown-unlocked', handleUnlocked);
+      window.removeEventListener('memories-order-shots-updated', handleUnlocked);
+      window.removeEventListener('storage', handleUnlocked);
+    };
   }, [cafeSlug]);
+
+  const handleVerifyPinAndAddShots = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!CooldownService.verifyBaristaPin(baristaPin)) {
+      setPinError('رمز الباريستا غير صحيح (الرمز الافتراضي: 1234 أو 7777 أو 2026)');
+      return;
+    }
+    const targetId = customerPhone.trim() || deviceId;
+    const newTotal = CooldownService.addOrderShots(targetId, pinShotsCount, 1, cafeSlug);
+    setExtraShots(newTotal);
+    setIsLockedByCooldown(false);
+    setIsBaristaPinModalOpen(false);
+    setBaristaPin('');
+    setPinError(null);
+  };
+
+  const handleTakeNextOrderPhoto = () => {
+    setTodayPhoto(null);
+    setIsPrintGiftModalOpen(false);
+  };
 
   // Sync settings when updated in storage or another tab
   useEffect(() => {
@@ -240,9 +275,17 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 rounded-full border border-amber-200 text-xs font-bold">
-            <Gift className="w-3.5 h-3.5 text-amber-600" />
-            <span>الهدية في الخانة الأخيرة</span>
+          <div className="flex items-center gap-2">
+            {extraShots > 0 && (
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full text-xs font-bold shadow-xs animate-pulse">
+                <Coffee className="w-3.5 h-3.5" />
+                <span>+${extraShots} صور أوردرات</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 rounded-full border border-amber-200 text-xs font-bold">
+              <Gift className="w-3.5 h-3.5 text-amber-600" />
+              <span>الهدية في الخانة الأخيرة</span>
+            </div>
           </div>
         </div>
       </header>
@@ -279,15 +322,43 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
               </div>
             )}
 
-            {/* Barista Override Notice */}
-            <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 text-xs text-stone-700 mb-6">
-              <div className="flex items-center justify-center gap-1.5 font-bold text-stone-900 mb-1">
-                <Coffee className="w-4 h-4 text-amber-600" />
-                <span>ترغب بإضافة لقطة ثانية اليوم؟</span>
+            {/* Barista Order Shots & Override Option */}
+            <div className="p-5 bg-gradient-to-br from-amber-50/80 to-orange-50/60 rounded-3xl border-2 border-amber-200/80 text-xs text-stone-800 mb-6 shadow-sm">
+              <div className="flex items-center justify-center gap-2 font-black text-stone-900 text-sm mb-1.5">
+                <Coffee className="w-5 h-5 text-amber-600" />
+                <span>طلبت أوردرات أو مشروبات إضافية؟ ☕</span>
               </div>
-              <p className="text-[11px] text-stone-500">
-                اطلب من الباريستا في الكاشير فك القفل لك فوراً بنقرة زر واحدة عبر لوحة التحكم!
+              <p className="text-xs text-stone-600 mb-4 leading-relaxed">
+                كل أوردر إضافي يمنحك لقطة جديدة تملأ بها كارت ذكرياتك وتصل لهديتك أسرع!
               </p>
+
+              <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPinError(null);
+                    setIsBaristaPinModalOpen(true);
+                  }}
+                  className="px-5 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-[0.98]"
+                >
+                  <ShieldCheck className="w-4 h-4 text-amber-200" />
+                  <span>شحن صور الأوردر بـ PIN الباريستا</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const access = CooldownService.checkAccess(deviceId, cafeSlug);
+                    if (access.allowed) {
+                      setIsLockedByCooldown(false);
+                      setExtraShots(access.extraShotsAvailable);
+                    }
+                  }}
+                  className="px-4 py-3 rounded-2xl bg-white hover:bg-stone-50 text-stone-700 font-bold text-xs border border-stone-300 flex items-center justify-center gap-2 transition"
+                >
+                  <span>تحديث بعد شحن الكاشير</span>
+                </button>
+              </div>
             </div>
 
             <button
@@ -526,6 +597,84 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         </div>
       )}
 
+      {/* Modal: Barista Order Shots PIN */}
+      {isBaristaPinModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
+          <div className="relative bg-[#FAF8F5] rounded-3xl p-6 sm:p-7 max-w-sm w-full text-stone-900 shadow-2xl border border-stone-200">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-3">
+              <ShieldCheck className="w-6 h-6 text-amber-600" />
+            </div>
+
+            <h4 className="font-black text-center text-base text-stone-900 mb-1">
+              تأكيد أوردر الباريستا والكاشير
+            </h4>
+            <p className="text-[11px] text-center text-stone-500 mb-4 leading-relaxed">
+              يقوم الباريستا بإدخال الرمز السريع لتأكيد الأوردر وشحن اللقطات فوراً
+            </p>
+
+            <form onSubmit={handleVerifyPinAndAddShots} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 mb-1 text-right">
+                  عدد الأوردرات / الصور المستحقة:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 2, 3].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setPinShotsCount(n)}
+                      className={`py-2 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1 ${
+                        pinShotsCount === n
+                          ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                          : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
+                      }`}
+                    >
+                      +{n} صورة
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 mb-1 text-right">
+                  رمز PIN الباريستا:
+                </label>
+                <input
+                  type="password"
+                  maxLength={6}
+                  placeholder="أدخل PIN (الافتراضي: 1234 أو 7777)"
+                  value={baristaPin}
+                  onChange={(e) => setBaristaPin(e.target.value)}
+                  className="w-full text-center tracking-widest font-mono text-lg py-2.5 px-4 rounded-xl border border-stone-300 focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"
+                  autoFocus
+                />
+                {pinError && (
+                  <p className="text-[10px] text-red-600 font-bold text-center mt-1">
+                    {pinError}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-3 rounded-2xl bg-stone-900 hover:bg-black text-white text-xs font-bold transition shadow-md"
+                >
+                  تأكيد وشحن الصور الآن 📸
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsBaristaPinModalOpen(false)}
+                  className="py-3 px-4 rounded-2xl bg-stone-200/80 hover:bg-stone-300 text-stone-700 text-xs font-bold transition"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Print & Gift Modal */}
       <PrintGiftModal
         isOpen={isPrintGiftModalOpen}
@@ -539,7 +688,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         customerName={customerName}
         customerRoleLabel={customerProfession || 'زائر مميز'}
         visitCount={currentDisplayPhotos.length}
-        onPrintStrip={() => window.print()}
+        onPrintStrip={() => PrintService.printElement('printable-strip')}
       />
     </div>
   );

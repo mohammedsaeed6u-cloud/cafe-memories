@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { CustomerVisitRecord } from './CustomerCRMTab';
 import { Printer, Gift, CheckCircle2, Clock, Sparkles } from 'lucide-react';
+import { PrintService } from '@/lib/services/print.service';
 
 interface PrintStationTabProps {
   queue: CustomerVisitRecord[];
@@ -28,7 +29,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
     if (onPrintItem) {
       onPrintItem(item);
     } else {
-      window.print();
+      PrintService.printElement('printable-strip');
     }
   };
 

@@ -6,6 +6,7 @@ import { PhotoboothStripCard } from './PhotoboothStripCard';
 import { LoyaltyCardWidget } from './LoyaltyCardWidget';
 import { ShareStoryWidget } from './ShareStoryWidget';
 import { Gift, Printer, Sparkles, CheckCircle, X } from 'lucide-react';
+import { PrintService } from '@/lib/services/print.service';
 
 interface PrintGiftModalProps {
   isOpen: boolean;
@@ -39,10 +40,9 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
   if (!isOpen) return null;
 
   const handlePrint = () => {
+    PrintService.printElement('printable-strip');
     if (onPrintStrip) {
       onPrintStrip();
-    } else {
-      window.print();
     }
   };
 

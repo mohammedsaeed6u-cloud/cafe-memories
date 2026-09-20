@@ -28,3 +28,56 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #78716c;
 }
+
+/* Photobooth 2x6 Single-Page Strip Print Styles */
+@media print {
+  @page {
+    size: portrait;
+    margin: 0;
+  }
+
+  html, body {
+    background-color: transparent !important;
+    background: transparent !important;
+    color: #1c1917 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide everything on the page */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Expose ONLY the printable photobooth strip */
+  #printable-strip, #printable-strip * {
+    visibility: visible !important;
+  }
+
+  #printable-strip {
+    position: fixed !important;
+    top: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin: 0 auto !important;
+    padding: 16px !important;
+    width: 2.3in !important;
+    max-width: 2.3in !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: #FAF8F5 !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* Specifically hide buttons, close icons, dialog overlays and footers */
+  button, .lucide-x, [role="dialog"] > div > button {
+    display: none !important;
+  }
+}

@@ -3,6 +3,7 @@
 import React from 'react';
 import { PhotoboothFrame, BusinessBranding, FreeGiftOffer } from '@/types/photobooth';
 import { Gift, Printer, Sparkles, Check } from 'lucide-react';
+import { PrintService } from '@/lib/services/print.service';
 
 interface PhotoboothStripCardProps {
   photos: string[]; // Photos taken so far
@@ -196,7 +197,10 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
       {/* Print Action Button */}
       {onPrint && (
         <button
-          onClick={onPrint}
+          onClick={() => {
+            PrintService.printElement('printable-strip');
+            if (onPrint) onPrint();
+          }}
           className="mt-4 px-5 py-2.5 rounded-full bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition active:scale-[0.98]"
         >
           <Printer className="w-3.5 h-3.5 text-amber-400" />
