@@ -99,15 +99,15 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative px-6 pt-16 pb-24 max-w-6xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-bold mb-8 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-700 text-xs font-bold mb-8 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5 text-amber-600" />
           <span>The Digital Memory & Loyalty Layer for Cafés</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>
         </div>
 
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white max-w-5xl mx-auto leading-[1.1]">
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-stone-900 max-w-5xl mx-auto leading-[1.1]">
           Turn everyday coffee runs into{' '}
-          <span className="bg-gradient-to-r from-amber-400 via-amber-300 to-orange-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 bg-clip-text text-transparent">
             shared memories
           </span>{' '}
           & loyal regulars.
@@ -129,9 +129,9 @@ export default function HomePage() {
           </Link>
           <Link
             href="/wall/screen-101"
-            className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white/90 hover:bg-stone-800 border border-stone-200 text-white font-bold text-base flex items-center justify-center gap-2.5 transition-all hover:scale-[1.02] shadow-lg"
+            className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-bold text-base flex items-center justify-center gap-2.5 transition-all hover:scale-[1.02] shadow-lg"
           >
-            <Tv className="w-5 h-5 text-amber-400" />
+            <Tv className="w-5 h-5 text-amber-600" />
             <span>Launch TV Live Wall</span>
           </Link>
         </div>
@@ -145,7 +145,7 @@ export default function HomePage() {
                 <Smartphone className="w-4 h-4" />
                 Customer Mobile Screen
               </span>
-              <span className="text-[10px] bg-stone-800 px-2 py-0.5 rounded text-stone-700 font-mono">No App Required</span>
+              <span className="text-[10px] bg-stone-800 px-2 py-0.5 rounded text-stone-300 font-mono">No App Required</span>
             </div>
 
             {/* Mini Simulated Phone Card */}
@@ -153,8 +153,8 @@ export default function HomePage() {
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-bold text-xs">☕</div>
                 <div>
-                  <div className="font-bold text-xs text-white">Espresso Lab • Main Branch</div>
-                  <div className="text-[10px] text-amber-400 font-medium">3 / 5 Visits • 2 until Free Drink</div>
+                  <div className="font-bold text-xs text-stone-900">Espresso Lab • Main Branch</div>
+                  <div className="text-[10px] text-amber-600 font-medium">3 / 5 Visits • 2 until Free Drink</div>
                 </div>
               </div>
 
@@ -167,8 +167,8 @@ export default function HomePage() {
                       i <= 3
                         ? 'bg-amber-500 text-stone-950 shadow-sm'
                         : i === 5
-                        ? 'bg-stone-800 text-amber-400 border border-amber-500/40'
-                        : 'bg-stone-800 text-stone-500'
+                        ? 'bg-stone-100 text-amber-500 border border-amber-500/40'
+                        : 'bg-stone-100 text-stone-400'
                     }`}
                   >
                     {i <= 3 ? '✓' : i === 5 ? '🎁' : `#${i}`}
@@ -224,12 +224,12 @@ export default function HomePage() {
                   <div className="font-extrabold text-sm text-white leading-tight">
                     &ldquo;Weekend work session with single origin V60 🥐&rdquo;
                   </div>
-                  <div className="text-[11px] text-stone-600">Sarah Mansour • Visit #5</div>
+                  <div className="text-[11px] text-stone-400">Sarah Mansour • Visit #5</div>
                 </div>
 
-                <div className="bg-white/90 p-2 rounded-lg border border-stone-200 text-[10px] text-amber-300 flex items-center justify-between">
-                  <span>Scan to Join Live Wall</span>
-                  <QrCode className="w-4 h-4 text-white" />
+                <div className="bg-white/90 p-2 rounded-lg border border-stone-200 text-[10px] text-amber-600 font-bold flex items-center justify-between">
+                  <span>Scan to Join</span>
+                  <div className="bg-stone-900 p-1 rounded"><QrCode className="w-3 h-3 text-white" /></div>
                 </div>
               </div>
             </div>
@@ -249,10 +249,10 @@ export default function HomePage() {
       <section className="px-6 py-20 bg-white/30 border-t border-stone-200/60">
         <div className="max-w-6xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <span className="text-xs uppercase font-bold tracking-widest text-amber-400 mb-2 block">
+            <span className="text-xs uppercase font-bold tracking-widest text-amber-700 mb-2 block">
               The Frictionless Loop
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">
               From Table QR to In-Store Celebrity in 15 Seconds
             </h2>
           </div>
@@ -260,60 +260,60 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="p-6 rounded-3xl bg-white/80 border border-stone-200 hover:border-amber-500/40 transition-all flex flex-col justify-between">
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg border border-amber-200">
                   1
                 </div>
-                <h3 className="font-bold text-lg text-white">Table QR Scan</h3>
+                <h3 className="font-bold text-lg text-stone-900">Table QR Scan</h3>
                 <p className="text-xs text-stone-600 leading-relaxed">
                   Patron sits at their table, points their camera at the branded acrylic stand. Zero download required.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-stone-200 text-[11px] text-amber-400 font-semibold">
+              <div className="mt-6 pt-4 border-t border-stone-200 text-[11px] text-amber-600 font-semibold">
                 Instant Safari & Chrome launch
               </div>
             </div>
 
             <div className="p-6 rounded-3xl bg-white/80 border border-stone-200 hover:border-amber-500/40 transition-all flex flex-col justify-between">
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg border border-amber-200">
                   2
                 </div>
-                <h3 className="font-bold text-lg text-white">Capture & Filter</h3>
+                <h3 className="font-bold text-lg text-stone-900">Capture & Filter</h3>
                 <p className="text-xs text-stone-600 leading-relaxed">
                   Guest snaps their latte art or coffee table scene. 1-tap warm roaster filters ensure aesthetic perfection.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-stone-200 text-[11px] text-amber-400 font-semibold">
+              <div className="mt-6 pt-4 border-t border-stone-200 text-[11px] text-amber-600 font-semibold">
                 Granular consent toggles
               </div>
             </div>
 
             <div className="p-6 rounded-3xl bg-white/80 border border-stone-200 hover:border-amber-500/40 transition-all flex flex-col justify-between">
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg border border-amber-200">
                   3
                 </div>
-                <h3 className="font-bold text-lg text-white">In-Store Live TV</h3>
+                <h3 className="font-bold text-lg text-stone-900">In-Store Live TV</h3>
                 <p className="text-xs text-stone-600 leading-relaxed">
                   Moments broadcast in real-time on your café TV screens. Patrons smile, point, and take photos of the screen.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-stone-200 text-[11px] text-amber-400 font-semibold">
+              <div className="mt-6 pt-4 border-t border-stone-200 text-[11px] text-amber-600 font-semibold">
                 Merchant moderation control
               </div>
             </div>
 
             <div className="p-6 rounded-3xl bg-white/80 border border-stone-200 hover:border-amber-500/40 transition-all flex flex-col justify-between">
               <div className="space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-lg border border-amber-200">
                   4
                 </div>
-                <h3 className="font-bold text-lg text-white">Loyalty & Story Share</h3>
+                <h3 className="font-bold text-lg text-stone-900">Loyalty & Story Share</h3>
                 <p className="text-xs text-stone-600 leading-relaxed">
                   Visits accumulate toward free drinks. Patrons share branded 9:16 Instagram Story Cards, bringing new friends.
                 </p>
               </div>
-              <div className="mt-6 pt-4 border-t border-stone-200 text-[11px] text-amber-400 font-semibold">
+              <div className="mt-6 pt-4 border-t border-stone-200 text-[11px] text-amber-600 font-semibold">
                 Viral word-of-mouth loop
               </div>
             </div>
@@ -332,7 +332,7 @@ export default function HomePage() {
           <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
             See how much repeat revenue you gain with Memories • موميريز
           </h2>
-          <p className="text-sm text-stone-600 mt-2 max-w-lg mx-auto">
+          <p className="text-sm text-stone-300 mt-2 max-w-lg mx-auto">
             Adjust your café&apos;s daily volume to estimate monthly repeat visits and organic social moments.
           </p>
 
@@ -353,20 +353,20 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-            <div className="p-5 rounded-2xl bg-stone-50/80 border border-stone-200">
-              <div className="text-xs text-stone-600 font-medium">Extra Monthly Visits</div>
+            <div className="p-5 rounded-2xl bg-stone-800/80 border border-stone-700">
+              <div className="text-xs text-stone-300 font-medium">Extra Monthly Visits</div>
               <div className="text-3xl font-black text-white mt-1">+{repeatGain * 30}</div>
               <div className="text-[11px] text-emerald-400 mt-0.5">+22% regular retention</div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-stone-50/80 border border-stone-200">
-              <div className="text-xs text-stone-600 font-medium">Est. Added Monthly Revenue</div>
+            <div className="p-5 rounded-2xl bg-stone-800/80 border border-stone-700">
+              <div className="text-xs text-stone-300 font-medium">Est. Added Monthly Revenue</div>
               <div className="text-3xl font-black text-amber-400 mt-1">${monthlyExtraRevenue.toLocaleString()}</div>
-              <div className="text-[11px] text-stone-600 mt-0.5">Based on $3.50 avg cup</div>
+              <div className="text-[11px] text-stone-400 mt-0.5">Based on $3.50 avg cup</div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-stone-50/80 border border-stone-200">
-              <div className="text-xs text-stone-600 font-medium">Organic Memories Shared</div>
+            <div className="p-5 rounded-2xl bg-stone-800/80 border border-stone-700">
+              <div className="text-xs text-stone-300 font-medium">Organic Memories Shared</div>
               <div className="text-3xl font-black text-white mt-1">{monthlyMemories.toLocaleString()}</div>
               <div className="text-[11px] text-amber-400 mt-0.5">Photos on Wall & Stories</div>
             </div>
@@ -378,10 +378,10 @@ export default function HomePage() {
       <section className="px-6 py-20 bg-white/30 border-t border-stone-200/60">
         <div className="max-w-6xl mx-auto">
           <div className="text-center max-w-xl mx-auto mb-16">
-            <span className="text-xs uppercase font-bold tracking-widest text-amber-400 mb-2 block">
+            <span className="text-xs uppercase font-bold tracking-widest text-amber-700 mb-2 block">
               Transparent Pricing
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-black text-stone-900 tracking-tight">
               Invest in Regulars, Not Paper Punch Cards
             </h2>
           </div>
@@ -390,9 +390,9 @@ export default function HomePage() {
             {/* Plan 1 */}
             <div className="p-8 rounded-3xl bg-white/80 border border-stone-200 flex flex-col justify-between">
               <div className="space-y-4">
-                <h3 className="font-bold text-lg text-white">Starter Roaster</h3>
+                <h3 className="font-bold text-lg text-stone-900">Starter Roaster</h3>
                 <p className="text-xs text-stone-600">Perfect for boutique single-location coffee bars.</p>
-                <div className="text-3xl font-black text-white">
+                <div className="text-3xl font-black text-stone-900">
                   $39 <span className="text-xs font-normal text-stone-600">/ month</span>
                 </div>
                 <ul className="space-y-2.5 text-xs text-stone-700 pt-4 border-t border-stone-200">
@@ -404,7 +404,7 @@ export default function HomePage() {
               </div>
               <Link
                 href="/login"
-                className="mt-8 w-full py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-white font-bold text-xs text-center transition-colors block"
+                className="mt-8 w-full py-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs text-center transition-colors block"
               >
                 Start Free 14-Day Trial
               </Link>
@@ -417,11 +417,11 @@ export default function HomePage() {
               </div>
               <div className="space-y-4">
                 <h3 className="font-bold text-lg text-white">Growth Barista</h3>
-                <p className="text-xs text-stone-600">For high-traffic specialty cafés and community spaces.</p>
+                <p className="text-xs text-stone-300">For high-traffic specialty cafés and community spaces.</p>
                 <div className="text-3xl font-black text-white">
-                  $89 <span className="text-xs font-normal text-stone-600">/ month</span>
+                  $89 <span className="text-xs font-normal text-stone-400">/ month</span>
                 </div>
-                <ul className="space-y-2.5 text-xs text-stone-700 pt-4 border-t border-stone-200">
+                <ul className="space-y-2.5 text-xs text-stone-300 pt-4 border-t border-stone-700">
                   <li className="flex items-center gap-2 font-semibold text-amber-300">✓ Up to 3 TV Live Screens</li>
                   <li className="flex items-center gap-2">✓ Unlimited guest memories</li>
                   <li className="flex items-center gap-2">✓ Branded Instagram Story Card generator</li>
@@ -440,9 +440,9 @@ export default function HomePage() {
             {/* Plan 3 */}
             <div className="p-8 rounded-3xl bg-white/80 border border-stone-200 flex flex-col justify-between">
               <div className="space-y-4">
-                <h3 className="font-bold text-lg text-white">Multi-Branch Empire</h3>
+                <h3 className="font-bold text-lg text-stone-900">Multi-Branch Empire</h3>
                 <p className="text-xs text-stone-600">For regional coffee chains & roasteries.</p>
-                <div className="text-3xl font-black text-white">
+                <div className="text-3xl font-black text-stone-900">
                   $199 <span className="text-xs font-normal text-stone-600">/ month</span>
                 </div>
                 <ul className="space-y-2.5 text-xs text-stone-700 pt-4 border-t border-stone-200">
@@ -454,7 +454,7 @@ export default function HomePage() {
               </div>
               <Link
                 href="/login"
-                className="mt-8 w-full py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-white font-bold text-xs text-center transition-colors block"
+                className="mt-8 w-full py-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs text-center transition-colors block"
               >
                 Contact Sales
               </Link>
@@ -466,7 +466,7 @@ export default function HomePage() {
       {/* FAQ Accordion */}
       <section className="px-6 py-20 max-w-3xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-white tracking-tight">Frequently Asked Questions</h2>
+          <h2 className="text-3xl font-black text-stone-900 tracking-tight">Frequently Asked Questions</h2>
         </div>
 
         <div className="space-y-3">
@@ -477,12 +477,12 @@ export default function HomePage() {
             >
               <button
                 onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-white"
+                className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-stone-800"
               >
                 <span>{faq.q}</span>
                 <ChevronDown
-                  className={`w-4 h-4 text-stone-600 shrink-0 transition-transform ${
-                    activeFaq === i ? 'rotate-180 text-amber-400' : ''
+                  className={`w-4 h-4 shrink-0 transition-transform ${
+                    activeFaq === i ? 'rotate-180 text-amber-600' : 'text-stone-500'
                   }`}
                 />
               </button>
@@ -497,9 +497,9 @@ export default function HomePage() {
       </section>
 
       {/* Final Call to Action */}
-      <section className="px-6 py-20 text-center border-t border-stone-200/80 bg-gradient-to-b from-transparent to-stone-950">
+      <section className="px-6 py-20 text-center border-t border-stone-200/80 bg-gradient-to-b from-transparent to-stone-100/50">
         <div className="max-w-2xl mx-auto space-y-6">
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+          <h2 className="text-3xl sm:text-5xl font-black text-stone-900 tracking-tight">
             Ready to give your café a digital heartbeat?
           </h2>
           <p className="text-stone-600 text-base">
@@ -514,7 +514,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/dashboard"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white hover:bg-stone-800 border border-stone-200 text-white font-bold text-sm transition-all"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-900 font-bold text-sm transition-all"
             >
               Enter Merchant Dashboard
             </Link>
@@ -523,7 +523,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-stone-900 text-center text-xs text-stone-500">
+      <footer className="py-8 border-t border-stone-200 text-center text-xs text-stone-500">
         <p>© 2026 Memories • موميريز. The Digital Memory & Loyalty Layer for Modern Specialty Cafés.</p>
       </footer>
     </div>

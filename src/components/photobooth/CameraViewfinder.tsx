@@ -190,9 +190,14 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
           />
         )}
 
+        {/* Warm café tone filter */}
+        {!capturedPhoto && isCameraReady && (
+          <div className="absolute inset-0 bg-amber-500/[0.04] mix-blend-multiply pointer-events-none z-10" />
+        )}
+
         {/* White Flash Overlay */}
         {isFlashing && (
-          <div className="absolute inset-0 bg-white z-50 animate-out fade-out duration-300 pointer-events-none" />
+          <div className="absolute inset-0 bg-white z-50 animate-shutter pointer-events-none" />
         )}
 
         {/* Loading / Error */}
@@ -239,7 +244,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
         {/* Countdown Overlay */}
         {countdown !== null && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] z-40">
-            <span className="text-8xl font-black text-amber-400 drop-shadow-[0_4px_24px_rgba(245,158,11,0.8)] animate-ping">
+            <span key={countdown} className="text-8xl font-black text-amber-400 drop-shadow-[0_4px_24px_rgba(245,158,11,0.8)] animate-countdown">
               {countdown}
             </span>
             <div className="mt-4 px-4 py-1.5 bg-black/70 rounded-full text-white text-xs font-bold border border-white/20">
@@ -277,13 +282,16 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
           <button
             onClick={handleSnap}
             disabled={!isCameraReady || isShooting}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-stone-900 to-stone-800 hover:from-black hover:to-stone-900 text-white font-bold text-base shadow-xl hover:shadow-2xl active:scale-[0.98] transition flex items-center justify-center gap-3 border border-stone-700 disabled:opacity-50 disabled:pointer-events-none"
+            className="group relative mx-auto w-20 h-20 rounded-full bg-stone-100 hover:bg-white flex items-center justify-center shadow-xl active:scale-[0.98] transition-all border-[6px] border-stone-300 disabled:opacity-50 disabled:pointer-events-none"
           >
-            <Camera className="w-5 h-5 text-amber-400" />
-            <span>
-              {isShooting ? 'جاري التقاط صورتك...' : 'التقط صورة زيارة اليوم 📸'}
-            </span>
-            <Sparkles className="w-4 h-4 text-amber-400" />
+            <div className="w-[3.25rem] h-[3.25rem] rounded-full bg-gradient-to-b from-stone-900 to-stone-800 flex items-center justify-center shadow-inner group-hover:from-black group-hover:to-stone-900 transition-colors">
+              <Camera className="w-5 h-5 text-amber-400" />
+            </div>
+            {isShooting && (
+              <div className="absolute -bottom-8 whitespace-nowrap text-xs font-bold text-stone-600">
+                جاري الالتقاط...
+              </div>
+            )}
           </button>
         ) : (
           <div className="flex gap-3">

@@ -8,13 +8,12 @@ import {
   PhotoboothCardMode,
   PlacedSticker,
 } from '@/types/photobooth';
-import { Gift, Printer, Check } from 'lucide-react';
-import { PrintService } from '@/lib/services/print.service';
+import { Check } from 'lucide-react';
 import { DraggableStickerLayer } from './DraggableStickerLayer';
 import { PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
 
 interface PhotoboothStripCardProps {
-  photos: string[]; // Photos taken so far
+  photos: string[];
   frame: PhotoboothFrame;
   branding: BusinessBranding;
   freeGiftOffer?: FreeGiftOffer;
@@ -50,11 +49,9 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   const isHorizontal = frame.orientation === 'horizontal';
   const totalSlots = Math.max(frame.shotCount || 3, 1);
 
-  const dateFormatted = new Date(timestamp).toLocaleDateString('ar-EG', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  // Date format: 2026.09.20
+  const dateObj = new Date(timestamp);
+  const dateFormatted = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
 
   const modeInfo =
     PHOTOBOOTH_CARD_MODES.find((m) => m.id === cardMode) ||
@@ -66,20 +63,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   const isSakura = cardMode === 'sakura_y2k';
   const isPolaroid = cardMode === 'polaroid_classic';
 
-  const shape = frame.frameShape || (isPolaroid ? 'polaroid' : 'rounded');
-  const outerRadiusClass =
-    shape === 'sharp'
-      ? 'rounded-md'
-      : shape === 'polaroid' || isPolaroid
-      ? 'rounded-2xl pb-10'
-      : 'rounded-3xl';
-
-  const slotRadiusClass =
-    shape === 'sharp'
-      ? 'rounded-xs'
-      : shape === 'polaroid' || isPolaroid
-      ? 'rounded-md'
-      : 'rounded-2xl';
+  const outerRadiusClass = isPolaroid ? 'rounded-xl pb-10' : 'rounded-xl';
 
   // Card background & text colors based on frame/mode
   const effectiveBg = frame.bgColor || modeInfo.defaultBg;
@@ -98,21 +82,27 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           borderColor: effectiveBorder,
           color: effectiveText,
         }}
-        className={`relative transition-all duration-300 select-none shadow-[0_20px_50px_rgba(0,0,0,0.12)] border-[3px] ${outerRadiusClass} overflow-hidden print:shadow-none print:border-none ${
-          isHorizontal ? 'w-full max-w-[480px] p-5' : 'w-[280px] sm:w-[310px] p-4 py-6'
+        className={`relative transition-all duration-300 select-none shadow-[0_4px_20px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.04)] border-[1px] ${outerRadiusClass} overflow-hidden print:shadow-none print:border-none ${
+          isHorizontal ? 'w-full max-w-[480px] p-5' : 'w-[300px] sm:w-[340px] p-4 py-5'
         }`}
       >
+        {/* Paper Texture Overlay */}
+        <div 
+          className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-[0.15] z-0"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}
+        />
+
         {/* Retro Film Sprocket Holes Edge (Analog 35mm styling) */}
         {isRetro && (
           <>
             <div className="absolute top-0 bottom-0 left-1.5 flex flex-col justify-around py-4 pointer-events-none z-10 opacity-30">
               {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="w-2 h-3.5 rounded-xs bg-white/40 mb-1" />
+                <div key={i} className="w-2 h-3.5 rounded-sm bg-white/40 mb-1" />
               ))}
             </div>
             <div className="absolute top-0 bottom-0 right-1.5 flex flex-col justify-around py-4 pointer-events-none z-10 opacity-30">
               {Array.from({ length: 12 }).map((_, i) => (
-                <div key={i} className="w-2 h-3.5 rounded-xs bg-white/40 mb-1" />
+                <div key={i} className="w-2 h-3.5 rounded-sm bg-white/40 mb-1" />
               ))}
             </div>
           </>
@@ -120,7 +110,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
 
         {/* Sakura Y2K Sparkle Glow Accents */}
         {isSakura && (
-          <div className="absolute inset-0 bg-gradient-to-b from-pink-100/30 via-transparent to-rose-100/30 pointer-events-none z-0" />
+          <div className="absolute inset-0 bg-gradient-to-b from-pink-200/20 via-transparent to-rose-200/20 pointer-events-none z-0" />
         )}
 
         {/* Subtle Corner Stickers/Emojis (from frame preset) */}
@@ -128,7 +118,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           <>
             {frame.cornerEmojis.topRight && (
               <div
-                className="absolute top-4 right-4 text-2xl filter drop-shadow-xs select-none z-20 pointer-events-none"
+                className="absolute top-4 right-4 text-2xl filter drop-shadow-sm select-none z-20 pointer-events-none"
                 title="Corner Sticker"
               >
                 {frame.cornerEmojis.topRight}
@@ -136,7 +126,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             )}
             {frame.cornerEmojis.bottomLeft && (
               <div
-                className="absolute bottom-4 left-4 text-2xl filter drop-shadow-xs select-none z-20 pointer-events-none"
+                className="absolute bottom-4 left-4 text-2xl filter drop-shadow-sm select-none z-20 pointer-events-none"
                 title="Corner Sticker"
               >
                 {frame.cornerEmojis.bottomLeft}
@@ -148,26 +138,25 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         {/* Top Header: Authentic Minimal Photobooth Branding */}
         <div className="relative z-10 flex flex-col items-center justify-center mb-3 text-center">
           {branding.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={branding.logoUrl}
               alt={branding.name}
-              className="h-9 object-contain mb-1 max-w-[130px]"
+              className="h-8 object-contain mb-1 max-w-[120px]"
             />
           ) : (
             <h3
               style={{ color: effectiveText }}
-              className="font-black text-sm sm:text-base tracking-wide"
+              className="font-black text-[13px] tracking-wide uppercase"
             >
               {branding.name || 'Memories • موميريز'}
             </h3>
           )}
 
           {/* Mode-specific Badge */}
-          <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="flex items-center gap-1.5 mt-1">
             <span
               style={{ color: effectiveAccent }}
-              className="text-[9px] font-black uppercase tracking-widest font-mono"
+              className="text-[8px] font-black uppercase tracking-[0.2em] font-mono opacity-80"
             >
               {frame.badgeText || modeInfo.filmBadge}
             </span>
@@ -179,7 +168,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           className={`relative z-10 w-full ${
             isHorizontal
               ? 'grid grid-cols-2 gap-3 my-2'
-              : 'flex flex-col gap-3 my-1'
+              : 'flex flex-col gap-2 my-1'
           }`}
         >
           {Array.from({ length: totalSlots }).map((_, slotIdx) => {
@@ -188,90 +177,47 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             const visitNumber = slotIdx + 1;
             const slotNumberFormatted = String(visitNumber).padStart(2, '0');
 
-            // 1. Slot is already filled with a photo
-            if (photo) {
-              return (
-                <div
-                  key={slotIdx}
-                  style={{ borderColor: effectiveBorder }}
-                  className={`relative overflow-hidden ${slotRadiusClass} border bg-stone-100 shadow-inner group ${
-                    isHorizontal ? 'aspect-[4/3]' : 'aspect-square'
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photo}
-                    alt={`Visit ${visitNumber}`}
-                    className="w-full h-full object-cover"
-                  />
+            // Aspect ratio depends on orientation, typically 3:4 for vertical strips, 4:3 for horizontal
+            const aspectClass = isHorizontal ? 'aspect-[4/3]' : 'aspect-[3/4]';
 
-                  {/* Authentic Film Slot Number (01, 02, 03...) */}
-                  <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-xs text-white text-[9px] font-mono font-black rounded-sm flex items-center gap-1 shadow-xs select-none">
-                    <span className="text-amber-400">#</span>
-                    <span>{slotNumberFormatted}</span>
-                  </div>
-
-                  {/* Checkmark Tag */}
-                  <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold rounded-md flex items-center gap-1 shadow-xs select-none">
-                    <Check className="w-2.5 h-2.5 text-emerald-400" />
-                    <span>الزيارة #{visitNumber}</span>
-                  </div>
-                </div>
-              );
-            }
-
-            // 2. The LAST Slot: Shows the Big Reward Milestone!
-            if (isLastSlot) {
-              return (
-                <div
-                  key={slotIdx}
-                  style={{ borderColor: effectiveAccent }}
-                  className={`relative overflow-hidden ${slotRadiusClass} border-2 border-dashed bg-gradient-to-br from-amber-500/10 to-orange-500/10 p-4 flex flex-col items-center justify-center text-center shadow-inner ${
-                    isHorizontal ? 'aspect-[4/3]' : 'aspect-square'
-                  }`}
-                >
-                  {/* Slot number on milestone */}
-                  <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-amber-500/20 text-amber-500 text-[9px] font-mono font-black rounded-sm">
-                    #{slotNumberFormatted}
-                  </div>
-
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center mb-1.5 shadow-xs">
-                    <Gift className="w-5 h-5 animate-bounce" />
-                  </div>
-                  <span
-                    style={{ color: effectiveAccent }}
-                    className="text-[10px] font-black uppercase tracking-wider"
-                  >
-                    الخانة الأخيرة • الزيارة #{visitNumber}
-                  </span>
-                  <p
-                    style={{ color: effectiveText }}
-                    className="text-xs font-black mt-1 leading-tight px-2"
-                  >
-                    {freeGiftOffer.title}
-                  </p>
-                  <span className="text-[9px] opacity-70 font-medium mt-1">
-                    اكتمال الكارت والطباعة
-                  </span>
-                </div>
-              );
-            }
-
-            // 3. Middle upcoming slots: Clean minimal placeholder
             return (
               <div
                 key={slotIdx}
                 style={{ borderColor: effectiveBorder }}
-                className={`relative overflow-hidden ${slotRadiusClass} border-2 border-dashed bg-black/5 dark:bg-white/5 flex flex-col items-center justify-center opacity-60 text-center ${
-                  isHorizontal ? 'aspect-[4/3]' : 'aspect-square'
-                }`}
+                className={`relative overflow-hidden bg-white ${aspectClass}`}
               >
-                <span className="w-7 h-7 rounded-full bg-stone-300/40 flex items-center justify-center text-xs font-mono font-bold mb-1">
-                  {slotNumberFormatted}
-                </span>
-                <span className="text-[11px] font-bold">
-                  الزيارة القادمة
-                </span>
+                {/* Inner white border / photo margin */}
+                <div className="absolute inset-1 bg-stone-100 flex items-center justify-center overflow-hidden">
+                  {photo ? (
+                    <>
+                      <img
+                        src={photo}
+                        alt={`Visit ${visitNumber}`}
+                        className="w-full h-full object-cover filter contrast-105 saturate-[0.95]"
+                      />
+                      {/* Checkmark Tag (minimal) */}
+                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/40 backdrop-blur-sm text-white text-[9px] font-bold rounded-sm flex items-center gap-1 shadow-sm select-none">
+                        <Check className="w-2.5 h-2.5 text-emerald-300 stroke-[3]" />
+                      </div>
+                    </>
+                  ) : isLastSlot ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-b from-black/5 to-black/10 dark:from-white/5 dark:to-white/10 text-center">
+                       <span style={{ color: effectiveAccent }} className="text-xl mb-2 opacity-80">🎁</span>
+                       <span className="text-[11px] font-bold opacity-80">هدية عند الاكتمال</span>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-black/5 dark:bg-white/5 opacity-50">
+                      <span className="text-[10px] font-bold uppercase tracking-wider">
+                        الزيارة {visitNumber}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Authentic Film Slot Number */}
+                <div className="absolute top-1.5 left-2 text-[8px] font-mono font-bold tracking-tighter opacity-50 select-none z-10 pointer-events-none mix-blend-difference text-white">
+                  #{slotNumberFormatted}
+                </div>
               </div>
             );
           })}
@@ -290,52 +236,36 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         {/* Authentic Photobooth Footer */}
         <div
           style={{ borderColor: effectiveBorder }}
-          className="relative z-10 mt-4 pt-3 border-t flex items-center justify-between text-[10px] opacity-70 font-medium px-2"
+          className="relative z-10 mt-5 pt-2 border-t-[0.5px] flex items-center justify-between text-[9px] opacity-80 font-mono px-1"
         >
-          <div className="flex items-center gap-2">
-            {/* Authentic Open Source Studio Barcode for Korean Noir & Retro Film */}
+          <div className="flex items-center gap-3">
+            {/* Date in typewriter format */}
+            <span className="tracking-tight">{dateFormatted}</span>
+            
+            {/* Open Source Studio Barcode for Korean Noir & Retro Film */}
             {(isKorean || isRetro) && (
-              <div className="flex items-center gap-0.5 font-mono text-[8px] tracking-tighter opacity-80 select-none">
-                <span className="w-0.5 h-3 bg-current inline-block" />
-                <span className="w-1 h-3 bg-current inline-block" />
-                <span className="w-0.5 h-3 bg-current inline-block" />
-                <span className="w-1.5 h-3 bg-current inline-block" />
-                <span className="w-0.5 h-3 bg-current inline-block" />
-                <span className="ml-1 text-[8px] font-mono">4-CUT</span>
+              <div className="flex items-center gap-[1px] opacity-60 select-none">
+                <span className="w-[1px] h-2.5 bg-current inline-block" />
+                <span className="w-[2px] h-2.5 bg-current inline-block" />
+                <span className="w-[1px] h-2.5 bg-current inline-block" />
+                <span className="w-[3px] h-2.5 bg-current inline-block" />
+                <span className="w-[1px] h-2.5 bg-current inline-block" />
               </div>
             )}
-            <span>{dateFormatted}</span>
           </div>
 
-          <span className="tracking-widest uppercase text-[9px] font-black font-mono">
-            {branding.name ? `${branding.name} • MEMORIES` : 'MEMORIES STUDIO'}
+          <span className="tracking-widest uppercase font-bold">
+            {branding.name ? branding.name : 'MEMORIES'}
           </span>
         </div>
 
         {/* Polaroid chin handwritten note line */}
         {isPolaroid && (
-          <div className="mt-2 text-center text-[10px] italic font-serif opacity-60 tracking-wider">
+          <div className="mt-3 text-center text-[10px] italic font-serif opacity-60 tracking-wider">
             memories together ♡
           </div>
         )}
       </div>
-
-      {/* Print Action Button */}
-      {onPrint && (
-        <button
-          onClick={() => {
-            if (onPrint) {
-              onPrint();
-            } else {
-              PrintService.printElement('printable-strip');
-            }
-          }}
-          className="mt-4 px-5 py-2.5 rounded-full bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition active:scale-[0.98]"
-        >
-          <Printer className="w-3.5 h-3.5 text-amber-400" />
-          <span>طباعة كارت الذكريات (2x6)</span>
-        </button>
-      )}
     </div>
   );
 };
