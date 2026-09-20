@@ -1,799 +1,383 @@
 'use client';
 
-import React, { useState, useEffect, use, useRef, useCallback } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect, use } from 'react';
+import { BusinessSettings, PhotoboothFrame, CustomerPersonaKey } from '@/types/photobooth';
+import { BusinessSettingsService } from '@/lib/services/business-settings.service';
+import { CUSTOMER_PERSONAS, DEFAULT_BUSINESS_SETTINGS } from '@/lib/constants/photobooth-presets';
+import { CameraViewfinder } from '@/components/photobooth/CameraViewfinder';
+import { PhotoboothStripCard } from '@/components/photobooth/PhotoboothStripCard';
+import { FrameSelector } from '@/components/photobooth/FrameSelector';
+import { PrintGiftModal } from '@/components/photobooth/PrintGiftModal';
 import {
-  Camera,
   Sparkles,
-  Download,
-  Share2,
-  Tv,
-  CheckCircle2,
-  RefreshCw,
-  X,
-  Palette,
-  Layers,
-  Heart,
-  Coffee,
-  Languages,
-  User,
-  Phone,
-  UserCheck,
+  Camera,
+  Gift,
+  CheckCircle,
+  ArrowRight,
   ShieldCheck,
-  Edit3
+  RotateCcw,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 
-interface PageProps {
-  params: Promise<{ cafeSlug: string }>;
+interface CustomerPageProps {
+  params: Promise<{
+    cafeSlug: string;
+  }>;
 }
 
-interface MemoryEntry {
-  id: string;
-  date: string;
-  caption: string;
-  img: string;
-}
+export default function CustomerPhotoboothPage({ params }: CustomerPageProps) {
+  const resolvedParams = use(params);
+  const cafeSlug = resolvedParams?.cafeSlug || 'espresso-lab';
 
-export default function CustomerPhotoBoothPage({ params }: PageProps) {
-  const { cafeSlug } = use(params);
-  const cafeName = cafeSlug ? cafeSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Espresso Lab';
+  // Business settings state
+  const [settings, setSettings] = useState<BusinessSettings>(() =>
+    BusinessSettingsService.getSettings(cafeSlug)
+  );
 
-  const [lang, setLang] = useState<'ar' | 'en'>('ar');
-  const [borderTheme, setBorderTheme] = useState<'white' | 'noir' | 'latte' | 'matcha'>('white');
-  const [filterStyle, setFilterStyle] = useState<'warm' | 'mono' | 'tokyo' | 'vintage'>('warm');
+  const [selectedFrame, setSelectedFrame] = useState<PhotoboothFrame>(() => {
+    return (
+      settings.frames.find((f) => f.id === settings.activeFrameId) ||
+      settings.frames[0]
+    );
+  });
 
-  const [frames, setFrames] = useState<string[]>([
-    'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80',
-  ]);
+  // Photobooth state
+  const [capturedPhotos, setCapturedPhotos] = useState<string[]>([]);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [isPrintGiftModalOpen, setIsPrintGiftModalOpen] = useState(false);
+  const [giftCode, setGiftCode] = useState('');
 
-  const [activeFrameIndex, setActiveFrameIndex] = useState<number | null>(null);
-  const [customCaption, setCustomCaption] = useState('Aesthetic morning roast & good talks ✨');
-  const [wallConsent, setWallConsent] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [broadcastSuccess, setBroadcastSuccess] = useState(false);
-  const [memories, setMemories] = useState<MemoryEntry[]>([]);
-  const [loadingMemories, setLoadingMemories] = useState(true);
-
-  // CRM Lead Profile State
+  // Customer profile form state
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [hasProfile, setHasProfile] = useState(false);
-  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'download' | 'broadcast' | null>(null);
-  const [leadFormError, setLeadFormError] = useState('');
-  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [customerRole, setCustomerRole] = useState<CustomerPersonaKey>('coffee_lover');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Initialize stored customer lead profile from localStorage
+  // Sync settings when updated in storage or another tab
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('cafe_guest_profile');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.name && parsed.phone) {
-          setCustomerName(parsed.name);
-          setCustomerPhone(parsed.phone);
-          setHasProfile(true);
-        }
+    const handleSettingsUpdate = (e: any) => {
+      if (e.detail) {
+        setSettings(e.detail);
+        const match = e.detail.frames?.find((f: PhotoboothFrame) => f.id === e.detail.activeFrameId);
+        if (match) setSelectedFrame(match);
       }
-    } catch {}
+    };
+
+    window.addEventListener('memories-settings-updated', handleSettingsUpdate);
+    return () => window.removeEventListener('memories-settings-updated', handleSettingsUpdate);
   }, []);
 
-  const loadRecentMemories = useCallback(async () => {
-    try {
-      setLoadingMemories(true);
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('memories')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        setMemories(
-          data.map(m => ({
-            id: m.id,
-            date: new Date(m.created_at).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
-              month: 'short',
-              day: 'numeric',
-            }),
-            caption: m.caption || 'Specialty Coffee Memory',
-            img: m.optimized_url || m.original_url,
-          }))
-        );
-      }
-    } catch {
-      setMemories([
-        {
-          id: '1',
-          date: 'Sep 20',
-          caption: 'Best flat white in town ☕',
-          img: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-          id: '2',
-          date: 'Sep 19',
-          caption: 'Golden hour study corner 📖',
-          img: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop&q=80',
-        },
-      ]);
-    } finally {
-      setLoadingMemories(false);
-    }
-  }, [lang]);
-
-  useEffect(() => {
-    loadRecentMemories();
-  }, [loadRecentMemories]);
-
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (activeFrameIndex !== null) {
-        const nextFrames = [...frames];
-        nextFrames[activeFrameIndex] = result;
-        setFrames(nextFrames);
-        setActiveFrameIndex(null);
-      } else {
-        setFrames([result, result, result]);
-      }
-    };
-    reader.readAsDataURL(file);
+  // When capture sequence finishes
+  const handleCaptureComplete = (photos: string[]) => {
+    setCapturedPhotos(photos);
   };
 
-  const triggerUploadForFrame = (index: number) => {
-    setActiveFrameIndex(index);
-    fileInputRef.current?.click();
+  // Open Lead intake modal
+  const handleProceedToGift = () => {
+    setIsLeadModalOpen(true);
   };
 
-  // Canvas Strip Generator & Downloader
-  const executeDownloadStrip = () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  // Submit Lead & Link Memory to Visit
+  const handleLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerName || !customerPhone) return;
 
-    canvas.width = 800;
-    canvas.height = 2000;
-
-    const bgColors: Record<string, string> = {
-      white: '#FAF8F5',
-      noir: '#1A1817',
-      latte: '#EBE3D5',
-      matcha: '#E2E8DE',
-    };
-    const textColors: Record<string, string> = {
-      white: '#231B18',
-      noir: '#F5EBE6',
-      latte: '#3D2F28',
-      matcha: '#2B382A',
-    };
-
-    ctx.fillStyle = bgColors[borderTheme] || '#FAF8F5';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = textColors[borderTheme] || '#231B18';
-    ctx.font = 'bold 36px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(cafeName.toUpperCase(), 400, 100);
-
-    ctx.font = '18px monospace';
-    ctx.fillText('• PHOTO BOOTH STRIP •', 400, 135);
-
-    let loadedCount = 0;
-    frames.forEach((src, idx) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = src;
-      img.onload = () => {
-        const frameY = 170 + idx * 520;
-        const frameWidth = 700;
-        const frameHeight = 490;
-        const frameX = 50;
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(frameX, frameY, frameWidth, frameHeight, 16);
-        ctx.clip();
-
-        if (filterStyle === 'mono') {
-          ctx.filter = 'grayscale(100%) contrast(1.1)';
-        } else if (filterStyle === 'vintage') {
-          ctx.filter = 'sepia(40%) contrast(1.05) brightness(0.95)';
-        } else if (filterStyle === 'tokyo') {
-          ctx.filter = 'saturate(1.2) brightness(1.05)';
-        }
-
-        ctx.drawImage(img, frameX, frameY, frameWidth, frameHeight);
-        ctx.restore();
-
-        loadedCount++;
-        if (loadedCount === frames.length) {
-          ctx.fillStyle = textColors[borderTheme] || '#231B18';
-          ctx.font = 'bold 24px sans-serif';
-          ctx.fillText(customCaption, 400, 1800);
-
-          const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
-          ctx.font = '18px monospace';
-          const guestTag = customerName ? ` • ${customerName.toUpperCase()}` : '';
-          ctx.fillText(`${dateStr} • SPECIALTY ROASTERY${guestTag} • SHOT #${Math.floor(1000 + Math.random() * 9000)}`, 400, 1850);
-
-          const link = document.createElement('a');
-          link.download = `${cafeSlug}-photobooth-${Date.now()}.png`;
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        }
-      };
-    });
-  };
-
-  // Submit Lead & Process Selected Action (Download or Broadcast)
-  const handleSaveLeadAndProceed = async (action: 'download' | 'broadcast', explicitName?: string, explicitPhone?: string) => {
-    const finalName = (explicitName ?? customerName).trim();
-    const finalPhone = (explicitPhone ?? customerPhone).trim();
-
-    if (!finalName || finalName.length < 2) {
-      setLeadFormError(lang === 'ar' ? 'يرجى إدخال اسم صحيح (حرفين على الأقل)' : 'Please enter a valid name');
-      return;
-    }
-
-    if (!finalPhone || finalPhone.replace(/\D/g, '').length < 6) {
-      setLeadFormError(lang === 'ar' ? 'يرجى إدخال رقم موبايل صحيح' : 'Please enter a valid phone number');
-      return;
-    }
-
-    setIsSubmittingLead(true);
-    setUploading(true);
-    setLeadFormError('');
+    setIsSubmitting(true);
+    const code = `GIFT-${Math.floor(1000 + Math.random() * 9000)}`;
+    setGiftCode(code);
 
     try {
-      // Send to Photobooth CRM Capture endpoint
-      const res = await fetch('/api/v1/photobooth/capture', {
+      await fetch('/api/v1/photobooth/capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: finalName,
-          phone: finalPhone,
-          originalUrl: frames[0],
-          caption: customCaption,
-          liveWallConsent: wallConsent,
+          customer: {
+            name: customerName,
+            phone: customerPhone,
+            role: customerRole,
+          },
+          photos: capturedPhotos,
+          cafeSlug,
+          frameId: selectedFrame.id,
+          giftCode: code,
+          visitId: `vis_${Date.now()}`,
         }),
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to submit profile');
-      }
-
-      // Save to localStorage for repeat frictionless visits
-      localStorage.setItem(
-        'cafe_guest_profile',
-        JSON.stringify({
-          name: finalName,
-          phone: finalPhone,
-          id: data.customer?.id,
-        })
-      );
-      setCustomerName(finalName);
-      setCustomerPhone(finalPhone);
-      setHasProfile(true);
-      setIsLeadModalOpen(false);
-
-      if (action === 'download') {
-        executeDownloadStrip();
-      } else if (action === 'broadcast') {
-        setBroadcastSuccess(true);
-        setTimeout(() => setBroadcastSuccess(false), 6000);
-      }
-
-      loadRecentMemories();
-    } catch (err: any) {
-      console.warn('Submission fallback:', err.message);
-      if (action === 'download') {
-        executeDownloadStrip();
-        setIsLeadModalOpen(false);
-      } else {
-        setLeadFormError(err.message || 'حدث خطأ، يرجى المحاولة ثانية');
-      }
+    } catch (err) {
+      console.warn('Could not sync with Supabase, proceeding locally', err);
     } finally {
-      setIsSubmittingLead(false);
-      setUploading(false);
+      setIsSubmitting(false);
+      setIsLeadModalOpen(false);
+      setIsPrintGiftModalOpen(true);
     }
   };
 
-  const onDownloadClick = () => {
-    if (!hasProfile || !customerName.trim() || !customerPhone.trim()) {
-      setPendingAction('download');
-      setIsLeadModalOpen(true);
-    } else {
-      handleSaveLeadAndProceed('download');
-    }
-  };
-
-  const onBroadcastClick = () => {
-    if (!hasProfile || !customerName.trim() || !customerPhone.trim()) {
-      setPendingAction('broadcast');
-      setIsLeadModalOpen(true);
-    } else {
-      handleSaveLeadAndProceed('broadcast');
-    }
-  };
-
-  const filterClasses: Record<string, string> = {
-    warm: 'sepia-[0.25] saturate-[1.2] contrast-[1.05]',
-    mono: 'grayscale contrast-[1.25]',
-    tokyo: 'brightness-[1.06] saturate-[1.3] contrast-[1.05]',
-    vintage: 'sepia-[0.45] brightness-[0.95] contrast-[1.1]',
-  };
-
-  const borderClasses: Record<string, { bg: string; text: string; subText: string; frameBg: string }> = {
-    white: {
-      bg: 'bg-[#FAF8F5]',
-      text: 'text-stone-900',
-      subText: 'text-stone-600',
-      frameBg: 'bg-stone-200/80',
-    },
-    noir: {
-      bg: 'bg-[#181615]',
-      text: 'text-stone-100',
-      subText: 'text-stone-400',
-      frameBg: 'bg-stone-800',
-    },
-    latte: {
-      bg: 'bg-[#EFE8DC]',
-      text: 'text-amber-950',
-      subText: 'text-amber-900/70',
-      frameBg: 'bg-amber-200/50',
-    },
-    matcha: {
-      bg: 'bg-[#E6ECE3]',
-      text: 'text-emerald-950',
-      subText: 'text-emerald-900/70',
-      frameBg: 'bg-emerald-200/50',
-    },
-  };
-
-  const currentTheme = borderClasses[borderTheme];
+  const selectedPersonaInfo = CUSTOMER_PERSONAS.find((p) => p.key === customerRole);
 
   return (
-    <div
-      className="min-h-screen bg-stone-950 text-stone-100 selection:bg-amber-500 selection:text-stone-950 pb-24"
-      dir={lang === 'ar' ? 'rtl' : 'ltr'}
-    >
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handlePhotoUpload}
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-      />
-
-      {/* CRM Lead Profile Modal */}
-      {isLeadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-sm rounded-3xl bg-stone-900 border border-stone-800 p-6 shadow-2xl space-y-5 text-stone-100 relative">
-            <button
-              onClick={() => setIsLeadModalOpen(false)}
-              className="absolute top-4 left-4 p-1.5 rounded-full bg-stone-800 text-stone-400 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="text-center space-y-2 pt-2">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-400 text-stone-950 mx-auto flex items-center justify-center shadow-lg shadow-amber-600/30">
-                <Coffee className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-black tracking-tight text-white font-serif">
-                {lang === 'ar' ? 'احفظ شريط ذكرياتك ☕📸' : 'Save Your Photo Strip'}
-              </h3>
-              <p className="text-xs text-stone-400 leading-relaxed">
-                {lang === 'ar'
-                  ? 'أدخل اسمك ورقم هاتفك لحفظ شريط صورك في بروفايلك وعرضه على شاشة الكافيه واستلام هدايا الزيارات'
-                  : 'Enter your name & phone number to save your photo strip profile and get featured on live screens.'}
-              </p>
-            </div>
-
-            {leadFormError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold">
-                {leadFormError}
+    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col items-center selection:bg-amber-100">
+      {/* Top Porcelain Header */}
+      <header className="w-full bg-white/85 backdrop-blur-md border-b border-stone-200/80 sticky top-0 z-40 py-3.5 px-4 shadow-xs">
+        <div className="max-w-xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {settings.branding.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={settings.branding.logoUrl}
+                alt={settings.branding.name}
+                className="h-8 object-contain"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-500 text-white flex items-center justify-center font-black text-sm shadow-sm">
+                M
               </div>
             )}
-
-            <div className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-bold text-stone-300 mb-1.5 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{lang === 'ar' ? 'الاسم بالكامل' : 'Your Name'}</span>
-                </label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={e => setCustomerName(e.target.value)}
-                  placeholder={lang === 'ar' ? 'مثال: سارة منصور' : 'e.g. Sarah Mansour'}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 text-sm focus:outline-none focus:border-amber-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-300 mb-1.5 flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{lang === 'ar' ? 'رقم الموبايل (واتساب)' : 'Mobile Phone (WhatsApp)'}</span>
-                </label>
-                <input
-                  type="tel"
-                  value={customerPhone}
-                  onChange={e => setCustomerPhone(e.target.value)}
-                  placeholder={lang === 'ar' ? '05XXXXXXXX أو 01XXXXXXXXX' : '+966 50 123 4567'}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-stone-950 border border-stone-800 text-stone-100 text-sm focus:outline-none focus:border-amber-500 transition-colors font-mono"
-                  dir="ltr"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 pt-1 text-[11px] text-stone-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>{lang === 'ar' ? 'بياناتك محفوظة بأمان لدى الكافيه لحفظ سجل ذكرياتك' : 'Your data is securely stored for your café loyalty'}</span>
-              </div>
-            </div>
-
-            <div className="pt-2 space-y-2">
-              <button
-                onClick={() => handleSaveLeadAndProceed(pendingAction || 'download')}
-                disabled={isSubmittingLead}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20 transition-all active:scale-[0.98] disabled:opacity-50"
-              >
-                {isSubmittingLead ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4" />
-                )}
-                <span>
-                  {pendingAction === 'broadcast'
-                    ? lang === 'ar' ? 'تأكيد وعرض على الشاشة' : 'Confirm & Broadcast'
-                    : lang === 'ar' ? 'تأكيد وتحميل الشريط' : 'Confirm & Download'}
-                </span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsLeadModalOpen(false);
-                  if (pendingAction === 'download') executeDownloadStrip();
-                }}
-                className="w-full py-2.5 text-center text-xs text-stone-400 hover:text-stone-300 font-semibold"
-              >
-                {lang === 'ar' ? 'تخطي الآن' : 'Skip for now'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-stone-950/80 border-b border-stone-800/80 px-4 py-3.5">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 text-stone-950 flex items-center justify-center font-black shadow-md shadow-amber-600/20">
-              <Camera className="w-5 h-5" />
-            </div>
             <div>
-              <h1 className="font-bold text-sm tracking-tight text-stone-100">{cafeName}</h1>
-              <p className="text-[11px] text-amber-400/90 font-medium">
-                {lang === 'ar' ? 'كابينة تصوير الذكريات • Photo Booth' : 'Live Memory Photo Booth'}
+              <h1 className="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">
+                {settings.branding.name || 'Memories • موميريز'}
+              </h1>
+              <p className="text-[10px] text-stone-500 font-medium">
+                كبينة تصوير الذكريات والهدايا الفورية
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/wall/screen-101"
-              target="_blank"
-              className="px-2.5 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-semibold text-stone-300 flex items-center gap-1.5 transition-colors"
-            >
-              <Tv className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">{lang === 'ar' ? 'شاشة الكافيه' : 'Live Wall'}</span>
-            </Link>
-            <button
-              onClick={() => setLang(l => (l === 'ar' ? 'en' : 'ar'))}
-              className="p-2 rounded-lg bg-stone-900 border border-stone-800 text-stone-300 hover:text-white text-xs"
-              aria-label="Toggle language"
-            >
-              <Languages className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 rounded-full border border-amber-200 text-xs font-bold">
+            <Gift className="w-3.5 h-3.5 text-amber-600" />
+            <span>هدية فورية مع كل شريط</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-4 pt-4 space-y-5">
-        {/* Customer Profile Status Bar */}
-        <div className="p-3 rounded-2xl bg-stone-900/80 border border-stone-800/80 flex items-center justify-between">
-          {hasProfile ? (
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
-                <UserCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span>{lang === 'ar' ? `مرحباً، ${customerName}` : `Welcome, ${customerName}`}</span>
-                  <span className="px-1.5 py-0.2 rounded text-[9px] bg-amber-500/20 text-amber-300 font-mono">CRM LEAD</span>
-                </p>
-                <p className="text-[10px] text-stone-400 font-mono" dir="ltr">{customerPhone}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-xs text-stone-400">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>{lang === 'ar' ? 'بروفايل ضيف جديد' : 'New Guest Session'}</span>
-            </div>
-          )}
+      {/* Main Flow Container */}
+      <main className="w-full max-w-xl mx-auto p-4 sm:p-6 flex-1 flex flex-col items-center">
+        {/* Step Indicator */}
+        <div className="w-full flex items-center justify-between mb-6 px-2">
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                capturedPhotos.length === 0
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-emerald-500 text-white'
+              }`}
+            >
+              {capturedPhotos.length === 0 ? '1' : '✓'}
+            </span>
+            <span className="text-xs font-bold text-stone-700">التصوير الحي</span>
+          </div>
 
-          <button
-            onClick={() => {
-              setPendingAction('download');
-              setIsLeadModalOpen(true);
-            }}
-            className="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-[11px] font-semibold flex items-center gap-1 transition-colors"
-          >
-            <Edit3 className="w-3 h-3 text-amber-400" />
-            <span>{hasProfile ? (lang === 'ar' ? 'تعديل' : 'Edit') : (lang === 'ar' ? 'تسجيل بروفايل' : 'Create Profile')}</span>
-          </button>
+          <div className="h-[2px] w-12 bg-stone-200" />
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                capturedPhotos.length > 0 && !giftCode
+                  ? 'bg-amber-600 text-white'
+                  : giftCode
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-stone-200 text-stone-600'
+              }`}
+            >
+              2
+            </span>
+            <span className="text-xs font-bold text-stone-700">تخصيص الشريط</span>
+          </div>
+
+          <div className="h-[2px] w-12 bg-stone-200" />
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                giftCode ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-600'
+              }`}
+            >
+              3
+            </span>
+            <span className="text-xs font-bold text-stone-700">الهدية والطباعة</span>
+          </div>
         </div>
 
-        {broadcastSuccess && (
-          <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 shadow-xl">
-            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-400" />
-            <div>
-              <p className="font-bold">{lang === 'ar' ? 'تم العرض على شاشة الكافيه!' : 'Broadcasting Live to Café Wall!'}</p>
-              <p className="text-xs text-emerald-400/80">
-                {lang === 'ar' ? 'شريط صورك معروض الآن في صالة الكافيه ومحفوظ في بروفايلك' : 'Your strip is now rotating on in-venue screens'}
+        {/* Phase 1: Strict Live Camera (No upload allowed!) */}
+        {capturedPhotos.length === 0 ? (
+          <div className="w-full animate-in fade-in">
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-black text-stone-900">
+                التقط شريط ذكرياتك الآن 📸
+              </h2>
+              <p className="text-xs text-stone-500 mt-1">
+                الكاميرا ستلتقط {selectedFrame.shotCount} لقطات متتالية مع عد تنازلي وفلاش واقعي
               </p>
             </div>
+
+            <CameraViewfinder
+              targetShotCount={selectedFrame.shotCount}
+              onCaptureComplete={handleCaptureComplete}
+              brandName={settings.branding.name}
+            />
+          </div>
+        ) : (
+          /* Phase 2: Frame Selection & Strip Preview */
+          <div className="w-full space-y-6 animate-in fade-in">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-black text-stone-900 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-amber-600" />
+                  <span>معاينة شريط ذكرياتك</span>
+                </h2>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  اختر الإطار المفضل والمزين بإيموجي الزوايا
+                </p>
+              </div>
+
+              <button
+                onClick={() => setCapturedPhotos([])}
+                className="px-3.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1.5 transition"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>إعادة التصوير</span>
+              </button>
+            </div>
+
+            {/* Realistic Photobooth Strip Preview */}
+            <div className="flex justify-center py-2">
+              <PhotoboothStripCard
+                photos={capturedPhotos}
+                frame={selectedFrame}
+                branding={settings.branding}
+                giftCode="MEMO-GIFT"
+              />
+            </div>
+
+            {/* Frame Selector */}
+            <FrameSelector
+              frames={settings.frames}
+              selectedFrameId={selectedFrame.id}
+              onSelectFrame={(frame) => setSelectedFrame(frame)}
+            />
+
+            {/* CTA: Proceed to Lead Form & Print */}
+            <button
+              onClick={handleProceedToGift}
+              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-3 active:scale-[0.98]"
+            >
+              <Gift className="w-5 h-5" />
+              <span>متابعة للحصول على هديتي وطباعة شريطي</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         )}
+      </main>
 
-        <div className="text-center space-y-1">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            {lang === 'ar' ? 'التقط شريط صور الفوتو بوث الخاص بك' : 'Snap Your Specialty Photo Strip'}
-          </span>
-          <h2 className="text-xl font-black tracking-tight text-stone-100">
-            {lang === 'ar' ? 'ذكريات قهوتك في شريط كلاسيكي' : 'Authentic Café Photobooth'}
-          </h2>
-          <p className="text-xs text-stone-400">
-            {lang === 'ar' ? 'اضغط على أي إطار لتغيير الصورة أو التقاط لقطة جديدة' : 'Tap any frame to capture or replace a photo'}
-          </p>
-        </div>
-
-        {/* Studio Controls */}
-        <div className="p-4 rounded-2xl bg-stone-900/90 border border-stone-800/80 space-y-3 shadow-lg">
-          <div>
-            <div className="flex items-center justify-between text-xs font-semibold mb-2 text-stone-400">
-              <span className="flex items-center gap-1.5">
-                <Palette className="w-3.5 h-3.5 text-amber-400" />
-                {lang === 'ar' ? 'لون إطار الشريط' : 'Strip Border Color'}
-              </span>
-              <span className="text-[11px] uppercase tracking-wider text-stone-400 font-mono">{borderTheme}</span>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { key: 'white', label: lang === 'ar' ? 'أبيض كلاسيك' : 'Ivory White', bg: 'bg-[#FAF8F5] text-stone-900' },
-                { key: 'noir', label: lang === 'ar' ? 'أسود فيلم' : 'Film Noir', bg: 'bg-[#181615] text-stone-100' },
-                { key: 'latte', label: lang === 'ar' ? 'لاتيه دافئ' : 'Warm Latte', bg: 'bg-[#EFE8DC] text-amber-950' },
-                { key: 'matcha', label: lang === 'ar' ? 'ماتشا ناعم' : 'Soft Matcha', bg: 'bg-[#E6ECE3] text-emerald-950' },
-              ].map(theme => (
-                <button
-                  key={theme.key}
-                  onClick={() => setBorderTheme(theme.key as any)}
-                  className={`py-2 px-1 rounded-xl text-[11px] font-bold border transition-all ${
-                    borderTheme === theme.key
-                      ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-stone-950 border-amber-400'
-                      : 'border-stone-800 hover:border-stone-700 opacity-80'
-                  } ${theme.bg}`}
-                >
-                  {theme.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-stone-800/60">
-            <div className="flex items-center justify-between text-xs font-semibold mb-2 text-stone-400">
-              <span className="flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-amber-400" />
-                {lang === 'ar' ? 'فلتر الصورة الفينتاج' : 'Vintage Grain Filter'}
-              </span>
-              <span className="text-[11px] uppercase tracking-wider text-stone-400 font-mono">{filterStyle}</span>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { key: 'warm', label: lang === 'ar' ? 'محمص' : 'Warm 35mm' },
-                { key: 'mono', label: lang === 'ar' ? 'أبيض/أسود' : 'B&W Film' },
-                { key: 'tokyo', label: lang === 'ar' ? 'طوكيو' : 'Tokyo Glow' },
-                { key: 'vintage', label: lang === 'ar' ? 'أنتيك' : 'Vintage' },
-              ].map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setFilterStyle(f.key as any)}
-                  className={`py-1.5 rounded-lg text-[11px] font-semibold border transition-all ${
-                    filterStyle === f.key
-                      ? 'bg-amber-500 text-stone-950 border-amber-400 shadow-md font-bold'
-                      : 'bg-stone-950 text-stone-400 border-stone-800 hover:border-stone-700'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* PHOTO BOOTH STRIP */}
-        <div className="flex justify-center">
-          <div
-            className={`w-[320px] rounded-3xl p-5 shadow-2xl transition-all duration-300 ${currentTheme.bg} ${currentTheme.text}`}
-            style={{
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-            }}
-          >
-            <div className="text-center pb-4 pt-1 border-b border-current/10 mb-4 space-y-0.5">
-              <div className="flex items-center justify-center gap-1.5 text-xs tracking-widest font-black uppercase font-serif">
-                <Coffee className="w-3.5 h-3.5 opacity-80" />
-                <span>{cafeName}</span>
-                <Coffee className="w-3.5 h-3.5 opacity-80" />
+      {/* Customer Lead Profile Modal (CRM Intake) */}
+      {isLeadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/80 backdrop-blur-md animate-in fade-in">
+          <div className="relative w-full max-w-md bg-[#FAF8F5] rounded-3xl p-6 sm:p-8 shadow-2xl border border-stone-200 text-stone-900">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 mb-2">
+                <Gift className="w-6 h-6" />
               </div>
-              <p className="text-[10px] tracking-[0.2em] uppercase font-mono opacity-60">
-                PHOTO BOOTH • MEMORY STRIP
+              <h3 className="text-xl font-black text-stone-900">
+                تسجيل العضوية واستلام الهدية
+              </h3>
+              <p className="text-xs text-stone-500 mt-1">
+                سجل بياناتك لربط زيارتك بشريط الصور واستلام هديتك الفورية
               </p>
             </div>
 
-            <div className="space-y-3.5">
-              {frames.map((src, index) => (
-                <div
-                  key={index}
-                  onClick={() => triggerUploadForFrame(index)}
-                  className={`group relative aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer shadow-inner transition-transform active:scale-[0.98] border border-black/10 ${currentTheme.frameBg}`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={src}
-                    alt={`Photobooth shot ${index + 1}`}
-                    className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${filterClasses[filterStyle]}`}
-                  />
-                  <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-md text-[10px] font-mono font-bold text-white tracking-wider">
-                    0{index + 1}
-                  </div>
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-1">
-                    <Camera className="w-6 h-6 text-amber-300 animate-bounce" />
-                    <span className="text-[11px] font-bold">
-                      {lang === 'ar' ? 'اضغط لتغيير الصورة' : 'Tap to change'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-4 mt-4 border-t border-current/10 text-center space-y-2">
-              <input
-                type="text"
-                value={customCaption}
-                onChange={e => setCustomCaption(e.target.value)}
-                placeholder={lang === 'ar' ? 'اكتب تعليقاً على الشريط...' : 'Add a caption to your strip...'}
-                className="w-full text-center bg-transparent border-b border-current/20 pb-1 text-xs font-semibold tracking-tight focus:outline-none focus:border-amber-500 placeholder:opacity-40"
-              />
-
-              <div className="flex items-center justify-between text-[9px] font-mono tracking-wider opacity-60 pt-1">
-                <span>{new Date().toISOString().slice(0, 10).replace(/-/g, '.')}</span>
-                <span>{customerName ? customerName.toUpperCase() : 'SPECIALTY ROAST'}</span>
-                <span>#BOOTH-{Math.floor(100 + Math.random() * 900)}</span>
+            <form onSubmit={handleLeadSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  الاسم الكريم
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="مثال: أحمد سامي"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                />
               </div>
 
-              <div className="pt-2 flex justify-center opacity-40">
-                <div className="h-6 flex items-end gap-[2px]">
-                  {[4, 2, 6, 1, 3, 5, 2, 4, 6, 2, 1, 4, 3, 6, 2, 5, 1, 3, 6, 2, 4, 1, 5, 3].map((h, i) => (
-                    <div
-                      key={i}
-                      className="w-[2px] bg-current"
-                      style={{ height: `${h * 3.5}px` }}
-                    />
-                  ))}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  رقم الموبايل (لاستلام كود الهدية)
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="01012345678"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none font-mono text-left"
+                />
+              </div>
+
+              {/* Persona / Role Selector */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                  مجالك أو اهتمامك (Persona):
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {CUSTOMER_PERSONAS.map((persona) => {
+                    const isSelected = customerRole === persona.key;
+                    return (
+                      <button
+                        type="button"
+                        key={persona.key}
+                        onClick={() => setCustomerRole(persona.key)}
+                        className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition ${
+                          isSelected
+                            ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                            : 'bg-white hover:bg-stone-100 text-stone-700 border-stone-200'
+                        }`}
+                      >
+                        <span>{persona.icon}</span>
+                        <span className="truncate">{persona.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="space-y-3 pt-2">
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-stone-900/60 border border-stone-800/80 text-xs text-stone-300">
-            <input
-              type="checkbox"
-              id="wallConsent"
-              checked={wallConsent}
-              onChange={e => setWallConsent(e.target.checked)}
-              className="w-4 h-4 rounded accent-amber-500 bg-stone-800 border-stone-700"
-            />
-            <label htmlFor="wallConsent" className="cursor-pointer">
-              {lang === 'ar'
-                ? 'عرض شريط الصور مباشرة على شاشة التلفزيون في الكافيه (Live Wall)'
-                : 'Project strip onto in-venue Café TV Screen (Live Wall)'}
-            </label>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={onDownloadClick}
-              className="py-3.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-700 font-bold text-xs text-stone-100 flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98]"
-            >
-              <Download className="w-4 h-4 text-amber-400" />
-              <span>{lang === 'ar' ? 'حفظ شريط الصور' : 'Download Strip'}</span>
-            </button>
-
-            <button
-              onClick={onBroadcastClick}
-              disabled={uploading}
-              className="py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20 transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-              {uploading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <Tv className="w-4 h-4" />
-              )}
-              <span>{lang === 'ar' ? 'إرسال لشاشة الكافيه' : 'Broadcast to TV'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Live Guest Memories Roll */}
-        <div className="pt-8 border-t border-stone-800/80 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Heart className="w-4 h-4 text-amber-400 fill-amber-400/20" />
-              <h3 className="font-bold text-sm text-stone-200">
-                {lang === 'ar' ? 'شريط ذكريات رواد الكافيه اليوم' : "Today's Guest Memory Strips"}
-              </h3>
-            </div>
-            <span className="text-[11px] font-mono text-stone-400">
-              {memories.length} {lang === 'ar' ? 'ذكريات' : 'Memories'}
-            </span>
-          </div>
-
-          {loadingMemories ? (
-            <div className="grid grid-cols-2 gap-3">
-              {[1, 2].map(n => (
-                <div key={n} className="aspect-[3/4] rounded-2xl bg-stone-900 animate-pulse border border-stone-800" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {memories.map(item => (
-                <div
-                  key={item.id}
-                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-stone-900 border border-stone-800/80 shadow-md transition-all hover:scale-[1.02]"
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-stone-900 hover:bg-black text-white font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition disabled:opacity-50"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.img}
-                    alt={item.caption}
-                    className="w-full h-full object-cover sepia-[0.15] contrast-[1.05]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 flex flex-col justify-end text-white">
-                    <p className="text-xs font-bold line-clamp-1">{item.caption}</p>
-                    <p className="text-[10px] text-amber-300/80 font-mono mt-0.5">{item.date}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                  {isSubmitting ? (
+                    <span>جاري التوثيق وتوليد الكود...</span>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <span>تأكيد واستلام كود الهدية والطباعة</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-stone-500">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>خصوصيتك محمية 100% ولا نشارك بياناتك</span>
+              </div>
+            </form>
+          </div>
         </div>
-      </main>
+      )}
+
+      {/* Print & Gift Modal */}
+      <PrintGiftModal
+        isOpen={isPrintGiftModalOpen}
+        onClose={() => setIsPrintGiftModalOpen(false)}
+        photos={capturedPhotos}
+        frame={selectedFrame}
+        branding={settings.branding}
+        freeGiftOffer={settings.freeGiftOffer}
+        giftCode={giftCode}
+        customerName={customerName}
+        customerRoleLabel={selectedPersonaInfo?.label}
+        onPrintStrip={() => window.print()}
+      />
     </div>
   );
 }

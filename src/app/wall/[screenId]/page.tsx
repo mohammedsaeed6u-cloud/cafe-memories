@@ -59,7 +59,7 @@ const FALLBACK_MEMORIES: WallMemory[] = [
   {
     id: 'f3',
     customer: 'Nour El-Din',
-    caption: 'Espresso Lab morning light. Our favorite weekend ritual ☕',
+    caption: 'Memories • موميريز morning light. Our favorite weekend ritual ☕',
     time: '25 mins ago',
     frames: [
       'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=85',
@@ -241,7 +241,7 @@ export default function PhotoBoothLiveWall({ params }: PageProps) {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-serif text-xl font-bold tracking-tight text-white">Espresso Lab</span>
+              <span className="font-serif text-xl font-bold tracking-tight text-white">Memories • موميريز</span>
               <span className="px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 text-[10px] font-bold tracking-wider flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping"></span>
                 LIVE BOOTH
@@ -278,7 +278,7 @@ export default function PhotoBoothLiveWall({ params }: PageProps) {
       {/* Main Live Photo Booth Projection Stage */}
       <div className="flex-1 relative z-10 flex items-center justify-center p-6 md:p-12">
         <div className="max-w-6xl w-full flex flex-col lg:flex-row items-center justify-center gap-12">
-          {/* THE PHOTO BOOTH STRIP (Centerpiece) */}
+          {/* THE MEMORIES PHOTO STRIP (Centerpiece) */}
           <div className="relative group">
             <div
               className={`w-[260px] md:w-[310px] rounded-3xl p-5 shadow-2xl transition-all duration-700 animate-in fade-in zoom-in-95 ${themeStyles.bg} ${themeStyles.text}`}
@@ -290,7 +290,7 @@ export default function PhotoBoothLiveWall({ params }: PageProps) {
               <div className="text-center pb-3 border-b border-current/10 mb-3 space-y-0.5">
                 <div className="flex items-center justify-center gap-1 text-xs font-serif font-black tracking-widest uppercase">
                   <Coffee className="w-3.5 h-3.5" />
-                  <span>ESPRESSO LAB</span>
+                  <span>MEMORIES • موميريز</span>
                   <Coffee className="w-3.5 h-3.5" />
                 </div>
                 <p className="text-[9px] font-mono tracking-widest uppercase opacity-60">

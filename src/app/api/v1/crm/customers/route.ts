@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(request: NextRequest) {
@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format');
     const search = searchParams.get('search')?.toLowerCase();
+    const roleFilter = searchParams.get('role');
 
     const supabase = createAdminClient();
 
@@ -28,20 +29,40 @@ export async function GET(request: NextRequest) {
       if (totalEngagements >= 3) tier = 'VIP';
       else if (totalEngagements >= 2) tier = 'Regular';
 
-      // Clean phone display
       const phone = c.anonymous_id || '';
+      
+      // Extract persona role from email if present, or fallback
+      let role = 'زائر ومحب للقهوة';
+      if (c.email && c.email.includes('@persona.memories')) {
+        role = decodeURIComponent(c.email.replace('@persona.memories', ''));
+      } else if (c.email && !c.email.includes('@')) {
+        role = c.email;
+      }
+
+      // Map visits tied to their specific memories
+      const visitsWithStrips = (c.visits || []).map((v: any) => {
+        const matchingMemory = (c.memories || []).find((m: any) => m.visit_id === v.id);
+        return {
+          id: v.id,
+          date: v.created_at,
+          source: v.source || 'table',
+          photoUrl: matchingMemory?.optimized_url || matchingMemory?.original_url || (c.memories?.[0]?.optimized_url) || null,
+          caption: matchingMemory?.caption || 'Specialty Memory',
+        };
+      });
 
       return {
         id: c.id,
         name: c.display_name || 'Guest Regular',
         phone,
-        email: c.email || null,
+        role,
         tier,
         memoryCount,
         visitCount,
         firstSeenAt: c.created_at,
         lastSeenAt: c.last_seen_at,
-        recentStrips: (c.memories || []).slice(0, 3).map((m: any) => ({
+        visitsWithStrips,
+        recentStrips: (c.memories || []).slice(0, 4).map((m: any) => ({
           id: m.id,
           img: m.optimized_url || m.original_url,
           caption: m.caption,
@@ -50,34 +71,39 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Apply search filter if query is present
-    const filteredCustomers = search
-      ? customers.filter(
-          c =>
-            c.name.toLowerCase().includes(search) ||
-            c.phone.toLowerCase().includes(search)
-        )
-      : customers;
+    // Filter
+    let filtered = customers;
+    if (search) {
+      filtered = filtered.filter(
+        c =>
+          c.name.toLowerCase().includes(search) ||
+          c.phone.toLowerCase().includes(search) ||
+          c.role.toLowerCase().includes(search)
+      );
+    }
+    if (roleFilter && roleFilter !== 'all') {
+      filtered = filtered.filter(c => c.role.includes(roleFilter));
+    }
 
-    // If CSV download requested
+    // CSV format
     if (format === 'csv') {
-      const csvHeader = 'الاسم,رقم الموبايل,عدد أشرطة الصور,عدد الزيارات,تاريخ أول زيارة,تاريخ آخر زيارة,فئة العميل\n';
-      const csvRows = filteredCustomers.map(c => {
+      const csvHeader = 'اسم العميل,رقم الموبايل,التصنيف / المجال,عدد أشرطة الصور,عدد الزيارات,تاريخ أول زيارة,تاريخ آخر زيارة,فئة العميل\n';
+      const csvRows = filtered.map(c => {
         const safeName = `"${c.name.replace(/"/g, '""')}"`;
         const safePhone = `"${c.phone.replace(/"/g, '""')}"`;
+        const safeRole = `"${c.role.replace(/"/g, '""')}"`;
         const firstSeen = new Date(c.firstSeenAt).toLocaleDateString('ar-EG');
         const lastSeen = new Date(c.lastSeenAt).toLocaleDateString('ar-EG');
-        return `${safeName},${safePhone},${c.memoryCount},${c.visitCount},${firstSeen},${lastSeen},${c.tier}`;
+        return `${safeName},${safePhone},${safeRole},${c.memoryCount},${c.visitCount},${firstSeen},${lastSeen},${c.tier}`;
       });
 
-      // Include UTF-8 BOM for Microsoft Excel compatibility with Arabic characters
       const csvContent = '\uFEFF' + csvHeader + csvRows.join('\n');
 
       return new NextResponse(csvContent, {
         status: 200,
         headers: {
           'Content-Type': 'text/csv; charset=utf-8',
-          'Content-Disposition': `attachment; filename="cafe-crm-contacts-${new Date().toISOString().slice(0, 10)}.csv"`,
+          'Content-Disposition': `attachment; filename="memories-crm-contacts-${new Date().toISOString().slice(0, 10)}.csv"`,
         },
       });
     }
@@ -91,7 +117,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      customers: filteredCustomers,
+      customers: filtered,
       stats,
     });
   } catch (err: any) {
