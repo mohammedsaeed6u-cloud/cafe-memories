@@ -1,22 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import {
   Coffee,
   QrCode,
   Maximize2,
   Sparkles,
-  Heart,
-  Clock,
-  ArrowLeft,
   Play,
   Pause,
-  AlertCircle,
+  LayoutGrid,
+  Layers,
+  Clock,
+  Pin,
   RefreshCw,
-  Camera
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+
+export type WallDisplayMode = 'board' | 'single' | 'grid';
 
 interface WallMemory {
   id: string;
@@ -25,6 +25,7 @@ interface WallMemory {
   time: string;
   frames: string[];
   theme: 'white' | 'noir' | 'latte';
+  rotationDeg?: number;
 }
 
 const FALLBACK_MEMORIES: WallMemory[] = [
@@ -37,9 +38,9 @@ const FALLBACK_MEMORIES: WallMemory[] = [
       'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80'
     ],
-    theme: 'white'
+    theme: 'white',
+    rotationDeg: -2.5,
   },
   {
     id: 'f2',
@@ -49,9 +50,10 @@ const FALLBACK_MEMORIES: WallMemory[] = [
     frames: [
       'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80',
     ],
-    theme: 'latte'
+    theme: 'latte',
+    rotationDeg: 3,
   },
   {
     id: 'f3',
@@ -61,10 +63,24 @@ const FALLBACK_MEMORIES: WallMemory[] = [
     frames: [
       'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80',
     ],
-    theme: 'noir'
-  }
+    theme: 'noir',
+    rotationDeg: -1.5,
+  },
+  {
+    id: 'f4',
+    customer: 'كريم وياسمين',
+    caption: 'احتفال بذكرى تخرجنا بالقهوة والكارت المطبوع 🎓🎉',
+    time: 'منذ 25 دقيقة',
+    frames: [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=80',
+    ],
+    theme: 'white',
+    rotationDeg: 2,
+  },
 ];
 
 export function WallClient({ screenId }: { screenId: string }) {
@@ -73,12 +89,47 @@ export function WallClient({ screenId }: { screenId: string }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
-  const [isSyncing, setIsSyncing] = useState(false);
 
-  // Sync memories from Supabase
+  // Merchant display preferences
+  const [displayMode, setDisplayMode] = useState<WallDisplayMode>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('memories_wall_mode') as WallDisplayMode) || 'board';
+    }
+    return 'board';
+  });
+
+  const [intervalSeconds, setIntervalSeconds] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('memories_wall_interval');
+      return saved ? parseInt(saved) || 10 : 10;
+    }
+    return 10;
+  });
+
+  // Sync memories from Supabase & local cafe feed
   const syncLiveFeed = useCallback(async () => {
-    setIsSyncing(true);
+    // 1. Read local cafe feed first (guaranteed real-time on static host)
+    let localItems: WallMemory[] = [];
+    if (typeof window !== 'undefined') {
+      try {
+        const localData = localStorage.getItem('memories_wall_feed_espresso-lab');
+        if (localData) {
+          const parsed = JSON.parse(localData);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            localItems = parsed.map((m, idx) => ({
+              id: m.id || `local-${idx}`,
+              customer: m.customer || 'عميل مميز',
+              caption: m.caption || 'ذكريات القهوة واللحظات الحلوة ☕✨',
+              time: m.time || 'الآن',
+              frames: m.frames || [],
+              theme: m.theme || 'white',
+              rotationDeg: ((idx % 4) - 1.5) * 2,
+            }));
+          }
+        }
+      } catch {}
+    }
+
     try {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -95,34 +146,58 @@ export function WallClient({ screenId }: { screenId: string }) {
           caption: m.caption || 'Specialty coffee moment ☕',
           time: 'الآن',
           frames: m.photos && m.photos.length > 0 ? m.photos : FALLBACK_MEMORIES[0].frames,
-          theme: (m.frame_theme as any) || (i % 2 === 0 ? 'white' : 'latte')
+          theme: (m.frame_theme as any) || (i % 2 === 0 ? 'white' : 'latte'),
+          rotationDeg: ((i % 4) - 1.5) * 2,
         }));
-        setMemories(mapped);
+        setMemories([...localItems, ...mapped]);
+        return;
       }
-      setLastSyncTime(new Date());
-    } catch {
-      // Keep fallbacks
-    } finally {
-      setIsSyncing(false);
+    } catch {}
+
+    if (localItems.length > 0) {
+      setMemories([...localItems, ...FALLBACK_MEMORIES]);
     }
   }, []);
 
   useEffect(() => {
     syncLiveFeed();
-    const interval = setInterval(syncLiveFeed, 30000); // Poll every 30s
-    return () => clearInterval(interval);
+    const interval = setInterval(syncLiveFeed, 15000); // Poll every 15s
+
+    const handleLocalUpdate = () => syncLiveFeed();
+    window.addEventListener('memories-wall-updated', handleLocalUpdate);
+    window.addEventListener('storage', handleLocalUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('memories-wall-updated', handleLocalUpdate);
+      window.removeEventListener('storage', handleLocalUpdate);
+    };
   }, [syncLiveFeed]);
 
-  // Slideshow timer
+  // Slideshow timer using merchant's chosen interval
   useEffect(() => {
     if (!isPlaying || memories.length <= 1) return;
 
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % memories.length);
-    }, 8000); // 8 seconds per memory strip
+    }, intervalSeconds * 1000);
 
     return () => clearInterval(timer);
-  }, [isPlaying, memories.length]);
+  }, [isPlaying, memories.length, intervalSeconds]);
+
+  const handleModeChange = (mode: WallDisplayMode) => {
+    setDisplayMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('memories_wall_mode', mode);
+    }
+  };
+
+  const handleIntervalChange = (seconds: number) => {
+    setIntervalSeconds(seconds);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('memories_wall_interval', String(seconds));
+    }
+  };
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -137,124 +212,330 @@ export function WallClient({ screenId }: { screenId: string }) {
   const currentMemory = memories[currentIndex] || FALLBACK_MEMORIES[0];
 
   return (
-    <div className="relative min-h-screen bg-[#FAF8F5] text-stone-900 overflow-hidden font-sans select-none">
-      {/* Background Ambience */}
-      <div className="absolute inset-0 pointer-events-none opacity-40">
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-amber-200/40 rounded-full blur-[140px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-orange-200/30 rounded-full blur-[130px]" />
-      </div>
-
-      {/* Screen Top Header Bar */}
-      <header className="relative z-20 px-8 py-5 flex items-center justify-between border-b border-stone-200/80 bg-white/70 backdrop-blur-md">
-        <div className="flex items-center gap-4">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-500 text-white flex items-center justify-center font-black text-lg shadow-sm">
+    <div className="relative min-h-screen bg-[#241712] text-stone-100 overflow-x-hidden font-sans select-none">
+      {/* Top Header Controls Bar */}
+      <header className="relative z-30 px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-amber-900/40 bg-stone-950/80 backdrop-blur-md">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-500 text-white flex items-center justify-center font-black text-lg shadow-md">
             M
           </div>
           <div>
-            <h1 className="text-xl font-black tracking-tight text-stone-900 flex items-center gap-2">
-              <span>Memories • موميريز</span>
+            <h1 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+              <span>Memories • شاشة الذكريات الحية</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </h1>
-            <p className="text-xs text-stone-500 font-medium">
-              شاشة العرض الحية التفاعلية • {screenId}
+            <p className="text-[11px] text-amber-200/60 font-medium">
+              شاشة كروت الولاء والذكريات • {screenId}
             </p>
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
+        {/* Mode Selector & Interval Control for Merchant */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Mode Switcher */}
+          <div className="flex items-center bg-stone-900/90 rounded-2xl p-1 border border-amber-900/40 text-xs">
+            <button
+              onClick={() => handleModeChange('board')}
+              className={`px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+                displayMode === 'board'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-stone-400 hover:text-white'
+              }`}
+              title="عرض الكروت معلقة على لوحة خشبية كلاسيكية"
+            >
+              <Pin className="w-3.5 h-3.5" />
+              <span>لوحة الحائط (Board)</span>
+            </button>
+
+            <button
+              onClick={() => handleModeChange('single')}
+              className={`px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+                displayMode === 'single'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-stone-400 hover:text-white'
+              }`}
+              title="عرض شريط فردي كبير"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>كارت فردي</span>
+            </button>
+
+            <button
+              onClick={() => handleModeChange('grid')}
+              className={`px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+                displayMode === 'grid'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-stone-400 hover:text-white'
+              }`}
+              title="عرض شبكة كل الكروت"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>شبكة الكروت</span>
+            </button>
+          </div>
+
+          {/* Slideshow Duration Selector */}
+          <div className="flex items-center gap-1 bg-stone-900/90 rounded-2xl px-2.5 py-1 border border-amber-900/40 text-xs">
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[10px] text-stone-400 font-bold ml-1">المدة:</span>
+            {[5, 10, 15, 30].map((sec) => (
+              <button
+                key={sec}
+                onClick={() => handleIntervalChange(sec)}
+                className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition ${
+                  intervalSeconds === sec
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-stone-400 hover:text-white'
+                }`}
+              >
+                {sec}ث
+              </button>
+            ))}
+          </div>
+
+          {/* Play/Pause */}
           <button
             onClick={() => setIsPlaying((p) => !p)}
-            className="w-10 h-10 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition"
+            className="w-9 h-9 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 flex items-center justify-center transition border border-amber-900/40"
             title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
           >
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 text-emerald-400" />}
           </button>
 
+          {/* Fullscreen */}
           <button
             onClick={toggleFullscreen}
-            className="w-10 h-10 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition"
+            className="w-9 h-9 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 flex items-center justify-center transition border border-amber-900/40"
             title="ملء الشاشة"
           >
             <Maximize2 className="w-4 h-4" />
           </button>
 
+          {/* QR trigger */}
           <button
             onClick={() => setIsQrModalOpen(true)}
-            className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center gap-2 shadow-sm transition"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white text-xs font-bold flex items-center gap-2 shadow-md transition"
           >
-            <QrCode className="w-4 h-4 text-amber-400" />
-            <span>امسح والتقط لحظتك 📸</span>
+            <QrCode className="w-4 h-4 text-amber-200" />
+            <span>امسح وصور 📸</span>
           </button>
         </div>
       </header>
 
-      {/* Main Wall Visual Focus */}
-      <main className="relative z-10 max-w-5xl mx-auto px-6 py-10 flex flex-col items-center justify-center min-h-[calc(100vh-100px)]">
-        {/* Memory Paper Strip Presentation */}
-        <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border-2 border-stone-200/80 animate-in fade-in duration-500 flex flex-col items-center">
-          {/* Header */}
-          <div className="w-full flex items-center justify-between mb-4 border-b border-stone-100 pb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-xs">
-                {currentMemory.customer.slice(0, 2)}
-              </div>
-              <div>
-                <p className="text-sm font-bold text-stone-900 leading-tight">
-                  {currentMemory.customer}
-                </p>
-                <p className="text-[10px] text-stone-400">{currentMemory.time}</p>
-              </div>
-            </div>
+      {/* ========================================================= */}
+      {/* MODE 1: CORKBOARD / MEMORY BOARD (لوحة الذكريات المعلقة الواقعية) */}
+      {/* ========================================================= */}
+      {displayMode === 'board' && (
+        <main className="relative min-h-[calc(100vh-80px)] p-6 sm:p-10 flex flex-col justify-between overflow-hidden bg-gradient-to-b from-[#2E1A12] via-[#24150E] to-[#1A0D08]">
+          {/* Subtle Warm Cork Grid Texture Background */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-25"
+            style={{
+              backgroundImage: 'radial-gradient(#8B5A2B 1.2px, transparent 1.2px)',
+              backgroundSize: '24px 24px',
+            }}
+          />
 
-            <span className="text-xs font-black text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-              MEMORIES STRIP
-            </span>
+          {/* Top Board Frame Header Banner */}
+          <div className="relative z-10 text-center mb-4">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-stone-900/80 border border-amber-500/30 backdrop-blur-md shadow-xl">
+              <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
+              <span className="text-xs font-black text-amber-200 tracking-wider">
+                لوحة ذكريات المكان • لحظات زوارنا المعلقة
+              </span>
+            </div>
           </div>
 
-          {/* Photo Strip Frames */}
-          <div className="w-full space-y-3">
-            {currentMemory.frames.map((frameUrl, idx) => (
+          {/* Realistic Corkboard Strips Display */}
+          <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start py-4">
+            {memories.slice(0, 4).map((memory, index) => {
+              const isSpotlight = index === currentIndex % Math.min(memories.length, 4);
+              const rotation = memory.rotationDeg || (index % 2 === 0 ? -2.5 : 2.5);
+
+              return (
+                <div
+                  key={memory.id}
+                  style={{
+                    transform: `rotate(${rotation}deg)`,
+                  }}
+                  className={`relative transition-all duration-700 rounded-3xl p-4 bg-[#FAF8F5] text-stone-900 border-2 ${
+                    isSpotlight
+                      ? 'ring-4 ring-amber-400 border-amber-300 shadow-[0_25px_60px_-15px_rgba(245,158,11,0.35)] scale-105 z-20'
+                      : 'border-stone-200/90 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] opacity-90 hover:opacity-100 z-10'
+                  }`}
+                >
+                  {/* Pushpin / Tape Realistic Graphic */}
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-red-600 to-rose-400 text-white shadow-[0_4px_8px_rgba(0,0,0,0.4)] border-2 border-white/80 flex items-center justify-center text-[10px] font-bold">
+                      📌
+                    </div>
+                  </div>
+
+                  {/* Strip Header */}
+                  <div className="flex items-center justify-between border-b border-stone-200 pb-2 mb-3 mt-1">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-[11px]">
+                        {memory.customer.slice(0, 2)}
+                      </div>
+                      <p className="text-xs font-bold text-stone-900 leading-tight">
+                        {memory.customer}
+                      </p>
+                    </div>
+
+                    {isSpotlight && (
+                      <span className="text-[10px] font-black text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full animate-pulse">
+                        ✨ اللقطة الآن
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Strip Photos */}
+                  <div className="space-y-2">
+                    {memory.frames.map((src, fIdx) => (
+                      <div
+                        key={fIdx}
+                        className="aspect-square rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 shadow-inner"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={src}
+                          alt="Photo"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Strip Caption */}
+                  <div className="mt-3 pt-2 border-t border-dashed border-stone-300 text-center">
+                    <p className="text-[11px] font-bold text-stone-700 leading-snug">
+                      &ldquo;{memory.caption}&rdquo;
+                    </p>
+                    <span className="text-[9px] text-stone-400 font-medium block mt-1">
+                      {memory.time}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bottom Callout Banner */}
+          <div className="relative z-10 max-w-xl mx-auto mt-6 text-center">
+            <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-stone-950/80 border border-amber-900/40 backdrop-blur-md text-amber-200/90 text-xs font-bold shadow-lg">
+              <Coffee className="w-4 h-4 text-amber-400" />
+              <span>اطلب قهوتك، امسح الباركود، وصورتك هتنزل هنا وتطبع كارتك فوراً!</span>
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODE 2: SINGLE STRIP FOCUS (كارت فردي كبير) */}
+      {/* ========================================================= */}
+      {displayMode === 'single' && (
+        <main className="relative z-10 max-w-5xl mx-auto px-6 py-8 flex flex-col items-center justify-center min-h-[calc(100vh-100px)]">
+          <div className="w-full max-w-md bg-[#FAF8F5] text-stone-900 rounded-3xl p-6 shadow-2xl border-4 border-amber-600/30 animate-in fade-in duration-500 flex flex-col items-center">
+            {/* Header */}
+            <div className="w-full flex items-center justify-between mb-4 border-b border-stone-200 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-xs">
+                  {currentMemory.customer.slice(0, 2)}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-stone-900 leading-tight">
+                    {currentMemory.customer}
+                  </p>
+                  <p className="text-[10px] text-stone-500">{currentMemory.time}</p>
+                </div>
+              </div>
+
+              <span className="text-xs font-black text-amber-800 bg-amber-100 px-3 py-1 rounded-full border border-amber-300">
+                MEMORIES STRIP
+              </span>
+            </div>
+
+            {/* Photo Strip Frames */}
+            <div className="w-full space-y-3">
+              {currentMemory.frames.map((frameUrl, idx) => (
+                <div
+                  key={idx}
+                  className="w-full aspect-square rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 shadow-inner"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={frameUrl}
+                    alt={`Frame ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Caption */}
+            <div className="w-full mt-4 pt-3 border-t border-dashed border-stone-300 text-center">
+              <p className="text-sm font-bold text-stone-800 leading-relaxed">
+                &ldquo;{currentMemory.caption}&rdquo;
+              </p>
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODE 3: GRID VIEW (شبكة الكروت) */}
+      {/* ========================================================= */}
+      {displayMode === 'grid' && (
+        <main className="relative z-10 max-w-7xl mx-auto p-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {memories.map((memory) => (
               <div
-                key={idx}
-                className="w-full aspect-square rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 shadow-inner"
+                key={memory.id}
+                className="bg-[#FAF8F5] text-stone-900 rounded-3xl p-4 shadow-xl border border-stone-200 flex flex-col"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={frameUrl}
-                  alt={`Frame ${idx + 1}`}
-                  className="w-full h-full object-cover"
-                />
+                <div className="flex items-center gap-2 border-b border-stone-200 pb-2 mb-3">
+                  <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-[10px]">
+                    {memory.customer.slice(0, 2)}
+                  </div>
+                  <p className="text-xs font-bold text-stone-900 truncate">
+                    {memory.customer}
+                  </p>
+                </div>
+
+                <div className="space-y-2 flex-1">
+                  {memory.frames.map((src, fIdx) => (
+                    <div
+                      key={fIdx}
+                      className="aspect-square rounded-xl overflow-hidden bg-stone-100 border border-stone-200"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={src}
+                        alt="Photo"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[11px] font-bold text-stone-700 mt-3 text-center truncate">
+                  {memory.caption}
+                </p>
               </div>
             ))}
           </div>
-
-          {/* Caption */}
-          <div className="w-full mt-4 pt-3 border-t border-dashed border-stone-200 text-center">
-            <p className="text-sm font-bold text-stone-800 leading-relaxed">
-              &ldquo;{currentMemory.caption}&rdquo;
-            </p>
-          </div>
-        </div>
-
-        {/* Floating Call to Action */}
-        <div className="mt-8 flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-md rounded-full border border-stone-200 shadow-lg">
-          <Sparkles className="w-4 h-4 text-amber-600 animate-spin" />
-          <span className="text-xs font-bold text-stone-800">
-            امسح الباركود على طاولتك أو من الكاشير لتظهر صورتك هنا فوراً!
-          </span>
-        </div>
-      </main>
+        </main>
+      )}
 
       {/* QR Code Modal for TV */}
       {isQrModalOpen && (
         <div
           onClick={() => setIsQrModalOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-stone-900/80 backdrop-blur-md animate-in fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-stone-950/85 backdrop-blur-md animate-in fade-in"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-stone-200"
+            className="bg-[#FAF8F5] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-amber-900/30 text-stone-900"
           >
             <h3 className="text-xl font-black text-stone-900 mb-1">
               التقط شريط ذكرياتك 📸
@@ -263,7 +544,7 @@ export function WallClient({ screenId }: { screenId: string }) {
               وجه كاميرا هاتفك نحو الكود لفتح كبينة التصوير واستلام هديتك
             </p>
 
-            <div className="w-56 h-56 mx-auto bg-stone-50 rounded-2xl border-2 border-dashed border-stone-300 flex items-center justify-center p-4 mb-6 shadow-inner">
+            <div className="w-56 h-56 mx-auto bg-white rounded-2xl border-2 border-dashed border-amber-300 flex items-center justify-center p-4 mb-6 shadow-inner">
               <QrCode className="w-40 h-40 text-stone-900" />
             </div>
 

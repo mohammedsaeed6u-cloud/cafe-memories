@@ -34,6 +34,14 @@ export interface PhotoboothFrame {
   isCustom?: boolean;
 }
 
+export type WallDisplayMode = 'board' | 'grid' | 'slideshow';
+
+export interface WallDisplaySettings {
+  mode: WallDisplayMode;
+  slideIntervalSeconds: number; // e.g. 5, 10, 15, 30
+  boardTheme?: 'warm_cork' | 'dark_slate' | 'espresso_wood';
+}
+
 export interface BusinessSettings {
   cafeSlug: string;
   cafeName: string;
@@ -43,6 +51,7 @@ export interface BusinessSettings {
   freeGiftOffer: FreeGiftOffer;
   activeFrameId: string;
   frames: PhotoboothFrame[];
+  wallSettings?: WallDisplaySettings;
 }
 
 export type CustomerPersonaKey = string;

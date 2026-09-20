@@ -22,6 +22,9 @@ import {
   Coffee,
   Heart,
   X,
+  Camera,
+  User,
+  UserCheck,
 } from 'lucide-react';
 
 export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
@@ -42,15 +45,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [isLockedByCooldown, setIsLockedByCooldown] = useState(false);
   const [remainingCooldownHours, setRemainingCooldownHours] = useState(24);
 
-  // Photobooth state: Customer's accumulated photos on their card
-  const [accumulatedPhotos, setAccumulatedPhotos] = useState<string[]>([]);
-  const [todayPhoto, setTodayPhoto] = useState<string | null>(null);
-  const [composedStripUrl, setComposedStripUrl] = useState<string | undefined>(undefined);
-  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
-  const [isPrintGiftModalOpen, setIsPrintGiftModalOpen] = useState(false);
-  const [giftCode, setGiftCode] = useState('');
-
-  // Customer profile form state (persisted for returning visits)
+  // Customer session state (isolated strictly by phone)
   const [customerName, setCustomerName] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('memories_customer_name') || '';
@@ -69,6 +64,25 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     }
     return '';
   });
+
+  // Check if current customer is identified in this session
+  const [isSessionStarted, setIsSessionStarted] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const phone = localStorage.getItem('memories_customer_phone');
+      const name = localStorage.getItem('memories_customer_name');
+      return !!phone && phone.trim().length >= 8 && !!name && name.trim().length > 0;
+    }
+    return false;
+  });
+
+  // Photobooth state: Customer's accumulated photos on their card
+  const [accumulatedPhotos, setAccumulatedPhotos] = useState<string[]>([]);
+  const [todayPhoto, setTodayPhoto] = useState<string | null>(null);
+  const [composedStripUrl, setComposedStripUrl] = useState<string | undefined>(undefined);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [isPrintGiftModalOpen, setIsPrintGiftModalOpen] = useState(false);
+  const [giftCode, setGiftCode] = useState('');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visitCount, setVisitCount] = useState(1);
   const [extraShots, setExtraShots] = useState<number>(0);
@@ -77,7 +91,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [pinShotsCount, setPinShotsCount] = useState<number>(1);
   const [pinError, setPinError] = useState<string | null>(null);
 
-  // Initialize device ID, check 24-hour cooldown & load saved card
+  // Initialize device ID, check 24-hour cooldown & load saved card for THIS customer
   useEffect(() => {
     let id = localStorage.getItem('memories_device_id');
     if (!id) {
@@ -86,35 +100,41 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     }
     setDeviceId(id);
 
-    // Load past photos for this cafe's card from local cache
-    try {
-      const past = localStorage.getItem(`memories_card_photos_${cafeSlug}`);
-      if (past) {
-        const parsed = JSON.parse(past);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setAccumulatedPhotos(parsed);
-          setVisitCount(parsed.length + 1);
+    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
+
+    // Load past photos for THIS specific customer
+    if (clean) {
+      try {
+        const past = localStorage.getItem(`memories_card_photos_${cafeSlug}_${clean}`);
+        if (past) {
+          const parsed = JSON.parse(past);
+          if (Array.isArray(parsed)) {
+            setAccumulatedPhotos(parsed);
+            setVisitCount(parsed.length + 1);
+          } else {
+            setAccumulatedPhotos([]);
+          }
+        } else {
+          setAccumulatedPhotos([]);
         }
+      } catch {
+        setAccumulatedPhotos([]);
       }
-    } catch {
-      // ignore
+    } else {
+      setAccumulatedPhotos([]);
     }
 
     const checkLock = () => {
-      const targetId = id || '';
-      const access = CooldownService.checkAccess(targetId, cafeSlug);
-      const storedPhone = typeof window !== 'undefined' ? localStorage.getItem('memories_customer_phone') : null;
-      const phoneToCheck = customerPhone.trim() || storedPhone || '';
-      const accessPhone = phoneToCheck ? CooldownService.checkAccess(phoneToCheck, cafeSlug) : null;
-
-      const totalExtra = (access.extraShotsAvailable || 0) + (accessPhone?.extraShotsAvailable || 0);
-      setExtraShots(totalExtra);
-
-      if (totalExtra > 0) {
+      if (!clean) {
         setIsLockedByCooldown(false);
-      } else if (!access.allowed || (accessPhone && !accessPhone.allowed)) {
+        setExtraShots(0);
+        return;
+      }
+      const accessPhone = CooldownService.checkAccess(clean, cafeSlug);
+      setExtraShots(accessPhone.extraShotsAvailable);
+      if (!accessPhone.allowed) {
         setIsLockedByCooldown(true);
-        setRemainingCooldownHours(Math.max(access.remainingHours || 0, accessPhone?.remainingHours || 0, 1));
+        setRemainingCooldownHours(accessPhone.remainingHours || 24);
       } else {
         setIsLockedByCooldown(false);
       }
@@ -137,13 +157,82 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     };
   }, [cafeSlug, customerPhone]);
 
+  const handleStartCustomerSession = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
+    if (!clean || clean.length < 8) {
+      alert('من فضلك أدخل رقم موبايل صحيح (8 أرقام على الأقل)');
+      return;
+    }
+    if (!customerName.trim()) {
+      alert('من فضلك أدخل اسمك الكريم');
+      return;
+    }
+
+    try {
+      localStorage.setItem('memories_customer_phone', clean);
+      localStorage.setItem('memories_customer_name', customerName.trim());
+    } catch {}
+
+    // Load isolated photos for this customer
+    const phoneKey = `memories_card_photos_${cafeSlug}_${clean}`;
+    try {
+      const stored = localStorage.getItem(phoneKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setAccumulatedPhotos(parsed);
+          setVisitCount(parsed.length + 1);
+        } else {
+          setAccumulatedPhotos([]);
+          setVisitCount(1);
+        }
+      } else {
+        setAccumulatedPhotos([]);
+        setVisitCount(1);
+      }
+    } catch {
+      setAccumulatedPhotos([]);
+      setVisitCount(1);
+    }
+
+    const access = CooldownService.checkAccess(clean, cafeSlug);
+    setExtraShots(access.extraShotsAvailable);
+    if (!access.allowed) {
+      setIsLockedByCooldown(true);
+      setRemainingCooldownHours(access.remainingHours || 24);
+    } else {
+      setIsLockedByCooldown(false);
+    }
+
+    setIsSessionStarted(true);
+  };
+
+  const handleSwitchCustomer = () => {
+    setIsSessionStarted(false);
+    setTodayPhoto(null);
+    setAccumulatedPhotos([]);
+    setComposedStripUrl(undefined);
+    setCustomerPhone('');
+    setCustomerName('');
+    setCustomerProfession('');
+    setIsLockedByCooldown(false);
+    setExtraShots(0);
+    try {
+      localStorage.removeItem('memories_customer_phone');
+      localStorage.removeItem('memories_customer_name');
+      localStorage.removeItem('memories_customer_role');
+    } catch {}
+  };
+
   const handleVerifyPinAndAddShots = (e: React.FormEvent) => {
     e.preventDefault();
     if (!CooldownService.verifyBaristaPin(baristaPin)) {
       setPinError('رمز الباريستا غير صحيح (الرمز الافتراضي: 1234 أو 7777 أو 2026)');
       return;
     }
-    const targetId = customerPhone.trim() || deviceId;
+    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
+    const targetId = clean || deviceId;
     const newTotal = CooldownService.addOrderShots(targetId, pinShotsCount, 1, cafeSlug);
     setExtraShots(newTotal);
     setIsLockedByCooldown(false);
@@ -232,14 +321,31 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     setAccumulatedPhotos(updatedCardPhotos);
     const slots = Math.max(selectedFrame.shotCount || 3, 1);
 
-    // Save card progress & profile locally
+    const cleanPhone = customerPhone.trim().replace(/[^0-9]/g, '');
+    const phoneKey = `memories_card_photos_${cafeSlug}_${cleanPhone}`;
+
+    // Save card progress & profile locally (100% isolated per customer phone)
     try {
-      localStorage.setItem(`memories_card_photos_${cafeSlug}`, JSON.stringify(updatedCardPhotos));
+      localStorage.setItem(phoneKey, JSON.stringify(updatedCardPhotos));
       localStorage.setItem('memories_customer_name', customerName);
-      localStorage.setItem('memories_customer_phone', customerPhone);
+      localStorage.setItem('memories_customer_phone', cleanPhone);
       if (customerProfession) {
         localStorage.setItem('memories_customer_role', customerProfession);
       }
+
+      // Sync with in-store Live TV Wall
+      const wallItem = {
+        id: `wall_${Date.now()}`,
+        customer: customerName,
+        caption: `ذكريات ${customerName} في ${settings.branding.name || 'Memories'} ☕✨`,
+        time: 'الآن',
+        frames: updatedCardPhotos,
+        theme: 'white',
+      };
+      const existingFeed = JSON.parse(localStorage.getItem(`memories_wall_feed_${cafeSlug}`) || '[]');
+      const newFeed = [wallItem, ...existingFeed].slice(0, 20);
+      localStorage.setItem(`memories_wall_feed_${cafeSlug}`, JSON.stringify(newFeed));
+      window.dispatchEvent(new CustomEvent('memories-wall-updated', { detail: newFeed }));
     } catch {
       // ignore
     }
@@ -263,8 +369,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     if (deviceId) {
       CooldownService.recordSession(deviceId, cafeSlug);
     }
-    if (customerPhone.trim()) {
-      CooldownService.recordSession(customerPhone.trim(), cafeSlug);
+    if (cleanPhone) {
+      CooldownService.recordSession(cleanPhone, cafeSlug);
     }
 
     // CRITICAL: Reset todayPhoto to null so it does not duplicate on re-render!
@@ -329,9 +435,22 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
               <h1 className="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">
                 {settings.branding.name || 'Memories • موميريز'}
               </h1>
-              <p className="text-[10px] text-stone-500 font-medium">
-                كارت الولاء المصور • صورة لكل زيارة
-              </p>
+              {isSessionStarted && customerName ? (
+                <div className="flex items-center gap-1.5 text-[10px] text-stone-500 font-medium">
+                  <span className="text-amber-800 font-bold">كارت: {customerName}</span>
+                  <button
+                    type="button"
+                    onClick={handleSwitchCustomer}
+                    className="text-stone-400 hover:text-amber-700 underline text-[10px] font-bold transition"
+                  >
+                    (تبديل العميل 🔄)
+                  </button>
+                </div>
+              ) : (
+                <p className="text-[10px] text-stone-500 font-medium">
+                  كارت الولاء المصور • صورة لكل زيارة
+                </p>
+              )}
             </div>
           </div>
 
@@ -352,15 +471,80 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
       {/* Main Container */}
       <main className="w-full max-w-xl mx-auto p-4 sm:p-6 flex-1 flex flex-col items-center">
-        {/* Check 24-Hour Cooldown */}
-        {isLockedByCooldown && !todayPhoto ? (
+        {/* Step 0: Customer Intake & Isolation First */}
+        {!isSessionStarted ? (
+          <div className="w-full bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-200/90 shadow-xl text-stone-900 my-auto animate-in fade-in">
+            <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <Camera className="w-8 h-8 text-amber-600" />
+            </div>
+
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-black text-stone-900 mb-1.5">
+                كارت ذكرياتك وهديتك الفورية ☕📸
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-sm mx-auto">
+                سجل رقم موبايلك واسمك لفتح كارتك الخاص المعزول ومتابعة لقطاتك وهديتك بدون تكرار
+              </p>
+            </div>
+
+            <form onSubmit={handleStartCustomerSession} className="space-y-4 max-w-md mx-auto">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1.5 text-right">
+                  رقم الموبايل (المعرّف الفريد لكارتك) *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="01012345678"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none font-mono text-base text-left bg-stone-50/50 transition"
+                  dir="ltr"
+                  autoFocus
+                />
+                <p className="text-[10px] text-stone-400 mt-1 text-right">
+                  يضمن فصل صورك تماماً عن أي زائر آخر
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1.5 text-right">
+                  الاسم الكريم *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="مثال: أحمد سامي"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none text-base text-right bg-stone-50/50 transition"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-black text-sm sm:text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-2 active:scale-[0.98]"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <span>فتح كارت الذكريات وبدء التصوير 📸</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-stone-500 pt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>بياناتك وصورك معزولة تماماً وخاصة بك وحدك</span>
+              </div>
+            </form>
+          </div>
+        ) : isLockedByCooldown && !todayPhoto ? (
           <div className="w-full bg-white rounded-3xl p-8 border-2 border-amber-200 shadow-xl text-center my-auto animate-in fade-in">
             <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 mx-auto flex items-center justify-center mb-4 shadow-inner">
               <Clock className="w-8 h-8" />
             </div>
 
             <h2 className="text-2xl font-black text-stone-900 mb-2">
-              لقد وثقت لحظتك لليوم يا بطل! ☕✨
+              لقد وثقت لحظتك لليوم يا {customerName || 'بطل'}! ☕✨
             </h2>
             <p className="text-stone-600 text-sm leading-relaxed mb-6">
               لكل زائر صورة واحدة في اليوم تضاف إلى كارت ذكرياته.
@@ -408,7 +592,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 <button
                   type="button"
                   onClick={() => {
-                    const access = CooldownService.checkAccess(deviceId, cafeSlug);
+                    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
+                    const access = CooldownService.checkAccess(clean || deviceId, cafeSlug);
                     if (access.allowed) {
                       setIsLockedByCooldown(false);
                       setExtraShots(access.extraShotsAvailable);
@@ -421,18 +606,31 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                const access = CooldownService.checkAccess(deviceId, cafeSlug);
-                if (access.allowed) {
-                  setIsLockedByCooldown(false);
-                }
-              }}
-              className="px-6 py-3 rounded-2xl bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center justify-center gap-2 mx-auto shadow-md transition"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
-              <span>فحص حالة الإذن الآن (بعد إذن الباريستا)</span>
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  const clean = customerPhone.trim().replace(/[^0-9]/g, '');
+                  const access = CooldownService.checkAccess(clean || deviceId, cafeSlug);
+                  if (access.allowed) {
+                    setIsLockedByCooldown(false);
+                    setExtraShots(access.extraShotsAvailable);
+                  }
+                }}
+                className="px-6 py-3 rounded-2xl bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md transition"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
+                <span>فحص حالة الإذن الآن</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSwitchCustomer}
+                className="px-5 py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+              >
+                <span>تسجيل رقم زائر آخر 🔄</span>
+              </button>
+            </div>
           </div>
         ) : (
           <>
