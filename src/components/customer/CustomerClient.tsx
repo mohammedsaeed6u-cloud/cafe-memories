@@ -41,6 +41,19 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     return settings.activeColorPaletteId || 'classic-latte';
   });
 
+  const staffLabel =
+    settings.businessType === 'restaurant'
+      ? 'الكاشير أو الجرسون'
+      : settings.businessType === 'retail'
+      ? 'الكاشير'
+      : settings.businessType === 'salon'
+      ? 'الاستقبال'
+      : settings.businessType === 'entertainment'
+      ? 'مشرف الألعاب'
+      : settings.businessType === 'events'
+      ? 'منظم الفعالية'
+      : 'الباريستا';
+
   const [stickers, setStickers] = useState<PlacedSticker[]>([]);
   const [cardMode, setCardMode] = useState<PhotoboothCardMode>(
     settings.defaultCardMode || 'korean_noir'
@@ -708,7 +721,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   className="px-5 py-2.5 rounded-xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-[0.98]"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-[#C59A6F]" />
-                  <span>إضافة لقطة عبر كود الباريستا</span>
+                  <span>إضافة لقطة عبر كود {staffLabel}</span>
                 </button>
 
                 <button
@@ -839,8 +852,27 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   </button>
                 </div>
 
-                {/* Photobooth Mode Selector (5 Authentic Open-Source Modes) */}
-                {settings.allowCustomerModeChoice !== false && (
+                {/* Photobooth Mode / Enforced Business Frame */}
+                {settings.lockFrameForCustomers ? (
+                  <div className="bg-stone-900 text-white rounded-2xl p-3.5 px-4 border border-stone-800 shadow-sm flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                        ✦
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-white block">
+                          تصميم معتمد من {settings.branding.name || 'المكان'}
+                        </span>
+                        <span className="text-[11px] text-stone-400">
+                          {selectedFrame.shotCount} {selectedFrame.shotCount === 1 ? 'صورة' : 'صور'} • {selectedFrame.orientation === 'horizontal' ? 'كارت عريض (Horizontal)' : 'شريط رأسي (Vertical)'}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      🔒 إطار رسمي
+                    </span>
+                  </div>
+                ) : settings.allowCustomerModeChoice !== false ? (
                   <div className="bg-white/90 backdrop-blur-md rounded-2xl p-3 border border-stone-200/90 shadow-2xs">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-black text-stone-800 flex items-center gap-1.5">
@@ -904,7 +936,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                       ))}
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 {/* Aesthetic Card Strip with Interactive Draggable Stickers */}
                 <div className="flex justify-center py-2">
@@ -1087,10 +1119,10 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             </div>
 
             <h4 className="font-black text-center text-base text-stone-900 mb-1">
-              تأكيد أوردر الباريستا والكاشير
+              تأكيد أوردر {staffLabel}
             </h4>
             <p className="text-[11px] text-center text-stone-500 mb-4 leading-relaxed">
-              يقوم الباريستا بإدخال الرمز السريع لتأكيد الأوردر وشحن اللقطات فوراً
+              يقوم {staffLabel} بإدخال الرمز السريع لتأكيد الأوردر وشحن اللقطات فوراً
             </p>
 
             <form onSubmit={handleVerifyPinAndAddShots} className="space-y-4">
@@ -1118,7 +1150,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
               <div>
                 <label className="block text-[11px] font-bold text-stone-700 mb-1 text-right">
-                  رمز PIN الباريستا:
+                  رمز PIN {staffLabel}:
                 </label>
                 <input
                   type="password"

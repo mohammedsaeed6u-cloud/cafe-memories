@@ -55,11 +55,21 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
 
   const isHorizontal = frame.orientation === 'horizontal';
 
-  // Determine layout type
-  const layoutType: PhotoboothLayoutType =
-    frame.layoutType || template?.layoutType || (frame.shotCount === 2 ? 'wide_duo_2cut' : frame.shotCount === 4 ? (isHorizontal ? 'wide_duo_4cut' : 'strip_4') : isHorizontal ? 'grid_2x2' : 'strip_3');
+  // Business Authoritative Shot Count: frame.shotCount is the single source of truth
+  const totalSlots = Math.max(Number(frame.shotCount) || template?.shotCount || 3, 1);
 
-  const totalSlots = template?.shotCount || Math.max(frame.shotCount || 2, 1);
+  // Determine layout type based on authoritative business orientation and shotCount
+  const layoutType: PhotoboothLayoutType =
+    frame.layoutType ||
+    (totalSlots === 2
+      ? (isHorizontal ? 'wide_duo_2cut' : 'strip_2')
+      : totalSlots === 3
+      ? (isHorizontal ? 'cinema_horizontal' : 'strip_3')
+      : totalSlots === 4
+      ? (isHorizontal ? 'wide_duo_4cut' : 'strip_4')
+      : isHorizontal
+      ? 'grid_2x2'
+      : 'strip_3');
 
   // Physical dimensions display (e.g. 10 × 7.6 سم / 4x3 in)
   const widthCm = frame.widthCm || template?.widthCm || (layoutType === 'wide_duo_2cut' ? 10 : isHorizontal ? 15.2 : 5);
@@ -83,31 +93,25 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   // Sizing & aspect classes for the Base
   let cardContainerClass = 'w-[290px] sm:w-[320px] p-4 py-5';
 
-  if (layoutType === 'wide_duo_2cut') {
-    // The requested wide, shorter card (between strip and big card)
-    cardContainerClass = isHorizontal
-      ? 'w-[370px] sm:w-[420px] p-4 py-4.5' // Horizontal: 2 photos side-by-side
-      : 'w-[280px] sm:w-[310px] p-4 py-5';   // Vertical: 2 photos stacked
-  } else if (layoutType === 'wide_duo_4cut') {
-    cardContainerClass = 'w-[350px] sm:w-[390px] p-4 py-4.5';
-  } else if (layoutType === 'kinfolk_minimal') {
-    cardContainerClass = 'w-[290px] sm:w-[330px] p-5 py-6';
-  } else if (layoutType === 'arabica_monochrome') {
-    cardContainerClass = 'w-[290px] sm:w-[320px] p-4 py-5';
-  } else if (layoutType === 'grid_2x2') {
-    cardContainerClass = 'w-[350px] sm:w-[390px] p-5 py-5';
-  } else if (layoutType === 'grid_2x3') {
-    cardContainerClass = 'w-[380px] sm:w-[440px] p-5 py-5';
-  } else if (layoutType === 'twin_strip') {
-    cardContainerClass = 'w-[420px] sm:w-[500px] p-4 py-5';
-  } else if (layoutType === 'cinema_horizontal') {
-    cardContainerClass = 'w-[380px] sm:w-[450px] p-4 py-5';
-  } else if (layoutType === 'polaroid_wide') {
-    cardContainerClass = 'w-[350px] sm:w-[390px] p-5 pb-9';
-  } else if (layoutType === 'polaroid_square') {
-    cardContainerClass = 'w-[300px] sm:w-[330px] p-5 pb-10';
-  } else if (isHorizontal) {
-    cardContainerClass = 'w-[420px] sm:w-[480px] p-4 py-4.5';
+  if (isHorizontal) {
+    if (totalSlots === 2) {
+      cardContainerClass = 'w-[370px] sm:w-[420px] p-4 py-4.5';
+    } else if (totalSlots === 3) {
+      cardContainerClass = 'w-[380px] sm:w-[440px] p-4 py-4.5';
+    } else if (totalSlots === 4) {
+      cardContainerClass = 'w-[350px] sm:w-[390px] p-4 py-4.5';
+    } else {
+      cardContainerClass = 'w-[400px] sm:w-[460px] p-4 py-4.5';
+    }
+  } else {
+    // Vertical
+    if (totalSlots === 1) {
+      cardContainerClass = 'w-[290px] sm:w-[320px] p-5 pb-10';
+    } else if (totalSlots === 2) {
+      cardContainerClass = 'w-[280px] sm:w-[310px] p-4 py-5';
+    } else {
+      cardContainerClass = 'w-[280px] sm:w-[320px] p-4 py-5';
+    }
   }
 
   const outerRadiusClass = isPolaroid ? 'rounded-2xl' : 'rounded-xl';
@@ -134,17 +138,20 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
                 alt={`Shot ${visitNumber}`}
                 className="w-full h-full object-cover filter contrast-[1.04] saturate-[0.96]"
               />
-              <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/50 backdrop-blur-xs text-white text-[8px] font-bold rounded-xs flex items-center gap-1 select-none">
+              <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold rounded-xs flex items-center gap-1 select-none">
                 <Check className="w-2.5 h-2.5 text-emerald-300 stroke-[3]" />
                 <span>#{slotFormatted}</span>
               </div>
             </>
           ) : (
-            /* Clean Base Placeholder */
-            <div className="w-full h-full flex flex-col items-center justify-center bg-black/[0.02] text-stone-400 p-2">
-              <span className="text-xs font-mono font-bold text-stone-500">#{slotFormatted}</span>
-              <span className="text-[8px] font-medium mt-0.5 opacity-70">
-                {isLastSlot ? 'الخانة الأخيرة' : 'خانة صورة'}
+            /* Clean Authentic Loyalty Placeholder */
+            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50 border border-dashed border-stone-300/80 text-stone-400 p-2 text-center select-none">
+              <div className="w-6 h-6 rounded-full bg-stone-200/80 flex items-center justify-center mb-1 text-stone-500">
+                {isLastSlot ? '🎁' : '🔒'}
+              </div>
+              <span className="text-[10px] font-mono font-black text-stone-600">#{slotFormatted}</span>
+              <span className="text-[8px] font-bold text-stone-500 mt-0.5 leading-tight">
+                {isLastSlot ? 'هدية الاكتمال' : `صورة الزيارة #${visitNumber}`}
               </span>
             </div>
           )}
@@ -232,104 +239,52 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
 
         {/* Layout Slots */}
         <div className="relative z-10 w-full my-1">
-          {/* 1. WIDE DUO (2 Photos Side by Side) - Short & Wide Card */}
-          {layoutType === 'wide_duo_2cut' && isHorizontal && (
-            <div className="grid grid-cols-2 gap-3.5">
-              {renderPhotoSlot(0, 'aspect-[3/4]')}
-              {renderPhotoSlot(1, 'aspect-[3/4]')}
-            </div>
-          )}
-          {layoutType === 'wide_duo_2cut' && !isHorizontal && (
-            <div className="flex flex-col gap-3">
-              {renderPhotoSlot(0, 'aspect-[4/3]')}
-              {renderPhotoSlot(1, 'aspect-[4/3]')}
-            </div>
-          )}
-
-          {/* 2. Compact Duo (4 Photos, 2x2) */}
-          {layoutType === 'wide_duo_4cut' && (
-            <div className="grid grid-cols-2 gap-2">
-              {Array.from({ length: 4 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[4/3]'))}
-            </div>
-          )}
-
-          {/* 3. Postcard Grid 2x2 */}
-          {layoutType === 'grid_2x2' && (
-            <div className="grid grid-cols-2 gap-2.5">
-              {Array.from({ length: 4 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[4/3]'))}
-            </div>
-          )}
-
-          {/* 4. Mini Grid 2x3 */}
-          {layoutType === 'grid_2x3' && (
-            <div className="grid grid-cols-3 gap-2">
-              {Array.from({ length: 6 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[4/3]'))}
-            </div>
-          )}
-
-          {/* 5. Twin Strip (Dual 2x6) */}
-          {layoutType === 'twin_strip' && (
-            <div className="grid grid-cols-2 gap-4 relative">
-              <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex flex-col items-center justify-between pointer-events-none z-20">
-                <Scissors className="w-3 h-3 text-stone-400 rotate-90 mb-1" />
-                <div className="w-0 flex-1 border-r border-dashed border-stone-300 dark:border-stone-600" />
-                <span className="text-[7px] font-mono text-stone-400 mt-1 uppercase tracking-tighter">CUT</span>
+          {isHorizontal ? (
+            /* Horizontal Card Layouts */
+            totalSlots === 1 ? (
+              <div className="w-full">{renderPhotoSlot(0, 'aspect-[16/9]')}</div>
+            ) : totalSlots === 2 ? (
+              <div className="grid grid-cols-2 gap-3">
+                {renderPhotoSlot(0, 'aspect-[3/4]')}
+                {renderPhotoSlot(1, 'aspect-[3/4]')}
               </div>
+            ) : totalSlots === 3 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {renderPhotoSlot(0, 'aspect-[3/4]')}
+                {renderPhotoSlot(1, 'aspect-[3/4]')}
+                {renderPhotoSlot(2, 'aspect-[3/4]')}
+              </div>
+            ) : totalSlots === 4 ? (
+              layoutType === 'wide_duo_4cut' || layoutType === 'grid_2x2' ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {Array.from({ length: 4 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[4/3]'))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-1.5">
+                  {Array.from({ length: 4 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[3/4]'))}
+                </div>
+              )
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {Array.from({ length: totalSlots }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[4/3]'))}
+              </div>
+            )
+          ) : (
+            /* Vertical Strip Layouts */
+            totalSlots === 1 ? (
+              <div className="w-full">{renderPhotoSlot(0, isPolaroid ? 'aspect-square' : 'aspect-[3/4]')}</div>
+            ) : totalSlots === 2 ? (
+              <div className="flex flex-col gap-2.5">
+                {renderPhotoSlot(0, 'aspect-[4/3]')}
+                {renderPhotoSlot(1, 'aspect-[4/3]')}
+              </div>
+            ) : (
               <div className="flex flex-col gap-2">
-                {Array.from({ length: 4 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[3/4]'))}
+                {Array.from({ length: totalSlots }).map((_, idx) =>
+                  renderPhotoSlot(idx, totalSlots === 3 ? 'aspect-[4/3]' : 'aspect-[3/4]')
+                )}
               </div>
-              <div className="flex flex-col gap-2">
-                {Array.from({ length: 4 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[3/4]'))}
-              </div>
-            </div>
-          )}
-
-          {/* 6. Cinema Horizontal 3 Cuts */}
-          {layoutType === 'cinema_horizontal' && (
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: 3 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[16/9]'))}
-              <div className="text-center text-[8px] font-mono text-stone-400 italic mt-0.5 tracking-wider">
-                — A warm coffee moment worth remembering —
-              </div>
-            </div>
-          )}
-
-          {/* 7. Polaroid Square / Wide */}
-          {layoutType === 'polaroid_square' && (
-            <div className="w-full">{renderPhotoSlot(0, 'aspect-square')}</div>
-          )}
-          {layoutType === 'polaroid_wide' && (
-            <div className="w-full">{renderPhotoSlot(0, 'aspect-[4/3]')}</div>
-          )}
-
-          {/* 8. Kinfolk Minimal (3 Cuts with generous breathing room & hairline borders) */}
-          {layoutType === 'kinfolk_minimal' && (
-            <div className="flex flex-col gap-3.5 my-1">
-              {Array.from({ length: 3 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[3/4]'))}
-            </div>
-          )}
-
-          {/* 9. % Arabica Monochrome (3 Cuts with stark geometric lines) */}
-          {layoutType === 'arabica_monochrome' && (
-            <div className="flex flex-col gap-2.5 my-1">
-              {Array.from({ length: 3 }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[3/4]'))}
-            </div>
-          )}
-
-          {/* 10. Horizontal Strip Mode (4 or 3 cuts side-by-side) */}
-          {isHorizontal && layoutType !== 'wide_duo_2cut' && layoutType !== 'wide_duo_4cut' && layoutType !== 'grid_2x2' && layoutType !== 'grid_2x3' && layoutType !== 'twin_strip' && layoutType !== 'cinema_horizontal' && layoutType !== 'polaroid_square' && layoutType !== 'polaroid_wide' && (
-            <div className={`grid gap-2 ${totalSlots === 2 ? 'grid-cols-2' : totalSlots === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
-              {Array.from({ length: totalSlots }).map((_, idx) => renderPhotoSlot(idx, 'aspect-[3/4]'))}
-            </div>
-          )}
-
-          {/* 11. Standard Vertical Strips (strip_4, strip_3, strip_2, film_35mm) */}
-          {!isHorizontal && layoutType !== 'kinfolk_minimal' && layoutType !== 'arabica_monochrome' && (layoutType === 'strip_4' || layoutType === 'strip_3' || layoutType === 'strip_2' || layoutType === 'film_35mm') && (
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: totalSlots }).map((_, idx) =>
-                renderPhotoSlot(idx, layoutType === 'strip_3' ? 'aspect-[4/3]' : 'aspect-[3/4]')
-              )}
-            </div>
+            )
           )}
         </div>
 

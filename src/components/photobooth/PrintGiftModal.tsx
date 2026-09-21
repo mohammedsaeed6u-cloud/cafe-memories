@@ -10,7 +10,7 @@ import {
 } from '@/types/photobooth';
 import { PhotoboothStripCard } from './PhotoboothStripCard';
 import { ShareStoryWidget } from './ShareStoryWidget';
-import { Gift, Printer, Sparkles, CheckCircle, X, Camera } from 'lucide-react';
+import { Gift, Printer, Sparkles, CheckCircle, X, Camera, Lock } from 'lucide-react';
 import { PrintService } from '@/lib/services/print.service';
 
 interface PrintGiftModalProps {
@@ -117,6 +117,9 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
             stripDataUrl={stripDataUrl || photos[0] || ''}
             brandName={branding.name || 'Memories'}
             cafeHandle={branding.name ? `@${branding.name.toLowerCase().replace(/\s+/g, '')}` : '@memories'}
+            isCardComplete={isCardComplete}
+            completedShots={photos.length}
+            totalShots={totalSlots}
           />
         </div>
 
@@ -128,7 +131,7 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
               <span>{freeGiftOffer.title || 'مشروب مجاني أو هدية فورية'}</span>
             </div>
             <p className="text-xs text-stone-600 mb-3">
-              🎉 مبروك! اكتمل كارت ذكرياتك بالكامل. أظهر هذا الكود للباريستا لاستلام هديتك مع الصورة المطبوعة:
+              🎉 مبروك! اكتمل كارت ذكرياتك بالكامل. أظهر هذا الكود لفريق المكان لاستلام هديتك مع الصورة المطبوعة:
             </p>
 
             <div className="inline-flex items-center gap-2 bg-white px-5 py-2.5 rounded-xl border border-amber-300 shadow-inner">
@@ -183,15 +186,26 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
           </button>
         )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons: Printing strictly gated until card is complete */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={handlePrint}
-            className="flex-1 py-3.5 px-5 rounded-2xl bg-stone-900 hover:bg-black text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.98]"
-          >
-            <Printer className="w-4 h-4 text-amber-400" />
-            <span>طباعة كارت الذكريات (2x6)</span>
-          </button>
+          {isCardComplete ? (
+            <button
+              onClick={handlePrint}
+              className="flex-1 py-3.5 px-5 rounded-2xl bg-stone-900 hover:bg-black text-white font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.98]"
+            >
+              <Printer className="w-4 h-4 text-amber-400" />
+              <span>طباعة كارت الذكريات المكتمل ({frame.orientation === 'horizontal' ? 'كارت عريض' : '2x6'})</span>
+            </button>
+          ) : (
+            <button
+              disabled
+              className="flex-1 py-3.5 px-4 rounded-2xl bg-stone-100 text-stone-400 font-bold text-xs border border-stone-200 flex items-center justify-center gap-2 cursor-not-allowed"
+              title="الطباعة مقفولة حتى إكمال الكارت"
+            >
+              <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>الطباعة مقفولة (متبقي {totalSlots - photos.length} صور لاكتمال الكارت)</span>
+            </button>
+          )}
 
           <button
             onClick={onClose}

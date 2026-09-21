@@ -7,8 +7,15 @@ import {
   StripOrientation,
   FrameShapeStyle,
   CardColorPalette,
+  BusinessType,
 } from '@/types/photobooth';
-import { PRESET_EMOJI_PAIRS, PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
+import {
+  PRESET_EMOJI_PAIRS,
+  PRESET_COLOR_PALETTES,
+  PHOTOBOOTH_CARD_MODES,
+  PHOTOBOOTH_FRAME_TEMPLATES,
+  BUSINESS_INDUSTRY_OPTIONS,
+} from '@/lib/constants/photobooth-presets';
 import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
 import { PhotoboothCardMode, PlacedSticker } from '@/types/photobooth';
 import { PhotoboothStripCard } from '@/components/photobooth/PhotoboothStripCard';
@@ -78,6 +85,12 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
   );
   const [allowCustomerStickers, setAllowCustomerStickers] = useState<boolean>(
     settings.allowCustomerStickers ?? true
+  );
+  const [lockFrameForCustomers, setLockFrameForCustomers] = useState<boolean>(
+    settings.lockFrameForCustomers ?? true
+  );
+  const [businessType, setBusinessType] = useState<BusinessType>(
+    settings.businessType || 'cafe'
   );
   const [previewStickers, setPreviewStickers] = useState<PlacedSticker[]>([]);
 
@@ -243,6 +256,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
 
     const updatedSettings: BusinessSettings = {
       ...settings,
+      businessType,
       branding,
       freeGiftOffer: freeGift,
       activeFrameId: activeFrame.id,
@@ -254,6 +268,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
       activeColorPaletteId: activePaletteId,
       allowCustomerColorChoice: allowCustomerColors,
       allowedColorIds,
+      lockFrameForCustomers,
       frames: normalizedFrames,
     };
 
@@ -267,6 +282,69 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Left Column: Controls (7 cols) */}
       <div className="lg:col-span-7 space-y-6">
+        {/* Section 0: Business Industry / Multi-Sector Selector */}
+        <div className="p-6 bg-white rounded-3xl border border-stone-200/90 shadow-xs">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                0
+              </div>
+              <div>
+                <h3 className="font-extrabold text-stone-900 text-base">
+                  نوع ونشاط البيزنس (Multi-Industry)
+                </h3>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  حدد مجال عملك لتخصيص الهدايا، تسميات الموظفين، وتجربة كارت الولاء
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+              متعدد الأنشطة
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {BUSINESS_INDUSTRY_OPTIONS.map((ind) => {
+              const isSelected = businessType === ind.id;
+              return (
+                <button
+                  key={ind.id}
+                  type="button"
+                  onClick={() => {
+                    setBusinessType(ind.id as BusinessType);
+                    // Autofill gift defaults if currently empty or default
+                    if (!freeGift.title || freeGift.title === 'مشروب مجاني أو هدية فورية') {
+                      setFreeGift({
+                        ...freeGift,
+                        title: ind.defaultGiftTitle,
+                        subtitle: ind.defaultGiftSubtitle,
+                      });
+                    }
+                  }}
+                  className={`p-3 rounded-2xl border text-right transition flex flex-col justify-between gap-1.5 ${
+                    isSelected
+                      ? 'border-amber-600 bg-amber-50/80 shadow-xs ring-1 ring-amber-500/50'
+                      : 'border-stone-200 hover:bg-stone-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xl">{ind.icon}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-amber-600" />}
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-stone-900 block leading-tight">
+                      {ind.nameAr}
+                    </span>
+                    <span className="text-[10px] text-stone-500 line-clamp-1 mt-0.5">
+                      الموظف: {ind.staffLabel}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Section 1: Business Branding & Logo */}
         <div className="p-6 bg-white rounded-3xl border border-stone-200/90 shadow-xs">
           <div className="flex items-center gap-2 mb-4">
@@ -337,7 +415,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
           </div>
         </div>
 
-                {/* Section 2: 10 Pinterest Photobooth Frame Templates */}
+        {/* Section 2: 10 Pinterest Photobooth Frame Templates */}
         <div className="p-6 bg-white rounded-3xl border border-stone-200/90 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -359,6 +437,49 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             </span>
           </div>
 
+          {/* Strict Frame Enforcement Toggle (نافذ إجبارياً) */}
+          <div className={`p-4 rounded-2xl border transition-all mb-4 ${
+            lockFrameForCustomers
+              ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-500/30'
+              : 'bg-stone-50 border-stone-200'
+          }`}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-2.5">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                  lockFrameForCustomers ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-600'
+                }`}>
+                  <Lock className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-stone-900">
+                      قفل الفريم إجبارياً على جميع العملاء (نافذ)
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      lockFrameForCustomers
+                        ? 'bg-amber-200 text-amber-900'
+                        : 'bg-stone-200 text-stone-700'
+                    }`}>
+                      {lockFrameForCustomers ? 'مُفعّل ومفروض' : 'اختياري للعميل'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-stone-600 mt-1 leading-relaxed">
+                    عند التفعيل، يتم فرض عدد الصور ({activeFrame.shotCount} صور) وتوجيه الكارت ({activeFrame.orientation === 'vertical' ? 'رأسي' : 'أفقي'}) وقالب البيزنس المعتمد إجبارياً على كل العملاء. لا يمكن لأي عميل تغيير شكل أو أبعاد الكارت، لضمان هوية البيزنس الموحدة وجودة الطباعة.
+                  </p>
+                </div>
+              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                <input
+                  type="checkbox"
+                  checked={lockFrameForCustomers}
+                  onChange={(e) => setLockFrameForCustomers(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+              </label>
+            </div>
+          </div>
           
           {/* Quick Orientation Switcher: Vertical vs Horizontal */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 bg-stone-50 rounded-2xl border border-stone-200/80 mb-4">

@@ -1,0 +1,45 @@
+﻿{
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=rflyenjmzgssxzcockss&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching",
+      "serverUrl": "https://mcp.supabase.com/mcp?project_ref=rflyenjmzgssxzcockss&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
+    },
+    "cloudflare": {
+      "url": "https://mcp.cloudflare.com/mcp",
+      "serverUrl": "https://mcp.cloudflare.com/mcp"
+    },
+    "cloudflare-docs": {
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "serverUrl": "https://docs.mcp.cloudflare.com/mcp"
+    },
+    "cloudflare-bindings": {
+      "url": "https://bindings.mcp.cloudflare.com/mcp",
+      "serverUrl": "https://bindings.mcp.cloudflare.com/mcp"
+    },
+    "cloudflare-builds": {
+      "url": "https://builds.mcp.cloudflare.com/mcp",
+      "serverUrl": "https://builds.mcp.cloudflare.com/mcp"
+    },
+    "cloudflare-observability": {
+      "url": "https://observability.mcp.cloudflare.com/mcp",
+      "serverUrl": "https://observability.mcp.cloudflare.com/mcp"
+    },
+    "gemini-api-docs": {
+      "url": "https://gemini-api-docs-mcp.dev",
+      "serverUrl": "https://gemini-api-docs-mcp.dev"
+    },
+    "chrome-devtools": {
+      "command": "C:\\Users\\mhmd saeed\\scoop\\apps\\nodejs-lts\\current\\node.exe",
+      "args": [
+        "C:\\Users\\mhmd saeed\\scoop\\persist\\nodejs-lts\\bin\\node_modules\\chrome-devtools-mcp\\build\\src\\index.js",
+        "--browser-url=http://127.0.0.1:9222"
+      ]
+    },
+    "woocommerce": {
+      "command": "C:\\Users\\mhmd saeed\\.gemini\\nagdy-plugins\\mcp-server-for-woo\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\Users\\mhmd saeed\\.gemini\\nagdy-plugins\\mcp-server-for-woo\\src\\server.py"
+      ]
+    }
+  }
+}

@@ -15,6 +15,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { BusinessSettingsService } from '@/lib/services/business-settings.service';
+import { BusinessSettings } from '@/types/photobooth';
 
 export type WallDisplayMode = 'board' | 'single' | 'grid';
 
@@ -84,11 +86,22 @@ const FALLBACK_MEMORIES: WallMemory[] = [
 ];
 
 export function WallClient({ screenId }: { screenId: string }) {
+  const [settings, setSettings] = useState<BusinessSettings>(() =>
+    BusinessSettingsService.getSettings('espresso-lab')
+  );
   const [memories, setMemories] = useState<WallMemory[]>(FALLBACK_MEMORIES);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleSettingsUpdated = (e: any) => {
+      if (e.detail) setSettings(e.detail);
+    };
+    window.addEventListener('memories-settings-updated', handleSettingsUpdated);
+    return () => window.removeEventListener('memories-settings-updated', handleSettingsUpdated);
+  }, []);
 
   // Merchant display preferences
   const [displayMode, setDisplayMode] = useState<WallDisplayMode>(() => {
@@ -367,23 +380,24 @@ export function WallClient({ screenId }: { screenId: string }) {
       {/* MODE 1: CORKBOARD / MEMORY BOARD (لوحة الذكريات المعلقة الواقعية) */}
       {/* ========================================================= */}
       {displayMode === 'board' && (
-        <main className="relative min-h-[calc(100vh-80px)] p-6 sm:p-10 flex flex-col justify-between overflow-hidden bg-gradient-to-b from-[#2E1A12] via-[#24150E] to-[#1A0D08]">
+        <main className="relative min-h-[calc(100vh-80px)] p-6 sm:p-10 flex flex-col justify-between overflow-hidden bg-gradient-to-b from-[#25150E] via-[#1D100A] to-[#120906]">
           {/* Subtle Warm Cork Grid Texture Background */}
           <div
-            className="absolute inset-0 pointer-events-none opacity-25"
+            className="absolute inset-0 pointer-events-none opacity-30"
             style={{
-              backgroundImage: 'radial-gradient(#8B5A2B 1.2px, transparent 1.2px)',
+              backgroundImage: 'radial-gradient(#965E30 1.5px, transparent 1.5px)',
               backgroundSize: '24px 24px',
             }}
           />
 
           {/* Top Board Frame Header Banner */}
           <div className="relative z-10 text-center mb-4">
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-stone-900/80 border border-amber-500/30 backdrop-blur-md shadow-xl">
-              <Sparkles className="w-4 h-4 text-amber-400 animate-spin" />
-              <span className="text-xs font-black text-amber-200 tracking-wider">
-                لوحة ذكريات المكان • لحظات زوارنا المعلقة
+            <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-stone-950/90 border border-amber-500/40 backdrop-blur-md shadow-2xl">
+              <span className="text-base">📌</span>
+              <span className="text-xs sm:text-sm font-black text-amber-200 tracking-wider">
+                بورد الذكريات الحي • Photobooth Memory Board
               </span>
+              <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
             </div>
           </div>
 
@@ -392,6 +406,8 @@ export function WallClient({ screenId }: { screenId: string }) {
             {memories.slice(0, 4).map((memory, index) => {
               const isSpotlight = index === currentIndex % Math.min(memories.length, 4);
               const rotation = memory.rotationDeg || (index % 2 === 0 ? -2.5 : 2.5);
+              const totalSlots = Math.max(settings.defaultShotCount || 3, 1);
+              const isCardComplete = memory.frames.length >= totalSlots;
 
               return (
                 <div
@@ -399,57 +415,79 @@ export function WallClient({ screenId }: { screenId: string }) {
                   style={{
                     transform: `rotate(${rotation}deg)`,
                   }}
-                  className={`relative transition-all duration-700 rounded-3xl p-4 bg-[#FAF8F5] text-stone-900 border-2 ${
+                  className={`relative transition-all duration-700 rounded-3xl p-4 bg-[#FAF8F5] text-stone-900 border-2 paper-texture ${
                     isSpotlight
-                      ? 'ring-4 ring-amber-400 border-amber-300 shadow-[0_25px_60px_-15px_rgba(245,158,11,0.35)] scale-105 z-20'
-                      : 'border-stone-200/90 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] opacity-90 hover:opacity-100 z-10'
+                      ? 'ring-4 ring-amber-400 border-amber-300 shadow-[0_25px_60px_-15px_rgba(245,158,11,0.45)] scale-105 z-20'
+                      : 'border-stone-200/90 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.6)] opacity-90 hover:opacity-100 z-10'
                   }`}
                 >
-          {/* Pushpin / Brass Pin Realistic Graphic */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-700 via-amber-500 to-amber-300 shadow-[0_3px_8px_rgba(0,0,0,0.5)] border border-amber-200/90 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 rounded-full bg-stone-900/90" />
-            </div>
-          </div>
-
-          {/* Strip Header */}
-          <div className="flex items-center justify-between border-b border-stone-200 pb-2 mb-3 mt-1">
-            <div className="flex items-center gap-1.5">
-              <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-[11px]">
-                {memory.customer.slice(0, 2)}
-              </div>
-              <p className="text-xs font-bold text-stone-900 leading-tight">
-                {memory.customer}
-              </p>
-            </div>
-
-            {isSpotlight && (
-              <span className="text-[10px] font-black text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full animate-pulse">
-                ✦ اللقطة الحالية
-              </span>
-            )}
-          </div>
-
-                  {/* Strip Photos */}
-                  <div className="space-y-2">
-                    {memory.frames.map((src, fIdx) => (
-                      <div
-                        key={fIdx}
-                        className="aspect-square rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 shadow-inner"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={src}
-                          alt="Photo"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
+                  {/* Pushpin / Brass Pin Realistic Graphic */}
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-800 via-amber-500 to-amber-300 shadow-[0_4px_10px_rgba(0,0,0,0.6)] border-2 border-amber-200 flex items-center justify-center">
+                      <span className="w-2 h-2 rounded-full bg-stone-950" />
+                    </div>
                   </div>
 
-                  {/* Strip Caption */}
+                  {/* Strip Header with Visit Progress Tag */}
+                  <div className="flex items-center justify-between border-b border-stone-200 pb-2 mb-3 mt-1.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-[11px] shrink-0">
+                        {memory.customer.slice(0, 2)}
+                      </div>
+                      <p className="text-xs font-bold text-stone-900 truncate">
+                        {memory.customer}
+                      </p>
+                    </div>
+
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                      isCardComplete
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-amber-100 text-amber-800 border border-amber-200'
+                    }`}>
+                      {isCardComplete ? '🎉 كارت مكتمل' : `زيارة #${memory.frames.length} من ${totalSlots}`}
+                    </span>
+                  </div>
+
+                  {/* Strip Photos: Renders all slots (both filled and in-progress loyalty placeholders) */}
+                  <div className="space-y-2">
+                    {Array.from({ length: totalSlots }).map((_, fIdx) => {
+                      const src = memory.frames[fIdx];
+                      const slotFormatted = String(fIdx + 1).padStart(2, '0');
+                      const isLast = fIdx === totalSlots - 1;
+
+                      return src ? (
+                        <div
+                          key={fIdx}
+                          className="aspect-[4/3] rounded-xl overflow-hidden bg-stone-100 border border-stone-200 shadow-inner relative"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={src}
+                            alt="Photo"
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute bottom-1 right-1.5 text-[8px] font-mono font-bold bg-black/60 text-white px-1 rounded">
+                            #{slotFormatted}
+                          </span>
+                        </div>
+                      ) : (
+                        <div
+                          key={fIdx}
+                          className="aspect-[4/3] rounded-xl bg-stone-100/70 border border-dashed border-stone-300 flex flex-col items-center justify-center text-stone-400 p-2 text-center select-none"
+                        >
+                          <span className="text-xs mb-0.5">{isLast ? '🎁' : '🔒'}</span>
+                          <span className="text-[9px] font-mono font-bold text-stone-500">#{slotFormatted}</span>
+                          <span className="text-[8px] text-stone-400 font-medium">
+                            {isLast ? 'هدية الاكتمال' : `الزيارة #${fIdx + 1}`}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Strip Caption & Timestamp */}
                   <div className="mt-3 pt-2 border-t border-dashed border-stone-300 text-center">
-                    <p className="text-[11px] font-bold text-stone-700 leading-snug">
+                    <p className="text-[11px] font-bold text-stone-700 leading-snug line-clamp-2">
                       &ldquo;{memory.caption}&rdquo;
                     </p>
                     <span className="text-[9px] text-stone-400 font-medium block mt-1">
@@ -463,9 +501,9 @@ export function WallClient({ screenId }: { screenId: string }) {
 
           {/* Bottom Callout Banner */}
           <div className="relative z-10 max-w-xl mx-auto mt-6 text-center">
-            <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-stone-950/80 border border-amber-900/40 backdrop-blur-md text-amber-200/90 text-xs font-bold shadow-lg">
-              <Coffee className="w-4 h-4 text-amber-400" />
-              <span>اطلب قهوتك، امسح الباركود، وصورتك هتنزل هنا وتطبع كارتك فوراً!</span>
+            <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-stone-950/90 border border-amber-900/50 backdrop-blur-md text-amber-200 text-xs font-bold shadow-xl">
+              <span className="text-base">📸</span>
+              <span>اطلب الآن، امسح الباركود، وصورتك هتنزل هنا في بورد الذكريات وتطبع كارتك فوراً!</span>
             </div>
           </div>
         </main>

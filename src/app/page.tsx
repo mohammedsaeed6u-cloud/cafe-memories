@@ -21,7 +21,7 @@ import {
   Clock,
   Sparkle,
 } from 'lucide-react';
-import { PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
+import { PHOTOBOOTH_FRAME_TEMPLATES, BUSINESS_INDUSTRY_OPTIONS } from '@/lib/constants/photobooth-presets';
 import { PhotoboothStripCard } from '@/components/photobooth/PhotoboothStripCard';
 import { PhotoboothFrame } from '@/types/photobooth';
 
@@ -29,6 +29,7 @@ export default function HomePage() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeDashTab, setActiveDashTab] = useState<'insights' | 'moderation'>('insights');
   const [activeTemplateId, setActiveTemplateId] = useState<string>('korean_noir_2x6');
+  const [selectedIndustryId, setSelectedIndustryId] = useState<string>('cafe');
   const [roiVisitors, setRoiVisitors] = useState<number>(150);
 
   const selectedTemplate =
@@ -156,14 +157,14 @@ export default function HomePage() {
         {/* Kicker Pill */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-stone-200/80 bg-white/90 text-stone-800 text-xs font-bold mb-6 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
-          <span>كبينة التصوير الكورية وبطاقة الولاء لكافيهات السبيشالتي</span>
+          <span>كبينة التصوير وبطاقة الولاء للكافيهات، المطاعم، المتاجر والفعاليات</span>
           <span className="text-amber-600 font-serif">✦</span>
         </div>
 
         {/* Punchy Apple Headline */}
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl sm:text-7xl md:text-8xl font-black text-stone-950 tracking-tight leading-[1.02]">
-            قهوتهم اليومية.
+            تجربتهم الفريدة.
             <br />
             <span className="bg-gradient-to-r from-stone-950 via-amber-700 to-amber-500 bg-clip-text text-transparent italic font-serif font-normal">
               ذكرياتهم الدائمة.
@@ -175,7 +176,7 @@ export default function HomePage() {
         <p className="mt-6 text-base sm:text-xl text-stone-600 max-w-xl mx-auto leading-relaxed font-medium">
           كبينة تصوير في متصفح كل زائر بمسحة QR واحدة.
           <br className="hidden sm:inline" />
-          شاشة حية في كافيهك، وبطاقة ولاء رقمية تضمن عودتهم كل أسبوع.
+          شاشة حية في مكانك، وبطاقة ولاء رقمية تضمن عودتهم والشراء المتكرر.
         </p>
 
         {/* Action Buttons */}
@@ -559,6 +560,127 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Signature Divider */}
+      <div className="flex items-center justify-center gap-3 py-6 opacity-60">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+        <span className="text-amber-600 font-serif text-sm">✦</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+      </div>
+
+      {/* Multi-Industry Showcase Section */}
+      <section className="px-6 py-16 max-w-6xl mx-auto" id="industries">
+        <div className="text-center mb-12">
+          <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
+            MULTI-INDUSTRY ✦ ليس للكافيهات فقط
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black text-stone-950 mt-2">
+            منظومة فوتوبوث وولاء{' '}
+            <span className="text-amber-600 font-serif italic font-normal">
+              مصممة لقطاع عملك.
+            </span>
+          </h2>
+          <p className="text-sm sm:text-base text-stone-600 mt-2.5 max-w-xl mx-auto">
+            من الكافيهات والمطاعم إلى بوتيكات الأزياء وصالونات التجميل ومساحات الترفيه؛ Memories يتكيف تلقائياً مع نوع عملك ليحقق لك أعلى معدل زيارات متكررة.
+          </p>
+        </div>
+
+        {/* Industry Selector Tabs */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5 mb-8 max-w-5xl mx-auto">
+          {BUSINESS_INDUSTRY_OPTIONS.map((ind) => {
+            const isSelected = selectedIndustryId === ind.id;
+            return (
+              <button
+                key={ind.id}
+                type="button"
+                onClick={() => setSelectedIndustryId(ind.id)}
+                className={`p-3.5 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-stone-950 text-white border-stone-950 shadow-md scale-[1.03]'
+                    : 'bg-white hover:bg-stone-50 text-stone-800 border-stone-200/90'
+                }`}
+              >
+                <span className="text-2xl">{ind.icon}</span>
+                <span className="text-xs font-bold leading-tight">{ind.nameAr}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Selected Industry Feature Showcase Card */}
+        {(() => {
+          const current =
+            BUSINESS_INDUSTRY_OPTIONS.find((i) => i.id === selectedIndustryId) ||
+            BUSINESS_INDUSTRY_OPTIONS[0];
+
+          return (
+            <div className="p-8 sm:p-10 rounded-3xl bg-white border border-stone-200/90 shadow-lg max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold font-mono mb-4">
+                  <span>{current.icon}</span>
+                  <span>{current.nameEn}</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black text-stone-950 mb-3">
+                  تجربة {current.nameAr}
+                </h3>
+                <p className="text-stone-600 text-sm leading-relaxed mb-6">
+                  {current.id === 'cafe' &&
+                    'تحويل طقس القهوة الصباحي إلى ذكريات ملموسة. يجمع العميل لقطة مع كل كوب قهوة حتى يكتمل الكارت ويستلم هديته المباشرة.'}
+                  {current.id === 'restaurant' &&
+                    'توثيق جمعات العائلات والأصدقاء ولحظات الاحتفال على المائدة، مع مكافأة العميل بطبق حلى أو مقبلات مجانية عند إكمال الكارت.'}
+                  {current.id === 'retail' &&
+                    'فوتوبوث تفاعلي أمام غرف القياس لتوثيق وتنسيق الآوتفت، مع قسيمة شراء وخصم فوري عند إكمال عدد الزيارات.'}
+                  {current.id === 'salon' &&
+                    'توثيق مظهر العميل الجديد واللوك المميز (Before & After)، مع جلسة عناية أو استشوار مجاني عند اكتمال الكارت.'}
+                  {current.id === 'entertainment' &&
+                    'لقطات الحماس والفوز في مساحات البولينج والألعاب، مع جولة لعب إضافية مجاناً تضمن عودة المجموعات والأصدقاء.'}
+                  {current.id === 'events' &&
+                    'شريط فوتوبوث تذكاري يحمل هوية الفعالية وشعار الرعاة، ليأخذ كل زائر قطعة حقيقية من الحدث.'}
+                  {current.id === 'general' &&
+                    'منظومة ولاء مرنة تتكيف مع أي مساحة وتجربة بيع بالتجزئة لربط العملاء بزيارات متكررة.'}
+                </p>
+
+                <div className="space-y-2.5 border-t border-stone-100 pt-4 text-xs font-medium text-stone-700">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                    <span><strong>الهدية المقترحة:</strong> {current.defaultGiftTitle}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                    <span><strong>المسؤول عن التأكيد:</strong> {current.staffLabel}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                    <span><strong>طريقة الاستلام:</strong> {current.defaultGiftSubtitle}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual Card Representation */}
+              <div className="p-6 bg-gradient-to-b from-stone-50 to-[#FAF8F5] rounded-2xl border border-stone-200/80 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-3xl mb-3 shadow-xs">
+                  {current.icon}
+                </div>
+                <h4 className="font-black text-stone-900 text-base mb-1">
+                  كارت ذكريات مخصص لـ {current.nameAr}
+                </h4>
+                <p className="text-xs text-stone-500 mb-5 max-w-xs">
+                  كارت استوديو بأبعاد حقيقية وهوية مكانك مع شاشة حية تعرض لحظات الزوار
+                </p>
+                <Link
+                  href="/dashboard"
+                  className="apple-btn-primary text-xs py-2.5 px-6 shadow-md flex items-center gap-2"
+                >
+                  <span>تفعيل هذا النمط في لوحة التاجر</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-amber-400 rotate-180" />
+                </Link>
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       {/* Signature Divider */}

@@ -55,6 +55,8 @@ export class BusinessSettingsService {
             parsed.allowCustomerColorChoice ?? DEFAULT_BUSINESS_SETTINGS.allowCustomerColorChoice,
           allowedColorIds:
             parsed.allowedColorIds || DEFAULT_BUSINESS_SETTINGS.allowedColorIds,
+          lockFrameForCustomers:
+            parsed.lockFrameForCustomers ?? DEFAULT_BUSINESS_SETTINGS.lockFrameForCustomers ?? true,
         };
       }
     } catch (err) {

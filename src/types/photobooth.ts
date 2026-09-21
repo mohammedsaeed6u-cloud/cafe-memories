@@ -142,7 +142,18 @@ export interface BusinessSettings {
   allowCustomerStickers?: boolean;
   allowCustomerModeChoice?: boolean;
   allowedModes?: PhotoboothCardMode[];
+  lockFrameForCustomers?: boolean; // When true, customer cannot change the business's enforced frame layout, shotCount, or orientation
+  businessType?: BusinessType;
 }
+
+export type BusinessType =
+  | 'cafe'           // كافيهات ومحامص
+  | 'restaurant'     // مطاعم ومفاهيم طعام
+  | 'retail'         // متاجر ملابس وأزياء وبوتيكات
+  | 'salon'          // صالونات تجميل وحلاقة وعناية
+  | 'entertainment'  // مساحات ترفيه وملاهي وبولينج
+  | 'events'         // معارض وفعاليات ومؤتمرات
+  | 'general';       // عام / مساحات أخرى
 
 export type CustomerPersonaKey = string;
 
