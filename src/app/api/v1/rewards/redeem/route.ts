@@ -7,7 +7,7 @@ const redeemRewardSchema = z.object({
   organizationId: z.string().uuid(),
   branchId: z.string().uuid().optional().nullable(),
   rewardRuleId: z.string().uuid(),
-  idempotencyKey: z.string().min(10).max(128),
+  idempotencyKey: z.string().min(8).max(128),
 });
 
 export async function POST(request: NextRequest) {
@@ -43,13 +43,49 @@ export async function POST(request: NextRequest) {
       .from('reward_rules')
       .select('*')
       .eq('id', rewardRuleId)
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
       .single();
 
     if (ruleError || !rule) {
-      return NextResponse.json({ error: 'Reward rule not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Reward rule not found or inactive' }, { status: 404 });
     }
 
-    // 3. Atomically record redemption
+    // 3. Strict Server-Side Eligibility Verification
+    const { count: verifiedVisits } = await supabase
+      .from('visits')
+      .select('*', { count: 'exact', head: true })
+      .eq('customer_id', customerId)
+      .eq('organization_id', organizationId)
+      .eq('verification_status', 'verified');
+
+    const totalVisits = verifiedVisits || 0;
+
+    // Check past redemptions count for this rule
+    const { count: pastRedemptions } = await supabase
+      .from('reward_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('customer_id', customerId)
+      .eq('organization_id', organizationId)
+      .eq('reference_id', rule.id)
+      .eq('type', 'reward_redeemed');
+
+    const redeemedCount = pastRedemptions || 0;
+    const eligibleRedemptions = Math.floor(totalVisits / (rule.threshold || 5));
+
+    if (redeemedCount >= eligibleRedemptions) {
+      return NextResponse.json(
+        {
+          error: 'العميل لا يمتلك زيارات كافية لصرف هذه المكافأة',
+          requiredVisits: rule.threshold,
+          currentVisits: totalVisits,
+          redeemedCount,
+        },
+        { status: 403 }
+      );
+    }
+
+    // 4. Atomically record redemption event
     const { data: newEvent, error: insertError } = await supabase
       .from('reward_events')
       .insert({
@@ -73,6 +109,7 @@ export async function POST(request: NextRequest) {
       success: true,
       rewardEventId: newEvent.id,
       rewardName: rule.name,
+      rewardValue: rule.reward_value,
       redeemedAt: newEvent.created_at,
     });
   } catch (err: any) {

@@ -164,6 +164,10 @@ export class LoyaltyCardService {
   /**
    * LocalStorage template management for Merchant
    */
+  static getTemplate(cafeSlug: string): LoyaltyCardTemplate {
+    return this.getTemplateForCafe(cafeSlug);
+  }
+
   static getTemplateForCafe(cafeSlug: string): LoyaltyCardTemplate {
     if (typeof window === 'undefined') return DEFAULT_LOYALTY_TEMPLATE;
     try {

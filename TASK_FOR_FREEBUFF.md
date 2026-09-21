@@ -1,32 +1,55 @@
-﻿# Task Specification for Freebuff: Staff Shift Quick PIN Authentication
+# Task Specification for Freebuff: Customer Experience Luxury Integration (Dynamic Loyalty Cards & Instant Print)
 
-## Objective
-Implement a 4-digit Quick PIN Switcher for baristas sharing a tablet in the café (`cafe-memories`), allowing rapid staff switching between orders without full re-login.
+## Architectural Lead: Antigravity
+## Implementation Subagent: Freebuff (GLM-5.3-Flash)
+## Workspace: `C:\Users\mhmd saeed\.gemini\antigravity\scratch\cafe-memories`
 
-## Requirements
+---
 
-### 1. Types & Validation (`src/types/staff.ts` & `src/lib/validations/staff.ts`)
-- Define `StaffMember` interface: `{ id: string; name: string; role: 'barista' | 'shift_lead' | 'manager'; avatarUrl?: string; }`
-- Zod schema for validating a 4-digit numeric string PIN (`/^[0-9]{4}$/`).
+## 1. Objective
+Elevate the customer photobooth experience (`src/components/customer/CustomerClient.tsx`) into a truly luxurious ("فخم ومضبوط") end-to-end journey by integrating:
+1. The dynamic, tactile **`LoyaltyCardView`** engine (supporting merchant-configured slot counts: 4, 6, 8, 10, 12, dimensions, and authentic cafe themes).
+2. Customer direct **"طلب طباعة فورية للكارت والشريط" (Instant Barista Print Request)** with sensory WebAudio feedback.
+3. High-resolution canvas/image export for the customer to save their personalized loyalty card to their camera roll or Apple Wallet preview.
 
-### 2. Service Logic (`src/lib/services/staff-auth.service.ts`)
-- Maintain in-memory or localStorage active staff session with switch timestamp.
-- Function `verifyStaffPin(staffId: string, pin: string): Promise<{ success: boolean; staff?: StaffMember; error?: string }>`
-- Add simulated lockout protection (e.g. after 3 failed attempts, 30-second cooldown).
+---
 
-### 3. UI Component (`src/components/dashboard/StaffPinModal.tsx`)
-- Sleek modal with:
-  - Staff selection (avatars/names).
-  - Virtual 4-digit Touch Numpad (designed for iPad/tablet baristas: buttons 0-9, Backspace, Clear).
-  - PIN dots indicator (masked 4 circles with active/error shake animation).
-  - Keyboard listeners (allowing typing 0-9 directly on physical keyboard or numpad).
-- Accessible and responsive with Tailwind CSS v4 & Lucide icons.
+## 2. Requirements & Deliverables
 
-### 4. Unit Tests (`tests/unit/staff-pin.test.ts`)
-- Test 4-digit PIN validation (valid vs invalid lengths, non-numeric).
-- Test lockout counter on repeated failed attempts.
-- Test successful verification returns the staff member.
+### Requirement 1: Integrate `LoyaltyCardView` into `CustomerClient.tsx`
+- In `src/components/customer/CustomerClient.tsx`:
+  - Replace legacy stamp cards with the tactile `LoyaltyCardView` (`src/components/loyalty/LoyaltyCardView.tsx`).
+  - Read active template settings from `src/lib/services/loyalty-card.service.ts` or merchant business settings.
+  - Dynamically render the customer's active stamps based on their `visitCount` or `accumulatedPhotos.length`.
+  - Display the authentic theme chosen by the merchant:
+    * `espresso_pass` (Luxury dark matte + bronze foil)
+    * `minimal_kraft` (Eco kraft paper + rubber stamp ink)
+    * `neon_cyber_latte` (Cyberpunk glow + neon ring stamps)
+    * `botanical_matcha` (Sage green + coffee blossom floral motif)
+  - Ensure counter QR code is visible so the barista can scan it from the tablet or print queue.
 
-## Acceptance Criteria
-1. `npm run build` must succeed with zero TypeScript or Lint errors.
-2. `npm test` must pass all existing tests + new unit tests in `tests/unit/staff-pin.test.ts`.
+### Requirement 2: Instant Print Request Action with Soundscape
+- After taking photos and composing the strip:
+  - Add a prominent, luxurious button: **"🖨️ إرسال لطابعة الكافيه الفورية"**.
+  - On click:
+    1. Send print job to `/api/v1/photobooth/capture` or trigger `PrintService.sendToQueue(...)`.
+    2. Play `SoundEffectsService.playBaristaDing()` for sensory acoustic confirmation.
+    3. Show a sleek feedback badge: `"تم إرسال الشريط لطابعة الباريستا بنجاح ✦ استلمه من الكاونتر"`.
+
+### Requirement 3: Canvas Card Save / Export
+- Allow customer to download their loyalty card as a clean PNG image directly to their phone with their name, stamp count, and cafe branding.
+- Support Web Share API (`navigator.share`) where available, with automatic file download fallback.
+
+### Requirement 4: Comprehensive Unit Tests
+- Create `tests/unit/customer-loyalty-integration.test.ts`:
+  - Test dynamic slot rendering for 4, 6, 8, 10, 12 slots.
+  - Test print dispatch payload formatting and status callback.
+  - Test theme classes mapping and WebAudio fallback handling.
+- Verify that all existing 142 tests continue to pass 100%.
+
+---
+
+## 3. Acceptance Criteria
+1. `npm test` passes **100% of all tests** (142 existing + new unit tests).
+2. `npm run build` succeeds cleanly with exit code 0 and zero TypeScript errors.
+3. Zero regressions in privacy consent (`liveWallConsent`) or calibrated print dimensions.

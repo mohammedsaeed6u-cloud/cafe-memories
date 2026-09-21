@@ -80,20 +80,22 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
   };
 
   return (
-    <div className="w-full bg-gradient-to-br from-[#FFFDF8] to-[#F7EFE2] rounded-3xl p-5 shadow-lg border border-[#E6DDD0] relative overflow-hidden select-none">
-      {/* Corner brand accents */}
-      <div className="absolute top-3 left-4 text-[#C9A227] text-lg" aria-hidden>✦</div>
-      <div className="absolute bottom-3 right-4 text-[#C9A227] text-lg" aria-hidden>✦</div>
+    <div className="lux-sheen lux-paper lux-lift w-full rounded-[1.75rem] p-5 relative overflow-hidden select-none">
+      {/* Guilloche-style corner ornaments */}
+      <div className="absolute top-2.5 left-3.5 text-[#C9A227] text-lg drop-shadow-[0_1px_1px_rgba(255,246,214,0.8)]" aria-hidden>✦</div>
+      <div className="absolute bottom-2.5 right-3.5 text-[#C9A227] text-lg drop-shadow-[0_1px_1px_rgba(255,246,214,0.8)]" aria-hidden>✦</div>
+      {/* Double-frame money-style inner border */}
+      <div className="absolute inset-2 rounded-[1.3rem] border border-[#C9A227]/25 pointer-events-none" aria-hidden />
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-4 pb-3 border-b border-dashed border-[#D8CBB6]">
+      <div className="flex items-start justify-between mb-4 pb-3 border-b border-[#C9A227]/25 relative">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-2xl bg-[#1C130D] text-[#F7EFE2] flex items-center justify-center shadow-sm">
+          <div className="lux-hero-badge w-9 h-9 rounded-2xl text-[#F3E18C] flex items-center justify-center">
             <Coffee className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="font-extrabold text-sm text-[#1C130D]">
-              كارت ولاء {brandName}
+            <h4 className="font-extrabold text-sm text-[#1C130D] tracking-tight">
+              كارت ولاء <span className="lux-gold-text">{brandName}</span>
             </h4>
             <p className="text-[10px] text-[#8C6B47] font-semibold">
               {customerName ? `كارت ${customerName} • ` : ''}صورة لكل زيارة ✦ الخانة الأخيرة هديتك
@@ -101,10 +103,10 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
           </div>
         </div>
         <span
-          className={`text-[10px] font-black tracking-wide px-2.5 py-1 rounded-full border ${
+          className={`text-[11px] font-black tracking-wider px-3 py-1 rounded-full border font-mono ${
             isGiftReady
-              ? 'bg-amber-100 text-amber-800 border-amber-300'
-              : 'bg-[#F1E8D8] text-[#8C6B47] border-[#E0D4BF]'
+              ? 'bg-gradient-to-l from-amber-200 to-amber-100 text-amber-900 border-amber-400 shadow-[0_0_10px_rgba(201,162,39,0.35)]'
+              : 'lux-gold-text bg-[#1C130D]/90 border-[#C9A227]/50'
           }`}
         >
           {state.stampedCount} / {LOYALTY_TOTAL_SLOTS}
@@ -123,15 +125,17 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
           return (
             <div
               key={idx}
-              className={`relative aspect-square rounded-2xl overflow-hidden flex flex-col items-center justify-center border-2 transition-all ${
+              className={`relative aspect-square rounded-2xl overflow-hidden flex flex-col items-center justify-center transition-all ${
                 isStamped
-                  ? 'border-[#C9A227]/60 bg-white shadow-sm'
-                  : 'border-2 border-dashed border-[#D8CBB6] bg-white/40'
+                  ? 'lux-slot-stamped bg-white'
+                  : isGiftSlot
+                  ? 'lux-slot-gift'
+                  : 'lux-slot-empty'
               } ${isLatest ? 'loyalty-stamp-in' : ''}`}
             >
               {isStamped ? (
                 <div
-                  className="absolute inset-1 rounded-xl overflow-hidden shadow-sm border border-[#1C130D]/10"
+                  className="absolute inset-1 rounded-xl overflow-hidden border border-[#1C130D]/10"
                   style={{ transform: `rotate(${tilt}deg)` }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -141,18 +145,22 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
-                  <span className="absolute bottom-0 inset-x-0 bg-black/45 text-white text-[7px] font-bold text-center py-0.5">
+                  <span className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent text-white text-[7px] font-bold text-center pt-1 pb-0.5">
                     {formatStampDate(slot!.takenAt)}
+                  </span>
+                  {/* Ink stamp seal ring */}
+                  <span className="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full border-[1.5px] border-[#C9A227]/90 bg-white/85 shadow-[0_0_6px_rgba(201,162,39,0.4)] flex items-center justify-center" aria-hidden>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227]" />
                   </span>
                 </div>
               ) : isGiftSlot ? (
-                <Gift className={`w-5 h-5 ${isGiftReady ? 'text-amber-500' : 'text-[#B49B77]'}`} />
+                <Gift className={`w-5 h-5 transition-all ${isGiftReady ? 'text-amber-500 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] scale-110' : 'text-[#B49B77]'}`} />
               ) : (
-                <Coffee className="w-4 h-4 text-[#C9B896] opacity-70" />
+                <Coffee className="w-4 h-4 text-[#C9B896] opacity-60" />
               )}
               <span
-                className={`absolute top-1 right-1.5 text-[8px] font-black ${
-                  isStamped ? 'text-white/90 drop-shadow' : 'text-[#B49B77]'
+                className={`absolute top-1 right-1.5 text-[8px] font-black font-mono ${
+                  isStamped ? 'text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]' : 'text-[#B49B77]'
                 }`}
               >
                 {String(idx + 1).padStart(2, '0')}
@@ -163,15 +171,15 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
       </div>
 
       {/* Footer / progress */}
-      <div className="mt-1 pt-3 border-t border-dashed border-[#D8CBB6]">
+      <div className="mt-1 pt-3 border-t border-[#C9A227]/25">
         {isGiftReady ? (
-          <div className="bg-gradient-to-l from-amber-500 to-amber-400 rounded-2xl p-3 text-center text-stone-950 shadow-md">
+          <div className="lux-sheen relative overflow-hidden bg-gradient-to-l from-amber-400 via-amber-300 to-amber-400 rounded-2xl p-3 text-center text-stone-950 shadow-[0_10px_26px_-10px_rgba(245,158,11,0.6)] border border-amber-500/60">
             <p className="font-black text-sm">🎁 كارتك اكتملت — هديتك جاهزة!</p>
             {onClaimGift && (
               <button
                 type="button"
                 onClick={onClaimGift}
-                className="mt-2 w-full py-2 rounded-xl bg-stone-950 text-amber-300 text-xs font-black hover:bg-stone-900 transition"
+                className="lux-cta mt-2 w-full py-2 rounded-xl text-amber-300 text-xs font-black transition"
               >
                 اطلب هديتك الآن ✦
               </button>
@@ -180,7 +188,8 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
         ) : (
           <p className="text-[11px] text-[#635345] font-semibold text-center leading-relaxed">
             <Sparkles className="inline w-3 h-3 text-[#C9A227] -mt-0.5" />{' '}
-            متبقي {state.remaining} {state.remaining === 1 ? 'زيارة' : 'زيارات'} للهدية —
+            متبقي <span className="font-black text-[#1C130D]">{state.remaining}</span>{' '}
+            {state.remaining === 1 ? 'زيارة' : 'زيارات'} للهدية —
             <span className="text-[#8C6B47]"> كل صورة ختم جديد على كارتك</span>
           </p>
         )}
@@ -192,7 +201,7 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
           <button
             type="button"
             onClick={handleShare}
-            className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#1C130D] text-[#F7EFE2] text-xs font-bold hover:bg-[#2A1D14] transition"
+            className="lux-cta flex items-center justify-center gap-1.5 py-2 rounded-xl text-[#F3E18C] text-xs font-bold transition"
           >
             <Share2 className="w-3.5 h-3.5" />
             شارك الكارت
@@ -200,7 +209,7 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
           <button
             type="button"
             onClick={handlePrint}
-            className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white text-[#1C130D] border border-[#E0D4BF] text-xs font-bold hover:bg-[#FAF6EE] transition"
+            className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/90 text-[#1C130D] border border-[#C9A227]/35 text-xs font-bold hover:bg-[#FAF6EE] hover:border-[#C9A227]/60 transition shadow-sm"
           >
             <Printer className="w-3.5 h-3.5" />
             اطبع الكارت

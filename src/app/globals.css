@@ -74,6 +74,156 @@
   }
 }
 
+/* ─── Luxury Card Language (warm paper, gold foil, velvet depth) ─── */
+
+/* Soft sheen sweeping across the card every few seconds */
+@keyframes loyalty-sheen {
+  0% { transform: translateX(-130%) skewX(-18deg); }
+  55%, 100% { transform: translateX(230%) skewX(-18deg); }
+}
+.lux-sheen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.35) 45%,
+    rgba(255, 246, 214, 0.55) 50%,
+    rgba(255, 255, 255, 0.35) 55%,
+    transparent
+  );
+  animation: loyalty-sheen 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lux-sheen::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/* Fine paper grain overlay (tiny noise via repeating gradients) */
+.lux-paper {
+  background-image:
+    radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.65), transparent 55%),
+    radial-gradient(ellipse at bottom right, rgba(201, 162, 39, 0.08), transparent 50%),
+    repeating-linear-gradient(45deg, rgba(28, 19, 13, 0.012) 0 2px, transparent 2px 4px);
+}
+
+/* Gold foil text: gradient + subtle metallic shine */
+.lux-gold-text {
+  background: linear-gradient(100deg, #8a6d1f 0%, #c9a227 28%, #f3e18c 50%, #c9a227 72%, #8a6d1f 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gold-shift 6s ease-in-out infinite;
+}
+@keyframes gold-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lux-gold-text {
+    animation: none;
+  }
+}
+
+/* Velvet-dark CTA button with gold ring and inner glow */
+.lux-cta {
+  position: relative;
+  background: linear-gradient(135deg, #2a1d14 0%, #1c130d 55%, #241710 100%);
+  box-shadow:
+    0 10px 24px -10px rgba(28, 19, 13, 0.55),
+    inset 0 1px 0 rgba(255, 235, 180, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(201, 162, 39, 0.45);
+}
+.lux-cta:hover {
+  border-color: rgba(201, 162, 39, 0.8);
+  box-shadow:
+    0 14px 30px -10px rgba(28, 19, 13, 0.6),
+    0 0 0 1px rgba(201, 162, 39, 0.25),
+    inset 0 1px 0 rgba(255, 235, 180, 0.25);
+}
+
+/* Card lifts slightly on hover — subtle 3D presence */
+.lux-lift {
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s ease;
+  transform-style: preserve-3d;
+}
+.lux-lift:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 24px 48px -18px rgba(28, 19, 13, 0.35),
+    0 8px 20px -10px rgba(28, 19, 13, 0.2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lux-lift,
+  .lux-lift:hover {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Gold-rimmed stamp slots */
+.lux-slot-stamped {
+  border: 1.5px solid rgba(201, 162, 39, 0.55);
+  box-shadow:
+    0 3px 10px -3px rgba(28, 19, 13, 0.28),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.85),
+    inset 0 0 12px rgba(201, 162, 39, 0.12);
+}
+
+/* Empty slot: engraved look instead of flat dashed */
+.lux-slot-empty {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(247, 239, 226, 0.4));
+  border: 1.5px solid rgba(216, 203, 182, 0.55);
+  box-shadow: inset 0 2px 5px rgba(28, 19, 13, 0.06);
+}
+
+/* Gift slot: warm golden aura to hint at the prize */
+.lux-slot-gift {
+  border: 1.5px solid rgba(201, 162, 39, 0.65);
+  background: linear-gradient(135deg, rgba(243, 225, 140, 0.25), rgba(201, 162, 39, 0.1));
+  box-shadow:
+    0 0 14px rgba(201, 162, 39, 0.25),
+    inset 0 0 10px rgba(201, 162, 39, 0.12);
+}
+
+/* Hero entry: luxury login card */
+.lux-hero-card {
+  background:
+    radial-gradient(ellipse at 85% -10%, rgba(201, 162, 39, 0.14), transparent 45%),
+    radial-gradient(ellipse at 10% 110%, rgba(197, 154, 111, 0.1), transparent 45%),
+    linear-gradient(165deg, #fffdf9 0%, #faf4e8 60%, #f5ecdc 100%);
+  border: 1px solid rgba(201, 162, 39, 0.28);
+  box-shadow:
+    0 24px 60px -22px rgba(28, 19, 13, 0.4),
+    0 6px 18px -8px rgba(28, 19, 13, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Camera badge on hero: gold ring glow */
+.lux-hero-badge {
+  background: linear-gradient(135deg, #241710, #1c130d);
+  border: 1px solid rgba(201, 162, 39, 0.5);
+  box-shadow:
+    0 8px 20px -8px rgba(28, 19, 13, 0.5),
+    0 0 0 4px rgba(201, 162, 39, 0.12),
+    inset 0 1px 0 rgba(255, 235, 180, 0.2);
+}
+
+/* Refined focus state for inputs on luxury surfaces */
+.lux-input:focus {
+  border-color: #c9a227;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
+}
+
 /* Tappy-Style Poster Typography */
 .poster-headline {
   font-weight: 900;
