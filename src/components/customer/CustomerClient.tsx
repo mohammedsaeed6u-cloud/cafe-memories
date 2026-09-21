@@ -94,35 +94,16 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [isLockedByCooldown, setIsLockedByCooldown] = useState(false);
   const [remainingCooldownHours, setRemainingCooldownHours] = useState(24);
 
-  // Customer session state (isolated strictly by phone)
-  const [customerName, setCustomerName] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('memories_customer_name') || '';
-    }
-    return '';
-  });
-  const [customerPhone, setCustomerPhone] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('memories_customer_phone') || '';
-    }
-    return '';
-  });
-  const [customerProfession, setCustomerProfession] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('memories_customer_role') || '';
-    }
-    return '';
-  });
+  // Customer session state (isolated strictly by phone).
+  // Initializers MUST NOT read localStorage directly: server render and client
+  // hydration would diverge (hydration mismatch). The mount effect below
+  // hydrates these states from storage after the first consistent render.
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerProfession, setCustomerProfession] = useState('');
 
   // Check if current customer is identified in this session
-  const [isSessionStarted, setIsSessionStarted] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const phone = localStorage.getItem('memories_customer_phone');
-      const name = localStorage.getItem('memories_customer_name');
-      return !!phone && phone.trim().length >= 8 && !!name && name.trim().length > 0;
-    }
-    return false;
-  });
+  const [isSessionStarted, setIsSessionStarted] = useState(false);
 
   // Photobooth state: Customer's accumulated photos on their card
   const [accumulatedPhotos, setAccumulatedPhotos] = useState<string[]>([]);
@@ -143,6 +124,25 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [baristaPin, setBaristaPin] = useState<string>('');
   const [pinShotsCount, setPinShotsCount] = useState<number>(1);
   const [pinError, setPinError] = useState<string | null>(null);
+
+  // Hydrate persisted session from storage AFTER first render (avoids SSR
+  // hydration mismatch): reads happen post-paint, writes batch to one commit.
+  useEffect(() => {
+    const hydrateSession = () => {
+      const storedName = localStorage.getItem('memories_customer_name') || '';
+      const storedPhone = localStorage.getItem('memories_customer_phone') || '';
+      const storedRole = localStorage.getItem('memories_customer_role') || '';
+      if (storedName) setCustomerName(storedName);
+      if (storedPhone) setCustomerPhone(storedPhone);
+      if (storedRole) setCustomerProfession(storedRole);
+      if (storedPhone.trim().length >= 8 && storedName.trim().length > 0) {
+        setIsSessionStarted(true);
+      }
+    };
+    // Run after first paint so SSR and first client render match exactly.
+    const raf = requestAnimationFrame(hydrateSession);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   // Initialize device ID, check 24-hour cooldown & load saved card for THIS customer
   useEffect(() => {
