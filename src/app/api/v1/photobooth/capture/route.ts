@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
-const captureSchema = z.object({
+export const captureSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   phone: z.string().min(4).max(30).optional(),
   role: z.string().max(100).optional().default('زائر ومحب للقهوة'),
@@ -22,7 +22,7 @@ const captureSchema = z.object({
   liveWallConsent: z.boolean().optional().default(true),
 });
 
-function normalizePhoneNumber(raw: string): string {
+export function normalizePhoneNumber(raw: string): string {
   const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
   let cleaned = (raw || '').trim();
   arabicDigits.forEach((digit, index) => {
