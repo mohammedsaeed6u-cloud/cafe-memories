@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   PhotoboothFrame,
   BusinessBranding,
@@ -12,6 +12,7 @@ import { PhotoboothStripCard } from './PhotoboothStripCard';
 import { ShareStoryWidget } from './ShareStoryWidget';
 import { Gift, Printer, Sparkles, CheckCircle, X, Camera, Lock } from 'lucide-react';
 import { PrintService } from '@/lib/services/print.service';
+import { SoundEffectsService } from '@/lib/services/sound-effects.service';
 
 interface PrintGiftModalProps {
   isOpen: boolean;
@@ -50,10 +51,16 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
   cardMode,
   stickers,
 }) => {
-  if (!isOpen) return null;
+  const totalSlots = Math.max(frame?.shotCount || 3, 1);
+  const isCardComplete = (photos?.length || 0) >= totalSlots;
 
-  const totalSlots = Math.max(frame.shotCount || 3, 1);
-  const isCardComplete = photos.length >= totalSlots;
+  useEffect(() => {
+    if (isOpen && isCardComplete) {
+      SoundEffectsService.playRewardCelebration();
+    }
+  }, [isOpen, isCardComplete]);
+
+  if (!isOpen) return null;
 
   const handlePrint = () => {
     if (onPrintStrip) {

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CustomerVisitRecord } from './CustomerCRMTab';
-import { Printer, Gift, CheckCircle2, Clock, Sparkles, Sliders, Scissors } from 'lucide-react';
+import { Printer, Gift, CheckCircle2, Clock, Sparkles, Sliders, Scissors, Bell, BellOff } from 'lucide-react';
 import { PrintService, PrintFormat, getPrintDimensions } from '@/lib/services/print.service';
+import { SoundEffectsService } from '@/lib/services/sound-effects.service';
 
 interface PrintStationTabProps {
   queue: CustomerVisitRecord[];
@@ -18,6 +19,16 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
 }) => {
   const [activeFormat, setActiveFormat] = useState<PrintFormat>('standard-2x6');
   const [handedOverGifts, setHandedOverGifts] = useState<Record<string, boolean>>({});
+  const [soundAlertEnabled, setSoundAlertEnabled] = useState(true);
+  const prevQueueLengthRef = useRef(queue.length);
+
+  // Trigger barista counter bell alert whenever new items enter the queue
+  useEffect(() => {
+    if (soundAlertEnabled && queue.length > prevQueueLengthRef.current) {
+      SoundEffectsService.playBaristaDing();
+    }
+    prevQueueLengthRef.current = queue.length;
+  }, [queue.length, soundAlertEnabled]);
 
   const activeDims = getPrintDimensions(activeFormat);
 
@@ -147,10 +158,42 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
 
       {/* Print Queue List */}
       <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm">
-        <h3 className="text-base font-black text-stone-900 mb-4 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-amber-600" />
-          <span>طابور الأشرطة الجاهزة للطباعة والتسليم للباريستا</span>
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h3 className="text-base font-black text-stone-900 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-600" />
+            <span>طابور الأشرطة الجاهزة للطباعة والتسليم للباريستا</span>
+          </h3>
+
+          <button
+            onClick={() => {
+              const next = !soundAlertEnabled;
+              setSoundAlertEnabled(next);
+              if (next) {
+                SoundEffectsService.playBaristaDing();
+              }
+            }}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 border ${
+              soundAlertEnabled
+                ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 shadow-xs'
+                : 'bg-stone-100 text-stone-500 border-stone-200 hover:bg-stone-200'
+            }`}
+            title="تفعيل أو كتم جرس تنبيه الطلبات الجديدة للباريستا"
+          >
+            {soundAlertEnabled ? (
+              <Bell className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+            ) : (
+              <BellOff className="w-3.5 h-3.5 text-stone-400" />
+            )}
+            <span>تنبيه صوتي للطلبات 🔔</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                soundAlertEnabled ? 'bg-amber-200 text-amber-900' : 'bg-stone-200 text-stone-600'
+              }`}
+            >
+              {soundAlertEnabled ? 'مفعل' : 'مكتوم'}
+            </span>
+          </button>
+        </div>
 
         {queue.length === 0 ? (
           <div className="py-16 text-center text-stone-400">

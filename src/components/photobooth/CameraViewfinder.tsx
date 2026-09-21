@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Camera, RefreshCw, CheckCircle2, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { SoundEffectsService } from '@/lib/services/sound-effects.service';
 
 export type CameraFilterMode = 'natural' | 'espresso' | 'noir' | 'fade';
 
@@ -68,65 +69,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isFlashing, setIsFlashing] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-
-  // Synthesized mechanical shutter sound via Web Audio API
-  const playShutterSound = useCallback(() => {
-    if (!soundEnabled || typeof window === 'undefined') return;
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'triangle';
-      osc1.frequency.setValueAtTime(1400, ctx.currentTime);
-      osc1.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.04);
-      gain1.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start();
-      osc1.stop(ctx.currentTime + 0.05);
-
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(600, ctx.currentTime + 0.07);
-      osc2.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.14);
-      gain2.gain.setValueAtTime(0.2, ctx.currentTime + 0.07);
-      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.14);
-      osc2.connect(gain2);
-      gain2.connect(ctx.destination);
-      osc2.start(ctx.currentTime + 0.07);
-      osc2.stop(ctx.currentTime + 0.14);
-    } catch {
-      // Audio context blocked
-    }
-  }, [soundEnabled]);
-
-  // Countdown beep
-  const playCountdownBeep = useCallback((freq = 880) => {
-    if (!soundEnabled || typeof window === 'undefined') return;
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.08);
-    } catch {
-      // Audio context blocked
-    }
-  }, [soundEnabled]);
+  const [soundEnabled, setSoundEnabled] = useState(() => !SoundEffectsService.isMuted());
 
   // Initialize camera stream
   const startCamera = useCallback(async () => {
@@ -216,14 +159,18 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
     // 3-second countdown
     for (let c = 3; c > 0; c--) {
       setCountdown(c);
-      playCountdownBeep(c === 1 ? 980 : 780);
+      if (soundEnabled) {
+        SoundEffectsService.playCountdownBeep(c === 1 ? 980 : 780);
+      }
       await new Promise((r) => setTimeout(r, 900));
     }
 
     // Flash & Shutter
     setCountdown(null);
     setIsFlashing(true);
-    playShutterSound();
+    if (soundEnabled) {
+      SoundEffectsService.playShutterSound();
+    }
 
     const photo = captureFrame();
     if (photo) {
@@ -371,7 +318,10 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
             {/* Camera Switch & Mute */}
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setSoundEnabled((v) => !v)}
+                onClick={() => {
+                  const nextMuted = SoundEffectsService.toggleMute();
+                  setSoundEnabled(!nextMuted);
+                }}
                 className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white/90 hover:text-white flex items-center justify-center border border-white/15 hover:scale-105 transition"
                 title="كتم / تفعيل الصوت"
               >
