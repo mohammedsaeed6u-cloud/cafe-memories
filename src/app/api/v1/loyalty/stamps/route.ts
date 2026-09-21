@@ -33,13 +33,27 @@ export async function GET(request: NextRequest) {
     const supabase = createAdminClient();
 
     // Resolve branch by slug (same pattern as the capture route).
-    const { data: branchBySlug } = await supabase
-      .from('branches')
-      .select('id, organization_id')
-      .eq('slug', cafeSlug)
-      .maybeSingle();
+    // Fallback to the venue's primary branch when the slug has no exact row
+    // (demo/sandbox slugs don't exist in the branches table).
+    let branchId: string | undefined;
+    {
+      const { data: branchBySlug } = await supabase
+        .from('branches')
+        .select('id, organization_id')
+        .eq('slug', cafeSlug)
+        .maybeSingle();
+      branchId = branchBySlug?.id;
 
-    const branchId = branchBySlug?.id;
+      if (!branchId) {
+        const { data: primaryBranch } = await supabase
+          .from('branches')
+          .select('id')
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        branchId = primaryBranch?.id;
+      }
+    }
 
     // The capture route stores the normalized phone on the customer record
     // (anonymous_id keeps the digits-only form). Look up the customer first.

@@ -174,10 +174,15 @@ export async function POST(request: NextRequest) {
 
     const visitCount = (totalVisits && totalVisits > 0) ? totalVisits : 1;
 
-    // 4. Create Memory record if photo is provided
+    // 4. Create Memory record if photo is provided (Guest Privacy & Consent calibrated)
     let memory: any = null;
     if (finalPhoto && resolvedOrgId && resolvedBranchId) {
       const formattedCaption = caption || `ذكريات موميريز • ${finalRole}`;
+      // When liveWallConsent is false, visibility must strictly be 'private' and status must NOT be 'live_wall'
+      const hasLiveWallConsent = Boolean(liveWallConsent);
+      const memoryVisibility = hasLiveWallConsent ? 'live_wall' : 'private';
+      const memoryStatus = 'approved';
+
       const { data: newMemory } = await supabase
         .from('memories')
         .insert({
@@ -189,8 +194,8 @@ export async function POST(request: NextRequest) {
           optimized_url: finalPhoto,
           thumbnail_url: finalPhoto,
           caption: formattedCaption,
-          status: 'approved',
-          visibility: liveWallConsent ? 'live_wall' : 'private',
+          status: memoryStatus,
+          visibility: memoryVisibility,
         })
         .select()
         .single();

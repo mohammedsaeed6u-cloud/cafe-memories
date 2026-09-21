@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { CustomerVisitRecord } from './CustomerCRMTab';
-import { Printer, Gift, CheckCircle2, Clock, Sparkles } from 'lucide-react';
-import { PrintService } from '@/lib/services/print.service';
+import { Printer, Gift, CheckCircle2, Clock, Sparkles, Sliders, Scissors } from 'lucide-react';
+import { PrintService, PrintFormat, getPrintDimensions } from '@/lib/services/print.service';
 
 interface PrintStationTabProps {
   queue: CustomerVisitRecord[];
@@ -16,7 +16,10 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
   onPrintItem,
   brandName = 'Memories',
 }) => {
+  const [activeFormat, setActiveFormat] = useState<PrintFormat>('standard-2x6');
   const [handedOverGifts, setHandedOverGifts] = useState<Record<string, boolean>>({});
+
+  const activeDims = getPrintDimensions(activeFormat);
 
   const toggleGiftHandover = (id: string) => {
     setHandedOverGifts((prev) => ({
@@ -25,11 +28,17 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
     }));
   };
 
-  const handlePrint = (item: CustomerVisitRecord) => {
+  const handlePrint = (item: CustomerVisitRecord, format: PrintFormat = activeFormat) => {
     if (onPrintItem) {
       onPrintItem(item);
+    } else if (item.photoStripUrl) {
+      PrintService.printStripImage(item.photoStripUrl, {
+        format,
+        highContrast: format.startsWith('thermal'),
+        showCutLine: true,
+      });
     } else {
-      PrintService.printElement('printable-strip');
+      PrintService.printElement('printable-strip', { format });
     }
   };
 
@@ -64,8 +73,74 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-stone-500 font-bold">نوع ورق الطباعة الموصى به</p>
-            <p className="text-sm font-black text-stone-800">شريط كلاسيك 2x6 لامع</p>
+            <p className="text-xs text-stone-500 font-bold">البروفايل النشط حالياً</p>
+            <p className="text-sm font-black text-stone-800">{activeDims.nameAr}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Format Selector & Precision Calibration Panel */}
+      <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-stone-100 pb-4 mb-4">
+          <div>
+            <h4 className="text-sm font-black text-stone-900 flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-amber-600" />
+              <span>محرك المعايرة والطباعة عالي الدقة (Hardware Print Calibration)</span>
+            </h4>
+            <p className="text-xs text-stone-500 mt-0.5">
+              معاير فيزيائياً بأبعاد دقيقة 100% مع إلغاء هوامش المتصفح ورؤوس الصفحات تلقائياً
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: 'standard-2x6', label: 'شريط 2×6 بوصة (قياسي)', icon: '🎞️' },
+              { id: 'dual-4x6', label: 'مزدوج 4×6 مع خط قص', icon: '✂️' },
+              { id: 'thermal-80mm', label: 'حراري 80 مم (ملصقات)', icon: '🧾' },
+              { id: 'thermal-58mm', label: 'حراري 58 مم (مدمج)', icon: '🏷️' },
+            ].map((fmt) => (
+              <button
+                key={fmt.id}
+                onClick={() => setActiveFormat(fmt.id as PrintFormat)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  activeFormat === fmt.id
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                }`}
+              >
+                <span>{fmt.icon}</span>
+                <span>{fmt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Live Calibration Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-200 text-xs">
+          <div>
+            <span className="text-stone-400 block font-medium">الأبعاد بالميليمتر:</span>
+            <span className="font-bold text-stone-800 font-mono">
+              {activeDims.widthMm} × {activeDims.heightMm} مم
+            </span>
+          </div>
+          <div>
+            <span className="text-stone-400 block font-medium">الأبعاد بالبوصة:</span>
+            <span className="font-bold text-stone-800 font-mono">
+              {activeDims.widthInches.toFixed(1)} × {activeDims.heightInches.toFixed(1)} in
+            </span>
+          </div>
+          <div>
+            <span className="text-stone-400 block font-medium">الدقة (300 DPI):</span>
+            <span className="font-bold text-stone-800 font-mono">
+              {activeDims.widthPx300Dpi} × {activeDims.heightPx300Dpi} px
+            </span>
+          </div>
+          <div>
+            <span className="text-stone-400 block font-medium">معايرة الهوامش:</span>
+            <span className="font-bold text-emerald-600 flex items-center gap-1">
+              <span>0mm (بدون هوامش)</span>
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </span>
           </div>
         </div>
       </div>
@@ -135,13 +210,32 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
 
                   {/* Actions: Print & Handover */}
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => handlePrint(item)}
-                      className="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
-                    >
-                      <Printer className="w-3.5 h-3.5 text-amber-400" />
-                      <span>طباعة 2x6</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handlePrint(item, activeFormat)}
+                        className="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+                        title={`طباعة بنمط: ${activeDims.nameAr}`}
+                      >
+                        <Printer className="w-3.5 h-3.5 text-amber-400" />
+                        <span>
+                          {activeFormat === 'dual-4x6'
+                            ? 'طباعة 4x6 مزدوج'
+                            : activeFormat.startsWith('thermal')
+                            ? `حراري ${activeDims.rollWidthMm}مم`
+                            : 'طباعة 2x6'}
+                        </span>
+                      </button>
+
+                      {activeFormat !== 'dual-4x6' && (
+                        <button
+                          onClick={() => handlePrint(item, 'dual-4x6')}
+                          className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition"
+                          title="طباعة سريعة كشريطين مزدوجين 4×6 مع خط قص"
+                        >
+                          <Scissors className="w-3.5 h-3.5 text-stone-600" />
+                        </button>
+                      )}
+                    </div>
 
                     <button
                       onClick={() => toggleGiftHandover(item.id)}

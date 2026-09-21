@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const branchId = searchParams.get('branchId');
     const organizationId = searchParams.get('organizationId');
-    const status = searchParams.get('status');
+    const statusParam = searchParams.get('status');
+    const visibilityParam = searchParams.get('visibility');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
     const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
 
@@ -43,7 +44,21 @@ export async function GET(request: NextRequest) {
 
     if (branchId) query = query.eq('branch_id', branchId);
     if (organizationId) query = query.eq('organization_id', organizationId);
-    if (status) query = query.eq('status', status);
+
+    // Guest Privacy & Wall display verification:
+    // Strictly fetch memories where visibility === 'live_wall' AND status === 'approved'
+    // (Only bypassed when explicitly requested with 'all' by authorized dashboard moderation)
+    if (statusParam && statusParam !== 'all') {
+      query = query.eq('status', statusParam);
+    } else if (!statusParam) {
+      query = query.eq('status', 'approved');
+    }
+
+    if (visibilityParam && visibilityParam !== 'all') {
+      query = query.eq('visibility', visibilityParam);
+    } else if (!visibilityParam) {
+      query = query.eq('visibility', 'live_wall');
+    }
 
     const { data: memories, error, count } = await query;
 

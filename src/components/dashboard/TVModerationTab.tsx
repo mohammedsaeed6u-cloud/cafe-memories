@@ -33,7 +33,7 @@ export const TVModerationTab: React.FC<TVModerationTabProps> = ({
     async function loadLiveMemories() {
       setIsLoading(true);
       try {
-        const res = await fetch('/api/v1/memories?limit=50');
+        const res = await fetch('/api/v1/memories?status=all&visibility=all&limit=50');
         if (res.ok) {
           const data = await res.json();
           if (data.memories && data.memories.length > 0) {

@@ -131,6 +131,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isPrintGiftModalOpen, setIsPrintGiftModalOpen] = useState(false);
   const [giftCode, setGiftCode] = useState('');
+  const [liveWallConsent, setLiveWallConsent] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visitCount, setVisitCount] = useState(1);
@@ -437,19 +438,23 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         localStorage.setItem('memories_customer_role', customerProfession);
       }
 
-      // Sync with in-store Live TV Wall
-      const wallItem = {
-        id: `wall_${Date.now()}`,
-        customer: customerName,
-        caption: `ذكريات ${customerName} في ${settings.branding.name || 'Memories'} ☕✨`,
-        time: 'الآن',
-        frames: updatedCardPhotos,
-        theme: 'white',
-      };
-      const existingFeed = JSON.parse(localStorage.getItem(`memories_wall_feed_${cafeSlug}`) || '[]');
-      const newFeed = [wallItem, ...existingFeed].slice(0, 20);
-      localStorage.setItem(`memories_wall_feed_${cafeSlug}`, JSON.stringify(newFeed));
-      window.dispatchEvent(new CustomEvent('memories-wall-updated', { detail: newFeed }));
+      // Sync with in-store Live TV Wall ONLY if customer consented
+      if (liveWallConsent) {
+        const wallItem = {
+          id: `wall_${Date.now()}`,
+          customer: customerName,
+          caption: `ذكريات ${customerName} في ${settings.branding.name || 'Memories'} ☕✨`,
+          time: 'الآن',
+          frames: updatedCardPhotos,
+          theme: 'white',
+          visibility: 'live_wall',
+          status: 'approved',
+        };
+        const existingFeed = JSON.parse(localStorage.getItem(`memories_wall_feed_${cafeSlug}`) || '[]');
+        const newFeed = [wallItem, ...existingFeed].slice(0, 20);
+        localStorage.setItem(`memories_wall_feed_${cafeSlug}`, JSON.stringify(newFeed));
+        window.dispatchEvent(new CustomEvent('memories-wall-updated', { detail: newFeed }));
+      }
     } catch {
       // ignore
     }
@@ -497,6 +502,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
           frameId: selectedFrame.id,
           giftCode: code,
           visitId: `vis_${Date.now()}`,
+          liveWallConsent,
         }),
       });
 
@@ -1126,6 +1132,32 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Guest Privacy & Consent Option: Live TV Wall Display */}
+              <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-200/60 text-amber-900 flex items-center justify-center text-sm shrink-0">
+                    📺
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-stone-900 leading-tight">
+                      عرض صورتي على شاشة الكافيه الحية (TV Wall)
+                    </p>
+                    <p className="text-[10px] text-stone-500 mt-0.5">
+                      حرية كاملة للاختيار: يمكنك إلغاء العرض والاحتفاظ بخصوصيتك
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={liveWallConsent}
+                    onChange={(e) => setLiveWallConsent(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+                </label>
               </div>
 
               <div className="pt-2 flex gap-2">

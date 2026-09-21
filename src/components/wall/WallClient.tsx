@@ -145,10 +145,12 @@ export function WallClient({ screenId }: { screenId: string }) {
 
     try {
       const supabase = createClient();
+      // Guest Privacy & Wall Display: Only fetch memories where visibility === 'live_wall' AND status === 'approved'
       const { data, error } = await supabase
         .from('memories')
         .select('*')
         .eq('status', 'approved')
+        .eq('visibility', 'live_wall')
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -173,7 +175,9 @@ export function WallClient({ screenId }: { screenId: string }) {
   }, []);
 
   useEffect(() => {
-    syncLiveFeed();
+    const initialSyncTimer = setTimeout(() => {
+      void syncLiveFeed();
+    }, 0);
     const interval = setInterval(syncLiveFeed, 15000); // Poll fallback every 15s
 
     // 1. Supabase Realtime subscription
@@ -215,6 +219,7 @@ export function WallClient({ screenId }: { screenId: string }) {
     window.addEventListener('storage', handleLocalUpdate);
 
     return () => {
+      clearTimeout(initialSyncTimer);
       clearInterval(interval);
       clearInterval(heartbeatInterval);
       if (channel) {
