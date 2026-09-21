@@ -11,7 +11,7 @@ import { CardColorPicker } from '@/components/photobooth/CardColorPicker';
 import { PrintGiftModal } from '@/components/photobooth/PrintGiftModal';
 import { StripComposerService } from '@/lib/services/strip-composer.service';
 import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
-import { PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
+import { PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
 import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
 import {
   Sparkles,
@@ -502,9 +502,9 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const isCardComplete = currentDisplayPhotos.length >= totalCardSlots;
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col items-center selection:bg-amber-100">
-      {/* Top Porcelain Header */}
-      <header className="w-full bg-white/85 backdrop-blur-md border-b border-stone-200/80 sticky top-0 z-40 py-3.5 px-4 shadow-xs">
+    <div className="min-h-screen bg-[#FDFBF7] text-[#1C130D] flex flex-col items-center selection:bg-[#C59A6F]/30 selection:text-[#1C130D]">
+      {/* Top Porcelain Minimalist Header */}
+      <header className="w-full bg-white/90 backdrop-blur-md border-b border-[#E6DDD0] sticky top-0 z-40 py-3.5 px-4 shadow-2xs">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             {settings.branding.logoUrl ? (
@@ -515,28 +515,29 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 className="h-8 object-contain"
               />
             ) : (
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-500 text-white flex items-center justify-center font-black text-sm shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-[#1C130D] text-[#FDFBF7] flex items-center justify-center font-black text-sm shadow-xs">
                 M
               </div>
             )}
             <div>
-              <h1 className="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">
-                {settings.branding.name || 'Memories • موميريز'}
+              <h1 className="font-extrabold text-sm sm:text-base text-[#1C130D] leading-tight flex items-center gap-1.5">
+                <span>{settings.branding.name || 'Memories'}</span>
+                <span className="text-[#C59A6F] font-serif text-xs">✦</span>
               </h1>
               {isSessionStarted && customerName ? (
-                <div className="flex items-center gap-1.5 text-[10px] text-stone-500 font-medium">
-                  <span className="text-amber-800 font-bold">كارت: {customerName}</span>
+                <div className="flex items-center gap-1.5 text-[10px] text-[#8C7A6B] font-medium">
+                  <span className="text-[#1C130D] font-bold">كارت: {customerName}</span>
                   <button
                     type="button"
                     onClick={handleSwitchCustomer}
-                    className="text-stone-400 hover:text-amber-700 underline text-[10px] font-bold transition"
+                    className="text-[#8C7A6B] hover:text-[#1C130D] underline text-[10px] font-bold transition"
                   >
-                    (تبديل العميل 🔄)
+                    (تبديل)
                   </button>
                 </div>
               ) : (
-                <p className="text-[10px] text-stone-500 font-medium">
-                  كارت الولاء المصور • صورة لكل زيارة
+                <p className="text-[10px] text-[#8C7A6B] font-medium">
+                  كارت الذكريات ✦ صورة لكل زيارة
                 </p>
               )}
             </div>
@@ -544,14 +545,13 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
           <div className="flex items-center gap-2">
             {extraShots > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full text-xs font-bold shadow-xs animate-pulse">
-                <Coffee className="w-3.5 h-3.5" />
-                <span>+{extraShots} صور أوردرات</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-[#F4EDE2] text-[#8C6B47] rounded-full text-xs font-bold font-mono">
+                <span>+{extraShots} لقطات إضافية</span>
               </div>
             )}
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 rounded-full border border-amber-200 text-xs font-bold">
-              <Gift className="w-3.5 h-3.5 text-amber-600" />
-              <span>الهدية في الخانة الأخيرة</span>
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#FDFBF7] text-[#8C6B47] rounded-full border border-[#D9CEBF] text-xs font-bold font-mono">
+              <span>✦</span>
+              <span>المكافأة في الخانة الأخيرة</span>
             </div>
           </div>
         </div>
@@ -561,24 +561,24 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       <main className="w-full max-w-xl mx-auto p-4 sm:p-6 flex-1 flex flex-col items-center">
         {/* Step 0: Customer Intake & Isolation First */}
         {!isSessionStarted ? (
-          <div className="w-full bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-200/90 shadow-xl text-stone-900 my-auto animate-in fade-in">
-            <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Camera className="w-8 h-8 text-amber-600" />
+          <div className="w-full bg-white rounded-3xl p-6 sm:p-8 border border-[#E6DDD0] shadow-xl text-[#1C130D] my-auto animate-in fade-in">
+            <div className="w-14 h-14 rounded-2xl bg-[#F4EDE2] text-[#8C6B47] flex items-center justify-center mx-auto mb-4">
+              <Camera className="w-7 h-7 text-[#1C130D]" />
             </div>
 
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-black text-stone-900 mb-1.5">
-                كارت ذكرياتك وهديتك الفورية ☕📸
+              <h2 className="text-2xl font-black text-[#1C130D] mb-1.5">
+                كارت ذكرياتك وهديتك الفورية
               </h2>
-              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-sm mx-auto">
-                سجل رقم موبايلك واسمك لفتح كارتك الخاص المعزول ومتابعة لقطاتك وهديتك بدون تكرار
+              <p className="text-xs sm:text-sm text-[#635345] leading-relaxed max-w-sm mx-auto">
+                سجل رقم هاتفك لفتح كارتك الخاص ومتابعة لقطاتك ومكافآتك في كل زيارة.
               </p>
             </div>
 
             <form onSubmit={handleStartCustomerSession} className="space-y-4 max-w-md mx-auto">
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1.5 text-right">
-                  رقم الموبايل (المعرّف الفريد لكارتك) *
+                <label className="block text-xs font-bold text-[#1C130D] mb-1.5 text-right">
+                  رقم الهاتف
                 </label>
                 <input
                   type="tel"
@@ -586,42 +586,39 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   placeholder="01012345678"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none font-mono text-base text-left bg-stone-50/50 transition"
+                  className="w-full px-4 py-3 rounded-2xl border border-[#D9CEBF] focus:border-[#1C130D] focus:ring-2 focus:ring-[#C59A6F]/20 focus:outline-none font-mono text-base text-left bg-[#FDFBF7] transition"
                   dir="ltr"
                   autoFocus
                 />
-                <p className="text-[10px] text-stone-400 mt-1 text-right">
-                  يضمن فصل صورك تماماً عن أي زائر آخر
-                </p>
               </div>
 
               {recognizedCustomer ? (
                 /* 1. Existing Registered Customer: Direct 1-Click Auto-Login */
-                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 text-center animate-in fade-in space-y-2.5">
+                <div className="p-4 bg-[#FAF6EE] rounded-2xl border border-[#D9CEBF] text-center animate-in fade-in space-y-2.5">
                   <div className="flex items-center justify-center gap-2">
-                    <UserCheck className="w-5 h-5 text-emerald-600" />
-                    <p className="text-base font-black text-stone-900">
-                      أهلاً بك مجدداً، {recognizedCustomer.name}! ☕✨
+                    <UserCheck className="w-4 h-4 text-[#8C6B47]" />
+                    <p className="text-sm font-black text-[#1C130D]">
+                      أهلاً بك مجدداً، {recognizedCustomer.name} ✦ كارتك جاهز
                     </p>
                   </div>
-                  <p className="text-xs text-stone-600">
-                    تم التعرّف على كارتك الخاص تلقائياً ({recognizedCustomer.photos?.length || 0} لقطات محفوظة)
+                  <p className="text-xs text-[#635345]">
+                    تم العثور على {recognizedCustomer.photos?.length || 0} لقطات سابقة في كارتك
                   </p>
                   <button
                     type="button"
                     onClick={() => handleStartCustomerSession(undefined, recognizedCustomer.name)}
-                    className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-black text-sm sm:text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-2 active:scale-[0.98]"
+                    className="w-full py-3.5 px-6 rounded-2xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] font-bold text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-[0.98]"
                   >
-                    <Sparkles className="w-4 h-4 text-amber-300" />
-                    <span>دخول مباشر إلى كارتك وبدء التصوير 📸</span>
+                    <span>دخول مباشر والتقاط صورة اليوم</span>
+                    <ArrowRight className="w-4 h-4 text-[#C59A6F] rotate-180" />
                   </button>
                 </div>
               ) : showNameInput || customerPhone.trim().length >= 8 ? (
                 /* 2. New Customer: Enter Name once */
                 <div className="animate-in fade-in space-y-3">
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1.5 text-right">
-                      الاسم الكريم (تسجيل لأول مرة) *
+                    <label className="block text-xs font-bold text-[#1C130D] mb-1.5 text-right">
+                      الاسم الكريم
                     </label>
                     <input
                       type="text"
@@ -629,21 +626,17 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                       placeholder="مثال: أحمد سامي"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none text-base text-right bg-stone-50/50 transition"
+                      className="w-full px-4 py-3 rounded-2xl border border-[#D9CEBF] focus:border-[#1C130D] focus:ring-2 focus:ring-[#C59A6F]/20 focus:outline-none text-base text-right bg-[#FDFBF7] transition"
                       autoFocus
                     />
-                    <p className="text-[10px] text-stone-400 mt-1 text-right">
-                      سيُحفظ اسمك برقمك لتسجيل الدخول المباشر في الزيارات القادمة
-                    </p>
                   </div>
 
                   <div className="pt-1">
                     <button
                       type="submit"
-                      className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-black text-sm sm:text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-2 active:scale-[0.98]"
+                      className="w-full py-3.5 px-6 rounded-2xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] font-bold text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-[0.98]"
                     >
-                      <Sparkles className="w-4 h-4 text-amber-300" />
-                      <span>حفظ الاسم وفتح كارت الذكريات 📸</span>
+                      <span>فتح كارت الذكريات ✦</span>
                     </button>
                   </div>
                 </div>
@@ -652,33 +645,33 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-4 px-6 rounded-2xl bg-stone-900 hover:bg-black text-white font-black text-sm sm:text-base shadow-lg transition flex items-center justify-center gap-2 active:scale-[0.98]"
+                    className="w-full py-3.5 px-6 rounded-2xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] font-bold text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-[0.98]"
                   >
-                    <ArrowRight className="w-4 h-4 text-amber-400 rotate-180" />
-                    <span>متابعة للتعرف على كارتك</span>
+                    <span>متابعة</span>
+                    <ArrowRight className="w-4 h-4 text-[#C59A6F] rotate-180" />
                   </button>
                 </div>
               )}
 
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-stone-500 pt-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>بياناتك وصورك معزولة تماماً وخاصة بك وحدك</span>
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#8C7A6B] pt-1 font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#8C6B47]" />
+                <span>بياناتك وصورك محفوظة بأعلى معايير الخصوصية</span>
               </div>
             </form>
           </div>
         ) : isLockedByCooldown && !todayPhoto ? (
-          <div className="w-full bg-white rounded-3xl p-8 border-2 border-amber-200 shadow-xl text-center my-auto animate-in fade-in">
-            <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 mx-auto flex items-center justify-center mb-4 shadow-inner">
-              <Clock className="w-8 h-8" />
+          <div className="w-full bg-white rounded-3xl p-8 border border-[#E6DDD0] shadow-xl text-center my-auto animate-in fade-in">
+            <div className="w-14 h-14 rounded-full bg-[#F4EDE2] text-[#8C6B47] mx-auto flex items-center justify-center mb-4">
+              <Clock className="w-7 h-7 text-[#1C130D]" />
             </div>
 
-            <h2 className="text-2xl font-black text-stone-900 mb-2">
-              لقد وثقت لحظتك لليوم يا {customerName || 'بطل'}! ☕✨
+            <h2 className="text-2xl font-black text-[#1C130D] mb-2">
+              لقد وثقت لحظتك لليوم يا {customerName || 'ضيفنا الكريم'} ✦
             </h2>
-            <p className="text-stone-600 text-sm leading-relaxed mb-6">
-              لكل زائر صورة واحدة في اليوم تضاف إلى كارت ذكرياته.
+            <p className="text-[#635345] text-xs sm:text-sm leading-relaxed mb-6">
+              لكل زائر لقطة واحدة تضاف إلى كارت ذكرياته يومياً.
               <br />
-              <span className="font-bold text-amber-800">
+              <span className="font-bold text-[#8C6B47]">
                 متبقي تقريباً {remainingCooldownHours} ساعة لتتمكن من إضافة لقطة زيارتك القادمة.
               </span>
             </p>
@@ -696,13 +689,13 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             )}
 
             {/* Barista Order Shots & Override Option */}
-            <div className="p-5 bg-gradient-to-br from-amber-50/80 to-orange-50/60 rounded-3xl border-2 border-amber-200/80 text-xs text-stone-800 mb-6 shadow-sm">
-              <div className="flex items-center justify-center gap-2 font-black text-stone-900 text-sm mb-1.5">
-                <Coffee className="w-5 h-5 text-amber-600" />
-                <span>طلبت أوردرات أو مشروبات إضافية؟ ☕</span>
+            <div className="p-5 bg-[#FAF6EE] rounded-3xl border border-[#E6DDD0] text-xs text-[#635345] mb-6">
+              <div className="flex items-center justify-center gap-2 font-black text-[#1C130D] text-sm mb-1.5">
+                <Coffee className="w-4 h-4 text-[#8C6B47]" />
+                <span>طلبات إضافية؟ ✦</span>
               </div>
-              <p className="text-xs text-stone-600 mb-4 leading-relaxed">
-                كل أوردر إضافي يمنحك لقطة جديدة تملأ بها كارت ذكرياتك وتصل لهديتك أسرع!
+              <p className="text-xs text-[#635345] mb-4 leading-relaxed">
+                كل طلب إضافي يمنحك لقطة جديدة تملأ بها كارت ذكرياتك وتصل لهديتك أسرع.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
@@ -712,10 +705,10 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                     setPinError(null);
                     setIsBaristaPinModalOpen(true);
                   }}
-                  className="px-5 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-[0.98]"
+                  className="px-5 py-2.5 rounded-xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-[0.98]"
                 >
-                  <ShieldCheck className="w-4 h-4 text-amber-200" />
-                  <span>شحن صور الأوردر بـ PIN الباريستا</span>
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#C59A6F]" />
+                  <span>إضافة لقطة عبر كود الباريستا</span>
                 </button>
 
                 <button
@@ -728,9 +721,9 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                       setExtraShots(access.extraShotsAvailable);
                     }
                   }}
-                  className="px-4 py-3 rounded-2xl bg-white hover:bg-stone-50 text-stone-700 font-bold text-xs border border-stone-300 flex items-center justify-center gap-2 transition"
+                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-stone-50 text-[#1C130D] font-bold text-xs border border-[#D9CEBF] flex items-center justify-center gap-2 transition"
                 >
-                  <span>تحديث بعد شحن الكاشير</span>
+                  <span>تحديث الحالة</span>
                 </button>
               </div>
             </div>
@@ -738,26 +731,10 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
               <button
                 type="button"
-                onClick={() => {
-                  const clean = customerPhone.trim().replace(/[^0-9]/g, '');
-                  const access = CooldownService.checkAccess(clean || deviceId, cafeSlug);
-                  if (access.allowed) {
-                    setIsLockedByCooldown(false);
-                    setExtraShots(access.extraShotsAvailable);
-                  }
-                }}
-                className="px-6 py-3 rounded-2xl bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md transition"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
-                <span>فحص حالة الإذن الآن</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={handleSwitchCustomer}
-                className="px-5 py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                className="px-5 py-2.5 rounded-xl bg-[#F4EDE2] hover:bg-[#EAE1D3] text-[#1C130D] text-xs font-bold flex items-center justify-center gap-1.5 transition"
               >
-                <span>تسجيل رقم زائر آخر 🔄</span>
+                <span>تسجيل رقم هاتف آخر</span>
               </button>
             </div>
           </div>
@@ -814,10 +791,10 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
               <div className="w-full animate-in fade-in">
                 <div className="text-center mb-4">
                   <h2 className="text-xl font-black text-stone-900">
-                    التقط صورة زيارة اليوم 📸
+                    وثّق لحظة زيارة اليوم ✦
                   </h2>
                   <p className="text-xs text-stone-500 mt-1">
-                    لكل زيارة صورة واحدة تملأ خانة في كارت ولائك وتنقلك خطوة نحو الهدية
+                    لكل زيارة لقطة استوديو حية تملأ خانة في كارت ولائك وتقربك من هديتك الفورية
                   </p>
                 </div>
 
@@ -825,6 +802,15 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   onCaptureComplete={handleCaptureComplete}
                   brandName={settings.branding.name}
                   visitNumber={accumulatedPhotos.length + 1}
+                  aspectRatioGuide={
+                    selectedFrame.layoutType === 'wide_duo_2cut'
+                      ? '4:3'
+                      : selectedFrame.layoutType === 'cinema_horizontal'
+                      ? '16:9'
+                      : selectedFrame.layoutType === 'polaroid_square'
+                      ? '1:1'
+                      : '3:4'
+                  }
                 />
               </div>
             ) : (
@@ -872,9 +858,31 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                           type="button"
                           onClick={() => {
                             setCardMode(mode.id);
+                            const matchingTemplate = PHOTOBOOTH_FRAME_TEMPLATES.find(
+                              (t: any) => t.id === mode.id || t.layoutType === (mode.id as any)
+                            );
                             setSelectedFrame((prev) => ({
                               ...prev,
                               cardMode: mode.id,
+                              layoutType:
+                                matchingTemplate?.layoutType ||
+                                (mode.id === 'wide_duo_2cut'
+                                  ? 'wide_duo_2cut'
+                                  : mode.id === 'cinema_horizontal'
+                                  ? 'cinema_horizontal'
+                                  : mode.id === 'polaroid_classic'
+                                  ? 'polaroid_square'
+                                  : mode.id === 'kinfolk_minimal'
+                                  ? 'kinfolk_minimal'
+                                  : mode.id === 'arabica_monochrome'
+                                  ? 'arabica_monochrome'
+                                  : mode.id === 'retro_film'
+                                  ? 'film_35mm'
+                                  : prev.layoutType),
+                              shotCount: matchingTemplate?.shotCount || prev.shotCount,
+                              orientation: matchingTemplate?.orientation || prev.orientation,
+                              widthCm: mode.widthCm || matchingTemplate?.widthCm || prev.widthCm,
+                              heightCm: mode.heightCm || matchingTemplate?.heightCm || prev.heightCm,
                               bgColor: mode.defaultBg,
                               borderColor: mode.defaultBorder,
                               textColor: mode.defaultText,

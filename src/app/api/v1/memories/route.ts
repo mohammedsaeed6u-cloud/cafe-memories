@@ -19,6 +19,48 @@ const createMemoryRequestSchema = z.object({
   }),
 });
 
+const updateMemoryStatusSchema = z.object({
+  memoryId: z.string().uuid(),
+  status: z.enum(['pending', 'approved', 'rejected', 'hidden', 'deleted']),
+  actorId: z.string().optional(),
+});
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const branchId = searchParams.get('branchId');
+    const organizationId = searchParams.get('organizationId');
+    const status = searchParams.get('status');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
+
+    const supabase = createAdminClient();
+    let query = supabase
+      .from('memories')
+      .select('*, customers(display_name, avatar_url)')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (branchId) query = query.eq('branch_id', branchId);
+    if (organizationId) query = query.eq('organization_id', organizationId);
+    if (status) query = query.eq('status', status);
+
+    const { data: memories, error, count } = await query;
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to fetch memories', details: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      memories: memories || [],
+      count: count || (memories ? memories.length : 0),
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.json();
@@ -82,6 +124,41 @@ export async function POST(request: NextRequest) {
         visibility: memory.visibility,
         createdAt: memory.created_at,
       },
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const rawBody = await request.json();
+    const parsed = updateMemoryStatusSchema.safeParse(rawBody);
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
+    }
+
+    const { memoryId, status, actorId } = parsed.data;
+    const supabase = createAdminClient();
+
+    const { data: updatedMemory, error } = await supabase
+      .from('memories')
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', memoryId)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to update memory status', details: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      memory: updatedMemory,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });

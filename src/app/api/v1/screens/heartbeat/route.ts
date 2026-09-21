@@ -3,8 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
 const heartbeatSchema = z.object({
-  screenId: z.string().uuid(),
-  currentMemoryId: z.string().uuid().optional().nullable(),
+  screenId: z.string().min(1),
+  currentMemoryId: z.string().optional().nullable(),
   batteryLevel: z.number().min(0).max(100).optional().nullable(),
 });
 

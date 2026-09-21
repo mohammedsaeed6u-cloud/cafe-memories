@@ -177,8 +177,14 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
 
     const newMode: PhotoboothCardMode =
       templateId === 'retro_film_35mm' ? 'retro_film' :
-      templateId === 'polaroid_classic' || templateId === 'polaroid_wide' ? 'polaroid_classic' :
-      templateId === 'classic_latte_2x6' ? 'cafe_latte' : 'korean_noir';
+      templateId === 'polaroid_classic' ? 'polaroid_classic' :
+      templateId === 'classic_latte_2x6' ? 'cafe_latte' :
+      templateId === 'wide_duo_2cut' ? 'wide_duo_2cut' :
+      templateId === 'kinfolk_minimal_2x6' ? 'kinfolk_minimal' :
+      templateId === 'cinema_strip_6x2' ? 'cinema_horizontal' :
+      templateId === 'tokyo_pastel_2x6' ? 'tokyo_pastel' :
+      templateId === 'arabica_monochrome_2x6' ? 'arabica_monochrome' :
+      'korean_noir';
 
     setCardMode(newMode);
 
@@ -188,6 +194,8 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
       layoutType: tmpl.layoutType,
       shotCount: tmpl.shotCount,
       orientation: tmpl.orientation,
+      widthCm: tmpl.widthCm,
+      heightCm: tmpl.heightCm,
       cardMode: newMode,
       bgColor: tmpl.defaultBg,
       borderColor: tmpl.defaultBorder,

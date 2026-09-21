@@ -26,7 +26,12 @@ export type PhotoboothCardMode =
   | 'cafe_latte'
   | 'retro_film'
   | 'sakura_y2k'
-  | 'polaroid_classic';
+  | 'polaroid_classic'
+  | 'wide_duo_2cut'
+  | 'kinfolk_minimal'
+  | 'cinema_horizontal'
+  | 'arabica_monochrome'
+  | 'tokyo_pastel';
 
 export interface PlacedSticker {
   id: string;
@@ -57,9 +62,11 @@ export type PhotoboothLayoutType =
   | 'polaroid_square'   // 3.5x4.2 in (8.8x10.7 cm) - 1 square cut with chin
   | 'polaroid_wide'     // 4.2x3.5 in (10.7x8.8 cm) - 1 wide cut with chin
   | 'cinema_horizontal' // 6x2 in (15x5 cm) - 3 widescreen cuts
-  | 'film_35mm'
+  | 'film_35mm'         // 2x6 in (5x15 cm) - 4 cuts with 35mm sprocket holes
   | 'wide_duo_2cut'    // 4x3 in (10x7.6 cm) - Wide short card with 2 photos side by side
-  | 'wide_duo_4cut';   // 4x3.5 in - Wide compact card with 4 photos (2x2)        // 2x6 in (5x15 cm) - 4 cuts with 35mm sprocket holes
+  | 'wide_duo_4cut'    // 4x3.5 in - Wide compact card with 4 photos (2x2)
+  | 'kinfolk_minimal'   // 2x6 in - 3 cuts with wide negative space
+  | 'arabica_monochrome'; // 2x6 in - stark monochrome typography
 
 export interface PhotoboothFrameTemplate {
   id: string;
@@ -67,6 +74,8 @@ export interface PhotoboothFrameTemplate {
   nameAr: string;
   dimensions: string;
   dimensionsCm: string;
+  widthCm?: number;
+  heightCm?: number;
   orientation: StripOrientation;
   shotCount: number;
   layoutType: PhotoboothLayoutType;
@@ -96,6 +105,8 @@ export interface PhotoboothFrame {
   badgeText?: string;
   templateId?: string;
   layoutType?: PhotoboothLayoutType;
+  widthCm?: number;
+  heightCm?: number;
   isCustom?: boolean;
 }
 
@@ -116,6 +127,8 @@ export interface BusinessSettings {
   defaultFrameShape?: FrameShapeStyle; // Rounded, sharp, or polaroid
   defaultCardMode?: PhotoboothCardMode;
   defaultTemplateId?: string;
+  defaultWidthCm?: number;
+  defaultHeightCm?: number;
   defaultLayoutType?: PhotoboothLayoutType; // Korean, Latte, Film, Sakura, Polaroid
   freeGiftOffer: FreeGiftOffer;
   activeFrameId: string;

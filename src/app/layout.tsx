@@ -1,13 +1,25 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Cairo, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-cairo',
+  display: 'swap',
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'Memories • موميريز',
-  description: 'منظومة كبائن التصوير والذكريات وبطاقات الولاء والهدايا الفورية',
+  title: 'Memories • The Loyalty & Live Wall Layer for Specialty Cafés',
+  description: 'منظومة كبائن التصوير والذكريات وشاشات العرض الحية وبطاقات الولاء لكافيهات السبيشالتي',
 };
 
 export default function RootLayout({
@@ -16,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={cn('min-h-screen bg-background font-sans antialiased', inter.variable)}>
+    <html lang="ar" dir="rtl" suppressHydrationWarning className={cn(cairo.variable, plusJakarta.variable)}>
+      <body className="min-h-screen bg-white text-stone-900 font-cairo antialiased selection:bg-amber-500/20 selection:text-amber-900">
         {children}
       </body>
     </html>

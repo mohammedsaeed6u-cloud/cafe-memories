@@ -161,7 +161,41 @@ export function WallClient({ screenId }: { screenId: string }) {
 
   useEffect(() => {
     syncLiveFeed();
-    const interval = setInterval(syncLiveFeed, 15000); // Poll every 15s
+    const interval = setInterval(syncLiveFeed, 15000); // Poll fallback every 15s
+
+    // 1. Supabase Realtime subscription
+    let channel: any = null;
+    try {
+      const supabase = createClient();
+      channel = supabase
+        .channel(`wall-realtime-${screenId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'memories' },
+          () => {
+            syncLiveFeed();
+          }
+        )
+        .subscribe();
+    } catch (err) {
+      console.warn('Realtime subscription fallback', err);
+    }
+
+    // 2. Periodic screen heartbeat
+    const sendHeartbeat = async () => {
+      try {
+        await fetch('/api/v1/screens/heartbeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            screenId,
+            batteryLevel: 100,
+          }),
+        });
+      } catch {}
+    };
+    sendHeartbeat();
+    const heartbeatInterval = setInterval(sendHeartbeat, 30000);
 
     const handleLocalUpdate = () => syncLiveFeed();
     window.addEventListener('memories-wall-updated', handleLocalUpdate);
@@ -169,10 +203,17 @@ export function WallClient({ screenId }: { screenId: string }) {
 
     return () => {
       clearInterval(interval);
+      clearInterval(heartbeatInterval);
+      if (channel) {
+        try {
+          const supabase = createClient();
+          supabase.removeChannel(channel);
+        } catch {}
+      }
       window.removeEventListener('memories-wall-updated', handleLocalUpdate);
       window.removeEventListener('storage', handleLocalUpdate);
     };
-  }, [syncLiveFeed]);
+  }, [syncLiveFeed, screenId]);
 
   // Slideshow timer using merchant's chosen interval
   useEffect(() => {
@@ -364,30 +405,30 @@ export function WallClient({ screenId }: { screenId: string }) {
                       : 'border-stone-200/90 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] opacity-90 hover:opacity-100 z-10'
                   }`}
                 >
-                  {/* Pushpin / Tape Realistic Graphic */}
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-red-600 to-rose-400 text-white shadow-[0_4px_8px_rgba(0,0,0,0.4)] border-2 border-white/80 flex items-center justify-center text-[10px] font-bold">
-                      📌
-                    </div>
-                  </div>
+          {/* Pushpin / Brass Pin Realistic Graphic */}
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-700 via-amber-500 to-amber-300 shadow-[0_3px_8px_rgba(0,0,0,0.5)] border border-amber-200/90 flex items-center justify-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-stone-900/90" />
+            </div>
+          </div>
 
-                  {/* Strip Header */}
-                  <div className="flex items-center justify-between border-b border-stone-200 pb-2 mb-3 mt-1">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-[11px]">
-                        {memory.customer.slice(0, 2)}
-                      </div>
-                      <p className="text-xs font-bold text-stone-900 leading-tight">
-                        {memory.customer}
-                      </p>
-                    </div>
+          {/* Strip Header */}
+          <div className="flex items-center justify-between border-b border-stone-200 pb-2 mb-3 mt-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-[11px]">
+                {memory.customer.slice(0, 2)}
+              </div>
+              <p className="text-xs font-bold text-stone-900 leading-tight">
+                {memory.customer}
+              </p>
+            </div>
 
-                    {isSpotlight && (
-                      <span className="text-[10px] font-black text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full animate-pulse">
-                        ✨ اللقطة الآن
-                      </span>
-                    )}
-                  </div>
+            {isSpotlight && (
+              <span className="text-[10px] font-black text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full animate-pulse">
+                ✦ اللقطة الحالية
+              </span>
+            )}
+          </div>
 
                   {/* Strip Photos */}
                   <div className="space-y-2">
