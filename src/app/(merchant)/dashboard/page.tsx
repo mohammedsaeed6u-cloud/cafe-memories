@@ -7,6 +7,9 @@ import { FrameStudioTab } from '@/components/dashboard/FrameStudioTab';
 import { CustomerCRMTab, CustomerVisitRecord } from '@/components/dashboard/CustomerCRMTab';
 import { PrintStationTab } from '@/components/dashboard/PrintStationTab';
 import { TVModerationTab } from '@/components/dashboard/TVModerationTab';
+import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
+import { getActiveStaff } from '@/lib/services/staff-auth.service';
+import { type StaffMember } from '@/types/staff';
 import {
   Sparkles,
   Users,
@@ -15,6 +18,7 @@ import {
   Monitor,
   ExternalLink,
   Store,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function MerchantDashboardPage() {
@@ -27,6 +31,8 @@ export default function MerchantDashboardPage() {
   const [activeTab, setActiveTab] = useState<'crm' | 'studio' | 'print' | 'wall'>('studio');
   const [customers, setCustomers] = useState<CustomerVisitRecord[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
+  const [activeStaff, setActiveStaff] = useState<StaffMember | null>(null);
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
   // Load customer data from API
   useEffect(() => {
@@ -120,6 +126,16 @@ export default function MerchantDashboardPage() {
     return () => window.removeEventListener('memories-settings-updated', handleUpdate);
   }, []);
 
+  // Sync active barista / staff session
+  useEffect(() => {
+    setActiveStaff(getActiveStaff());
+    const handleStaffChange = () => {
+      setActiveStaff(getActiveStaff());
+    };
+    window.addEventListener('memories-active-staff-changed', handleStaffChange);
+    return () => window.removeEventListener('memories-active-staff-changed', handleStaffChange);
+  }, []);
+
   // Export CSV
   const handleExportCsv = () => {
     window.open('/api/v1/crm/customers?format=csv', '_blank');
@@ -158,6 +174,25 @@ export default function MerchantDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Quick Staff PIN Switcher */}
+            <button
+              onClick={() => setIsStaffModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold flex items-center gap-2 transition cursor-pointer"
+              title="تبديل الباريستا بالـ PIN السريع"
+            >
+              {activeStaff?.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={activeStaff.avatarUrl}
+                  alt={activeStaff.name}
+                  className="w-5 h-5 rounded-full border border-amber-300 object-cover"
+                />
+              ) : (
+                <ShieldCheck className="w-4 h-4 text-amber-600" />
+              )}
+              <span>{activeStaff ? `${activeStaff.name} (${activeStaff.role})` : 'تبديل الشفت (PIN)'}</span>
+            </button>
+
             <a
               href={`/c/${cafeSlug}`}
               target="_blank"
@@ -265,6 +300,16 @@ export default function MerchantDashboardPage() {
           />
         )}
       </main>
+
+      {/* Staff Quick PIN Modal */}
+      <StaffPinModal
+        open={isStaffModalOpen}
+        onClose={() => setIsStaffModalOpen(false)}
+        onSuccess={(staff) => {
+          setActiveStaff(staff);
+          setIsStaffModalOpen(false);
+        }}
+      />
     </div>
   );
 }
