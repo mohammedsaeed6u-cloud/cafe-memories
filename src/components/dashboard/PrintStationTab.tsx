@@ -238,6 +238,17 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                       <h4 className="font-bold text-stone-900 text-sm truncate">
                         {item.name}
                       </h4>
+                      {item.totalVisits && item.totalVisits >= 5 ? (
+                        <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-400 to-amber-600 text-stone-950 font-black text-[9px] shadow-xs flex items-center gap-1 shrink-0">
+                          <span>👑</span>
+                          <span>VIP ذهبي (#{item.totalVisits})</span>
+                        </span>
+                      ) : item.totalVisits && item.totalVisits >= 3 ? (
+                        <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-[9px] border border-amber-300 flex items-center gap-1 shrink-0">
+                          <span>⭐</span>
+                          <span>مميز (#{item.totalVisits})</span>
+                        </span>
+                      ) : null}
                     </div>
 
                     <p className="text-[11px] text-stone-500 font-mono mt-0.5">

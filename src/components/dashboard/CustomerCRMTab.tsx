@@ -312,9 +312,21 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
                     {/* Visits & Linked Strip Preview */}
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-stone-800">
-                          {customer.totalVisits} زيارة
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-stone-800">
+                            {customer.totalVisits} زيارة
+                          </span>
+                          {customer.totalVisits >= 5 ? (
+                            <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-400 to-amber-600 text-stone-950 font-black text-[9px] shadow-xs flex items-center gap-0.5">
+                              <span>👑</span>
+                              <span>VIP ذهبي</span>
+                            </span>
+                          ) : customer.totalVisits >= 3 ? (
+                            <span className="px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200 text-[9px] font-bold">
+                              ⭐ مميز
+                            </span>
+                          ) : null}
+                        </div>
 
                         {customer.photoStripUrl ? (
                           <button
