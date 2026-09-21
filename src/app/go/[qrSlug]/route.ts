@@ -1,3 +1,7 @@
+export function generateStaticParams() {
+  return [{ qrSlug: 'table-01' }, { qrSlug: 'counter' }, { qrSlug: 'main' }];
+}
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 

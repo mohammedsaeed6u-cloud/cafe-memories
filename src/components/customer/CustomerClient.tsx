@@ -103,7 +103,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [customerProfession, setCustomerProfession] = useState('');
 
   // Check if current customer is identified in this session
-  const [isSessionStarted, setIsSessionStarted] = useState(false);
+  const [isSessionStarted, setIsSessionStarted] = useState(true);
 
   // Photobooth state: Customer's accumulated photos on their card
   const [accumulatedPhotos, setAccumulatedPhotos] = useState<string[]>([]);
@@ -613,107 +613,38 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
       {/* Main Container */}
       <main className="w-full max-w-xl mx-auto p-4 sm:p-6 flex-1 flex flex-col items-center">
-        {/* Step 0: Customer Intake & Isolation First */}
-        {!isSessionStarted ? (
-          <div className="w-full bg-white rounded-3xl p-6 sm:p-8 border border-[#E6DDD0] shadow-xl text-[#1C130D] my-auto animate-in fade-in">
-            <div className="w-14 h-14 rounded-2xl bg-[#F4EDE2] text-[#8C6B47] flex items-center justify-center mx-auto mb-4">
-              <Camera className="w-7 h-7 text-[#1C130D]" />
+        {/* Guest vs Registered Customer Subtle Identity Strip */}
+        {customerPhone.trim().length >= 8 ? (
+          <div className="w-full bg-[#FAF6EE] border border-[#D9CEBF] rounded-2xl p-2.5 px-4 mb-4 flex items-center justify-between text-xs animate-in fade-in shadow-2xs">
+            <div className="flex items-center gap-2 text-[#1C130D]">
+              <UserCheck className="w-4 h-4 text-[#8C6B47]" />
+              <span className="font-bold">مرحباً {customerName || 'صديق المكان'} ({customerPhone})</span>
             </div>
-
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-black text-[#1C130D] mb-1.5">
-                كارت ذكرياتك وهديتك الفورية
-              </h2>
-              <p className="text-xs sm:text-sm text-[#635345] leading-relaxed max-w-sm mx-auto">
-                سجل رقم هاتفك لفتح كارتك الخاص ومتابعة لقطاتك ومكافآتك في كل زيارة.
-              </p>
-            </div>
-
-            <form onSubmit={handleStartCustomerSession} className="space-y-4 max-w-md mx-auto">
-              <div>
-                <label className="block text-xs font-bold text-[#1C130D] mb-1.5 text-right">
-                  رقم الهاتف
-                </label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="01012345678"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-[#D9CEBF] focus:border-[#1C130D] focus:ring-2 focus:ring-[#C59A6F]/20 focus:outline-none font-mono text-base text-left bg-[#FDFBF7] transition"
-                  dir="ltr"
-                  autoFocus
-                />
-              </div>
-
-              {recognizedCustomer ? (
-                /* 1. Existing Registered Customer: Direct 1-Click Auto-Login */
-                <div className="p-4 bg-[#FAF6EE] rounded-2xl border border-[#D9CEBF] text-center animate-in fade-in space-y-2.5">
-                  <div className="flex items-center justify-center gap-2">
-                    <UserCheck className="w-4 h-4 text-[#8C6B47]" />
-                    <p className="text-sm font-black text-[#1C130D]">
-                      أهلاً بك مجدداً، {recognizedCustomer.name} ✦ كارتك جاهز
-                    </p>
-                  </div>
-                  <p className="text-xs text-[#635345]">
-                    تم العثور على {recognizedCustomer.photos?.length || 0} لقطات سابقة في كارتك
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => handleStartCustomerSession(undefined, recognizedCustomer.name)}
-                    className="w-full py-3.5 px-6 rounded-2xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] font-bold text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-[0.98]"
-                  >
-                    <span>دخول مباشر والتقاط صورة اليوم</span>
-                    <ArrowRight className="w-4 h-4 text-[#C59A6F] rotate-180" />
-                  </button>
-                </div>
-              ) : showNameInput || customerPhone.trim().length >= 8 ? (
-                /* 2. New Customer: Enter Name once */
-                <div className="animate-in fade-in space-y-3">
-                  <div>
-                    <label className="block text-xs font-bold text-[#1C130D] mb-1.5 text-right">
-                      الاسم الكريم
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="مثال: أحمد سامي"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border border-[#D9CEBF] focus:border-[#1C130D] focus:ring-2 focus:ring-[#C59A6F]/20 focus:outline-none text-base text-right bg-[#FDFBF7] transition"
-                      autoFocus
-                    />
-                  </div>
-
-                  <div className="pt-1">
-                    <button
-                      type="submit"
-                      className="w-full py-3.5 px-6 rounded-2xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] font-bold text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-[0.98]"
-                    >
-                      <span>فتح كارت الذكريات ✦</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* 3. Initial state before phone completion */
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 px-6 rounded-2xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] font-bold text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-[0.98]"
-                  >
-                    <span>متابعة</span>
-                    <ArrowRight className="w-4 h-4 text-[#C59A6F] rotate-180" />
-                  </button>
-                </div>
-              )}
-
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#8C7A6B] pt-1 font-medium">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#8C6B47]" />
-                <span>بياناتك وصورك محفوظة بأعلى معايير الخصوصية</span>
-              </div>
-            </form>
+            <button
+              type="button"
+              onClick={handleSwitchCustomer}
+              className="text-[#8C6B47] hover:text-[#1C130D] text-[11px] font-bold underline transition"
+            >
+              تسجيل حساب آخر
+            </button>
           </div>
-        ) : isLockedByCooldown && !todayPhoto ? (
+        ) : (
+          <div className="w-full bg-gradient-to-r from-[#FAF6EE] to-white border border-[#E6DDD0] rounded-2xl p-2.5 px-4 mb-4 flex items-center justify-between text-xs animate-in fade-in shadow-2xs">
+            <div className="flex items-center gap-2 text-[#635345]">
+              <Sparkles className="w-4 h-4 text-[#8C6B47]" />
+              <span>تتصفح كضيف ✦ التقط صورتك مباشرة أو احفظ كارتك برقمك</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsLeadModalOpen(true)}
+              className="px-3 py-1 rounded-xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] text-[11px] font-bold shadow-xs transition"
+            >
+              ربط رقمي
+            </button>
+          </div>
+        )}
+
+        {isLockedByCooldown && !todayPhoto ? (
           <div className="w-full bg-white rounded-3xl p-8 border border-[#E6DDD0] shadow-xl text-center my-auto animate-in fade-in">
             <div className="w-14 h-14 rounded-full bg-[#F4EDE2] text-[#8C6B47] mx-auto flex items-center justify-center mb-4">
               <Clock className="w-7 h-7 text-[#1C130D]" />

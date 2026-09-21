@@ -1,3 +1,7 @@
+export function generateStaticParams() {
+  return [{ slug: 'table-01' }, { slug: 'counter' }, { slug: 'main' }];
+}
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 

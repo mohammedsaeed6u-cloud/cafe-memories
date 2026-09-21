@@ -3,17 +3,14 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
 const updateConsentSchema = z.object({
+  memoryId: z.string().uuid(),
   liveWallConsent: z.boolean().optional(),
   socialShareConsent: z.boolean().optional(),
   marketingConsent: z.boolean().optional(),
 });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest) {
   try {
-    const { id: memoryId } = await params;
     const rawBody = await request.json();
     const parsed = updateConsentSchema.safeParse(rawBody);
 
@@ -21,10 +18,9 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
     }
 
-    const { liveWallConsent, socialShareConsent, marketingConsent } = parsed.data;
+    const { memoryId, liveWallConsent, socialShareConsent, marketingConsent } = parsed.data;
     const supabase = createAdminClient();
 
-    // 1. Update memory_consents record
     const updates: any = {};
     if (liveWallConsent !== undefined) updates.live_wall_consent = liveWallConsent;
     if (socialShareConsent !== undefined) updates.social_share_consent = socialShareConsent;
@@ -41,7 +37,6 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update consent', details: consentError.message }, { status: 500 });
     }
 
-    // 2. If Live Wall consent is false, immediately set memory visibility to private
     if (liveWallConsent === false) {
       await supabase
         .from('memories')

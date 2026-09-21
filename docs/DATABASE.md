@@ -295,6 +295,112 @@ CREATE TABLE playlist_items (
 #### `campaigns`, `reports`, `moderation_actions`, `audit_logs`, `subscriptions`, `feature_flags`, `share_events`, `notifications`
 Complete administrative tables supporting enterprise compliance, multi-tenant billing, and telemetry.
 
+### 2.7. Product Realignment Schema & Stored Procedures (Migration 00002)
+
+#### `screen_pairing_codes`
+Manages secure temporary 6-digit numeric pairing codes with a 10-minute time-to-live and brute-force attempt limits:
+```sql
+CREATE TABLE screen_pairing_codes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(6) NOT NULL,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    branch_id UUID NOT NULL REFERENCES branches(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '10 minutes'),
+    is_used BOOLEAN NOT NULL DEFAULT false,
+    used_at TIMESTAMPTZ,
+    used_by_device_id VARCHAR(128),
+    attempts INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_screen_pairing_lookup 
+ON screen_pairing_codes (code, expires_at) 
+WHERE is_used = false;
+```
+
+#### Atomic Stored Procedure: `redeem_customer_reward()`
+Guarantees transactional integrity and prevents double-spending of customer rewards:
+```sql
+CREATE OR REPLACE FUNCTION redeem_customer_reward(
+    p_customer_id UUID,
+    p_organization_id UUID,
+    p_branch_id UUID,
+    p_rule_id UUID,
+    p_idempotency_key VARCHAR
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_verified_visits INT;
+    v_past_redemptions INT;
+    v_threshold INT;
+    v_event_id UUID;
+BEGIN
+    SELECT threshold INTO v_threshold FROM reward_rules WHERE id = p_rule_id;
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Reward rule not found');
+    END IF;
+
+    SELECT COUNT(*) INTO v_verified_visits
+    FROM visits
+    WHERE customer_id = p_customer_id AND organization_id = p_organization_id;
+
+    SELECT COUNT(*) INTO v_past_redemptions
+    FROM reward_events
+    WHERE customer_id = p_customer_id 
+      AND reference_id = p_rule_id 
+      AND type = 'reward_redeemed';
+
+    IF (v_verified_visits / v_threshold) <= v_past_redemptions THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Insufficient visits for reward');
+    END IF;
+
+    INSERT INTO reward_events (
+        customer_id, organization_id, branch_id, type, value, reference_type, reference_id, idempotency_key
+    ) VALUES (
+        p_customer_id, p_organization_id, p_branch_id, 'reward_redeemed', 1, 'reward_rule', p_rule_id, p_idempotency_key
+    )
+    RETURNING id INTO v_event_id;
+
+    RETURN jsonb_build_object('success', true, 'event_id', v_event_id, 'redeemed_at', now());
+END;
+$$;
+```
+
+#### Instant Consent Cascading Trigger: `handle_consent_revocation()`
+Ensures GDPR/privacy compliance: when a customer toggles off Live Wall consent, their memory visibility drops immediately to `private`:
+```sql
+CREATE OR REPLACE FUNCTION handle_consent_revocation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    IF (OLD.live_wall_consent = true AND NEW.live_wall_consent = false) THEN
+        UPDATE memories
+        SET visibility = 'private', updated_at = now()
+        WHERE id = NEW.memory_id;
+
+        INSERT INTO audit_logs (
+            organization_id, action, target_type, target_id, details
+        ) VALUES (
+            (SELECT organization_id FROM memories WHERE id = NEW.memory_id),
+            'consent_revoked_live_wall', 'memory', NEW.memory_id,
+            jsonb_build_object('revoked_at', now(), 'actor', 'customer')
+        );
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_consent_revoked
+AFTER UPDATE ON memory_consents
+FOR EACH ROW
+EXECUTE FUNCTION handle_consent_revocation();
+```
+
 ---
 
 ## 3. High-Performance Indexing Strategy (1M+ Users)
