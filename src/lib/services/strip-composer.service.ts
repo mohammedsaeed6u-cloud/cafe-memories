@@ -63,18 +63,29 @@ export class StripComposerService {
     const effectiveAccent = frame.accentColor || modeInfo.defaultAccent;
 
     const isKorean = cardMode === 'korean_noir';
-    const isRetro = cardMode === 'retro_film';
-    const isPolaroid = cardMode === 'polaroid_classic';
+    const isRetro = cardMode === 'retro_film' || cardMode === 'film_35mm';
+    const isPolaroid = cardMode === 'polaroid_classic' || cardMode === 'polaroid_vintage' || frame.frameShape === 'polaroid';
+    const isTokyo = cardMode === 'tokyo_pastel';
+    const isKinfolk = cardMode === 'kinfolk_minimal';
+    const isArabicaGold = cardMode === 'arabica_luxury_gold';
 
     // 1. Draw frame background
     ctx.fillStyle = effectiveBg;
     ctx.fillRect(0, 0, width, height);
 
     // Outer subtle border
-    ctx.strokeStyle = effectiveBorder;
-    ctx.lineWidth = 6;
+    ctx.strokeStyle = isArabicaGold ? '#D4AF37' : effectiveBorder;
+    ctx.lineWidth = isArabicaGold ? 8 : 6;
     this.roundRect(ctx, 16, 16, width - 32, height - 32, isPolaroid ? 16 : 28);
     ctx.stroke();
+
+    if (isArabicaGold) {
+      // Inner luxury gold filigree line
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
+      ctx.lineWidth = 2;
+      this.roundRect(ctx, 24, 24, width - 48, height - 48, 22);
+      ctx.stroke();
+    }
 
     // Retro 35mm Sprocket Holes on side margins
     if (isRetro) {
@@ -315,11 +326,14 @@ export class StripComposerService {
 
     // 8. Draw Clean Minimal Footer (Date & Brand Name & Barcode)
     const footerY = height - 42;
-    const dateStr = new Date(timestamp).toLocaleDateString('ar-EG', {
+    const dateObj = new Date(timestamp);
+    const dateStr = dateObj.toLocaleDateString('ar-EG', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
+    const shortYear = String(dateObj.getFullYear()).slice(-2);
+    const tokyoStampDate = `'${shortYear} ${String(dateObj.getMonth() + 1).padStart(2, '0')} ${String(dateObj.getDate()).padStart(2, '0')}`;
 
     // Barcode on footer for Korean / Retro modes
     if (isKorean || isRetro) {
@@ -334,18 +348,33 @@ export class StripComposerService {
       }
       ctx.font = '9px monospace';
       ctx.textAlign = 'left';
-      ctx.fillText('4-CUT', curX + 4, barY + 12);
+      ctx.fillText(isKorean ? 'SEOUL 4-CUT' : '35MM DX', curX + 4, barY + 12);
     }
 
     ctx.textAlign = 'center';
     ctx.fillStyle = effectiveText;
-    ctx.font = '13px sans-serif';
-    ctx.fillText(dateStr + ' • ' + (branding.name ? branding.name + ' • Memories' : 'Memories'), width / 2, footerY);
+
+    if (isTokyo) {
+      ctx.font = 'bold 13px monospace';
+      ctx.fillStyle = '#FF6B35';
+      ctx.fillText(tokyoStampDate + ' • ' + (branding.name || 'TOKYO MEMORIES'), width / 2, footerY);
+    } else if (isKinfolk) {
+      ctx.font = 'italic 13px serif';
+      ctx.fillText(`KINFOLK ARCHIVES • ${branding.name || 'A SENSE OF PLACE'}`, width / 2, footerY);
+    } else if (isArabicaGold) {
+      ctx.font = 'bold 12px serif';
+      ctx.fillStyle = '#C5A059';
+      ctx.fillText(`% ARABICA SPECIALTY ROASTERS • ${dateStr}`, width / 2, footerY);
+    } else {
+      ctx.font = '13px sans-serif';
+      ctx.fillText(dateStr + ' • ' + (branding.name ? branding.name + ' • Memories' : 'Memories'), width / 2, footerY);
+    }
 
     if (isPolaroid) {
       ctx.font = 'italic 13px serif';
       ctx.fillStyle = effectiveText;
-      ctx.fillText('memories together ♡', width / 2, footerY + 22);
+      const chinNote = frame.customText || branding.tagline || 'special coffee memory ♡';
+      ctx.fillText(chinNote, width / 2, footerY + 22);
     }
 
     return canvas.toDataURL('image/png', 0.95);

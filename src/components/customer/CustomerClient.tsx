@@ -11,6 +11,8 @@ import { CardColorPicker } from '@/components/photobooth/CardColorPicker';
 import { PrintGiftModal } from '@/components/photobooth/PrintGiftModal';
 import { StripComposerService } from '@/lib/services/strip-composer.service';
 import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
+import { LoyaltyStampCard } from '@/components/customer/LoyaltyStampCard';
+import type { LoyaltyStampSlot } from '@/lib/services/loyalty-stamps';
 import { PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
 import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
 import {
@@ -132,6 +134,9 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [visitCount, setVisitCount] = useState(1);
+  // Loyalty stamp card: server slots (cloud truth) + honest cloud-sync notice
+  const [loyaltySlots, setLoyaltySlots] = useState<LoyaltyStampSlot[]>([]);
+  const [cloudSync, setCloudSync] = useState<'idle' | 'synced' | 'local_only'>('idle');
   const [extraShots, setExtraShots] = useState<number>(0);
   const [isBaristaPinModalOpen, setIsBaristaPinModalOpen] = useState<boolean>(false);
   const [baristaPin, setBaristaPin] = useState<string>('');
@@ -500,9 +505,15 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         if (data.customer?.visitsCount) {
           setVisitCount(data.customer.visitsCount);
         }
+        setCloudSync('synced');
+        // Cloud truth landed — refresh the stamp card from the server.
+        void refreshLoyaltySlots(cleanPhone);
+      } else {
+        setCloudSync('local_only');
       }
     } catch (err) {
-      console.warn('Proceeding locally (static mode)', err);
+      console.warn('Cloud capture failed — card saved on this device only', err);
+      setCloudSync('local_only');
     } finally {
       setIsSubmitting(false);
       setIsLeadModalOpen(false);
@@ -513,6 +524,30 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const currentDisplayPhotos = todayPhoto ? [...accumulatedPhotos, todayPhoto] : accumulatedPhotos;
   const totalCardSlots = Math.max(selectedFrame.shotCount || 3, 1);
   const isCardComplete = currentDisplayPhotos.length >= totalCardSlots;
+
+  // Pull the customer's stamp card from the cloud; silently keeps local fallback.
+  const refreshLoyaltySlots = (phone: string) => {
+    if (!phone || phone.length < 6) return;
+    fetch(`/api/v1/loyalty/stamps?cafeSlug=${encodeURIComponent(cafeSlug)}&phone=${encodeURIComponent(phone)}`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+      .then((data) => {
+        if (Array.isArray(data?.slots)) {
+          setLoyaltySlots(data.slots);
+          if (data.slots.length > 0) setCloudSync('synced');
+        }
+      })
+      .catch(() => {
+        /* offline / static mode — the card renders from local photos */
+      });
+  };
+
+  useEffect(() => {
+    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
+    if (clean.length >= 6 && accumulatedPhotos.length >= 0) {
+      refreshLoyaltySlots(clean);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerPhone]);
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#1C130D] flex flex-col items-center selection:bg-[#C59A6F]/30 selection:text-[#1C130D]">
@@ -700,6 +735,22 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 />
               </div>
             )}
+
+            {/* Loyalty stamp card — every photo = one stamp (cloud truth + local fallback) */}
+            <div className="my-6">
+              <LoyaltyStampCard
+                slots={loyaltySlots}
+                localPhotos={accumulatedPhotos}
+                brandName={settings.branding.name || 'Memories'}
+                customerName={customerName || undefined}
+                onClaimGift={() => setIsPrintGiftModalOpen(true)}
+              />
+              {cloudSync === 'local_only' && (
+                <p className="text-center text-[10px] text-[#8C6B47] mt-2 font-semibold">
+                  ☁︎ اتحفظ على جهازك بس دلوقتي — هيتزامن مع كافيه أول ما النت يرجع
+                </p>
+              )}
+            </div>
 
             {/* Barista Order Shots & Override Option */}
             <div className="p-5 bg-[#FAF6EE] rounded-3xl border border-[#E6DDD0] text-xs text-[#635345] mb-6">

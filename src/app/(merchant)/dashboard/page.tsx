@@ -7,6 +7,7 @@ import { FrameStudioTab } from '@/components/dashboard/FrameStudioTab';
 import { CustomerCRMTab, CustomerVisitRecord } from '@/components/dashboard/CustomerCRMTab';
 import { PrintStationTab } from '@/components/dashboard/PrintStationTab';
 import { TVModerationTab } from '@/components/dashboard/TVModerationTab';
+import { LoyaltyStudioTab } from '@/components/dashboard/LoyaltyStudioTab';
 import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
 import { getActiveStaff } from '@/lib/services/staff-auth.service';
 import { type StaffMember } from '@/types/staff';
@@ -19,6 +20,7 @@ import {
   ExternalLink,
   Store,
   ShieldCheck,
+  CreditCard,
 } from 'lucide-react';
 
 export default function MerchantDashboardPage() {
@@ -28,7 +30,7 @@ export default function MerchantDashboardPage() {
     BusinessSettingsService.getSettings(cafeSlug)
   );
 
-  const [activeTab, setActiveTab] = useState<'crm' | 'studio' | 'print' | 'wall'>('studio');
+  const [activeTab, setActiveTab] = useState<'crm' | 'studio' | 'loyalty' | 'print' | 'wall'>('studio');
   const [customers, setCustomers] = useState<CustomerVisitRecord[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [activeStaff, setActiveStaff] = useState<StaffMember | null>(null);
@@ -232,6 +234,18 @@ export default function MerchantDashboardPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab('loyalty')}
+            className={`py-3 px-4 text-xs font-bold border-b-2 transition flex items-center gap-2 flex-shrink-0 ${
+              activeTab === 'loyalty'
+                ? 'border-amber-600 text-amber-700 font-black'
+                : 'border-transparent text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <CreditCard className="w-4 h-4" />
+            <span>💳 استوديو بطاقات الولاء</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('crm')}
             className={`py-3 px-4 text-xs font-bold border-b-2 transition flex items-center gap-2 flex-shrink-0 ${
               activeTab === 'crm'
@@ -275,6 +289,14 @@ export default function MerchantDashboardPage() {
           <FrameStudioTab
             settings={settings}
             onSettingsUpdated={(newSettings) => setSettings(newSettings)}
+          />
+        )}
+
+        {activeTab === 'loyalty' && (
+          <LoyaltyStudioTab
+            cafeSlug={cafeSlug}
+            brandName={settings.branding.name}
+            brandLogoUrl={settings.branding.logoUrl}
           />
         )}
 

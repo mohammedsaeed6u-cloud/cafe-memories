@@ -25,18 +25,30 @@ export class BusinessSettingsService {
           parsed.defaultOrientation || DEFAULT_BUSINESS_SETTINGS.defaultOrientation;
         const defaultFrameShape =
           parsed.defaultFrameShape || DEFAULT_BUSINESS_SETTINGS.defaultFrameShape || 'rounded';
+        const defaultBorderRadius =
+          parsed.defaultBorderRadius ?? DEFAULT_BUSINESS_SETTINGS.defaultBorderRadius ?? 16;
+        const defaultWidthCm =
+          parsed.defaultWidthCm ?? DEFAULT_BUSINESS_SETTINGS.defaultWidthCm ?? 5;
+        const defaultHeightCm =
+          parsed.defaultHeightCm ?? DEFAULT_BUSINESS_SETTINGS.defaultHeightCm ?? 15.2;
+        const defaultCardMode =
+          parsed.defaultCardMode || DEFAULT_BUSINESS_SETTINGS.defaultCardMode || 'korean_noir';
 
         const rawFrames =
           parsed.frames && parsed.frames.length > 0
             ? parsed.frames
             : DEFAULT_BUSINESS_SETTINGS.frames;
 
-        // Strictly normalize all frames to have the merchant's authoritative shotCount and orientation
+        // Strictly normalize all frames to have the merchant's authoritative properties
         const normalizedFrames = rawFrames.map((f: PhotoboothFrame) => ({
           ...f,
           shotCount: defaultShotCount,
           orientation: defaultOrientation,
           frameShape: defaultFrameShape,
+          borderRadius: f.borderRadius ?? defaultBorderRadius,
+          widthCm: f.widthCm ?? defaultWidthCm,
+          heightCm: f.heightCm ?? defaultHeightCm,
+          cardMode: f.cardMode || defaultCardMode,
         }));
 
         return {
@@ -48,6 +60,11 @@ export class BusinessSettingsService {
           defaultShotCount,
           defaultOrientation,
           defaultFrameShape,
+          defaultBorderRadius,
+          defaultDimensionsPreset: parsed.defaultDimensionsPreset || 'strip_2x6',
+          defaultWidthCm,
+          defaultHeightCm,
+          defaultCardMode,
           frames: normalizedFrames,
           activeColorPaletteId:
             parsed.activeColorPaletteId || DEFAULT_BUSINESS_SETTINGS.activeColorPaletteId,

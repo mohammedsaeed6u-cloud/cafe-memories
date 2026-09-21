@@ -19,7 +19,7 @@ export interface FreeGiftOffer {
   icon: string;
 }
 
-export type FrameShapeStyle = 'rounded' | 'sharp' | 'polaroid';
+export type FrameShapeStyle = 'rounded' | 'sharp' | 'polaroid' | 'pill';
 
 export type PhotoboothCardMode =
   | 'korean_noir'
@@ -31,6 +31,9 @@ export type PhotoboothCardMode =
   | 'kinfolk_minimal'
   | 'cinema_horizontal'
   | 'arabica_monochrome'
+  | 'arabica_luxury_gold'
+  | 'film_35mm'
+  | 'polaroid_vintage'
   | 'tokyo_pastel';
 
 export interface PlacedSticker {
@@ -56,8 +59,10 @@ export type PhotoboothLayoutType =
   | 'strip_4'           // 2x6 in (5x15 cm) - 4 vertical cuts
   | 'strip_3'           // 2x6 in (5x15 cm) - 3 vertical cuts
   | 'strip_2'           // 2x6 in (5x15 cm) - 2 vertical cuts (Double Shot)
+  | 'strip_1'           // 1 vertical cut
   | 'grid_2x2'          // 4x6 in (10x15 cm) - 4 cuts grid (2x2)
   | 'grid_2x3'          // 4x6 in (10x15 cm) - 6 cuts grid (2x3)
+  | 'grid_3x2'          // 4x6 in (10x15 cm) - 6 cuts grid (3x2)
   | 'twin_strip'        // 4x6 in (10x15 cm) - Dual 2x6 strips with cut line
   | 'polaroid_square'   // 3.5x4.2 in (8.8x10.7 cm) - 1 square cut with chin
   | 'polaroid_wide'     // 4.2x3.5 in (10.7x8.8 cm) - 1 wide cut with chin
@@ -66,7 +71,10 @@ export type PhotoboothLayoutType =
   | 'wide_duo_2cut'    // 4x3 in (10x7.6 cm) - Wide short card with 2 photos side by side
   | 'wide_duo_4cut'    // 4x3.5 in - Wide compact card with 4 photos (2x2)
   | 'kinfolk_minimal'   // 2x6 in - 3 cuts with wide negative space
-  | 'arabica_monochrome'; // 2x6 in - stark monochrome typography
+  | 'arabica_monochrome' // 2x6 in - stark monochrome typography
+  | 'arabica_luxury_gold'
+  | 'tokyo_pastel'
+  | 'polaroid_vintage';
 
 export interface PhotoboothFrameTemplate {
   id: string;
@@ -79,6 +87,7 @@ export interface PhotoboothFrameTemplate {
   orientation: StripOrientation;
   shotCount: number;
   layoutType: PhotoboothLayoutType;
+  cardMode?: PhotoboothCardMode;
   description: string;
   badge: string;
   icon: string;
@@ -107,6 +116,8 @@ export interface PhotoboothFrame {
   layoutType?: PhotoboothLayoutType;
   widthCm?: number;
   heightCm?: number;
+  borderRadius?: number | string;
+  customText?: string;
   isCustom?: boolean;
 }
 
@@ -125,6 +136,8 @@ export interface BusinessSettings {
   defaultShotCount: number; // Strictly determined by merchant
   defaultOrientation: StripOrientation; // Strictly determined by merchant
   defaultFrameShape?: FrameShapeStyle; // Rounded, sharp, or polaroid
+  defaultBorderRadius?: number;
+  defaultDimensionsPreset?: string;
   defaultCardMode?: PhotoboothCardMode;
   defaultTemplateId?: string;
   defaultWidthCm?: number;
