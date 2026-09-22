@@ -9,6 +9,12 @@
 
 export const LOYALTY_TOTAL_SLOTS = 10;
 
+/** How long a customer's stamps stay cached in server memory. */
+export const LOYALTY_STAMPS_CACHE_TTL_MS = 30_000;
+
+/** Hard cap on cached customers to keep memory usage bounded. */
+export const LOYALTY_STAMPS_CACHE_MAX_ENTRIES = 500;
+
 export interface LoyaltyStampSlot {
   /** ISO timestamp of when the photo was captured (memory created). */
   takenAt: string;
@@ -90,4 +96,79 @@ export function pickMemoryThumbnail(memory: {
     memory.originalUrl ||
     ''
   );
+}
+
+/* ------------------------------------------------------------------ *
+ * Short-lived in-memory stamp cache
+ * ------------------------------------------------------------------ */
+
+export interface LoyaltyStampsCacheEntry {
+  slots: LoyaltyStampSlot[];
+  /** Absolute expiry timestamp (Date.now() based). */
+  expiresAt: number;
+}
+
+export type LoyaltyStampsCacheStore = Map<string, LoyaltyStampsCacheEntry>;
+
+/** Default process-wide store (inject a fresh Map in tests). */
+const defaultStampsCache: LoyaltyStampsCacheStore = new Map();
+
+/** Cache key for one customer's card within a cafe.
+ * The phone is canonicalized to digits only so that "201234567899" and
+ * "+201234567899" share one entry — callers (stamps route, capture route)
+ * use different phone conventions. */
+export function createStampsCacheKey(cafeSlug: string, phone: string): string {
+  return `${cafeSlug}:${phone.replace(/\D/g, '')}`;
+}
+
+export function getCachedLoyaltyStamps(
+  cafeSlug: string,
+  phone: string,
+  store: LoyaltyStampsCacheStore = defaultStampsCache
+): LoyaltyStampSlot[] | null {
+  const key = createStampsCacheKey(cafeSlug, phone);
+  const hit = store.get(key);
+  if (!hit) return null;
+  if (hit.expiresAt <= Date.now()) {
+    store.delete(key);
+    return null;
+  }
+  return hit.slots;
+}
+
+export function setCachedLoyaltyStamps(
+  cafeSlug: string,
+  phone: string,
+  slots: LoyaltyStampSlot[],
+  store: LoyaltyStampsCacheStore = defaultStampsCache
+): void {
+  const key = createStampsCacheKey(cafeSlug, phone);
+
+  // Keep memory bounded: drop expired entries, then evict oldest insertions.
+  if (store.size >= LOYALTY_STAMPS_CACHE_MAX_ENTRIES) {
+    const now = Date.now();
+    for (const [entryKey, entry] of store) {
+      if (entry.expiresAt <= now) store.delete(entryKey);
+    }
+    while (store.size >= LOYALTY_STAMPS_CACHE_MAX_ENTRIES) {
+      const oldest = store.keys().next();
+      if (oldest.done) break;
+      store.delete(oldest.value);
+    }
+  }
+
+  store.set(key, { slots, expiresAt: Date.now() + LOYALTY_STAMPS_CACHE_TTL_MS });
+}
+
+/**
+ * Explicit invalidation: called by the capture route right after a memory is
+ * recorded, so a fresh capture is never hidden by the cache. The TTL above is
+ * only a safety net for out-of-band writes (dashboard moderation, DB edits).
+ */
+export function invalidateLoyaltyStampsCache(
+  cafeSlug: string,
+  phone: string,
+  store: LoyaltyStampsCacheStore = defaultStampsCache
+): void {
+  store.delete(createStampsCacheKey(cafeSlug, phone));
 }

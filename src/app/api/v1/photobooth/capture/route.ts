@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { invalidateLoyaltyStampsCache } from '@/lib/services/loyalty-stamps';
 import { z } from 'zod';
 
 export const captureSchema = z.object({
@@ -200,6 +201,10 @@ export async function POST(request: NextRequest) {
         .select()
         .single();
       memory = newMemory;
+
+      // Fresh stamp must show up immediately: drop the customer's cached
+      // card so the next stamps read hits the database (TTL is a safety net).
+      if (cafeSlug) invalidateLoyaltyStampsCache(cafeSlug, cleanPhone);
     }
 
     // Generate Instant Free Gift Voucher Code

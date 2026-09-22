@@ -1,4 +1,4 @@
-# Task Specification for Freebuff: Customer Experience Luxury Integration (Dynamic Loyalty Cards & Instant Print)
+# Task Specification for Freebuff: Canvas Card Image Export Service & Test Suite
 
 ## Architectural Lead: Antigravity
 ## Implementation Subagent: Freebuff (GLM-5.3-Flash)
@@ -7,49 +7,54 @@
 ---
 
 ## 1. Objective
-Elevate the customer photobooth experience (`src/components/customer/CustomerClient.tsx`) into a truly luxurious ("فخم ومضبوط") end-to-end journey by integrating:
-1. The dynamic, tactile **`LoyaltyCardView`** engine (supporting merchant-configured slot counts: 4, 6, 8, 10, 12, dimensions, and authentic cafe themes).
-2. Customer direct **"طلب طباعة فورية للكارت والشريط" (Instant Barista Print Request)** with sensory WebAudio feedback.
-3. High-resolution canvas/image export for the customer to save their personalized loyalty card to their camera roll or Apple Wallet preview.
+Build the client-side **Card Canvas Export Service** (`src/lib/services/card-canvas-export.service.ts`) that allows customers and baristas to export luxury loyalty cards as crisp, high-resolution PNG images (retina 2x/3x) for saving to photos or sharing via the Web Share API (`navigator.share`).
 
 ---
 
 ## 2. Requirements & Deliverables
 
-### Requirement 1: Integrate `LoyaltyCardView` into `CustomerClient.tsx`
-- In `src/components/customer/CustomerClient.tsx`:
-  - Replace legacy stamp cards with the tactile `LoyaltyCardView` (`src/components/loyalty/LoyaltyCardView.tsx`).
-  - Read active template settings from `src/lib/services/loyalty-card.service.ts` or merchant business settings.
-  - Dynamically render the customer's active stamps based on their `visitCount` or `accumulatedPhotos.length`.
-  - Display the authentic theme chosen by the merchant:
-    * `espresso_pass` (Luxury dark matte + bronze foil)
-    * `minimal_kraft` (Eco kraft paper + rubber stamp ink)
-    * `neon_cyber_latte` (Cyberpunk glow + neon ring stamps)
-    * `botanical_matcha` (Sage green + coffee blossom floral motif)
-  - Ensure counter QR code is visible so the barista can scan it from the tablet or print queue.
+### Requirement 1: Create `src/lib/services/card-canvas-export.service.ts`
+Implement:
+1. `exportCardToDataUrl(options: CardExportOptions): Promise<string>`
+   - Options interface:
+     - `customerName: string`
+     - `cafeName: string`
+     - `stampsCount: number`
+     - `totalSlots: number`
+     - `theme: string` ('espresso_pass' | 'minimal_kraft' | 'neon_cyber_latte' | 'botanical_matcha')
+     - `qrCodeDataUrl?: string`
+   - Renders a card canvas with standard Apple Wallet aspect ratio (approx 600x380px or 1200x760px at 2x):
+     - Background theme styling (dark matte for espresso_pass, sage green for botanical_matcha, kraft warm for minimal_kraft, dark neon for neon_cyber_latte)
+     - Luxury typography for cafe name and customer name
+     - Stamp indicators showing active stamps vs empty slots
+     - Counter scan QR placeholder or image
+   - Gracefully handles headless/SSR environment (checks if `typeof document === 'undefined'` or mockable).
+   - Returns a `data:image/png;base64,...` string.
 
-### Requirement 2: Instant Print Request Action with Soundscape
-- After taking photos and composing the strip:
-  - Add a prominent, luxurious button: **"🖨️ إرسال لطابعة الكافيه الفورية"**.
-  - On click:
-    1. Send print job to `/api/v1/photobooth/capture` or trigger `PrintService.sendToQueue(...)`.
-    2. Play `SoundEffectsService.playBaristaDing()` for sensory acoustic confirmation.
-    3. Show a sleek feedback badge: `"تم إرسال الشريط لطابعة الباريستا بنجاح ✦ استلمه من الكاونتر"`.
+2. `downloadCardImage(dataUrl: string, filename?: string): void`
+   - Creates a temporary `<a>` element, sets `download = filename || 'cafe-loyalty-card.png'`, clicks it, and revokes/removes the element.
 
-### Requirement 3: Canvas Card Save / Export
-- Allow customer to download their loyalty card as a clean PNG image directly to their phone with their name, stamp count, and cafe branding.
-- Support Web Share API (`navigator.share`) where available, with automatic file download fallback.
+3. `shareCardImage(dataUrl: string, title?: string): Promise<boolean>`
+   - Checks if `navigator.share` and `navigator.canShare` are available.
+   - If available, converts dataUrl to a Blob/File and calls `navigator.share`.
+   - If not available or if sharing fails, falls back to `downloadCardImage` and returns true.
 
-### Requirement 4: Comprehensive Unit Tests
-- Create `tests/unit/customer-loyalty-integration.test.ts`:
-  - Test dynamic slot rendering for 4, 6, 8, 10, 12 slots.
-  - Test print dispatch payload formatting and status callback.
-  - Test theme classes mapping and WebAudio fallback handling.
-- Verify that all existing 142 tests continue to pass 100%.
+### Requirement 2: Unit Tests `tests/unit/card-canvas-export.test.ts`
+Create comprehensive tests covering:
+- Correct options handling and theme selection.
+- Graceful behavior when document / HTMLCanvasElement is mocked or in Node.
+- `downloadCardImage` triggering anchor click.
+- `shareCardImage` calling `navigator.share` or falling back to download.
+
+### Requirement 3: Quality Gates
+1. Run `pnpm test` - all tests must pass 100% (165 existing + new tests).
+2. Run `pnpm build` - must compile with zero errors.
 
 ---
 
-## 3. Acceptance Criteria
-1. `npm test` passes **100% of all tests** (142 existing + new unit tests).
-2. `npm run build` succeeds cleanly with exit code 0 and zero TypeScript errors.
-3. Zero regressions in privacy consent (`liveWallConsent`) or calibrated print dimensions.
+## 3. Freebuff Action Required
+1. Read this specification.
+2. Implement `src/lib/services/card-canvas-export.service.ts`.
+3. Implement `tests/unit/card-canvas-export.test.ts`.
+4. Run `pnpm test` and verify that all test suites pass.
+5. Provide a summary of your changes.

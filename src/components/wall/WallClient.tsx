@@ -17,6 +17,7 @@ import {
   Heart,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 
 interface WallClientProps {
   screenId: string;
@@ -47,6 +48,17 @@ export function WallClient({ screenId }: WallClientProps) {
   const [isOnline, setIsOnline] = useState(true);
   const [lastSyncTime, setLastSyncTime] = useState<string>('الآن');
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const [brandName, setBrandName] = useState('Memories');
+  const [cafeSlug, setCafeSlug] = useState('espresso-lab');
+
+  useEffect(() => {
+    try {
+      const s = BusinessSettingsService.getSettings();
+      if (s?.branding?.name) setBrandName(s.branding.name);
+      if (s?.cafeSlug) setCafeSlug(s.cafeSlug);
+    } catch {}
+  }, []);
 
   const CACHE_KEY = `memories_wall_cache_${screenId}`;
 
@@ -273,11 +285,11 @@ export function WallClient({ screenId }: WallClientProps) {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
-              <span>Espresso Lab Roastery</span>
+              <span>{brandName}</span>
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             </h1>
             <p className="text-xs text-stone-400 font-mono">
-              Live Café Community Board ✦ فرع التجمع
+              Live Community Board ✦ شاشة الصالة الحية ({cafeSlug})
             </p>
           </div>
         </div>
@@ -367,7 +379,7 @@ export function WallClient({ screenId }: WallClientProps) {
                     بدون أي تطبيق • افتح كاميرا هاتفك
                   </p>
                   <span className="text-[10px] text-stone-500 font-mono block">
-                    espresso-lab.memories.app
+                    memories-c9w.pages.dev/c/{cafeSlug}
                   </span>
                 </div>
 

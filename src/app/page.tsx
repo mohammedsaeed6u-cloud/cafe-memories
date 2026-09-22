@@ -22,8 +22,9 @@ import {
 
 export default function HomePage() {
   // Scenario ROI Calculator State
+  const [currency, setCurrency] = useState<'EGP' | 'SAR'>('EGP');
   const [dailyVisitors, setDailyVisitors] = useState(150);
-  const [averageTicket, setAverageTicket] = useState(45); // SAR / EGP
+  const [averageTicket, setAverageTicket] = useState(65);
   const [estimatedReturnLift, setEstimatedReturnLift] = useState(25); // 25% lift in repeat visits
 
   // Estimated Scenario Calculation
@@ -46,27 +47,27 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-stone-950 text-white flex items-center justify-center font-black shadow-md">
-              <Coffee className="w-5 h-5 text-amber-500" />
+              <Sparkles className="w-5 h-5 text-amber-500" />
             </div>
             <div className="flex flex-col text-right">
               <span className="font-black text-lg sm:text-xl tracking-tight text-stone-950 leading-tight">
                 Memories <span className="text-amber-600 font-serif">✦</span> موميريز
               </span>
               <span className="text-[10px] text-stone-500 tracking-wider uppercase font-bold">
-                Café Memories & Live Community Layer
+                منظومة الذكريات والولاء للأنشطة التجارية
               </span>
             </div>
           </Link>
 
           <div className="hidden md:flex items-center gap-7 text-xs font-bold text-stone-600">
             <a href="#loop" className="hover:text-stone-950 transition-colors">
-              حلقة نمو الكافيه
+              حلقة العودة والولاء
             </a>
             <a href="#wall" className="hover:text-stone-950 transition-colors">
-              شاشة الصالة الحية
+              شاشات الصالة الحية
             </a>
             <a href="#roi" className="hover:text-stone-950 transition-colors">
-              حاسبة العائد
+              حاسبة العائد المتوقع
             </a>
             <a href="#pricing" className="hover:text-stone-950 transition-colors">
               الباقات
@@ -97,20 +98,20 @@ export default function HomePage() {
       <section className="relative px-6 pt-14 sm:pt-20 pb-20 max-w-6xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-stone-200/90 bg-white/90 text-stone-800 text-xs font-bold mb-6 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
-          <span>منظومة الذكريات، الشاشات الحية وبطاقات الولاء الرقمية للكافيهات</span>
+          <span>للكافيهات والمطاعم والمتاجر وصالونات التجميل والمراكز الترفيهية</span>
           <span className="text-amber-600 font-serif">✦</span>
         </div>
 
         <div className="max-w-4xl mx-auto text-center space-y-4">
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-stone-950 tracking-tight leading-[1.08]">
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-stone-950 tracking-tight leading-[1.1]">
             حوّل زياراتهم العابرة.<br />
             <span className="bg-gradient-to-r from-stone-950 via-amber-700 to-amber-500 bg-clip-text text-transparent italic font-serif font-normal">
-              إلى ذكريات دائمة وعملاء منتظمين.
+              إلى ذكريات حية وعملاء متكررين.
             </span>
           </h1>
 
           <p className="mt-4 text-base sm:text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed font-medium">
-            منظومة رقمية تمنح زوار كافيهك تجربة توثيق لحظاتهم بمسحة QR واحدة بدون أي تطبيق، مع شاشة حية تبث ذكرياتهم في الصالة، وبطاقة ولاء ذكية تضمن عودتهم والشراء المتكرر.
+            منظومة رقمية تتيح لزوار مكانك توثيق لحظاتهم بمسحة QR واحدة بدون أي تطبيق، مع شاشات تفاعلية تبث الذكريات في الصالة وبطاقة ولاء ذكية تضمن تكرار الشراء.
           </p>
         </div>
 
@@ -129,7 +130,7 @@ export default function HomePage() {
             className="w-full sm:w-auto text-sm py-4 px-7 rounded-full bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-bold shadow-sm transition flex items-center justify-center gap-2"
           >
             <Tv className="w-4 h-4 text-amber-600" />
-            <span>عرض شاشة الكافيه (Live Wall)</span>
+            <span>عرض شاشة الصالة (Live Wall)</span>
           </Link>
         </div>
 
@@ -142,7 +143,7 @@ export default function HomePage() {
             </div>
             <h3 className="font-bold text-sm text-stone-950">مسح الـ QR والتقاط الذكرى</h3>
             <p className="text-xs text-stone-500 leading-relaxed">
-              الزبون يمسح كود الطاولة بكاميرا هاتفه؛ بدون تحميل تطبيق أو تسجيل معقد، يلتقط صورة لقهوته ولحظته.
+              العميل يمسح الكود بكاميرا هاتفه؛ بدون تحميل تطبيق أو تسجيل معقد، يلتقط صورته ولحظته داخل مكانك.
             </p>
           </div>
 
@@ -151,9 +152,9 @@ export default function HomePage() {
             <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold font-mono">
               02
             </div>
-            <h3 className="font-bold text-sm text-amber-950">ظهور فوري على شاشة الكافيه</h3>
+            <h3 className="font-bold text-sm text-amber-950">بث مباشر على شاشة الصالة</h3>
             <p className="text-xs text-amber-900 leading-relaxed">
-              بموافقة الزائر واعتماد الباريستا، تظهر لحظته على شاشة الصالة الكبيرة ليراها الحضور ويتفاعلوا معها.
+              بموافقة العميل واعتماد طاقمك، تظهر لحظته على شاشة الصالة الكبيرة ليراها الحضور ويتشجع الآخرون للمشاركة.
             </p>
           </div>
 
@@ -162,9 +163,9 @@ export default function HomePage() {
             <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center font-bold font-mono">
               03
             </div>
-            <h3 className="font-bold text-sm text-stone-950">قصة ذكريات ومكافأة مضمونة</h3>
+            <h3 className="font-bold text-sm text-stone-950">بطاقة ولاء وقصة ذكريات تراكمية</h3>
             <p className="text-xs text-stone-500 leading-relaxed">
-              تتجمع لحظاته في بطاقة ذكريات خاصة (Your Café Story) لتفتح له هديته التلقائية عند إكمال الزيارات.
+              تتجمع لحظاته في بطاقة فاخرة تشبه المحفظة الرقمية، ولا تفتح له الهدية والتحميل إلا عند إكمال الزيارات.
             </p>
           </div>
         </div>
@@ -174,13 +175,13 @@ export default function HomePage() {
       <section id="loop" className="py-20 px-6 max-w-6xl mx-auto border-t border-stone-200/60">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
-            THE REAL CUSTOMER RETENTION LOOP
+            حلقة عودة الزوار الطبيعية ✦ Retention Loop
           </span>
           <h2 className="text-3xl sm:text-5xl font-black text-stone-950 mt-2">
             حلقة نمو حقيقية لا تعتمد على الخصومات العشوائية.
           </h2>
           <p className="text-sm sm:text-base text-stone-600 mt-3">
-            بدلاً من برامج الولاء المهملة، نبني ارتباطاً عاطفياً يجعل الزائر يشعر بأن المكان جزء من ذكرياته الشخصية.
+            بدلاً من برامج الولاء المهملة والبطاقات الورقية الضائعة، نبني ارتباطاً عاطفياً يجعل الزائر يشعر بأن المكان جزء من ذكرياته الشخصية.
           </p>
         </div>
 
@@ -192,26 +193,26 @@ export default function HomePage() {
               </span>
               <h3 className="font-black text-base text-stone-950 mb-2">دخول صفري الاحتكاك</h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                لا نطلب رقم هاتف ولا كلمة مرور قبل تقديم القيمة. هوية غير مرئية تحفظ الزيارات من أول نقرة.
+                لا نطلب رقم هاتف أو تحميل تطبيق قبل تقديم القيمة. هوية ذكية فورية تحفظ الزيارات من اللحظة الأولى.
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-stone-100 text-[11px] font-mono text-amber-700 font-bold">
-              ZERO-FRICTION ENTRY
+            <div className="mt-6 pt-4 border-t border-stone-100 text-[11px] font-bold text-amber-700">
+              بدون تطبيقات أو تسجيل معقد
             </div>
           </div>
 
           <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm flex flex-col justify-between">
             <div>
               <span className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-lg font-black mb-4">
-                ☕
+                ✨
               </span>
               <h3 className="font-black text-base text-stone-950 mb-2">توثيق اللحظة لا الأختام</h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                المشاعر هي المحرك: "أنا أجمع لحظاتي وذكرياتي مع أصدقائي في هذا المكان"، وليس مجرد كارت ورقي يضيع في الجيب.
+                المشاعر هي المحرك: العميل يجمع لحظاته الخاصة مع أصدقائه في مكانك، ما يجعله فخوراً بمشاركتها والعودة.
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-stone-100 text-[11px] font-mono text-amber-700 font-bold">
-              MOMENTS OVER STAMPS
+            <div className="mt-6 pt-4 border-t border-stone-100 text-[11px] font-bold text-amber-700">
+              ارتباط وجداني مع المكان
             </div>
           </div>
 
@@ -225,8 +226,8 @@ export default function HomePage() {
                 الزبون في الصالة يرى صورة عميل آخر على الشاشة ← يتشجع ويمسح الـ QR ← يوثق لحظته ← يراها زبون آخر.
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-stone-100 text-[11px] font-mono text-amber-700 font-bold">
-              IN-STORE VIRAL LOOP
+            <div className="mt-6 pt-4 border-t border-stone-100 text-[11px] font-bold text-amber-700">
+              تفاعل جماعي داخل الصالة
             </div>
           </div>
 
@@ -235,13 +236,13 @@ export default function HomePage() {
               <span className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg font-black mb-4">
                 🎁
               </span>
-              <h3 className="font-black text-base text-stone-950 mb-2">مكافآت محسوبة سيرفر-سايد</h3>
+              <h3 className="font-black text-base text-stone-950 mb-2">مكافآت محكمة ومحمية</h3>
               <p className="text-xs text-stone-600 leading-relaxed">
-                حماية كاملة لأرباح الكافيه. يتم التحقق من استحقاق الهدية والصرف بأكواد ذكية لضمان عدم التلاعب.
+                حماية كاملة لأرباحك. التحقق من الاستحقاق يتم سيرفر-سايد ولا يتم صرف الهدايا إلا للزيارات الفعلية.
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-stone-100 text-[11px] font-mono text-amber-700 font-bold">
-              TRANSACTIONAL INTEGRITY
+            <div className="mt-6 pt-4 border-t border-stone-100 text-[11px] font-bold text-amber-700">
+              حماية تامة من التلاعب
             </div>
           </div>
         </div>
@@ -252,13 +253,13 @@ export default function HomePage() {
         <div className="p-8 sm:p-12 rounded-3xl bg-stone-950 text-white shadow-2xl relative overflow-hidden">
           <div className="relative z-10 max-w-2xl space-y-4">
             <span className="px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-mono font-bold">
-              SMART TV LIVE WALL ✦ شاشة الصالة الحية
+              شاشة الصالة الذكية ✦ Smart TV Live Wall
             </span>
             <h2 className="text-3xl sm:text-4xl font-black leading-tight">
-              حوّل أي شاشة تلفزيون في كافيهك إلى معرض حي للحظات الزوار.
+              حوّل أي شاشة تلفزيون في مكانك إلى معرض حي للحظات الزوار.
             </h2>
             <p className="text-sm text-stone-400 leading-relaxed">
-              اقتران فوري عبر كود سري مؤقت من لوحة التاجر بدون إدخال أي كلمات سر على التلفزيون. تدعم العمل أثناء انقطاع الإنترنت (Offline Resilience) مع نظام عدالة يمنع تكرار صور نفس الزائر.
+              اقتران فوري عبر كود سري مؤقت من لوحة التاجر بدون إدخال كلمات سر على الشاشة. تدعم العمل أثناء انقطاع الإنترنت (Offline Cache) مع نظام عدالة يمنع تكرار صور نفس الزائر.
             </p>
 
             <div className="pt-4 flex flex-wrap items-center gap-4">
@@ -285,14 +286,38 @@ export default function HomePage() {
       <section id="roi" className="py-20 px-6 max-w-5xl mx-auto border-t border-stone-200/60">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
-            SCENARIO ESTIMATE ✦ نموذج تقديري تقريبي
+            حاسبة الأثر المالي والزيارات المتكررة
           </span>
           <h2 className="text-3xl sm:text-4xl font-black text-stone-950 mt-2">
-            احسب الأثر المالي المتوقع لزيادة عودة الزوار.
+            احسب العائد المتوقع لزيادة عودة الزوار.
           </h2>
           <p className="text-xs text-stone-500 mt-2">
-            *هذه أرقام استرشادية مبنية على تحفيز الشراء المتكرر بنسب واقعية ولا تعتبر ضماناً ثابتاً للأرباح.
+            *أرقام استرشادية مبنية على تحفيز الشراء المتكرر بنسب واقعية ولا تعتبر ضماناً ثابتاً للأرباح.
           </p>
+
+          {/* Currency Toggle */}
+          <div className="inline-flex items-center gap-1 p-1 bg-stone-100 rounded-full border border-stone-200 mt-4">
+            <button
+              onClick={() => setCurrency('EGP')}
+              className={`px-4 py-1 rounded-full text-xs font-bold transition ${
+                currency === 'EGP'
+                  ? 'bg-stone-950 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              الجنيه المصري (EGP)
+            </button>
+            <button
+              onClick={() => setCurrency('SAR')}
+              className={`px-4 py-1 rounded-full text-xs font-bold transition ${
+                currency === 'SAR'
+                  ? 'bg-stone-950 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              الريال السعودي (SAR)
+            </button>
+          </div>
         </div>
 
         <div className="p-8 rounded-3xl bg-white border border-stone-200 shadow-md grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
@@ -300,7 +325,7 @@ export default function HomePage() {
             <div>
               <div className="flex justify-between text-xs font-bold text-stone-700 mb-2">
                 <span>متوسط الزوار يومياً</span>
-                <span className="font-mono text-amber-700">{dailyVisitors} زائر</span>
+                <span className="font-mono text-amber-700 font-bold">{dailyVisitors} زائر</span>
               </div>
               <input
                 type="range"
@@ -315,13 +340,13 @@ export default function HomePage() {
 
             <div>
               <div className="flex justify-between text-xs font-bold text-stone-700 mb-2">
-                <span>متوسط الفاتورة (SAR / EGP)</span>
-                <span className="font-mono text-amber-700">{averageTicket}</span>
+                <span>متوسط الفاتورة ({currency})</span>
+                <span className="font-mono text-amber-700 font-bold">{averageTicket} {currency}</span>
               </div>
               <input
                 type="range"
                 min="20"
-                max="120"
+                max="250"
                 step="5"
                 value={averageTicket}
                 onChange={(e) => setAverageTicket(Number(e.target.value))}
@@ -332,7 +357,7 @@ export default function HomePage() {
             <div>
               <div className="flex justify-between text-xs font-bold text-stone-700 mb-2">
                 <span>نسبة التحسن المتوقعة في الزيارات المتكررة</span>
-                <span className="font-mono text-amber-700">+{estimatedReturnLift}%</span>
+                <span className="font-mono text-amber-700 font-bold">+{estimatedReturnLift}%</span>
               </div>
               <input
                 type="range"
@@ -360,7 +385,7 @@ export default function HomePage() {
                 القيمة الاقتصادية الإضافية التقديرية شهرياً
               </span>
               <span className="text-2xl sm:text-3xl font-black font-mono text-emerald-400">
-                ~ {estimatedAddedRevenue.toLocaleString()}
+                ~ {estimatedAddedRevenue.toLocaleString()} {currency}
               </span>
             </div>
           </div>
@@ -371,23 +396,23 @@ export default function HomePage() {
       <section id="pricing" className="py-20 px-6 max-w-6xl mx-auto border-t border-stone-200/60">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
-            FLEXIBLE PLANS ✦ خطط مرنة تتوسع معك
+            خطط مرنة تتوسع مع نمو نشاطك التجاري
           </span>
           <h2 className="text-3xl sm:text-5xl font-black text-stone-950 mt-2">
-            تسعير مبني على قيمة كافيهك الحقيقية.
+            تسعير مبني على القيمة الحقيقية لزيادة مبيعاتك.
           </h2>
           <p className="text-sm sm:text-base text-stone-600 mt-3">
-            ابدأ بتجربة مجانية، وتوسع بإضافة الشاشات الحية والفروع حسب احتياجك.
+            ابدأ بنقاط الـ QR والبطاقات الذكية، وتوسع بإضافة الشاشات الحية والفروع حسب احتياجك.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-7 rounded-3xl bg-white border border-stone-200/90 shadow-sm flex flex-col justify-between">
             <div>
-              <span className="font-mono text-xs font-bold text-stone-500 uppercase">Starter Roastery</span>
-              <h3 className="text-2xl font-black text-stone-950 mt-1 mb-3">كافيه البداية</h3>
+              <span className="font-mono text-xs font-bold text-stone-500 uppercase">Starter Tier</span>
+              <h3 className="text-2xl font-black text-stone-950 mt-1 mb-3">الباقة الأساسية</h3>
               <p className="text-xs text-stone-600 leading-relaxed mb-6">
-                مثالي للكافيهات المستقلة التي ترغب في تجربة منظومة توثيق الذكريات والولاء بمسحة الـ QR.
+                مثالية للأماكن المستقلة التي ترغب في تجربة منظومة توثيق الذكريات والولاء بمسحة الـ QR.
               </p>
               <ul className="space-y-2.5 text-xs text-stone-700">
                 <li className="flex items-center gap-2">
@@ -396,7 +421,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>قصة الذكريات الرقمية للزوار (Your Café Story)</span>
+                  <span>قصة الذكريات الرقمية للزوار (Brand Story)</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -418,9 +443,9 @@ export default function HomePage() {
             </span>
             <div>
               <span className="font-mono text-xs font-bold text-amber-400 uppercase">Live Community Pro</span>
-              <h3 className="text-2xl font-black text-white mt-1 mb-3">الكافيه التفاعلي</h3>
+              <h3 className="text-2xl font-black text-white mt-1 mb-3">الباقة الاحترافية (Live Wall)</h3>
               <p className="text-xs text-stone-400 leading-relaxed mb-6">
-                يشمل منظومة الشاشة الحية (Live Wall) مع اعتماد الباريستا المباشر وتحليلات العودة.
+                تشمل منظومة الشاشة الحية (Live Wall) مع اعتماد طاقم المكان وتحليلات عودة الزوار.
               </p>
               <ul className="space-y-2.5 text-xs text-stone-300">
                 <li className="flex items-center gap-2">
@@ -429,7 +454,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>طابور اعتماد الباريستا بلمسة واحدة (iPad/Mobile)</span>
+                  <span>طابور اعتماد سريع بلمسة واحدة للطاقم</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-amber-400 shrink-0" />
@@ -445,16 +470,16 @@ export default function HomePage() {
               href="/dashboard"
               className="mt-8 w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs text-center transition block"
             >
-              ترقية الكافيه للشاشة الحية ✦
+              ترقية النشاط للشاشة الحية ✦
             </Link>
           </div>
 
           <div className="p-7 rounded-3xl bg-white border border-stone-200/90 shadow-sm flex flex-col justify-between">
             <div>
-              <span className="font-mono text-xs font-bold text-stone-500 uppercase">Multi-Branch Empire</span>
-              <h3 className="text-2xl font-black text-stone-950 mt-1 mb-3">سلاسل الفروع والروستري</h3>
+              <span className="font-mono text-xs font-bold text-stone-500 uppercase">Enterprise Multi-Branch</span>
+              <h3 className="text-2xl font-black text-stone-950 mt-1 mb-3">سلاسل الفروع والشركات</h3>
               <p className="text-xs text-stone-600 leading-relaxed mb-6">
-                للشركات وسلاسل الكافيهات التي تحتاج إلى إدارة موحدة للفروع المتعددة والشاشات وصلاحيات الطاقم.
+                للشركات والسلاسل التجارية التي تحتاج إلى إدارة موحدة للفروع المتعددة والشاشات وصلاحيات الطاقم.
               </p>
               <ul className="space-y-2.5 text-xs text-stone-700">
                 <li className="flex items-center gap-2">
@@ -467,7 +492,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>ربط API مع أنظمة نقاط البيع (POS)</span>
+                  <span>ربط API مع أنظمة الكاشير ونقاط البيع (POS)</span>
                 </li>
               </ul>
             </div>

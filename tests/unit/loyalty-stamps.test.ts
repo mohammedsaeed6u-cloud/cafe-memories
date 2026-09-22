@@ -1,9 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   LOYALTY_TOTAL_SLOTS,
+  LOYALTY_STAMPS_CACHE_TTL_MS,
+  LOYALTY_STAMPS_CACHE_MAX_ENTRIES,
   getStampState,
   mapLocalPhotosToSlots,
   pickMemoryThumbnail,
+  getCachedLoyaltyStamps,
+  setCachedLoyaltyStamps,
+  invalidateLoyaltyStampsCache,
+  type LoyaltyStampsCacheStore,
   type LoyaltyStampSlot,
 } from '@/lib/services/loyalty-stamps';
 
@@ -81,5 +87,76 @@ describe('Loyalty stamp card logic', () => {
     expect(pickMemoryThumbnail({ optimizedUrl: 'o', originalUrl: 'g' })).toBe('o');
     expect(pickMemoryThumbnail({ originalUrl: 'g' })).toBe('g');
     expect(pickMemoryThumbnail({})).toBe('');
+  });
+});
+
+describe('Loyalty stamps cache', () => {
+  it('serves a fresh entry and drops it after the TTL expires', () => {
+    vi.useFakeTimers();
+    try {
+      const store: LoyaltyStampsCacheStore = new Map();
+      setCachedLoyaltyStamps('demo', '+201000000000', [slot('2026-09-21T10:00:00Z', 'photo-a')], store);
+
+      expect(getCachedLoyaltyStamps('demo', '+201000000000', store)).toHaveLength(1);
+
+      vi.advanceTimersByTime(LOYALTY_STAMPS_CACHE_TTL_MS + 1);
+      expect(getCachedLoyaltyStamps('demo', '+201000000000', store)).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('explicit invalidation works even inside the TTL window', () => {
+    const store: LoyaltyStampsCacheStore = new Map();
+    setCachedLoyaltyStamps('demo', '+201000000000', [slot('2026-09-21T10:00:00Z', 'photo-a')], store);
+    expect(getCachedLoyaltyStamps('demo', '+201000000000', store)).not.toBeNull();
+
+    invalidateLoyaltyStampsCache('demo', '+201000000000', store);
+    expect(getCachedLoyaltyStamps('demo', '+201000000000', store)).toBeNull();
+  });
+
+  it('keys entries by cafe + phone independently, canonicalizing the phone', () => {
+    const store: LoyaltyStampsCacheStore = new Map();
+    setCachedLoyaltyStamps('demo', '+201000000000', [slot('2026-09-21T10:00:00Z', 'photo-a')], store);
+
+    expect(getCachedLoyaltyStamps('demo', '+201111111111', store)).toBeNull();
+    expect(getCachedLoyaltyStamps('other-cafe', '+201000000000', store)).toBeNull();
+    // The digits-only form and the "+"-prefixed form are the same customer.
+    expect(getCachedLoyaltyStamps('demo', '201000000000', store)).not.toBeNull();
+    expect(getCachedLoyaltyStamps('demo', '+201000000000', store)).not.toBeNull();
+  });
+
+  it('evicts the oldest entry when the cap is reached', () => {
+    const store: LoyaltyStampsCacheStore = new Map();
+    const oldestPhone = '201000000000';
+    for (let i = 0; i < LOYALTY_STAMPS_CACHE_MAX_ENTRIES; i++) {
+      setCachedLoyaltyStamps('cafe', `${20100000 + i}`, [], store);
+    }
+    expect(store.size).toBe(LOYALTY_STAMPS_CACHE_MAX_ENTRIES);
+
+    setCachedLoyaltyStamps('cafe', '201999990001', [], store);
+
+    expect(store.size).toBe(LOYALTY_STAMPS_CACHE_MAX_ENTRIES);
+    expect(getCachedLoyaltyStamps('cafe', oldestPhone, store)).toBeNull();
+    expect(getCachedLoyaltyStamps('cafe', '201999990001', store)).toEqual([]);
+  });
+
+  it('prunes expired entries before evicting live ones', () => {
+    vi.useFakeTimers();
+    try {
+      const store: LoyaltyStampsCacheStore = new Map();
+      for (let i = 0; i < LOYALTY_STAMPS_CACHE_MAX_ENTRIES; i++) {
+        setCachedLoyaltyStamps('cafe', `p${i}`, [], store);
+      }
+
+      // Everything expires; a new write must not be rejected or evict live data.
+      vi.advanceTimersByTime(LOYALTY_STAMPS_CACHE_TTL_MS + 1);
+      setCachedLoyaltyStamps('cafe', '201999990001', [], store);
+
+      expect(getCachedLoyaltyStamps('cafe', '201999990001', store)).toEqual([]);
+      expect(getCachedLoyaltyStamps('cafe', '201000000000', store)).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

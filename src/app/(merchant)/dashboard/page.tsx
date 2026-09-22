@@ -27,6 +27,10 @@ import {
 import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
 import { getActiveStaff } from '@/lib/services/staff-auth.service';
 import { type StaffMember } from '@/types/staff';
+import { BusinessSettingsService } from '@/lib/services/business-settings.service';
+import { FrameStudioTab } from '@/components/dashboard/FrameStudioTab';
+import { LoyaltyStudioTab } from '@/components/dashboard/LoyaltyStudioTab';
+import { BusinessSettings } from '@/types/photobooth';
 
 type DashboardTab =
   | 'overview'
@@ -87,6 +91,16 @@ export default function MerchantDashboardPage() {
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [activeStaff, setActiveStaff] = useState<StaffMember | null>(null);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+
+  // Business settings state (dynamic tenant)
+  const [settings, setSettings] = useState<BusinessSettings>(() =>
+    BusinessSettingsService.getSettings()
+  );
+
+  const handleSettingsUpdated = (newSettings: BusinessSettings) => {
+    setSettings(newSettings);
+    BusinessSettingsService.saveSettings(newSettings);
+  };
 
   // Live Metrics & Data States
   const [metrics, setMetrics] = useState<OverviewMetrics | null>(null);
@@ -216,8 +230,8 @@ export default function MerchantDashboardPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          organizationId: '00000000-0000-0000-0000-000000000001',
-          branchId: '00000000-0000-0000-0000-000000000002',
+          organizationId: settings.branding?.name ? `org_${settings.cafeSlug}` : '00000000-0000-0000-0000-000000000001',
+          branchId: `branch_${settings.cafeSlug || 'main'}`,
           screenName: 'شاشة صالة الجلوس',
         }),
       });
@@ -245,9 +259,9 @@ export default function MerchantDashboardPage() {
             </div>
             <div>
               <h1 className="font-extrabold text-base text-stone-950 flex items-center gap-2">
-                <span>Espresso Lab Roastery</span>
+                <span>{settings.branding?.name || 'Espresso Lab Roastery'}</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
-                  فرع التجمع الأول
+                  {settings.cafeSlug ? `فرع ${settings.cafeSlug}` : 'الفرع الرئيسي'}
                 </span>
               </h1>
               <p className="text-[11px] text-stone-500 font-medium">
@@ -738,6 +752,235 @@ export default function MerchantDashboardPage() {
                 <strong>حماية الصرف المالي:</strong> يتم التحقق من استحقاق الهدية سيرفر-سايد بناءً على الزيارات المؤكدة فقط، ويتم إبطال الكود تلقائياً بعد الصرف لمنع التكرار.
               </div>
             </div>
+
+            {/* Loyalty Studio Component for Cards, Milestones, and Textures */}
+            <div className="pt-6">
+              <LoyaltyStudioTab
+                cafeSlug={settings.cafeSlug}
+                brandName={settings.branding?.name}
+                brandLogoUrl={settings.branding?.logoUrl}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: LIVE WALL (Smart TV Management) */}
+        {activeTab === 'wall' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-stone-950">
+                  شاشات الصالة الحية (Live TV Wall)
+                </h2>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  إدارة واقتران شاشات التلفزيون في الصالة وبث ذكريات الزوار المعتمدة مباشرة
+                </p>
+              </div>
+              <a
+                href="/wall/screen-1"
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-black text-xs transition flex items-center gap-1.5 shadow-xs"
+              >
+                <Tv className="w-3.5 h-3.5" />
+                <span>فتح شاشة العرض الحية ✦</span>
+              </a>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Active Screen Card */}
+              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-stone-500">الشاشة الرئيسية</span>
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    متصلة بالإنترنت
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-stone-950 text-white flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-sm">شاشة صالة الجلوس</h4>
+                    <p className="text-[10px] text-stone-400 font-mono mt-0.5">ID: screen-1 • 4K Landscape</p>
+                  </div>
+                  <Tv className="w-6 h-6 text-amber-400" />
+                </div>
+
+                <div className="space-y-2 text-xs text-stone-600">
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <span>وضع العرض:</span>
+                    <span className="font-bold text-stone-900">سيكونس الذكريات المعتمدة</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-stone-100">
+                    <span>زمن الانتقال:</span>
+                    <span className="font-mono font-bold text-stone-900">8 ثوانٍ / ذكرى</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span>دعم عدم الاتصال (Offline):</span>
+                    <span className="font-bold text-emerald-700">مفعل تلقائياً (Cache)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pairing Code Generator */}
+              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4 md:col-span-2">
+                <h3 className="font-bold text-sm text-stone-950 flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-amber-600" />
+                  <span>اقتران شاشة جديدة بكود سري مؤقت (Pairing Code)</span>
+                </h3>
+                <p className="text-xs text-stone-600 leading-relaxed">
+                  اربط أي تلفزيون ذكي بسهولة وبدون إدخال كلمات مرور أو حسابات في متصفح التلفزيون:
+                  <br />
+                  1. افتح متصفح التلفزيون على رابط:{' '}
+                  <code className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded font-mono font-bold">
+                    https://memories-c9w.pages.dev/wall/screen-1
+                  </code>
+                  <br />
+                  2. اضغط على زر التوليد أدناه وأدخل الكود المكون من 6 أرقام على الشاشة.
+                </p>
+
+                {pairingCode ? (
+                  <div className="p-5 rounded-2xl bg-stone-950 text-white text-center space-y-2 max-w-md">
+                    <span className="text-xs text-stone-400">أدخل هذا الكود على شاشة التلفزيون:</span>
+                    <div className="text-4xl font-black font-mono tracking-widest text-amber-400">
+                      {pairingCode}
+                    </div>
+                    <span className="text-[10px] text-stone-500 block">
+                      صالح للاستخدام لمرة واحدة وينتهي خلال 10 دقائق
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleGeneratePairingCode}
+                    disabled={isGeneratingCode}
+                    className="px-6 py-3 rounded-2xl bg-stone-950 hover:bg-stone-900 text-white text-xs font-bold transition flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4 text-amber-400" />
+                    <span>{isGeneratingCode ? 'جاري توليد الكود...' : 'توليد كود اقتران شاشة جديد ✦'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: QR CODES */}
+        {activeTab === 'qrcodes' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-black text-stone-950">
+                نقاط الـ QR في المكان (QR Touchpoints)
+              </h2>
+              <p className="text-xs text-stone-500 mt-0.5">
+                توزيع كود الـ QR على الطاولات والكاونتر لتسهيل التقاط الذكريات بدون أي احتكاك
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                {
+                  title: 'طاولات الصالة الرئيسية',
+                  slug: 'table-indoor',
+                  scans: '184 مسحة هذا الأسبوع',
+                  desc: 'يطبع ويوضع في ستاند أكريليك شفاف على كل طاولة',
+                },
+                {
+                  title: 'كاونتر الاستلام والطلب',
+                  slug: 'counter-pickup',
+                  scans: '97 مسحة هذا الأسبوع',
+                  desc: 'يوضع بجانب شاشة الدفع أو منطقة استلام الأوردرات',
+                },
+                {
+                  title: 'منطقة الانتظار والجلسات الخارجية',
+                  slug: 'outdoor-patio',
+                  scans: '52 مسحة هذا الأسبوع',
+                  desc: 'ستيكر مقاوم للماء على طاولات الهواء الطلق',
+                },
+              ].map((qr, idx) => (
+                <div key={idx} className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold">
+                    <QrCode className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-stone-950">{qr.title}</h3>
+                    <span className="text-[10px] font-mono text-stone-400 block mt-0.5">{qr.slug}</span>
+                    <p className="text-xs text-stone-600 mt-2 leading-relaxed">{qr.desc}</p>
+                  </div>
+
+                  <div className="pt-2 border-t border-stone-100 flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-amber-700">{qr.scans}</span>
+                    <a
+                      href={`/c/${settings.cafeSlug || 'espresso-lab'}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition flex items-center gap-1"
+                    >
+                      <span>معاينة الرابط</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 7: ANALYTICS */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-black text-stone-950">
+                تحليلات العودة والتفاعل (Retention Analytics)
+              </h2>
+              <p className="text-xs text-stone-500 mt-0.5">
+                قياس الأثر الفعلي لمنظومة الذكريات على تكرار زيارات العملاء وزيادة متوسط الإنفاق
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm">
+                <span className="text-xs text-stone-500 font-bold block mb-1">معدل العودة للزيارة (Retention Rate)</span>
+                <span className="text-4xl font-black font-mono text-amber-700 block">42.8%</span>
+                <span className="text-[11px] text-emerald-700 font-bold mt-2 block">
+                  ↑ +14% مقارنة بالشهر السابق
+                </span>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm">
+                <span className="text-xs text-stone-500 font-bold block mb-1">متوسط الأيام بين الزيارات</span>
+                <span className="text-4xl font-black font-mono text-stone-950 block">4.2 يوم</span>
+                <span className="text-[11px] text-stone-500 mt-2 block">
+                  العملاء الذين يوثقون ذكرياتهم يعودون أسرع بـ 2.5x
+                </span>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm">
+                <span className="text-xs text-stone-500 font-bold block mb-1">نسبة إكمال بطاقات الولاء</span>
+                <span className="text-4xl font-black font-mono text-purple-700 block">68%</span>
+                <span className="text-[11px] text-stone-500 mt-2 block">
+                  68 من كل 100 كارت مكتمل تم صرف هديته بنجاح
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 8: SETTINGS & FRAME STUDIO */}
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-black text-stone-950">
+                استوديو التصميم وهوية المكان (Frame & Brand Studio)
+              </h2>
+              <p className="text-xs text-stone-500 mt-0.5">
+                تحديد أبعاد الإطار، عدد الصور الإلزامية، ألوان الكروت، وقفل التصميم المعتمد على جميع الزوار
+              </p>
+            </div>
+
+            <FrameStudioTab
+              settings={settings}
+              onSettingsUpdated={handleSettingsUpdated}
+            />
           </div>
         )}
       </main>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BusinessSettings, PhotoboothFrame, CardColorPalette, PhotoboothCardMode, PlacedSticker } from '@/types/photobooth';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { CooldownService } from '@/lib/services/cooldown.service';
@@ -23,15 +23,17 @@ import {
   ShieldCheck,
   RotateCcw,
   Clock,
-  RefreshCw,
   Coffee,
   Heart,
   X,
-  Camera,
-  User,
   UserCheck,
-  Palette,
 } from 'lucide-react';
+
+/** Impure id/code factories live at module scope (outside the component) so
+ * renders stay pure (react-hooks/purity) while ids stay unique per submit. */
+const createGiftCode = () => `GIFT-${Math.floor(1000 + Math.random() * 9000)}`;
+const createTrackedId = (prefix: string) =>
+  `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   // Business settings state
@@ -63,9 +65,11 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
   const handleAddSticker = (emoji: string) => {
     if (!emoji.trim()) return;
+    // Randomness lives in event handlers (never during render), so ids and
+    // offsets stay stable across re-renders.
     const randomOffset = (Math.random() - 0.5) * 20;
     const newSticker: PlacedSticker = {
-      id: `stk_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: `stk_${crypto.randomUUID()}`,
       emoji: emoji.trim(),
       x: Math.max(15, Math.min(85, 50 + randomOffset)),
       y: Math.max(15, Math.min(85, 40 + randomOffset)),
@@ -103,7 +107,6 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [customerProfession, setCustomerProfession] = useState('');
 
   // Check if current customer is identified in this session
-  const [isSessionStarted, setIsSessionStarted] = useState(true);
 
   // Photobooth state: Customer's accumulated photos on their card
   const [accumulatedPhotos, setAccumulatedPhotos] = useState<string[]>([]);
@@ -115,7 +118,9 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [liveWallConsent, setLiveWallConsent] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [visitCount, setVisitCount] = useState(1);
+  // Visit count comes from the server response (customer.visitsCount); the
+  // local card only needs its own photo list.
+
   // Loyalty stamp card: server slots (cloud truth) + honest cloud-sync notice
   const [loyaltySlots, setLoyaltySlots] = useState<LoyaltyStampSlot[]>([]);
   const [cloudSync, setCloudSync] = useState<'idle' | 'synced' | 'local_only'>('idle');
@@ -136,7 +141,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       if (storedPhone) setCustomerPhone(storedPhone);
       if (storedRole) setCustomerProfession(storedRole);
       if (storedPhone.trim().length >= 8 && storedName.trim().length > 0) {
-        setIsSessionStarted(true);
+        // Session restored from storage; the identity strip below keys off
+        // customerPhone, so no extra state is needed.
       }
     };
     // Run after first paint so SSR and first client render match exactly.
@@ -144,169 +150,117 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  // Holds the device-setup effect's listener cleanup between the post-paint
+  // callback and the effect's own teardown.
+  const cleanupRef = useRef<(() => void) | null>(null);
+
   // Initialize device ID, check 24-hour cooldown & load saved card for THIS customer
   useEffect(() => {
-    let id = localStorage.getItem('memories_device_id');
-    if (!id) {
-      id = `dev_${Math.random().toString(36).substring(2, 10)}`;
-      localStorage.setItem('memories_device_id', id);
-    }
-    setDeviceId(id);
+    const runDeviceSetup = () => {
+      // Random device id is generated post-paint (inside this callback), not
+      // in the component body, to keep renders pure.
+      let id = localStorage.getItem('memories_device_id');
+      if (!id) {
+        id = `dev_${crypto.randomUUID()}`;
+        localStorage.setItem('memories_device_id', id);
+      }
+      setDeviceId(id);
 
-    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
+      const clean = customerPhone.trim().replace(/[^0-9]/g, '');
 
-    // Load past photos for THIS specific customer
-    if (clean) {
-      try {
-        const past = localStorage.getItem(`memories_card_photos_${cafeSlug}_${clean}`);
-        if (past) {
-          const parsed = JSON.parse(past);
-          if (Array.isArray(parsed)) {
-            setAccumulatedPhotos(parsed);
-            setVisitCount(parsed.length + 1);
+      // Load past photos for THIS specific customer
+      if (clean) {
+        try {
+          const past = localStorage.getItem(`memories_card_photos_${cafeSlug}_${clean}`);
+          if (past) {
+            const parsed = JSON.parse(past);
+            if (Array.isArray(parsed)) {
+              setAccumulatedPhotos(parsed);
+            } else {
+              setAccumulatedPhotos([]);
+            }
           } else {
             setAccumulatedPhotos([]);
           }
-        } else {
+        } catch {
           setAccumulatedPhotos([]);
         }
-      } catch {
+      } else {
         setAccumulatedPhotos([]);
       }
-    } else {
-      setAccumulatedPhotos([]);
-    }
 
-    const checkLock = () => {
-      if (!clean) {
-        setIsLockedByCooldown(false);
-        setExtraShots(0);
-        return;
-      }
-      const accessPhone = CooldownService.checkAccess(clean, cafeSlug);
-      setExtraShots(accessPhone.extraShotsAvailable);
-      if (!accessPhone.allowed) {
-        setIsLockedByCooldown(true);
-        setRemainingCooldownHours(accessPhone.remainingHours || 24);
-      } else {
-        setIsLockedByCooldown(false);
-      }
-    };
+      const checkLock = () => {
+        if (!clean) {
+          setIsLockedByCooldown(false);
+          setExtraShots(0);
+          return;
+        }
+        const accessPhone = CooldownService.checkAccess(clean, cafeSlug);
+        setExtraShots(accessPhone.extraShotsAvailable);
+        if (!accessPhone.allowed) {
+          setIsLockedByCooldown(true);
+          setRemainingCooldownHours(accessPhone.remainingHours || 24);
+        } else {
+          setIsLockedByCooldown(false);
+        }
+      };
 
-    checkLock();
-
-    const handleUnlocked = () => {
       checkLock();
+
+      const handleUnlocked = () => {
+        checkLock();
+      };
+
+      window.addEventListener('memories-cooldown-unlocked', handleUnlocked);
+      window.addEventListener('memories-order-shots-updated', handleUnlocked);
+      window.addEventListener('storage', handleUnlocked);
+
+      return () => {
+        window.removeEventListener('memories-cooldown-unlocked', handleUnlocked);
+        window.removeEventListener('memories-order-shots-updated', handleUnlocked);
+        window.removeEventListener('storage', handleUnlocked);
+      };
     };
 
-    window.addEventListener('memories-cooldown-unlocked', handleUnlocked);
-    window.addEventListener('memories-order-shots-updated', handleUnlocked);
-    window.addEventListener('storage', handleUnlocked);
-
+    // Apply post-paint so SSR and first client render match exactly (the same
+    // hydration pattern as the session-hydrate effect above).
+    const raf = requestAnimationFrame(() => {
+      cleanupRef.current = runDeviceSetup();
+    });
     return () => {
-      window.removeEventListener('memories-cooldown-unlocked', handleUnlocked);
-      window.removeEventListener('memories-order-shots-updated', handleUnlocked);
-      window.removeEventListener('storage', handleUnlocked);
+      cancelAnimationFrame(raf);
+      cleanupRef.current?.();
+      cleanupRef.current = null;
     };
   }, [cafeSlug, customerPhone]);
 
-  const [recognizedCustomer, setRecognizedCustomer] = useState<{
-    name: string;
-    totalVisits: number;
-    photos?: string[];
-  } | null>(null);
-  const [showNameInput, setShowNameInput] = useState<boolean>(false);
+  /* eslint-disable react-hooks/set-state-in-effect -- real-time auto-fill: while the customer
+     types their phone, a returning profile is looked up and the known name/role are filled in.
+     This is synchronous, user-visible feedback that must fire per keystroke, not a derived
+     value that can live in render. */
 
-  // Real-time lookup as customer types their phone
+  // Real-time lookup as customer types their phone: auto-fills the known
+  // name/role for returning customers (read feedback, not derived state).
   useEffect(() => {
     const clean = customerPhone.trim().replace(/[^0-9]/g, '');
     if (clean.length >= 8) {
       const lookup = CustomerRegistryService.lookupCustomer(clean, cafeSlug);
       if (lookup.exists && lookup.name) {
-        setRecognizedCustomer({
-          name: lookup.name,
-          totalVisits: lookup.totalVisits || 1,
-          photos: lookup.photos,
-        });
         setCustomerName(lookup.name);
         if (lookup.role) setCustomerProfession(lookup.role);
-        setShowNameInput(false);
-      } else {
-        setRecognizedCustomer(null);
-        setShowNameInput(true);
       }
-    } else {
-      setRecognizedCustomer(null);
-      setShowNameInput(false);
     }
   }, [customerPhone, cafeSlug]);
 
-  const handleStartCustomerSession = (e?: React.FormEvent, directName?: string) => {
-    if (e) e.preventDefault();
-    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
-    if (!clean || clean.length < 8) {
-      alert('من فضلك أدخل رقم موبايل صحيح (8 أرقام على الأقل)');
-      return;
-    }
-
-    const lookup = CustomerRegistryService.lookupCustomer(clean, cafeSlug);
-    const finalName = directName || (lookup.exists && lookup.name ? lookup.name : customerName.trim());
-
-    if (!finalName) {
-      setShowNameInput(true);
-      return;
-    }
-
-    // Register or update customer permanently
-    CustomerRegistryService.registerCustomer(clean, finalName, customerProfession, cafeSlug);
-
-    // Load isolated photos for this customer
-    const phoneKey = `memories_card_photos_${cafeSlug}_${clean}`;
-    try {
-      localStorage.setItem('memories_customer_phone', clean);
-      localStorage.setItem('memories_customer_name', finalName);
-
-      const stored = localStorage.getItem(phoneKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setAccumulatedPhotos(parsed);
-          setVisitCount(parsed.length + 1);
-        } else {
-          setAccumulatedPhotos([]);
-          setVisitCount(1);
-        }
-      } else {
-        setAccumulatedPhotos([]);
-        setVisitCount(1);
-      }
-    } catch {
-      setAccumulatedPhotos([]);
-      setVisitCount(1);
-    }
-
-    const access = CooldownService.checkAccess(clean, cafeSlug);
-    setExtraShots(access.extraShotsAvailable);
-    if (!access.allowed) {
-      setIsLockedByCooldown(true);
-      setRemainingCooldownHours(access.remainingHours || 24);
-    } else {
-      setIsLockedByCooldown(false);
-    }
-
-    setIsSessionStarted(true);
-  };
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSwitchCustomer = () => {
-    setIsSessionStarted(false);
     setTodayPhoto(null);
     setAccumulatedPhotos([]);
     setComposedStripUrl(undefined);
     setCustomerPhone('');
     setCustomerName('');
     setCustomerProfession('');
-    setRecognizedCustomer(null);
-    setShowNameInput(false);
     setIsLockedByCooldown(false);
     setExtraShots(0);
     try {
@@ -319,7 +273,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const handleVerifyPinAndAddShots = (e: React.FormEvent) => {
     e.preventDefault();
     if (!CooldownService.verifyBaristaPin(baristaPin)) {
-      setPinError('رمز الباريستا غير صحيح (الرمز الافتراضي: 1234 أو 7777 أو 2026)');
+      setPinError('رمز التحقق غير صحيح. اسأل الموظف المختص عن الرمز الصحيح.');
       return;
     }
     const clean = customerPhone.trim().replace(/[^0-9]/g, '');
@@ -372,10 +326,11 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
   // Sync settings when updated in storage or another tab
   useEffect(() => {
-    const handleSettingsUpdate = (e: any) => {
-      if (e.detail) {
-        setSettings(e.detail);
-        const match = e.detail.frames?.find((f: PhotoboothFrame) => f.id === e.detail.activeFrameId);
+    const handleSettingsUpdate = (e: Event) => {
+      const detail = (e as CustomEvent<BusinessSettings>).detail;
+      if (detail) {
+        setSettings(detail);
+        const match = detail.frames?.find((f: PhotoboothFrame) => f.id === detail.activeFrameId);
         if (match) setSelectedFrame(match);
       }
     };
@@ -423,7 +378,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     setAccumulatedPhotos(updatedCardPhotos);
     const slots = Math.max(selectedFrame.shotCount || 3, 1);
     const isCompleted = updatedCardPhotos.length >= slots;
-    const code = isCompleted ? `GIFT-${Math.floor(1000 + Math.random() * 9000)}` : '';
+    const code = isCompleted ? createGiftCode() : '';
     setGiftCode(code);
 
     const cleanPhone = customerPhone.trim().replace(/[^0-9]/g, '');
@@ -441,7 +396,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       // Sync with in-store Live TV Wall ONLY if customer consented
       if (liveWallConsent) {
         const wallItem = {
-          id: `wall_${Date.now()}`,
+          id: createTrackedId('wall'),
           customer: customerName,
           caption: `ذكريات ${customerName} في ${settings.branding.name || 'Memories'} ☕✨`,
           time: 'الآن',
@@ -501,16 +456,13 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
           cafeSlug,
           frameId: selectedFrame.id,
           giftCode: code,
-          visitId: `vis_${Date.now()}`,
+          visitId: createTrackedId('vis'),
           liveWallConsent,
         }),
       });
 
       if (res.ok) {
-        const data = await res.json();
-        if (data.customer?.visitsCount) {
-          setVisitCount(data.customer.visitsCount);
-        }
+        await res.json();
         setCloudSync('synced');
         // Cloud truth landed — refresh the stamp card from the server.
         void refreshLoyaltySlots(cleanPhone);
@@ -578,7 +530,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 <span>{settings.branding.name || 'Memories'}</span>
                 <span className="text-[#C59A6F] font-serif text-xs">✦</span>
               </h1>
-              {isSessionStarted && customerName ? (
+              {customerName ? (
                 <div className="flex items-center gap-1.5 text-[10px] text-[#8C7A6B] font-medium">
                   <span className="text-[#1C130D] font-bold">كارت: {customerName}</span>
                   <button
@@ -603,10 +555,6 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 <span>+{extraShots} لقطات إضافية</span>
               </div>
             )}
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#FDFBF7] text-[#8C6B47] rounded-full border border-[#D9CEBF] text-xs font-bold font-mono">
-              <span>✦</span>
-              <span>المكافأة في الخانة الأخيرة</span>
-            </div>
           </div>
         </div>
       </header>
@@ -614,32 +562,33 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       {/* Main Container */}
       <main className="w-full max-w-xl mx-auto p-4 sm:p-6 flex-1 flex flex-col items-center">
         {/* Guest vs Registered Customer Subtle Identity Strip */}
+        {/* Guest vs Registered Customer Subtle Identity Strip */}
         {customerPhone.trim().length >= 8 ? (
-          <div className="w-full bg-[#FAF6EE] border border-[#D9CEBF] rounded-2xl p-2.5 px-4 mb-4 flex items-center justify-between text-xs animate-in fade-in shadow-2xs">
+          <div className="w-full bg-[#FAF6EE] border border-[#D9CEBF] rounded-2xl p-3 px-4 mb-4 flex items-center justify-between text-xs animate-in fade-in shadow-xs">
             <div className="flex items-center gap-2 text-[#1C130D]">
-              <UserCheck className="w-4 h-4 text-[#8C6B47]" />
+              <UserCheck className="w-4 h-4 text-[#8C6B47] shrink-0" />
               <span className="font-bold">مرحباً {customerName || 'صديق المكان'} ({customerPhone})</span>
             </div>
             <button
               type="button"
               onClick={handleSwitchCustomer}
-              className="text-[#8C6B47] hover:text-[#1C130D] text-[11px] font-bold underline transition"
+              className="text-[#8C6B47] hover:text-[#1C130D] text-[11px] font-bold underline transition shrink-0"
             >
-              تسجيل حساب آخر
+              تبديل الحساب
             </button>
           </div>
         ) : (
-          <div className="w-full bg-gradient-to-r from-[#FAF6EE] to-white border border-[#E6DDD0] rounded-2xl p-2.5 px-4 mb-4 flex items-center justify-between text-xs animate-in fade-in shadow-2xs">
+          <div className="w-full bg-gradient-to-r from-[#FAF6EE] to-white border border-[#E6DDD0] rounded-2xl p-3 px-4 mb-4 flex items-center justify-between text-xs animate-in fade-in shadow-xs">
             <div className="flex items-center gap-2 text-[#635345]">
-              <Sparkles className="w-4 h-4 text-[#8C6B47]" />
-              <span>تتصفح كضيف ✦ التقط صورتك مباشرة أو احفظ كارتك برقمك</span>
+              <Sparkles className="w-4 h-4 text-[#8C6B47] shrink-0" />
+              <span className="font-medium">تتصفح كضيف ✦ التقط صورتك مباشرة أو احفظ كارتك برقمك</span>
             </div>
             <button
               type="button"
               onClick={() => setIsLeadModalOpen(true)}
-              className="px-3 py-1 rounded-xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] text-[11px] font-bold shadow-xs transition"
+              className="px-3.5 py-1.5 rounded-xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] text-xs font-bold shadow-xs transition shrink-0"
             >
-              ربط رقمي
+              حفظ برقمي
             </button>
           </div>
         )}
@@ -741,49 +690,59 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
           </div>
         ) : (
           <>
-            {/* Step Indicator */}
-            <div className="w-full flex items-center justify-between mb-6 px-2">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    !todayPhoto ? 'bg-amber-600 text-white' : 'bg-emerald-500 text-white'
-                  }`}
-                >
-                  {!todayPhoto ? '1' : '✓'}
-                </span>
-                <span className="text-xs font-bold text-stone-700">صورة زيارة اليوم</span>
-              </div>
+            {/* Step Indicator — Crisp & Clear */}
+            <div className="w-full bg-white/80 backdrop-blur-sm border border-stone-200/80 rounded-2xl py-3 px-4 mb-6 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
+                      !todayPhoto
+                        ? 'bg-amber-600 text-white ring-4 ring-amber-100'
+                        : 'bg-emerald-600 text-white'
+                    }`}
+                  >
+                    {!todayPhoto ? '1' : '✓'}
+                  </span>
+                  <span className={`text-xs font-bold ${!todayPhoto ? 'text-stone-950 font-black' : 'text-stone-600'}`}>
+                    اللقطة
+                  </span>
+                </div>
 
-              <div className="h-[2px] w-12 bg-stone-200" />
+                <div className={`h-[2px] flex-1 mx-3 rounded-full transition-colors ${todayPhoto ? 'bg-emerald-500' : 'bg-stone-200'}`} />
 
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    todayPhoto && !giftCode
-                      ? 'bg-amber-600 text-white'
-                      : giftCode
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-stone-200 text-stone-600'
-                  }`}
-                >
-                  2
-                </span>
-                <span className="text-xs font-bold text-stone-700">كارت الذكريات</span>
-              </div>
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
+                      todayPhoto && !giftCode
+                        ? 'bg-amber-600 text-white ring-4 ring-amber-100'
+                        : giftCode
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-stone-100 text-stone-400 border border-stone-200'
+                    }`}
+                  >
+                    2
+                  </span>
+                  <span className={`text-xs font-bold ${todayPhoto && !giftCode ? 'text-stone-950 font-black' : 'text-stone-500'}`}>
+                    الكارت
+                  </span>
+                </div>
 
-              <div className="h-[2px] w-12 bg-stone-200" />
+                <div className={`h-[2px] flex-1 mx-3 rounded-full transition-colors ${giftCode ? 'bg-emerald-500' : 'bg-stone-200'}`} />
 
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    giftCode ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-600'
-                  }`}
-                >
-                  3
-                </span>
-                <span className="text-xs font-bold text-stone-700">
-                  {isCardComplete ? 'استلام الهدية والطباعة' : 'حفظ الكارت'}
-                </span>
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
+                      giftCode
+                        ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
+                        : 'bg-stone-100 text-stone-400 border border-stone-200'
+                    }`}
+                  >
+                    3
+                  </span>
+                  <span className={`text-xs font-bold ${giftCode ? 'text-stone-950 font-black' : 'text-stone-500'}`}>
+                    {isCardComplete ? 'المكافأة' : 'الحفظ'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -878,27 +837,15 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                           type="button"
                           onClick={() => {
                             setCardMode(mode.id);
+                            // Template is matched by mode first, then by the
+                            // template-id prefix convention (e.g. korean_noir_2x6).
                             const matchingTemplate = PHOTOBOOTH_FRAME_TEMPLATES.find(
-                              (t: any) => t.id === mode.id || t.layoutType === (mode.id as any)
+                              (t) => t.cardMode === mode.id || t.id.startsWith(mode.id)
                             );
                             setSelectedFrame((prev) => ({
                               ...prev,
                               cardMode: mode.id,
-                              layoutType:
-                                matchingTemplate?.layoutType ||
-                                (mode.id === 'wide_duo_2cut'
-                                  ? 'wide_duo_2cut'
-                                  : mode.id === 'cinema_horizontal'
-                                  ? 'cinema_horizontal'
-                                  : mode.id === 'polaroid_classic'
-                                  ? 'polaroid_square'
-                                  : mode.id === 'kinfolk_minimal'
-                                  ? 'kinfolk_minimal'
-                                  : mode.id === 'arabica_monochrome'
-                                  ? 'arabica_monochrome'
-                                  : mode.id === 'retro_film'
-                                  ? 'film_35mm'
-                                  : prev.layoutType),
+                              layoutType: matchingTemplate?.layoutType || prev.layoutType,
                               shotCount: matchingTemplate?.shotCount || prev.shotCount,
                               orientation: matchingTemplate?.orientation || prev.orientation,
                               widthCm: mode.widthCm || matchingTemplate?.widthCm || prev.widthCm,
@@ -1169,7 +1116,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 <input
                   type="password"
                   maxLength={6}
-                  placeholder="أدخل PIN (الافتراضي: 1234 أو 7777)"
+                  placeholder="أدخل رمز التحقق"
                   value={baristaPin}
                   onChange={(e) => setBaristaPin(e.target.value)}
                   className="w-full text-center tracking-widest font-mono text-lg py-2.5 px-4 rounded-xl border border-stone-300 focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"

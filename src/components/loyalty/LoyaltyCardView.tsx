@@ -19,6 +19,8 @@ import {
   ShieldCheck,
   Info,
   Award,
+  Download,
+  Share2,
 } from 'lucide-react';
 import {
   LoyaltyCardTemplate,
@@ -27,6 +29,7 @@ import {
   LoyaltyMilestoneIcon,
 } from '@/types/loyalty-card';
 import { LoyaltyCardService } from '@/lib/services/loyalty-card.service';
+import { CardCanvasExportService } from '@/lib/services/card-canvas-export.service';
 
 export interface LoyaltyCardViewProps {
   template: LoyaltyCardTemplate;
@@ -164,6 +167,44 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
 
     const nextSlot = activeState.activeStamps + 1;
     handleSlotClick(nextSlot);
+  };
+
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCard = async () => {
+    setIsExporting(true);
+    try {
+      const dataUrl = await CardCanvasExportService.exportCardToDataUrl({
+        customerName,
+        cafeName: brandName,
+        stampsCount: activeState.activeStamps,
+        totalSlots: template.slotCount,
+        theme: template.id,
+      });
+      CardCanvasExportService.downloadCardImage(dataUrl, `loyalty-card-${customerName}.png`);
+    } catch (err) {
+      console.error('Failed to export card image', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleShareCard = async () => {
+    setIsExporting(true);
+    try {
+      const dataUrl = await CardCanvasExportService.exportCardToDataUrl({
+        customerName,
+        cafeName: brandName,
+        stampsCount: activeState.activeStamps,
+        totalSlots: template.slotCount,
+        theme: template.id,
+      });
+      await CardCanvasExportService.shareCardImage(dataUrl, `كارت ولاء ${customerName} في ${brandName}`);
+    } catch (err) {
+      console.error('Failed to share card image', err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleResetCard = () => {
@@ -667,6 +708,29 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
           >
             <RotateCw className="w-3.5 h-3.5" />
             <span>{isFlipped ? 'الواجهة' : 'الباركود'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportCard}
+            disabled={isExporting}
+            className="py-1.5 px-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl font-bold flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+            title="حفظ الكارت كصورة PNG"
+            aria-label="حفظ كصورة"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">حفظ</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleShareCard}
+            disabled={isExporting}
+            className="p-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl border border-stone-200 transition cursor-pointer disabled:opacity-50"
+            title="مشاركة الكارت"
+            aria-label="مشاركة الكارت"
+          >
+            <Share2 className="w-3.5 h-3.5" />
           </button>
 
           <button
