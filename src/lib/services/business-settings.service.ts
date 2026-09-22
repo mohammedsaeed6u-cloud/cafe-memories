@@ -9,8 +9,19 @@ export class BusinessSettingsService {
   }
 
   static getSettings(cafeSlug: string = 'espresso-lab'): BusinessSettings {
+    const defaultShotCount = DEFAULT_BUSINESS_SETTINGS.defaultShotCount || 3;
+    const defaultOrientation = DEFAULT_BUSINESS_SETTINGS.defaultOrientation || 'vertical';
+
     if (typeof window === 'undefined') {
-      return { ...DEFAULT_BUSINESS_SETTINGS, cafeSlug };
+      return {
+        ...DEFAULT_BUSINESS_SETTINGS,
+        cafeSlug,
+        frames: (DEFAULT_BUSINESS_SETTINGS.frames || []).map((f) => ({
+          ...f,
+          shotCount: defaultShotCount,
+          orientation: defaultOrientation,
+        })),
+      };
     }
 
     try {

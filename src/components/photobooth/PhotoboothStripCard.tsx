@@ -27,6 +27,7 @@ interface PhotoboothStripCardProps {
   stickers?: PlacedSticker[];
   onUpdateStickers?: (stickers: PlacedSticker[]) => void;
   isStickersInteractive?: boolean;
+  onSlotClick?: (slotIdx: number) => void;
 }
 
 export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
@@ -44,6 +45,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   stickers = [],
   onUpdateStickers,
   isStickersInteractive = false,
+  onSlotClick,
 }) => {
   const cardContainerRef = useRef<HTMLDivElement>(null);
 
@@ -210,15 +212,32 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
                 <span>#{slotFormatted}</span>
               </div>
             </>
+          ) : slotIdx === photos.length ? (
+            /* Active Next Slot: Pulse & Tap to Capture */
+            <button
+              type="button"
+              onClick={() => onSlotClick?.(slotIdx)}
+              className="w-full h-full flex flex-col items-center justify-center bg-amber-500/10 hover:bg-amber-500/20 border-2 border-amber-500 text-amber-900 p-2 text-center transition cursor-pointer group"
+            >
+              <div className="w-7 h-7 rounded-full bg-amber-500 text-stone-950 flex items-center justify-center mb-1 text-xs font-black shadow-xs group-hover:scale-110 transition">
+                📸
+              </div>
+              <span className="text-[10px] font-mono font-black text-amber-950">
+                لقطة اليوم ✦
+              </span>
+              <span className="text-[8px] font-bold text-amber-800 mt-0.5 leading-tight">
+                اضغط للتوثيق
+              </span>
+            </button>
           ) : (
-            /* Authentic Loyalty Milestone Placeholder */
+            /* Future Locked Milestone Placeholder */
             <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 border border-dashed border-stone-300/80 text-stone-400 p-2 text-center select-none">
               <div className="w-6 h-6 rounded-full bg-stone-200/80 flex items-center justify-center mb-1 text-stone-500 text-xs">
                 {isLastSlot ? '🎁' : '🔒'}
               </div>
               <span className="text-[10px] font-mono font-black text-stone-600">#{slotFormatted}</span>
               <span className="text-[8px] font-bold text-stone-500 mt-0.5 leading-tight">
-                {isLastSlot ? (freeGiftOffer.title || 'هدية الاكتمال') : `صورة الزيارة #${visitNumber}`}
+                {isLastSlot ? (freeGiftOffer.title || 'هدية الاكتمال') : `الزيارة #${visitNumber}`}
               </span>
             </div>
           )}

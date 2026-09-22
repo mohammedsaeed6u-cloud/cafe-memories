@@ -19,6 +19,7 @@ import {
   Sparkles,
   Gift,
   CheckCircle,
+  CheckCircle2,
   ArrowRight,
   ShieldCheck,
   RotateCcw,
@@ -27,6 +28,9 @@ import {
   Heart,
   X,
   UserCheck,
+  Lock,
+  Download,
+  Camera,
 } from 'lucide-react';
 
 /** Impure id/code factories live at module scope (outside the component) so
@@ -114,6 +118,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [composedStripUrl, setComposedStripUrl] = useState<string | undefined>(undefined);
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isPrintGiftModalOpen, setIsPrintGiftModalOpen] = useState(false);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [giftCode, setGiftCode] = useState('');
   const [liveWallConsent, setLiveWallConsent] = useState(true);
 
@@ -690,242 +695,277 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
           </div>
         ) : (
           <>
-            {/* Step Indicator — Crisp & Clear */}
-            <div className="w-full bg-white/80 backdrop-blur-sm border border-stone-200/80 rounded-2xl py-3 px-4 mb-6 shadow-2xs">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
-                      !todayPhoto
-                        ? 'bg-amber-600 text-white ring-4 ring-amber-100'
-                        : 'bg-emerald-600 text-white'
-                    }`}
-                  >
-                    {!todayPhoto ? '1' : '✓'}
-                  </span>
-                  <span className={`text-xs font-bold ${!todayPhoto ? 'text-stone-950 font-black' : 'text-stone-600'}`}>
-                    اللقطة
-                  </span>
-                </div>
-
-                <div className={`h-[2px] flex-1 mx-3 rounded-full transition-colors ${todayPhoto ? 'bg-emerald-500' : 'bg-stone-200'}`} />
-
-                <div className="flex items-center gap-2.5">
-                  <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
-                      todayPhoto && !giftCode
-                        ? 'bg-amber-600 text-white ring-4 ring-amber-100'
-                        : giftCode
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-stone-100 text-stone-400 border border-stone-200'
-                    }`}
-                  >
-                    2
-                  </span>
-                  <span className={`text-xs font-bold ${todayPhoto && !giftCode ? 'text-stone-950 font-black' : 'text-stone-500'}`}>
-                    الكارت
-                  </span>
-                </div>
-
-                <div className={`h-[2px] flex-1 mx-3 rounded-full transition-colors ${giftCode ? 'bg-emerald-500' : 'bg-stone-200'}`} />
-
-                <div className="flex items-center gap-2.5">
-                  <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
-                      giftCode
-                        ? 'bg-emerald-600 text-white ring-4 ring-emerald-100'
-                        : 'bg-stone-100 text-stone-400 border border-stone-200'
-                    }`}
-                  >
-                    3
-                  </span>
-                  <span className={`text-xs font-bold ${giftCode ? 'text-stone-950 font-black' : 'text-stone-500'}`}>
-                    {isCardComplete ? 'المكافأة' : 'الحفظ'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Phase 1: Live Camera for 1 Photo Only */}
-            {!todayPhoto ? (
-              <div className="w-full animate-in fade-in">
-                <div className="text-center mb-4">
-                  <h2 className="text-xl font-black text-stone-900">
-                    وثّق لحظة زيارة اليوم ✦
-                  </h2>
-                  <p className="text-xs text-stone-500 mt-1">
-                    لكل زيارة لقطة استوديو حية تملأ خانة في كارت ولائك وتقربك من هديتك الفورية
-                  </p>
-                </div>
-
-                <CameraViewfinder
-                  onCaptureComplete={handleCaptureComplete}
-                  brandName={settings.branding.name}
-                  visitNumber={accumulatedPhotos.length + 1}
-                  aspectRatioGuide={
-                    selectedFrame.layoutType === 'wide_duo_2cut'
-                      ? '4:3'
-                      : selectedFrame.layoutType === 'cinema_horizontal'
-                      ? '16:9'
-                      : selectedFrame.layoutType === 'polaroid_square'
-                      ? '1:1'
-                      : '3:4'
-                  }
-                />
-              </div>
-            ) : (
-              /* Phase 2: Accumulated Card Preview & Next Steps */
-              <div className="w-full space-y-6 animate-in fade-in">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-black text-stone-900 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-600" />
-                      <span>كارت ذكرياتك التراكمي</span>
-                    </h2>
-                    <p className="text-xs text-stone-500 mt-0.5">
-                      تمت إضافة صورة اليوم إلى الخانة #{currentDisplayPhotos.length}
-                    </p>
+            {/* ============================================================ */}
+            {/* DIGITAL PURSE / WALLET PASS HERO (كارت محفظة الذكريات الرقمي) */}
+            {/* ============================================================ */}
+            <div className="w-full flex flex-col items-center space-y-6 animate-in fade-in duration-300">
+              {/* Luxury Digital Purse Sleeve */}
+              <div className="w-full max-w-lg bg-gradient-to-b from-[#1E1B18] via-[#141210] to-[#0A0908] border border-[#38302A] rounded-[32px] p-5 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] relative text-[#FDFBF7] overflow-hidden">
+                {/* Subtle Leather Texture & Stitching Detail */}
+                <div className="absolute inset-2 rounded-[26px] border border-dashed border-[#C59A6F]/20 pointer-events-none" />
+                
+                {/* Purse Top Crest & Header */}
+                <div className="relative z-10 flex items-center justify-between pb-4 mb-4 border-b border-[#38302A]/80">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#C59A6F] to-[#8C6B47] text-[#1C130D] flex items-center justify-center font-black text-sm shadow-md">
+                      {settings.branding.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={settings.branding.logoUrl}
+                          alt={settings.branding.name}
+                          className="w-7 h-7 object-contain rounded-xl"
+                        />
+                      ) : (
+                        <span>✦</span>
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-black text-sm text-[#FDFBF7] tracking-tight">
+                          {settings.branding.name || 'Memories Studio'}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C59A6F]/20 text-[#E8C7A5] font-bold border border-[#C59A6F]/30">
+                          {settings.businessType === 'restaurant'
+                            ? '🍽️ مطعم معتمد'
+                            : settings.businessType === 'retail'
+                            ? '🛍️ بوتيك معتمد'
+                            : settings.businessType === 'salon'
+                            ? '💅 صالون معتمد'
+                            : settings.businessType === 'entertainment'
+                            ? '🎳 مركز ترفيه'
+                            : settings.businessType === 'events'
+                            ? '🎟️ فعالية معتمدة'
+                            : '☕ كافيه معتمد'}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-[#A69585] block mt-0.5 font-medium">
+                        محفظة الذكريات والولاء الرقمية ✦ Digital Memory Purse
+                      </span>
+                    </div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setTodayPhoto(null);
-                      setComposedStripUrl(undefined);
-                    }}
-                    className="px-3.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1.5 transition"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>إعادة اللقطة</span>
-                  </button>
-                </div>
-
-                {/* Photobooth Mode / Enforced Business Frame */}
-                {settings.lockFrameForCustomers ? (
-                  <div className="bg-stone-900 text-white rounded-2xl p-3.5 px-4 border border-stone-800 shadow-sm flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
-                        ✦
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold text-white block">
-                          تصميم معتمد من {settings.branding.name || 'المكان'}
-                        </span>
-                        <span className="text-[11px] text-stone-400">
-                          {selectedFrame.shotCount} {selectedFrame.shotCount === 1 ? 'صورة' : 'صور'} • {selectedFrame.orientation === 'horizontal' ? 'كارت عريض (Horizontal)' : 'شريط رأسي (Vertical)'}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      🔒 إطار رسمي
+                  {/* Business Dictated Badge */}
+                  <div className="text-left">
+                    <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-stone-800 text-[#C59A6F] border border-[#C59A6F]/30 flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-[#C59A6F]" />
+                      <span>{selectedFrame.orientation === 'horizontal' ? 'كارت عريض' : 'كارت طولي'}</span>
+                    </span>
+                    <span className="text-[9px] text-[#8C7A6B] block mt-1 text-center font-mono font-bold">
+                      {totalCardSlots} خانات إلزامية
                     </span>
                   </div>
-                ) : settings.allowCustomerModeChoice !== false ? (
-                  <div className="bg-white/90 backdrop-blur-md rounded-2xl p-3 border border-stone-200/90 shadow-2xs">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-black text-stone-800 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                        <span>ستايل شريط الصور (Photobooth Style):</span>
-                      </span>
-                      <span className="text-[10px] text-stone-400 font-mono">
-                        {PHOTOBOOTH_CARD_MODES.find((m) => m.id === cardMode)?.nameEn}
-                      </span>
+                </div>
+
+                {/* Inset Pocket Holding the Authentic Photobooth Strip Card */}
+                <div className="relative z-10 flex justify-center py-2">
+                  <PhotoboothStripCard
+                    photos={currentDisplayPhotos}
+                    frame={{
+                      ...selectedFrame,
+                      shotCount: totalCardSlots,
+                      orientation: settings.defaultOrientation || selectedFrame.orientation || 'vertical',
+                      frameShape: settings.defaultFrameShape || selectedFrame.frameShape || 'rounded',
+                      cardMode: settings.defaultCardMode || selectedFrame.cardMode || 'korean_noir',
+                    }}
+                    branding={settings.branding}
+                    freeGiftOffer={settings.freeGiftOffer}
+                    cardMode={settings.defaultCardMode || selectedFrame.cardMode || 'korean_noir'}
+                    onSlotClick={() => {
+                      if (!todayPhoto && !isLockedByCooldown) {
+                        setIsCameraModalOpen(true);
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Purse Progress & Status Strip */}
+                <div className="relative z-10 mt-4 pt-3 border-t border-[#38302A]/80 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-[#A69585] font-bold">حالة المحفظة:</span>
+                    <span className="font-mono text-xs font-black text-[#E8C7A5]">
+                      {currentDisplayPhotos.length} / {totalCardSlots} خانات مكتملة
+                    </span>
+                  </div>
+
+                  {/* Visual Progress Dots */}
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: totalCardSlots }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`w-2.5 h-2.5 rounded-full transition-all ${
+                          idx < currentDisplayPhotos.length
+                            ? 'bg-[#C59A6F] ring-2 ring-[#C59A6F]/30'
+                            : idx === currentDisplayPhotos.length && !todayPhoto
+                            ? 'bg-amber-400 animate-pulse'
+                            : 'bg-stone-700'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Primary Interaction Buttons Under the Purse */}
+              <div className="w-full max-w-lg space-y-3">
+                {!todayPhoto && !isLockedByCooldown ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsCameraModalOpen(true)}
+                    className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-extrabold text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-3 active:scale-[0.98] border border-amber-500/30"
+                  >
+                    <Camera className="w-5 h-5 text-amber-200" />
+                    <span>📸 توثيق لقطة زيارة اليوم (+ إضافة للمحفظة)</span>
+                  </button>
+                ) : todayPhoto ? (
+                  <div className="space-y-3 bg-white p-4 sm:p-5 rounded-3xl border border-stone-200 shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                        <span>تمت إضافة لقطة اليوم بنجاح إلى الكارت!</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTodayPhoto(null);
+                          setComposedStripUrl(undefined);
+                        }}
+                        className="px-3.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1.5 transition"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>إعادة اللقطة</span>
+                      </button>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                      {PHOTOBOOTH_CARD_MODES.map((mode) => (
-                        <button
-                          key={mode.id}
-                          type="button"
-                          onClick={() => {
-                            setCardMode(mode.id);
-                            // Template is matched by mode first, then by the
-                            // template-id prefix convention (e.g. korean_noir_2x6).
-                            const matchingTemplate = PHOTOBOOTH_FRAME_TEMPLATES.find(
-                              (t) => t.cardMode === mode.id || t.id.startsWith(mode.id)
-                            );
-                            setSelectedFrame((prev) => ({
-                              ...prev,
-                              cardMode: mode.id,
-                              layoutType: matchingTemplate?.layoutType || prev.layoutType,
-                              shotCount: matchingTemplate?.shotCount || prev.shotCount,
-                              orientation: matchingTemplate?.orientation || prev.orientation,
-                              widthCm: mode.widthCm || matchingTemplate?.widthCm || prev.widthCm,
-                              heightCm: mode.heightCm || matchingTemplate?.heightCm || prev.heightCm,
-                              bgColor: mode.defaultBg,
-                              borderColor: mode.defaultBorder,
-                              textColor: mode.defaultText,
-                              accentColor: mode.defaultAccent,
-                              badgeText: mode.filmBadge,
-                            }));
-                          }}
-                          className={`px-2.5 py-2 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition ${
-                            cardMode === mode.id
-                              ? 'bg-amber-500/10 border-amber-500 text-amber-900 shadow-2xs scale-[1.02]'
-                              : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
-                          }`}
-                        >
-                          <span className="text-base">{mode.icon}</span>
-                          <span className="text-[11px] truncate w-full text-center leading-tight">
-                            {mode.nameEn}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+
+                    {customerPhone.trim().length >= 8 ? (
+                      <div className="p-3 bg-stone-50 rounded-2xl border border-stone-200 flex items-center justify-between text-xs">
+                        <span className="text-stone-700 font-medium">
+                          الكارت مربوط برقمك: <strong className="font-mono text-stone-900">{customerPhone}</strong>
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-700">✓ محفوظ ومحدث</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsLeadModalOpen(true)}
+                        className="w-full py-3.5 px-4 rounded-xl bg-stone-950 hover:bg-stone-900 text-white text-xs font-bold transition flex items-center justify-center gap-2"
+                      >
+                        <Heart className="w-4 h-4 text-amber-400" />
+                        <span>ربط الكارت برقم هاتفك لحفظ زياراتك القادمة</span>
+                      </button>
+                    )}
                   </div>
                 ) : null}
 
-                {/* Aesthetic Card Strip with Interactive Draggable Stickers */}
-                <div className="flex justify-center py-2">
-                  <PhotoboothStripCard
-                    photos={currentDisplayPhotos}
-                    frame={selectedFrame}
-                    branding={settings.branding}
-                    freeGiftOffer={settings.freeGiftOffer}
-                    cardMode={cardMode}
-                    stickers={stickers}
-                    onUpdateStickers={setStickers}
-                    isStickersInteractive={true}
-                  />
+                {/* Gated Retention & Download / Print Milestone Unlocks */}
+                <div className="w-full bg-[#FAF8F5] border border-[#E6DDD0] rounded-3xl p-5 shadow-sm space-y-4">
+                  {!isCardComplete ? (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                          <Lock className="w-5 h-5 text-amber-700" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-sm text-stone-900 leading-tight">
+                            التحميل عالي الدقة (HD) والطباعة يفتحان عند اكتمال الكارت
+                          </h3>
+                          <p className="text-xs text-stone-600 mt-1 leading-relaxed">
+                            كارت ذكرياتك يكتمل بزياراتك القادمة للشراء من المتجر. متبقي{' '}
+                            <strong className="text-amber-800 font-bold">
+                              {totalCardSlots - currentDisplayPhotos.length} زيارات
+                            </strong>{' '}
+                            لفتح هديتك الفورية ({settings.freeGiftOffer.title || 'مشروب مجاني'}) وتفعيل تحميل وطباعة الكارت التذكاري.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Firmly Gated Buttons */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        <button
+                          type="button"
+                          disabled
+                          className="py-3 px-4 rounded-2xl bg-stone-100 text-stone-400 font-bold text-xs border border-stone-200 flex items-center justify-center gap-2 cursor-not-allowed"
+                          title="التحميل مغلق حتى إكمال الكارت بالشراء المتكرر"
+                        >
+                          <Lock className="w-3.5 h-3.5 text-stone-400" />
+                          <span>تحميل الكارت HD (مغلق)</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled
+                          className="py-3 px-4 rounded-2xl bg-stone-100 text-stone-400 font-bold text-xs border border-stone-200 flex items-center justify-center gap-2 cursor-not-allowed"
+                          title="الطباعة مغلقة حتى اكتمال جميع الخانات"
+                        >
+                          <Lock className="w-3.5 h-3.5 text-stone-400" />
+                          <span>طباعة الكارت الفاخر (مغلق)</span>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    /* Card 100% Complete: Full Celebratory Unlock! */
+                    <div className="space-y-4 text-center">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 shadow-sm mx-auto">
+                        <Sparkles className="w-6 h-6 text-emerald-600 animate-bounce" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-stone-950">
+                          🎉 ألف مبروك! اكتمل كارت ذكرياتك بالكامل!
+                        </h3>
+                        <p className="text-xs text-stone-600 mt-1">
+                          استحققت هديتك الفورية:{' '}
+                          <strong className="text-amber-900">{settings.freeGiftOffer.title}</strong>
+                        </p>
+                      </div>
+
+                      {/* Cashier Voucher Code */}
+                      <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-2xl inline-flex flex-col items-center justify-center min-w-[240px]">
+                        <span className="text-[10px] text-amber-800 font-bold mb-0.5">
+                          كود صرف الهدية لدى {staffLabel}:
+                        </span>
+                        <span className="font-mono text-2xl font-black text-amber-950 tracking-wider">
+                          {giftCode || 'GIFT-FREE'}
+                        </span>
+                      </div>
+
+                      {/* Unlocked Actions */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (composedStripUrl) {
+                              const a = document.createElement('a');
+                              a.href = composedStripUrl;
+                              a.download = `memories-pass-${Date.now()}.png`;
+                              document.body.appendChild(a);
+                              a.click();
+                              document.body.removeChild(a);
+                            }
+                          }}
+                          className="py-3.5 px-4 rounded-2xl bg-stone-950 hover:bg-black text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-4 h-4 text-amber-400" />
+                          <span>تحميل كارت الذكريات HD ⬇️</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (composedStripUrl) {
+                              PrintService.printStripImage(composedStripUrl);
+                            } else {
+                              PrintService.printElement('printable-strip');
+                            }
+                          }}
+                          className="py-3.5 px-4 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2"
+                        >
+                          <span>🖨️ إرسال الكارت للطباعة</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {/* Draggable Sticker & Emoji Control Tray */}
-                {settings.allowCustomerStickers !== false && (
-                  <StickerControlTray
-                    onAddSticker={handleAddSticker}
-                    stickersCount={stickers.length}
-                    onClearAll={() => setStickers([])}
-                  />
-                )}
-
-                {/* Customer Allowed Color Picker (Strictly Controlled by Business Owner) */}
-                {settings.allowCustomerColorChoice && (
-                  <CardColorPicker
-                    palettes={
-                      settings.allowedColorIds && settings.allowedColorIds.length > 0
-                        ? PRESET_COLOR_PALETTES.filter((p) =>
-                            settings.allowedColorIds?.includes(p.id)
-                          )
-                        : PRESET_COLOR_PALETTES
-                    }
-                    selectedPaletteId={selectedPaletteId}
-                    onSelectPalette={handleColorPaletteChange}
-                  />
-                )}
-
-                {/* CTA: Proceed to Lead Form */}
-                <button
-                  onClick={handleProceedToGift}
-                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-3 active:scale-[0.98]"
-                >
-                  <Gift className="w-5 h-5" />
-                  <span>
-                    {isCardComplete
-                      ? '🎉 اكتمل الكارت! استلم هديتك واطبع شريطك الآن'
-                      : 'حفظ لقطة اليوم ومتابعة تقدم الكارت'}
-                  </span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
               </div>
-            )}
+            </div>
           </>
         )}
       </main>
@@ -1148,6 +1188,46 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      
+      {/* Camera Viewfinder Modal */}
+      {isCameraModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md animate-in fade-in">
+          <div className="relative w-full max-w-md bg-stone-950 rounded-3xl p-4 sm:p-6 shadow-2xl border border-stone-800 text-white">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-stone-800">
+              <div className="flex items-center gap-2">
+                <Camera className="w-4 h-4 text-amber-400" />
+                <h3 className="text-sm font-bold text-white">
+                  توثيق لقطة زيارة اليوم ✦ {settings.branding.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCameraModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 flex items-center justify-center transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Viewfinder Component */}
+            <CameraViewfinder
+              onCaptureComplete={(photo) => {
+                handleCaptureComplete(photo);
+                setIsCameraModalOpen(false);
+              }}
+              brandName={settings.branding.name}
+              visitNumber={accumulatedPhotos.length + 1}
+              aspectRatioGuide={
+                selectedFrame.orientation === 'horizontal'
+                  ? '4:3'
+                  : '3:4'
+              }
+            />
           </div>
         </div>
       )}
