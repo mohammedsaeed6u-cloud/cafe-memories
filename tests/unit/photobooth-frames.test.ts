@@ -202,5 +202,52 @@ describe('Photobooth Frames Template System', () => {
       expect(DEFAULT_PHOTOBOOTH_FRAMES.some((f) => f.id === 'film-35mm')).toBe(true);
       expect(DEFAULT_PHOTOBOOTH_FRAMES.some((f) => f.id === 'polaroid-vintage')).toBe(true);
     });
+
+    it('provides viral Gen-Z & Korean frame suites (Snap Express, Spotify, iPhone Gallery, Camera, iMessage)', () => {
+      // 1. The Snap Express vintage train ticket
+      const snapTemplate = PHOTOBOOTH_FRAME_TEMPLATES.find((t) => t.id === 'snap_express_ticket_2x6');
+      expect(snapTemplate).toBeDefined();
+      expect(snapTemplate?.cardMode).toBe('ticket_express');
+      expect(snapTemplate?.defaultBg).toBe('#FAF5EC');
+      expect(snapTemplate?.defaultBorder).toBe('#4A121A');
+      expect(snapTemplate?.shotCount).toBe(3);
+
+      const snapFrame = DEFAULT_PHOTOBOOTH_FRAMES.find((f) => f.id === 'snap-express');
+      expect(snapFrame).toBeDefined();
+      expect(snapFrame?.ticketSeat).toBe('ROW 15 • SEAT A33');
+
+      // 2. Spotify Photostrip with colorways
+      const spotifyTemplate = PHOTOBOOTH_FRAME_TEMPLATES.find((t) => t.id === 'spotify_photostrip_2x6');
+      expect(spotifyTemplate).toBeDefined();
+      expect(spotifyTemplate?.cardMode).toBe('spotify_player');
+      expect(spotifyTemplate?.defaultAccent).toBe('#1DB954');
+
+      const spotifyFrame = DEFAULT_PHOTOBOOTH_FRAMES.find((f) => f.id === 'spotify-player');
+      expect(spotifyFrame).toBeDefined();
+      expect(spotifyFrame?.songTitle).toBe('Nobody Gets Me');
+
+      // Spotify 4 colorways
+      const paletteIds = PRESET_COLOR_PALETTES.map((p) => p.id);
+      expect(paletteIds).toContain('spotify-slate-blue');
+      expect(paletteIds).toContain('spotify-warm-taupe');
+      expect(paletteIds).toContain('spotify-charcoal-oled');
+      expect(paletteIds).toContain('spotify-burnt-terracotta');
+
+      // 3. Apple Photos Gallery Bright & Dark
+      const iosLight = PHOTOBOOTH_FRAME_TEMPLATES.find((t) => t.id === 'iphone_gallery_light_2x6');
+      const iosDark = PHOTOBOOTH_FRAME_TEMPLATES.find((t) => t.id === 'iphone_gallery_dark_2x6');
+      expect(iosLight).toBeDefined();
+      expect(iosDark).toBeDefined();
+      expect(iosLight?.cardMode).toBe('ios_gallery_light');
+      expect(iosDark?.cardMode).toBe('ios_gallery_dark');
+
+      // 4. iOS Camera & iMessage MMS
+      const iosCamera = PHOTOBOOTH_FRAME_TEMPLATES.find((t) => t.id === 'iphone_camera_strip_2x6');
+      const iosMessage = PHOTOBOOTH_FRAME_TEMPLATES.find((t) => t.id === 'iphone_imessage_strip_2x6');
+      expect(iosCamera).toBeDefined();
+      expect(iosMessage).toBeDefined();
+      expect(iosCamera?.cardMode).toBe('ios_camera');
+      expect(iosMessage?.cardMode).toBe('ios_imessage');
+    });
   });
 });

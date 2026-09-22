@@ -90,8 +90,8 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
           </div>
           <h3 className="text-xl font-black text-stone-900">
             {isCardComplete
-              ? '🎉 مبارك! اكتمل كارت ذكرياتك بالكامل!'
-              : `تم توثيق زيارتك بنجاح يا ${customerName}! ✨`}
+              ? 'اكتمل كارت ذكرياتك بالكامل!'
+              : `تم توثيق زيارتك بنجاح يا ${customerName}!`}
           </h3>
           {customerRoleLabel && (
             <p className="text-xs font-bold text-amber-800 mt-1">
@@ -138,7 +138,7 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
               <span>{freeGiftOffer.title || 'مشروب مجاني أو هدية فورية'}</span>
             </div>
             <p className="text-xs text-stone-600 mb-3">
-              🎉 مبروك! اكتمل كارت ذكرياتك بالكامل. أظهر هذا الكود لفريق المكان لاستلام هديتك مع الصورة المطبوعة:
+              اكتمل كارت ذكرياتك بالكامل. أظهر هذا الكود لفريق المكان لاستلام هديتك مع الصورة المطبوعة:
             </p>
 
             <div className="inline-flex items-center gap-2 bg-white px-5 py-2.5 rounded-xl border border-amber-300 shadow-inner">
@@ -189,7 +189,7 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
             className="w-full mb-3 py-3.5 px-5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 transition active:scale-[0.98]"
           >
             <Camera className="w-4 h-4" />
-            <span>لديك رصيد صور من أوردراتك! التقط الصورة التالية الآن (+{extraShots}) 📸</span>
+            <span>لديك رصيد صور من أوردراتك! التقط الصورة التالية الآن (+{extraShots})</span>
           </button>
         )}
 

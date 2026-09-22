@@ -6,15 +6,25 @@ import { BusinessSettingsService } from '@/lib/services/business-settings.servic
 import { CooldownService } from '@/lib/services/cooldown.service';
 import { PrintService } from '@/lib/services/print.service';
 import { CameraViewfinder } from '@/components/photobooth/CameraViewfinder';
-import { PhotoboothStripCard } from '@/components/photobooth/PhotoboothStripCard';
 import { CardColorPicker } from '@/components/photobooth/CardColorPicker';
-import { PrintGiftModal } from '@/components/photobooth/PrintGiftModal';
 import { StripComposerService } from '@/lib/services/strip-composer.service';
 import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
-import { LoyaltyStampCard } from '@/components/customer/LoyaltyStampCard';
-import type { LoyaltyStampSlot } from '@/lib/services/loyalty-stamps';
 import { PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
 import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
+import { PasswordInput } from '@/components/ui/PasswordInput';
+
+// Dedicated Feature Slices
+import { CoBrandingHeader } from '@/features/co-branding/CoBrandingHeader';
+import { CustomerLoyaltyCard } from '@/features/loyalty/CustomerLoyaltyCard';
+import { StaffQuickStampModal } from '@/features/loyalty/StaffQuickStampModal';
+import { LoyaltyPurseService, CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
+import { PhotoboothResponsiveCard } from '@/features/photobooth/PhotoboothResponsiveCard';
+import { AestheticSampleToggle } from '@/features/photobooth/AestheticSampleToggle';
+import { PhotoCaptureOrUpload } from '@/features/photobooth/PhotoCaptureOrUpload';
+import { InstagramMentionPrompt } from '@/features/social/InstagramMentionPrompt';
+import { WallConsentModal } from '@/features/wall-consent/WallConsentModal';
+import { CompletionGiftRewardModal } from '@/features/rewards/CompletionGiftRewardModal';
+
 import {
   Sparkles,
   Gift,
@@ -31,13 +41,19 @@ import {
   Lock,
   Download,
   Camera,
+  Share2,
 } from 'lucide-react';
 
-/** Impure id/code factories live at module scope (outside the component) so
- * renders stay pure (react-hooks/purity) while ids stay unique per submit. */
 const createGiftCode = () => `GIFT-${Math.floor(1000 + Math.random() * 9000)}`;
 const createTrackedId = (prefix: string) =>
   `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+const AESTHETIC_PREVIEW_PORTRAITS = [
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&auto=format&fit=crop&q=80',
+];
 
 export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   // Business settings state
@@ -46,7 +62,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   );
 
   const [selectedPaletteId, setSelectedPaletteId] = useState<string>(() => {
-    return settings.activeColorPaletteId || 'classic-latte';
+    return settings.activeColorPaletteId || 'ticket-express-cream';
   });
 
   const staffLabel =
@@ -56,87 +72,75 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       ? 'الكاشير'
       : settings.businessType === 'salon'
       ? 'الاستقبال'
-      : settings.businessType === 'entertainment'
-      ? 'مشرف الألعاب'
-      : settings.businessType === 'events'
-      ? 'منظم الفعالية'
       : 'الباريستا';
 
-  const [stickers, setStickers] = useState<PlacedSticker[]>([]);
-  const [cardMode, setCardMode] = useState<PhotoboothCardMode>(
-    settings.defaultCardMode || 'korean_noir'
-  );
-
-  const handleAddSticker = (emoji: string) => {
-    if (!emoji.trim()) return;
-    // Randomness lives in event handlers (never during render), so ids and
-    // offsets stay stable across re-renders.
-    const randomOffset = (Math.random() - 0.5) * 20;
-    const newSticker: PlacedSticker = {
-      id: `stk_${crypto.randomUUID()}`,
-      emoji: emoji.trim(),
-      x: Math.max(15, Math.min(85, 50 + randomOffset)),
-      y: Math.max(15, Math.min(85, 40 + randomOffset)),
-      rotation: Math.round((Math.random() - 0.5) * 30),
-      scale: 1,
-    };
-    setStickers((prev) => [...prev, newSticker]);
-  };
-
+  // Frame selection
   const [selectedFrame, setSelectedFrame] = useState<PhotoboothFrame>(() => {
     const base =
       settings.frames.find((f) => f.id === settings.activeFrameId) ||
       settings.frames[0];
     return {
       ...base,
-      templateId: settings.defaultTemplateId || base?.templateId || 'korean_noir_2x6',
+      templateId: settings.defaultTemplateId || base?.templateId || 'snap_express_ticket_2x6',
       layoutType: settings.defaultLayoutType || base?.layoutType,
-      shotCount: settings.defaultShotCount || base?.shotCount || 4,
+      shotCount: settings.defaultShotCount || base?.shotCount || 3,
       orientation: settings.defaultOrientation || base?.orientation || 'vertical',
       frameShape: settings.defaultFrameShape || 'rounded',
+      dimensionsPreset: (settings.defaultDimensionsPreset as any) || 'strip_2x6',
     };
   });
 
-  // Cooldown / 24-hour limit state
-  const [deviceId, setDeviceId] = useState<string>('');
-  const [isLockedByCooldown, setIsLockedByCooldown] = useState(false);
-  const [remainingCooldownHours, setRemainingCooldownHours] = useState(24);
+  const [cardMode, setCardMode] = useState<PhotoboothCardMode>(
+    settings.defaultCardMode || 'ticket_express'
+  );
 
-  // Customer session state (isolated strictly by phone).
-  // Initializers MUST NOT read localStorage directly: server render and client
-  // hydration would diverge (hydration mismatch). The mount effect below
-  // hydrates these states from storage after the first consistent render.
+  // Sub-customizer states for viral frames
+  const [spotifyBg, setSpotifyBg] = useState<string>('#384C5A');
+  const [spotifyTrack, setSpotifyTrack] = useState<{ title: string; artist: string }>({
+    title: 'Nobody Gets Me',
+    artist: 'SZA • SOS',
+  });
+  const [ticketSeat, setTicketSeat] = useState<string>('ROW 15 • SEAT A33');
+
+  // Customer session state
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerProfession, setCustomerProfession] = useState('');
 
-  // Check if current customer is identified in this session
+  // Loyalty purse state
+  const [loyaltyData, setLoyaltyData] = useState<CustomerLoyaltyData>(() =>
+    LoyaltyPurseService.getData(customerPhone, cafeSlug, 5)
+  );
 
-  // Photobooth state: Customer's accumulated photos on their card
+  // Modals & Flows
+  const [isStaffStampModalOpen, setIsStaffStampModalOpen] = useState(false);
+  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [isWallConsentModalOpen, setIsWallConsentModalOpen] = useState(false);
+  const [isCompletionRewardOpen, setIsCompletionRewardOpen] = useState(false);
+  const [hasAnsweredWallConsent, setHasAnsweredWallConsent] = useState(false);
+
+  // Card photos state
   const [accumulatedPhotos, setAccumulatedPhotos] = useState<string[]>([]);
   const [todayPhoto, setTodayPhoto] = useState<string | null>(null);
   const [composedStripUrl, setComposedStripUrl] = useState<string | undefined>(undefined);
-  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
-  const [isPrintGiftModalOpen, setIsPrintGiftModalOpen] = useState(false);
-  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
   const [giftCode, setGiftCode] = useState('');
   const [liveWallConsent, setLiveWallConsent] = useState(true);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Visit count comes from the server response (customer.visitsCount); the
-  // local card only needs its own photo list.
+  const [stickers, setStickers] = useState<PlacedSticker[]>([]);
 
-  // Loyalty stamp card: server slots (cloud truth) + honest cloud-sync notice
-  const [loyaltySlots, setLoyaltySlots] = useState<LoyaltyStampSlot[]>([]);
-  const [cloudSync, setCloudSync] = useState<'idle' | 'synced' | 'local_only'>('idle');
-  const [extraShots, setExtraShots] = useState<number>(0);
-  const [isBaristaPinModalOpen, setIsBaristaPinModalOpen] = useState<boolean>(false);
-  const [baristaPin, setBaristaPin] = useState<string>('');
-  const [pinShotsCount, setPinShotsCount] = useState<number>(1);
-  const [pinError, setPinError] = useState<string | null>(null);
+  // Preview Mode with high-aesthetic portraits (defaults to false for real customer card)
+  const [isPreviewWithSamples, setIsPreviewWithSamples] = useState<boolean>(false);
 
-  // Hydrate persisted session from storage AFTER first render (avoids SSR
-  // hydration mismatch): reads happen post-paint, writes batch to one commit.
+  // Customer Onboarding / Registration Form State
+  const [regName, setRegName] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regSuccessNotice, setRegSuccessNotice] = useState<string | null>(null);
+
+  // Total slots authoritative from merchant
+  const totalCardSlots = Math.max(selectedFrame.shotCount || 3, 1);
+
+  // Hydrate persisted session from storage
   useEffect(() => {
     const hydrateSession = () => {
       const storedName = localStorage.getItem('memories_customer_name') || '';
@@ -145,267 +149,126 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       if (storedName) setCustomerName(storedName);
       if (storedPhone) setCustomerPhone(storedPhone);
       if (storedRole) setCustomerProfession(storedRole);
-      if (storedPhone.trim().length >= 8 && storedName.trim().length > 0) {
-        // Session restored from storage; the identity strip below keys off
-        // customerPhone, so no extra state is needed.
+
+      // Restore loyalty data
+      const loyalty = LoyaltyPurseService.getData(storedPhone, cafeSlug, 5);
+      setLoyaltyData(loyalty);
+
+      // Check wall consent answer
+      const consentAnswered = localStorage.getItem(`memories_wall_consent_${cafeSlug}_${storedPhone || 'guest'}`);
+      if (consentAnswered) {
+        setHasAnsweredWallConsent(true);
+        setLiveWallConsent(consentAnswered === 'true');
       }
-    };
-    // Run after first paint so SSR and first client render match exactly.
-    const raf = requestAnimationFrame(hydrateSession);
-    return () => cancelAnimationFrame(raf);
-  }, []);
 
-  // Holds the device-setup effect's listener cleanup between the post-paint
-  // callback and the effect's own teardown.
-  const cleanupRef = useRef<(() => void) | null>(null);
-
-  // Initialize device ID, check 24-hour cooldown & load saved card for THIS customer
-  useEffect(() => {
-    const runDeviceSetup = () => {
-      // Random device id is generated post-paint (inside this callback), not
-      // in the component body, to keep renders pure.
-      let id = localStorage.getItem('memories_device_id');
-      if (!id) {
-        id = `dev_${crypto.randomUUID()}`;
-        localStorage.setItem('memories_device_id', id);
-      }
-      setDeviceId(id);
-
-      const clean = customerPhone.trim().replace(/[^0-9]/g, '');
-
-      // Load past photos for THIS specific customer
-      if (clean) {
-        try {
-          const past = localStorage.getItem(`memories_card_photos_${cafeSlug}_${clean}`);
-          if (past) {
-            const parsed = JSON.parse(past);
-            if (Array.isArray(parsed)) {
-              setAccumulatedPhotos(parsed);
-            } else {
-              setAccumulatedPhotos([]);
+      // Restore saved photos for this customer
+      if (storedPhone) {
+        const clean = storedPhone.trim().replace(/[^0-9]/g, '');
+        const saved = localStorage.getItem(`memories_card_photos_${cafeSlug}_${clean}`);
+        if (saved) {
+          try {
+            const list = JSON.parse(saved);
+            if (Array.isArray(list) && list.length > 0) {
+              setAccumulatedPhotos(list);
+              setIsPreviewWithSamples(false); // Switch to real card if photos exist
             }
-          } else {
-            setAccumulatedPhotos([]);
-          }
-        } catch {
-          setAccumulatedPhotos([]);
+          } catch {}
         }
-      } else {
-        setAccumulatedPhotos([]);
       }
-
-      const checkLock = () => {
-        if (!clean) {
-          setIsLockedByCooldown(false);
-          setExtraShots(0);
-          return;
-        }
-        const accessPhone = CooldownService.checkAccess(clean, cafeSlug);
-        setExtraShots(accessPhone.extraShotsAvailable);
-        if (!accessPhone.allowed) {
-          setIsLockedByCooldown(true);
-          setRemainingCooldownHours(accessPhone.remainingHours || 24);
-        } else {
-          setIsLockedByCooldown(false);
-        }
-      };
-
-      checkLock();
-
-      const handleUnlocked = () => {
-        checkLock();
-      };
-
-      window.addEventListener('memories-cooldown-unlocked', handleUnlocked);
-      window.addEventListener('memories-order-shots-updated', handleUnlocked);
-      window.addEventListener('storage', handleUnlocked);
-
-      return () => {
-        window.removeEventListener('memories-cooldown-unlocked', handleUnlocked);
-        window.removeEventListener('memories-order-shots-updated', handleUnlocked);
-        window.removeEventListener('storage', handleUnlocked);
-      };
     };
+    requestAnimationFrame(hydrateSession);
+  }, [cafeSlug]);
 
-    // Apply post-paint so SSR and first client render match exactly (the same
-    // hydration pattern as the session-hydrate effect above).
-    const raf = requestAnimationFrame(() => {
-      cleanupRef.current = runDeviceSetup();
-    });
-    return () => {
-      cancelAnimationFrame(raf);
-      cleanupRef.current?.();
-      cleanupRef.current = null;
-    };
-  }, [cafeSlug, customerPhone]);
+  // Current photos to display: samples if preview mode, or customer's actual photos
+  const currentDisplayPhotos =
+    isPreviewWithSamples && accumulatedPhotos.length === 0
+      ? AESTHETIC_PREVIEW_PORTRAITS.slice(0, totalCardSlots)
+      : todayPhoto
+      ? [...accumulatedPhotos, todayPhoto]
+      : accumulatedPhotos;
 
-  /* eslint-disable react-hooks/set-state-in-effect -- real-time auto-fill: while the customer
-     types their phone, a returning profile is looked up and the known name/role are filled in.
-     This is synchronous, user-visible feedback that must fire per keystroke, not a derived
-     value that can live in render. */
+  // Check completion
+  const isCardCompleted = accumulatedPhotos.length >= totalCardSlots || (todayPhoto && accumulatedPhotos.length + 1 >= totalCardSlots);
 
-  // Real-time lookup as customer types their phone: auto-fills the known
-  // name/role for returning customers (read feedback, not derived state).
-  useEffect(() => {
-    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
-    if (clean.length >= 8) {
-      const lookup = CustomerRegistryService.lookupCustomer(clean, cafeSlug);
-      if (lookup.exists && lookup.name) {
-        setCustomerName(lookup.name);
-        if (lookup.role) setCustomerProfession(lookup.role);
-      }
-    }
-  }, [customerPhone, cafeSlug]);
+  // Direct Staff Stamp Handler
+  const handleStaffStampSuccess = () => {
+    const res = LoyaltyPurseService.addDirectStamp(customerPhone, cafeSlug, 5);
+    setLoyaltyData(LoyaltyPurseService.getData(customerPhone, cafeSlug, 5));
+  };
 
-  /* eslint-enable react-hooks/set-state-in-effect */
+  // Customer Registration & Check-in Handler
+  const handleRegisterCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = regPhone.trim().replace(/[^0-9]/g, '');
+    const name = regName.trim();
+    if (!clean || clean.length < 8 || !name) return;
 
-  const handleSwitchCustomer = () => {
-    setTodayPhoto(null);
-    setAccumulatedPhotos([]);
-    setComposedStripUrl(undefined);
+    CustomerRegistryService.registerCustomer(clean, name, 'coffee_lover', cafeSlug);
+    setCustomerPhone(clean);
+    setCustomerName(name);
+    const updatedLoyalty = LoyaltyPurseService.getData(clean, cafeSlug, 5);
+    setLoyaltyData(updatedLoyalty);
+    setRegSuccessNotice(`تم تثبيت كارت الولاء بنجاح للعميل (${name})! يمكنك الآن التقاط صورك وختم زياراتك.`);
+    setTimeout(() => setRegSuccessNotice(null), 4000);
+  };
+
+  const handleClearCustomer = () => {
     setCustomerPhone('');
     setCustomerName('');
-    setCustomerProfession('');
-    setIsLockedByCooldown(false);
-    setExtraShots(0);
+    localStorage.removeItem('memories_customer_phone');
+    localStorage.removeItem('memories_customer_name');
+    setLoyaltyData(LoyaltyPurseService.getData('', cafeSlug, 5));
+  };
+
+  // Add Photo Handler (from camera, file upload, or test shot)
+  const handleCommitPhoto = (photoBase64: string) => {
+    setIsPreviewWithSamples(false);
+    const updated = [...accumulatedPhotos, photoBase64];
+    setAccumulatedPhotos(updated);
+
+    const clean = customerPhone.trim().replace(/[^0-9]/g, '') || 'guest';
     try {
-      localStorage.removeItem('memories_customer_phone');
-      localStorage.removeItem('memories_customer_name');
-      localStorage.removeItem('memories_customer_role');
+      localStorage.setItem(`memories_card_photos_${cafeSlug}_${clean}`, JSON.stringify(updated));
+      CustomerRegistryService.registerCustomer(clean, customerName || 'ضيف الكافيه', 'coffee_lover', cafeSlug);
     } catch {}
-  };
 
-  const handleVerifyPinAndAddShots = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!CooldownService.verifyBaristaPin(baristaPin)) {
-      setPinError('رمز التحقق غير صحيح. اسأل الموظف المختص عن الرمز الصحيح.');
-      return;
+    // Check if card just completed!
+    if (updated.length >= totalCardSlots) {
+      const code = createGiftCode();
+      setGiftCode(code);
+
+      // Trigger 1-time TV Wall Consent if not answered yet
+      if (!hasAnsweredWallConsent) {
+        setIsWallConsentModalOpen(true);
+      } else {
+        setIsCompletionRewardOpen(true);
+      }
     }
-    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
-    const targetId = clean || deviceId;
-    const newTotal = CooldownService.addOrderShots(targetId, pinShotsCount, 1, cafeSlug);
-    setExtraShots(newTotal);
-    setIsLockedByCooldown(false);
-    setIsBaristaPinModalOpen(false);
-    setBaristaPin('');
-    setPinError(null);
   };
 
-  const handleTakeNextOrderPhoto = () => {
-    setTodayPhoto(null);
-    setIsPrintGiftModalOpen(false);
+  // Quick aesthetic test shot
+  const handleQuickSampleShot = () => {
+    const nextIdx = accumulatedPhotos.length % AESTHETIC_PREVIEW_PORTRAITS.length;
+    handleCommitPhoto(AESTHETIC_PREVIEW_PORTRAITS[nextIdx]);
   };
 
-  const handleColorPaletteChange = async (palette: CardColorPalette) => {
-    setSelectedPaletteId(palette.id);
-    const updatedFrame: PhotoboothFrame = {
-      ...selectedFrame,
-      bgColor: palette.bgColor,
-      borderColor: palette.borderColor,
-      textColor: palette.textColor,
-      accentColor: palette.accentColor,
-      shotCount: settings.defaultShotCount,
-      orientation: settings.defaultOrientation,
-      frameShape: settings.defaultFrameShape || 'rounded',
-    };
-    setSelectedFrame(updatedFrame);
+  // Handle Wall Consent Answer
+  const handleWallConsent = (consent: boolean) => {
+    setLiveWallConsent(consent);
+    setHasAnsweredWallConsent(true);
+    const clean = customerPhone.trim().replace(/[^0-9]/g, '') || 'guest';
+    localStorage.setItem(`memories_wall_consent_${cafeSlug}_${clean}`, consent ? 'true' : 'false');
+    setIsWallConsentModalOpen(false);
 
-    const currentPhotos = todayPhoto ? [...accumulatedPhotos, todayPhoto] : accumulatedPhotos;
-    if (currentPhotos.length > 0) {
-      const slots = Math.max(settings.defaultShotCount || 3, 1);
+    // If consent given, broadcast to wall feed
+    if (consent) {
       try {
-        const stripUrl = await StripComposerService.composeStrip({
-          photos: currentPhotos,
-          totalSlots: slots,
-          frame: updatedFrame,
-          branding: settings.branding,
-          freeGiftOffer: settings.freeGiftOffer,
-          giftCode: giftCode || 'GIFT-MEMO',
-        });
-        setComposedStripUrl(stripUrl);
-      } catch (err) {
-        console.warn('Canvas re-composition fallback', err);
-      }
-    }
-  };
-
-  // Sync settings when updated in storage or another tab
-  useEffect(() => {
-    const handleSettingsUpdate = (e: Event) => {
-      const detail = (e as CustomEvent<BusinessSettings>).detail;
-      if (detail) {
-        setSettings(detail);
-        const match = detail.frames?.find((f: PhotoboothFrame) => f.id === detail.activeFrameId);
-        if (match) setSelectedFrame(match);
-      }
-    };
-
-    window.addEventListener('memories-settings-updated', handleSettingsUpdate);
-    return () => window.removeEventListener('memories-settings-updated', handleSettingsUpdate);
-  }, []);
-
-  // When customer captures today's single photo
-  const handleCaptureComplete = async (photo: string) => {
-    setTodayPhoto(photo);
-    const updated = [...accumulatedPhotos, photo];
-    const slots = Math.max(selectedFrame.shotCount || 3, 1);
-
-    // Compose canvas strip in background
-    try {
-      const stripUrl = await StripComposerService.composeStrip({
-        photos: updated,
-        totalSlots: slots,
-        frame: selectedFrame,
-        branding: settings.branding,
-        freeGiftOffer: settings.freeGiftOffer,
-        giftCode: '',
-        cardMode: cardMode,
-        stickers: stickers,
-      });
-      setComposedStripUrl(stripUrl);
-    } catch (err) {
-      console.warn('Canvas composition fallback', err);
-    }
-  };
-
-  // Open Lead intake modal
-  const handleProceedToGift = () => {
-    setIsLeadModalOpen(true);
-  };
-
-  // Submit Lead & Link Memory to Visit
-  const handleLeadSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customerName || !customerPhone || !todayPhoto) return;
-
-    setIsSubmitting(true);
-    const updatedCardPhotos = [...accumulatedPhotos, todayPhoto];
-    setAccumulatedPhotos(updatedCardPhotos);
-    const slots = Math.max(selectedFrame.shotCount || 3, 1);
-    const isCompleted = updatedCardPhotos.length >= slots;
-    const code = isCompleted ? createGiftCode() : '';
-    setGiftCode(code);
-
-    const cleanPhone = customerPhone.trim().replace(/[^0-9]/g, '');
-    const phoneKey = `memories_card_photos_${cafeSlug}_${cleanPhone}`;
-
-    // Save card progress & profile locally (100% isolated per customer phone)
-    try {
-      localStorage.setItem(phoneKey, JSON.stringify(updatedCardPhotos));
-      localStorage.setItem('memories_customer_name', customerName);
-      localStorage.setItem('memories_customer_phone', cleanPhone);
-      if (customerProfession) {
-        localStorage.setItem('memories_customer_role', customerProfession);
-      }
-
-      // Sync with in-store Live TV Wall ONLY if customer consented
-      if (liveWallConsent) {
         const wallItem = {
           id: createTrackedId('wall'),
-          customer: customerName,
-          caption: `ذكريات ${customerName} في ${settings.branding.name || 'Memories'} ☕✨`,
+          customer: customerName || 'ضيف مميز',
+          caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'Memories'}`,
           time: 'الآن',
-          frames: updatedCardPhotos,
+          frames: accumulatedPhotos,
           theme: 'white',
           visibility: 'live_wall',
           status: 'approved',
@@ -414,858 +277,357 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         const newFeed = [wallItem, ...existingFeed].slice(0, 20);
         localStorage.setItem(`memories_wall_feed_${cafeSlug}`, JSON.stringify(newFeed));
         window.dispatchEvent(new CustomEvent('memories-wall-updated', { detail: newFeed }));
-      }
-    } catch {
-      // ignore
+      } catch {}
     }
 
-    // Re-compose with real gift code
+    // Now open completion gift reward modal
+    setIsCompletionRewardOpen(true);
+  };
+
+  // Direct 300 DPI Print or Download
+  const handlePrintOrDownload = async () => {
     try {
-      const finalStrip = await StripComposerService.composeStrip({
-        photos: updatedCardPhotos,
-        totalSlots: slots,
-        frame: selectedFrame,
+      const highRes = await StripComposerService.composeStrip({
+        photos: currentDisplayPhotos,
+        totalSlots: totalCardSlots,
+        frame: {
+          ...selectedFrame,
+          shotCount: totalCardSlots,
+          cardMode,
+          bgColor: cardMode === 'spotify_player' ? spotifyBg : selectedFrame.bgColor,
+          songTitle: spotifyTrack.title,
+          songArtist: spotifyTrack.artist,
+          ticketSeat,
+        },
         branding: settings.branding,
         freeGiftOffer: settings.freeGiftOffer,
-        giftCode: code,
-        cardMode: cardMode,
-        stickers: stickers,
+        giftCode: giftCode || 'GIFT-2026',
+        cardMode,
+        stickers,
       });
-      setComposedStripUrl(finalStrip);
+
+      // Queue in isolated merchant print station
+      try {
+        const queueKey = `memories_print_queue_${cafeSlug}`;
+        const existingQueue = JSON.parse(localStorage.getItem(queueKey) || '[]');
+        const newPrintJob = {
+          id: createTrackedId('print'),
+          name: customerName || 'ضيف الكافيه',
+          phone: customerPhone || 'guest',
+          role: 'coffee_lover',
+          totalVisits: loyaltyData.stampedCount,
+          lastVisit: new Date().toISOString(),
+          photoStripUrl: highRes,
+          format: ((selectedFrame.dimensionsPreset as string) === 'grid_4x6' || (selectedFrame.dimensionsPreset as string) === 'postcard_4x6') ? 'postcard-4x6' : 'standard-2x6',
+          createdAt: new Date().toISOString(),
+        };
+        localStorage.setItem(queueKey, JSON.stringify([newPrintJob, ...existingQueue].slice(0, 30)));
+        window.dispatchEvent(new CustomEvent('memories-print-queue-updated'));
+      } catch {}
+
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = highRes;
+      link.download = `${settings.branding.name}-photostrip-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch {
-      // keep previous
-    }
-
-    // Record session / deduct order shot
-    if (deviceId) {
-      CooldownService.recordSession(deviceId, cafeSlug);
-    }
-    if (cleanPhone) {
-      CooldownService.recordSession(cleanPhone, cafeSlug);
-    }
-
-    // CRITICAL: Reset todayPhoto to null so it does not duplicate on re-render!
-    setTodayPhoto(null);
-
-    try {
-      const res = await fetch('/api/v1/photobooth/capture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer: {
-            name: customerName,
-            phone: customerPhone,
-            role: customerProfession || 'زائر مميز',
-          },
-          photos: updatedCardPhotos,
-          cafeSlug,
-          frameId: selectedFrame.id,
-          giftCode: code,
-          visitId: createTrackedId('vis'),
-          liveWallConsent,
-        }),
-      });
-
-      if (res.ok) {
-        await res.json();
-        setCloudSync('synced');
-        // Cloud truth landed — refresh the stamp card from the server.
-        void refreshLoyaltySlots(cleanPhone);
-      } else {
-        setCloudSync('local_only');
-      }
-    } catch (err) {
-      console.warn('Cloud capture failed — card saved on this device only', err);
-      setCloudSync('local_only');
-    } finally {
-      setIsSubmitting(false);
-      setIsLeadModalOpen(false);
-      setIsPrintGiftModalOpen(true);
+      window.print();
     }
   };
-
-  const currentDisplayPhotos = todayPhoto ? [...accumulatedPhotos, todayPhoto] : accumulatedPhotos;
-  const totalCardSlots = Math.max(selectedFrame.shotCount || 3, 1);
-  const isCardComplete = currentDisplayPhotos.length >= totalCardSlots;
-
-  // Pull the customer's stamp card from the cloud; silently keeps local fallback.
-  const refreshLoyaltySlots = (phone: string) => {
-    if (!phone || phone.length < 6) return;
-    fetch(`/api/v1/loyalty/stamps?cafeSlug=${encodeURIComponent(cafeSlug)}&phone=${encodeURIComponent(phone)}`)
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
-      .then((data) => {
-        if (Array.isArray(data?.slots)) {
-          setLoyaltySlots(data.slots);
-          if (data.slots.length > 0) setCloudSync('synced');
-        }
-      })
-      .catch(() => {
-        /* offline / static mode — the card renders from local photos */
-      });
-  };
-
-  useEffect(() => {
-    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
-    if (clean.length >= 6 && accumulatedPhotos.length >= 0) {
-      refreshLoyaltySlots(clean);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customerPhone]);
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#1C130D] flex flex-col items-center selection:bg-[#C59A6F]/30 selection:text-[#1C130D]">
-      {/* Top Porcelain Minimalist Header */}
-      <header className="w-full bg-white/90 backdrop-blur-md border-b border-[#E6DDD0] sticky top-0 z-40 py-3.5 px-4 shadow-2xs">
-        <div className="max-w-xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {settings.branding.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={settings.branding.logoUrl}
-                alt={settings.branding.name}
-                className="h-8 object-contain"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-xl bg-[#1C130D] text-[#FDFBF7] flex items-center justify-center font-black text-sm shadow-xs">
-                M
-              </div>
-            )}
-            <div>
-              <h1 className="font-extrabold text-sm sm:text-base text-[#1C130D] leading-tight flex items-center gap-1.5">
-                <span>{settings.branding.name || 'Memories'}</span>
-                <span className="text-[#C59A6F] font-serif text-xs">✦</span>
-              </h1>
-              {customerName ? (
-                <div className="flex items-center gap-1.5 text-[10px] text-[#8C7A6B] font-medium">
-                  <span className="text-[#1C130D] font-bold">كارت: {customerName}</span>
-                  <button
-                    type="button"
-                    onClick={handleSwitchCustomer}
-                    className="text-[#8C7A6B] hover:text-[#1C130D] underline text-[10px] font-bold transition"
-                  >
-                    (تبديل)
-                  </button>
-                </div>
-              ) : (
-                <p className="text-[10px] text-[#8C7A6B] font-medium">
-                  كارت الذكريات ✦ صورة لكل زيارة
-                </p>
-              )}
-            </div>
-          </div>
+    <div className="w-full min-h-screen bg-[#FAF9F6] text-stone-900 flex flex-col items-center selection:bg-amber-500/20 pb-16">
+      {/* 1. CO-BRANDING HEADER: memories × Business */}
+      <div className="w-full pt-3 px-3 sm:px-4">
+        <CoBrandingHeader branding={settings.branding} />
+      </div>
 
-          <div className="flex items-center gap-2">
-            {extraShots > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-[#F4EDE2] text-[#8C6B47] rounded-full text-xs font-bold font-mono">
-                <span>+{extraShots} لقطات إضافية</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <main className="w-full max-w-xl mx-auto p-4 sm:p-6 flex-1 flex flex-col items-center">
-        {/* Guest vs Registered Customer Subtle Identity Strip */}
-        {/* Guest vs Registered Customer Subtle Identity Strip */}
-        {customerPhone.trim().length >= 8 ? (
-          <div className="w-full bg-[#FAF6EE] border border-[#D9CEBF] rounded-2xl p-3 px-4 mb-4 flex items-center justify-between text-xs animate-in fade-in shadow-xs">
-            <div className="flex items-center gap-2 text-[#1C130D]">
-              <UserCheck className="w-4 h-4 text-[#8C6B47] shrink-0" />
-              <span className="font-bold">مرحباً {customerName || 'صديق المكان'} ({customerPhone})</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleSwitchCustomer}
-              className="text-[#8C6B47] hover:text-[#1C130D] text-[11px] font-bold underline transition shrink-0"
-            >
-              تبديل الحساب
-            </button>
-          </div>
-        ) : (
-          <div className="w-full bg-gradient-to-r from-[#FAF6EE] to-white border border-[#E6DDD0] rounded-2xl p-3 px-4 mb-4 flex items-center justify-between text-xs animate-in fade-in shadow-xs">
-            <div className="flex items-center gap-2 text-[#635345]">
-              <Sparkles className="w-4 h-4 text-[#8C6B47] shrink-0" />
-              <span className="font-medium">تتصفح كضيف ✦ التقط صورتك مباشرة أو احفظ كارتك برقمك</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsLeadModalOpen(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] text-xs font-bold shadow-xs transition shrink-0"
-            >
-              حفظ برقمي
-            </button>
+      <main className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-4 flex flex-col items-center space-y-5">
+        {/* Registration Success Toast */}
+        {regSuccessNotice && (
+          <div className="w-full p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{regSuccessNotice}</span>
           </div>
         )}
 
-        {isLockedByCooldown && !todayPhoto ? (
-          <div className="w-full bg-white rounded-3xl p-8 border border-[#E6DDD0] shadow-xl text-center my-auto animate-in fade-in">
-            <div className="w-14 h-14 rounded-full bg-[#F4EDE2] text-[#8C6B47] mx-auto flex items-center justify-center mb-4">
-              <Clock className="w-7 h-7 text-[#1C130D]" />
-            </div>
-
-            <h2 className="text-2xl font-black text-[#1C130D] mb-2">
-              لقد وثقت لحظتك لليوم يا {customerName || 'ضيفنا الكريم'} ✦
-            </h2>
-            <p className="text-[#635345] text-xs sm:text-sm leading-relaxed mb-6">
-              لكل زائر لقطة واحدة تضاف إلى كارت ذكرياته يومياً.
-              <br />
-              <span className="font-bold text-[#8C6B47]">
-                متبقي تقريباً {remainingCooldownHours} ساعة لتتمكن من إضافة لقطة زيارتك القادمة.
-              </span>
-            </p>
-
-            {/* View Current Card */}
-            {accumulatedPhotos.length > 0 && (
-              <div className="my-6 flex justify-center">
-                <PhotoboothStripCard
-                  photos={accumulatedPhotos}
-                  frame={selectedFrame}
-                  branding={settings.branding}
-                  freeGiftOffer={settings.freeGiftOffer}
-                />
+        {/* 2. REAL CUSTOMER REGISTRATION / IDENTIFICATION */}
+        {!customerPhone ? (
+          <div className="w-full p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-sm text-stone-900 space-y-3">
+            <div className="flex items-center gap-2.5 border-b border-stone-100 pb-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-bold shadow-xs">
+                <UserCheck className="w-4 h-4" />
               </div>
-            )}
-
-            {/* Loyalty stamp card — every photo = one stamp (cloud truth + local fallback) */}
-            <div className="my-6">
-              <LoyaltyStampCard
-                slots={loyaltySlots}
-                localPhotos={accumulatedPhotos}
-                brandName={settings.branding.name || 'Memories'}
-                customerName={customerName || undefined}
-                onClaimGift={() => setIsPrintGiftModalOpen(true)}
-              />
-              {cloudSync === 'local_only' && (
-                <p className="text-center text-[10px] text-[#8C6B47] mt-2 font-semibold">
-                  ☁︎ اتحفظ على جهازك بس دلوقتي — هيتزامن مع كافيه أول ما النت يرجع
-                </p>
-              )}
-            </div>
-
-            {/* Barista Order Shots & Override Option */}
-            <div className="p-5 bg-[#FAF6EE] rounded-3xl border border-[#E6DDD0] text-xs text-[#635345] mb-6">
-              <div className="flex items-center justify-center gap-2 font-black text-[#1C130D] text-sm mb-1.5">
-                <Coffee className="w-4 h-4 text-[#8C6B47]" />
-                <span>طلبات إضافية؟ ✦</span>
-              </div>
-              <p className="text-xs text-[#635345] mb-4 leading-relaxed">
-                كل طلب إضافي يمنحك لقطة جديدة تملأ بها كارت ذكرياتك وتصل لهديتك أسرع.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPinError(null);
-                    setIsBaristaPinModalOpen(true);
-                  }}
-                  className="px-5 py-2.5 rounded-xl bg-[#1C130D] hover:bg-[#2A1D15] text-[#FDFBF7] font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-[0.98]"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#C59A6F]" />
-                  <span>إضافة لقطة عبر كود {staffLabel}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const clean = customerPhone.trim().replace(/[^0-9]/g, '');
-                    const access = CooldownService.checkAccess(clean || deviceId, cafeSlug);
-                    if (access.allowed) {
-                      setIsLockedByCooldown(false);
-                      setExtraShots(access.extraShotsAvailable);
-                    }
-                  }}
-                  className="px-4 py-2.5 rounded-xl bg-white hover:bg-stone-50 text-[#1C130D] font-bold text-xs border border-[#D9CEBF] flex items-center justify-center gap-2 transition"
-                >
-                  <span>تحديث الحالة</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
-              <button
-                type="button"
-                onClick={handleSwitchCustomer}
-                className="px-5 py-2.5 rounded-xl bg-[#F4EDE2] hover:bg-[#EAE1D3] text-[#1C130D] text-xs font-bold flex items-center justify-center gap-1.5 transition"
-              >
-                <span>تسجيل رقم هاتف آخر</span>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* ============================================================ */}
-            {/* DIGITAL PURSE / WALLET PASS HERO (كارت محفظة الذكريات الرقمي) */}
-            {/* ============================================================ */}
-            <div className="w-full flex flex-col items-center space-y-6 animate-in fade-in duration-300">
-              {/* Luxury Digital Purse Sleeve */}
-              <div className="w-full max-w-lg bg-gradient-to-b from-[#1E1B18] via-[#141210] to-[#0A0908] border border-[#38302A] rounded-[32px] p-5 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] relative text-[#FDFBF7] overflow-hidden">
-                {/* Subtle Leather Texture & Stitching Detail */}
-                <div className="absolute inset-2 rounded-[26px] border border-dashed border-[#C59A6F]/20 pointer-events-none" />
-                
-                {/* Purse Top Crest & Header */}
-                <div className="relative z-10 flex items-center justify-between pb-4 mb-4 border-b border-[#38302A]/80">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#C59A6F] to-[#8C6B47] text-[#1C130D] flex items-center justify-center font-black text-sm shadow-md">
-                      {settings.branding.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={settings.branding.logoUrl}
-                          alt={settings.branding.name}
-                          className="w-7 h-7 object-contain rounded-xl"
-                        />
-                      ) : (
-                        <span>✦</span>
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-black text-sm text-[#FDFBF7] tracking-tight">
-                          {settings.branding.name || 'Memories Studio'}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C59A6F]/20 text-[#E8C7A5] font-bold border border-[#C59A6F]/30">
-                          {settings.businessType === 'restaurant'
-                            ? '🍽️ مطعم معتمد'
-                            : settings.businessType === 'retail'
-                            ? '🛍️ بوتيك معتمد'
-                            : settings.businessType === 'salon'
-                            ? '💅 صالون معتمد'
-                            : settings.businessType === 'entertainment'
-                            ? '🎳 مركز ترفيه'
-                            : settings.businessType === 'events'
-                            ? '🎟️ فعالية معتمدة'
-                            : '☕ كافيه معتمد'}
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-[#A69585] block mt-0.5 font-medium">
-                        محفظة الذكريات والولاء الرقمية ✦ Digital Memory Purse
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Business Dictated Badge */}
-                  <div className="text-left">
-                    <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-stone-800 text-[#C59A6F] border border-[#C59A6F]/30 flex items-center gap-1">
-                      <Lock className="w-3 h-3 text-[#C59A6F]" />
-                      <span>{selectedFrame.orientation === 'horizontal' ? 'كارت عريض' : 'كارت طولي'}</span>
-                    </span>
-                    <span className="text-[9px] text-[#8C7A6B] block mt-1 text-center font-mono font-bold">
-                      {totalCardSlots} خانات إلزامية
-                    </span>
-                  </div>
-                </div>
-
-                {/* Inset Pocket Holding the Authentic Photobooth Strip Card */}
-                <div className="relative z-10 flex justify-center py-2">
-                  <PhotoboothStripCard
-                    photos={currentDisplayPhotos}
-                    frame={{
-                      ...selectedFrame,
-                      shotCount: totalCardSlots,
-                      orientation: settings.defaultOrientation || selectedFrame.orientation || 'vertical',
-                      frameShape: settings.defaultFrameShape || selectedFrame.frameShape || 'rounded',
-                      cardMode: settings.defaultCardMode || selectedFrame.cardMode || 'korean_noir',
-                    }}
-                    branding={settings.branding}
-                    freeGiftOffer={settings.freeGiftOffer}
-                    cardMode={settings.defaultCardMode || selectedFrame.cardMode || 'korean_noir'}
-                    onSlotClick={() => {
-                      if (!todayPhoto && !isLockedByCooldown) {
-                        setIsCameraModalOpen(true);
-                      }
-                    }}
-                  />
-                </div>
-
-                {/* Purse Progress & Status Strip */}
-                <div className="relative z-10 mt-4 pt-3 border-t border-[#38302A]/80 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-[#A69585] font-bold">حالة المحفظة:</span>
-                    <span className="font-mono text-xs font-black text-[#E8C7A5]">
-                      {currentDisplayPhotos.length} / {totalCardSlots} خانات مكتملة
-                    </span>
-                  </div>
-
-                  {/* Visual Progress Dots */}
-                  <div className="flex items-center gap-1.5">
-                    {Array.from({ length: totalCardSlots }).map((_, idx) => (
-                      <div
-                        key={idx}
-                        className={`w-2.5 h-2.5 rounded-full transition-all ${
-                          idx < currentDisplayPhotos.length
-                            ? 'bg-[#C59A6F] ring-2 ring-[#C59A6F]/30'
-                            : idx === currentDisplayPhotos.length && !todayPhoto
-                            ? 'bg-amber-400 animate-pulse'
-                            : 'bg-stone-700'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Primary Interaction Buttons Under the Purse */}
-              <div className="w-full max-w-lg space-y-3">
-                {!todayPhoto && !isLockedByCooldown ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsCameraModalOpen(true)}
-                    className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:to-amber-900 text-white font-extrabold text-base shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-3 active:scale-[0.98] border border-amber-500/30"
-                  >
-                    <Camera className="w-5 h-5 text-amber-200" />
-                    <span>📸 توثيق لقطة زيارة اليوم (+ إضافة للمحفظة)</span>
-                  </button>
-                ) : todayPhoto ? (
-                  <div className="space-y-3 bg-white p-4 sm:p-5 rounded-3xl border border-stone-200 shadow-md">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                        <span>تمت إضافة لقطة اليوم بنجاح إلى الكارت!</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTodayPhoto(null);
-                          setComposedStripUrl(undefined);
-                        }}
-                        className="px-3.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1.5 transition"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>إعادة اللقطة</span>
-                      </button>
-                    </div>
-
-                    {customerPhone.trim().length >= 8 ? (
-                      <div className="p-3 bg-stone-50 rounded-2xl border border-stone-200 flex items-center justify-between text-xs">
-                        <span className="text-stone-700 font-medium">
-                          الكارت مربوط برقمك: <strong className="font-mono text-stone-900">{customerPhone}</strong>
-                        </span>
-                        <span className="text-[11px] font-bold text-emerald-700">✓ محفوظ ومحدث</span>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setIsLeadModalOpen(true)}
-                        className="w-full py-3.5 px-4 rounded-xl bg-stone-950 hover:bg-stone-900 text-white text-xs font-bold transition flex items-center justify-center gap-2"
-                      >
-                        <Heart className="w-4 h-4 text-amber-400" />
-                        <span>ربط الكارت برقم هاتفك لحفظ زياراتك القادمة</span>
-                      </button>
-                    )}
-                  </div>
-                ) : null}
-
-                {/* Gated Retention & Download / Print Milestone Unlocks */}
-                <div className="w-full bg-[#FAF8F5] border border-[#E6DDD0] rounded-3xl p-5 shadow-sm space-y-4">
-                  {!isCardComplete ? (
-                    <>
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
-                          <Lock className="w-5 h-5 text-amber-700" />
-                        </div>
-                        <div>
-                          <h3 className="font-black text-sm text-stone-900 leading-tight">
-                            التحميل عالي الدقة (HD) والطباعة يفتحان عند اكتمال الكارت
-                          </h3>
-                          <p className="text-xs text-stone-600 mt-1 leading-relaxed">
-                            كارت ذكرياتك يكتمل بزياراتك القادمة للشراء من المتجر. متبقي{' '}
-                            <strong className="text-amber-800 font-bold">
-                              {totalCardSlots - currentDisplayPhotos.length} زيارات
-                            </strong>{' '}
-                            لفتح هديتك الفورية ({settings.freeGiftOffer.title || 'مشروب مجاني'}) وتفعيل تحميل وطباعة الكارت التذكاري.
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Firmly Gated Buttons */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                        <button
-                          type="button"
-                          disabled
-                          className="py-3 px-4 rounded-2xl bg-stone-100 text-stone-400 font-bold text-xs border border-stone-200 flex items-center justify-center gap-2 cursor-not-allowed"
-                          title="التحميل مغلق حتى إكمال الكارت بالشراء المتكرر"
-                        >
-                          <Lock className="w-3.5 h-3.5 text-stone-400" />
-                          <span>تحميل الكارت HD (مغلق)</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          disabled
-                          className="py-3 px-4 rounded-2xl bg-stone-100 text-stone-400 font-bold text-xs border border-stone-200 flex items-center justify-center gap-2 cursor-not-allowed"
-                          title="الطباعة مغلقة حتى اكتمال جميع الخانات"
-                        >
-                          <Lock className="w-3.5 h-3.5 text-stone-400" />
-                          <span>طباعة الكارت الفاخر (مغلق)</span>
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    /* Card 100% Complete: Full Celebratory Unlock! */
-                    <div className="space-y-4 text-center">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 shadow-sm mx-auto">
-                        <Sparkles className="w-6 h-6 text-emerald-600 animate-bounce" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-black text-stone-950">
-                          🎉 ألف مبروك! اكتمل كارت ذكرياتك بالكامل!
-                        </h3>
-                        <p className="text-xs text-stone-600 mt-1">
-                          استحققت هديتك الفورية:{' '}
-                          <strong className="text-amber-900">{settings.freeGiftOffer.title}</strong>
-                        </p>
-                      </div>
-
-                      {/* Cashier Voucher Code */}
-                      <div className="p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-2xl inline-flex flex-col items-center justify-center min-w-[240px]">
-                        <span className="text-[10px] text-amber-800 font-bold mb-0.5">
-                          كود صرف الهدية لدى {staffLabel}:
-                        </span>
-                        <span className="font-mono text-2xl font-black text-amber-950 tracking-wider">
-                          {giftCode || 'GIFT-FREE'}
-                        </span>
-                      </div>
-
-                      {/* Unlocked Actions */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (composedStripUrl) {
-                              const a = document.createElement('a');
-                              a.href = composedStripUrl;
-                              a.download = `memories-pass-${Date.now()}.png`;
-                              document.body.appendChild(a);
-                              a.click();
-                              document.body.removeChild(a);
-                            }
-                          }}
-                          className="py-3.5 px-4 rounded-2xl bg-stone-950 hover:bg-black text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2"
-                        >
-                          <Download className="w-4 h-4 text-amber-400" />
-                          <span>تحميل كارت الذكريات HD ⬇️</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (composedStripUrl) {
-                              PrintService.printStripImage(composedStripUrl);
-                            } else {
-                              PrintService.printElement('printable-strip');
-                            }
-                          }}
-                          className="py-3.5 px-4 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2"
-                        >
-                          <span>🖨️ إرسال الكارت للطباعة</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </main>
-
-      {/* Customer Profile Intake Modal (Ultra Clean & Minimal) */}
-      {isLeadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/80 backdrop-blur-md animate-in fade-in">
-          <div className="relative w-full max-w-md bg-[#FAF8F5] rounded-3xl p-6 sm:p-8 shadow-2xl border border-stone-200 text-stone-900">
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={() => setIsLeadModalOpen(false)}
-              className="absolute top-5 left-5 w-8 h-8 rounded-full bg-stone-200/80 hover:bg-stone-300 text-stone-700 flex items-center justify-center transition"
-              title="إغلاق"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 mb-2">
-                <Heart className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-black text-stone-900">
-                توثيق زيارتك وحفظ كارتك
-              </h3>
-              <p className="text-xs text-stone-500 mt-1">
-                سجل بياناتك لربط كارت ذكرياتك برقمك ومتابعة خاناتك القادمة
-              </p>
-            </div>
-
-            <form onSubmit={handleLeadSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">
-                  الاسم الكريم
-                </label>
+                <h3 className="font-extrabold text-sm text-stone-950">
+                  تسجيل كارت الولاء وبدء التوثيق
+                </h3>
+                <p className="text-[11px] text-stone-500">
+                  سجّل اسمك ورقمك لحفظ أختامك وصورك في كارتك واستلام هديتك فوراً
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleRegisterCustomer} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="text-[11px] font-bold text-stone-700 block mb-1">الاسم أو اللقب:</label>
                 <input
                   type="text"
                   required
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="مثال: أحمد سامي"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"
+                  placeholder="مثال: أحمد، سارة، ضيف الكافيه..."
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">
-                  رقم الموبايل
-                </label>
+                <label className="text-[11px] font-bold text-stone-700 block mb-1">رقم الموبايل:</label>
                 <input
                   type="tel"
                   required
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="01012345678"
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none font-mono text-left bg-white"
+                  placeholder="01xxxxxxxxx"
+                  value={regPhone}
+                  onChange={(e) => setRegPhone(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none font-mono"
+                  dir="ltr"
                 />
               </div>
-
-              {/* Clean, Single Input for Profession / Field */}
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">
-                  مجالك أو اهتمامك (اختياري)
-                </label>
-                <input
-                  type="text"
-                  value={customerProfession}
-                  onChange={(e) => setCustomerProfession(e.target.value)}
-                  placeholder="مثلاً: مهندس ديكور، صانع محتوى، كاتب، طالب..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"
-                />
-                {/* Subtle Clean Pills */}
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {['💻 تقني', '🎨 مبدع', '🎓 طالب', '💼 ريادة', '☕ زائر القهوة'].map((tag) => (
-                    <button
-                      type="button"
-                      key={tag}
-                      onClick={() => setCustomerProfession(tag)}
-                      className="px-2.5 py-1 bg-stone-100 hover:bg-amber-50 text-stone-600 hover:text-amber-800 rounded-lg text-[11px] font-medium border border-stone-200 transition"
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Guest Privacy & Consent Option: Live TV Wall Display */}
-              <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-amber-200/60 text-amber-900 flex items-center justify-center text-sm shrink-0">
-                    📺
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-stone-900 leading-tight">
-                      عرض صورتي على شاشة الكافيه الحية (TV Wall)
-                    </p>
-                    <p className="text-[10px] text-stone-500 mt-0.5">
-                      حرية كاملة للاختيار: يمكنك إلغاء العرض والاحتفاظ بخصوصيتك
-                    </p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={liveWallConsent}
-                    onChange={(e) => setLiveWallConsent(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-10 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
-                </label>
-              </div>
-
-              <div className="pt-2 flex gap-2">
+              <div className="sm:col-span-2 pt-1">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 py-3.5 px-6 rounded-2xl bg-stone-900 hover:bg-black text-white font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition disabled:opacity-50"
+                  className="w-full py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
                 >
-                  {isSubmitting ? (
-                    <span>جاري حفظ الكارت...</span>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span>تأكيد وحفظ الكارت</span>
-                    </>
-                  )}
+                  <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                  <span>تثبيت الكارت وبدء التصوير</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setIsLeadModalOpen(false)}
-                  className="py-3.5 px-5 rounded-2xl bg-stone-200/80 hover:bg-stone-300 text-stone-700 font-bold text-sm transition"
-                >
-                  إلغاء
-                </button>
-              </div>
-
-              <div className="flex items-center justify-center gap-1.5 text-[11px] text-stone-500">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>بياناتك محفوظة بأمان تام في سجل أصدقاء المكان</span>
               </div>
             </form>
           </div>
-        </div>
-      )}
-
-      {/* Modal: Barista Order Shots PIN */}
-      {isBaristaPinModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
-          <div className="relative bg-[#FAF8F5] rounded-3xl p-6 sm:p-7 max-w-sm w-full text-stone-900 shadow-2xl border border-stone-200">
-            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-3">
-              <ShieldCheck className="w-6 h-6 text-amber-600" />
+        ) : (
+          <div className="w-full p-3 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                <CheckCircle className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="font-extrabold text-stone-950">{customerName || 'ضيف مميز'}</span>
+                <span className="text-[10px] text-stone-500 font-mono block" dir="ltr">{customerPhone}</span>
+              </div>
             </div>
-
-            <h4 className="font-black text-center text-base text-stone-900 mb-1">
-              تأكيد أوردر {staffLabel}
-            </h4>
-            <p className="text-[11px] text-center text-stone-500 mb-4 leading-relaxed">
-              يقوم {staffLabel} بإدخال الرمز السريع لتأكيد الأوردر وشحن اللقطات فوراً
-            </p>
-
-            <form onSubmit={handleVerifyPinAndAddShots} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-bold text-stone-700 mb-1 text-right">
-                  عدد الأوردرات / الصور المستحقة:
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[1, 2, 3].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setPinShotsCount(n)}
-                      className={`py-2 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1 ${
-                        pinShotsCount === n
-                          ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
-                          : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
-                      }`}
-                    >
-                      +{n} صورة
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-stone-700 mb-1 text-right">
-                  رمز PIN {staffLabel}:
-                </label>
-                <input
-                  type="password"
-                  maxLength={6}
-                  placeholder="أدخل رمز التحقق"
-                  value={baristaPin}
-                  onChange={(e) => setBaristaPin(e.target.value)}
-                  className="w-full text-center tracking-widest font-mono text-lg py-2.5 px-4 rounded-xl border border-stone-300 focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white"
-                />
-                {pinError && (
-                  <p className="text-[10px] text-red-600 font-bold text-center mt-1">
-                    {pinError}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="submit"
-                  className="flex-1 py-3 rounded-2xl bg-stone-900 hover:bg-black text-white text-xs font-bold transition shadow-md"
-                >
-                  تأكيد وشحن الصور الآن 📸
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsBaristaPinModalOpen(false);
-                    setBaristaPin('');
-                    setPinError(null);
-                  }}
-                  className="py-3 px-4 rounded-2xl bg-stone-200/80 hover:bg-stone-300 text-stone-700 text-xs font-bold transition"
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
+            <button
+              type="button"
+              onClick={handleClearCustomer}
+              className="text-[10px] text-stone-400 hover:text-stone-700 underline cursor-pointer"
+            >
+              تغيير الحساب
+            </button>
           </div>
-        </div>
-      )}
+        )}
 
-      
-      {/* Camera Viewfinder Modal */}
+        {/* 3. CUSTOMER DIGITAL LOYALTY CARD WITH QR CODE */}
+        <CustomerLoyaltyCard
+          loyaltyData={loyaltyData}
+          giftTitle={settings.freeGiftOffer.title}
+          onOpenStaffStamp={() => setIsStaffStampModalOpen(true)}
+        />
+
+        {/* 3. PHOTOBOOTH STRIP SPECIFICATIONS & SAMPLE PREVIEW TOGGLE */}
+        <div className="w-full flex items-center justify-between px-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-stone-700">
+              {selectedFrame.widthCm === 10 ? 'كارت بوستكارد 4×6' : 'شريط طولي 2×6'}:
+            </span>
+            <span className="text-[10px] font-mono text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full font-bold">
+              {totalCardSlots} لقطات
+            </span>
+          </div>
+
+          <AestheticSampleToggle
+            isPreviewMode={isPreviewWithSamples}
+            onToggle={setIsPreviewWithSamples}
+          />
+        </div>
+
+        {/* 4. VIRAL THEME PILLS SELECTOR */}
+        <div className="w-full space-y-2">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none touch-pan-x">
+            {[
+              { id: 'ticket_express', label: 'تذكرة قطار', icon: 'EXP' },
+              { id: 'spotify_player', label: 'مشغل سبوتيفاي', icon: 'AUD' },
+              { id: 'ios_gallery_light', label: 'ألبوم آيفون', icon: 'IOS' },
+              { id: 'ios_gallery_dark', label: 'آيفون دارك', icon: 'DARK' },
+              { id: 'ios_camera', label: 'كاميرا آيفون', icon: 'CAM' },
+              { id: 'ios_imessage', label: 'آي مسج', icon: 'MSG' },
+              { id: 'korean_noir', label: 'نوار كوري', icon: 'RAW' },
+              { id: 'polaroid_vintage', label: 'بولارويد', icon: 'FILM' },
+            ].map((mode) => {
+              const isActive = cardMode === mode.id;
+              return (
+                <button
+                  key={mode.id}
+                  type="button"
+                  onClick={() => setCardMode(mode.id as PhotoboothCardMode)}
+                  className={`px-3 py-2 rounded-2xl border text-xs font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
+                    isActive
+                      ? 'bg-amber-500 text-stone-950 border-amber-500 shadow-xs font-black'
+                      : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-200'
+                  }`}
+                >
+                  <span className="text-sm">{mode.icon}</span>
+                  <span>{mode.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Sub-customizer for Spotify */}
+          {cardMode === 'spotify_player' && (
+            <div className="p-3 bg-white border border-stone-200/90 rounded-2xl space-y-2.5 text-xs shadow-2xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-bold text-stone-700">اللون:</span>
+                {[
+                  { id: '#384C5A', name: 'Slate Blue', hex: '#384C5A' },
+                  { id: '#4E483E', name: 'Warm Taupe', hex: '#4E483E' },
+                  { id: '#161618', name: 'OLED Charcoal', hex: '#161618' },
+                  { id: '#8B3A2B', name: 'Terracotta', hex: '#8B3A2B' },
+                ].map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSpotifyBg(c.hex)}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-xl border text-[10px] font-bold transition ${
+                      spotifyBg === c.hex ? 'border-amber-500 ring-2 ring-amber-400/40' : 'border-stone-200'
+                    }`}
+                  >
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c.hex }} />
+                    <span>{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sub-customizer for Ticket Express */}
+          {cardMode === 'ticket_express' && (
+            <div className="p-3 bg-white border border-stone-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
+              <span className="text-[11px] font-bold text-stone-700">المقعد / الطاولة:</span>
+              <div className="flex items-center gap-1.5">
+                {['ROW 15 • SEAT A33', 'TABLE 04 • VIP', 'CAR 02 • SEAT B12'].map((seat) => (
+                  <button
+                    key={seat}
+                    type="button"
+                    onClick={() => setTicketSeat(seat)}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition ${
+                      ticketSeat === seat ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-stone-50 border-stone-200 text-stone-600'
+                    }`}
+                  >
+                    {seat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 5. THE HERO PHOTOBOOTH CARD (2x6 or 4x6) */}
+        <div className="w-full flex justify-center py-2 animate-in zoom-in-95 duration-200">
+          <PhotoboothResponsiveCard
+            photos={currentDisplayPhotos}
+            frame={{
+              ...selectedFrame,
+              shotCount: totalCardSlots,
+              cardMode,
+              bgColor: cardMode === 'spotify_player' ? spotifyBg : selectedFrame.bgColor,
+              songTitle: spotifyTrack.title,
+              songArtist: spotifyTrack.artist,
+              ticketSeat,
+            }}
+            branding={settings.branding}
+            freeGiftOffer={settings.freeGiftOffer}
+            cardMode={cardMode}
+            stickers={stickers}
+            onUpdateStickers={setStickers}
+            isStickersInteractive={true}
+            onSlotClick={() => setIsCameraModalOpen(true)}
+            dimensionPreset={selectedFrame.dimensionsPreset || (selectedFrame.widthCm === 10 ? 'grid_4x6' : 'strip_2x6')}
+          />
+        </div>
+
+        {/* 6. PHOTO CAPTURE & UPLOAD ACTIONS */}
+        <PhotoCaptureOrUpload
+          canShoot={LoyaltyPurseService.canCustomerShoot(customerPhone, cafeSlug, accumulatedPhotos.length)}
+          onOpenLiveCamera={() => setIsCameraModalOpen(true)}
+          onUploadPhoto={handleCommitPhoto}
+          onQuickSampleShot={handleQuickSampleShot}
+        />
+
+        {/* 7. HIGH RES DOWNLOAD DIRECT ACTION */}
+        <button
+          type="button"
+          onClick={handlePrintOrDownload}
+          className="w-full max-w-md py-3 px-4 rounded-2xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+        >
+          <Download className="w-4 h-4 text-amber-600" />
+          <span>تحميل شريط الذكريات عالي الدقة (300 DPI)</span>
+        </button>
+
+        {/* 8. INSTAGRAM MENTION PROMPT BANNER */}
+        <InstagramMentionPrompt
+          instagramHandle={settings.branding.instagramHandle || '@espressolab_eg'}
+          businessName={settings.branding.name}
+        />
+      </main>
+
+      {/* 9. MODALS */}
+      {/* Live Camera Viewfinder Modal */}
       {isCameraModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/90 backdrop-blur-md animate-in fade-in">
-          <div className="relative w-full max-w-md bg-stone-950 rounded-3xl p-4 sm:p-6 shadow-2xl border border-stone-800 text-white">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-stone-800">
-              <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-bold text-white">
-                  توثيق لقطة زيارة اليوم ✦ {settings.branding.name}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsCameraModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 flex items-center justify-center transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Viewfinder Component */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-900/80 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md bg-stone-950 rounded-3xl p-4 overflow-hidden border border-stone-800 shadow-2xl relative">
+            <button
+              type="button"
+              onClick={() => setIsCameraModalOpen(false)}
+              className="absolute top-4 left-4 z-30 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
             <CameraViewfinder
-              onCaptureComplete={(photo) => {
-                handleCaptureComplete(photo);
-                setIsCameraModalOpen(false);
-              }}
               brandName={settings.branding.name}
               visitNumber={accumulatedPhotos.length + 1}
-              aspectRatioGuide={
-                selectedFrame.orientation === 'horizontal'
-                  ? '4:3'
-                  : '3:4'
-              }
+              onCaptureComplete={(photo: string) => {
+                handleCommitPhoto(photo);
+                setIsCameraModalOpen(false);
+              }}
             />
           </div>
         </div>
       )}
 
-      {/* Print & Gift Modal */}
-      <PrintGiftModal
-        isOpen={isPrintGiftModalOpen}
-        onClose={() => {
-          setIsPrintGiftModalOpen(false);
-          setTodayPhoto(null);
-          const targetId = customerPhone.trim() || deviceId;
-          const access = CooldownService.checkAccess(targetId, cafeSlug);
-          setExtraShots(access.extraShotsAvailable);
-          if (!access.allowed) {
-            setIsLockedByCooldown(true);
-            setRemainingCooldownHours(access.remainingHours || 24);
-          }
-        }}
-        photos={accumulatedPhotos.length > 0 ? accumulatedPhotos : (todayPhoto ? [todayPhoto] : [])}
-        stripDataUrl={composedStripUrl}
-        frame={selectedFrame}
-        branding={settings.branding}
-        freeGiftOffer={settings.freeGiftOffer}
-        giftCode={giftCode}
-        customerName={customerName}
-        customerRoleLabel={customerProfession || 'زائر مميز'}
-        visitCount={accumulatedPhotos.length}
-        onPrintStrip={() => {
-          if (composedStripUrl) {
-            PrintService.printStripImage(composedStripUrl);
-          } else {
-            PrintService.printElement('printable-strip');
-          }
-        }}
-        extraShots={extraShots}
-        onTakeNextPhoto={handleTakeNextOrderPhoto}
-        cardMode={cardMode}
-        stickers={stickers}
+      {/* Staff Quick Stamp Modal */}
+      <StaffQuickStampModal
+        isOpen={isStaffStampModalOpen}
+        onClose={() => setIsStaffStampModalOpen(false)}
+        onStampSuccess={handleStaffStampSuccess}
+        staffLabel={staffLabel}
+      />
+
+      {/* TV Wall Display Consent Modal (Triggered ONCE on 100% completion) */}
+      <WallConsentModal
+        isOpen={isWallConsentModalOpen}
+        businessName={settings.branding.name}
+        onConsent={handleWallConsent}
+        onClose={() => setIsWallConsentModalOpen(false)}
+      />
+
+      {/* Completion Gift Reward Voucher Modal */}
+      <CompletionGiftRewardModal
+        isOpen={isCompletionRewardOpen}
+        giftTitle={settings.freeGiftOffer.title}
+        giftSubtitle={settings.freeGiftOffer.subtitle}
+        giftCode={giftCode || 'GIFT-2026'}
+        onClose={() => setIsCompletionRewardOpen(false)}
+        onPrintStrip={handlePrintOrDownload}
       />
     </div>
   );

@@ -29,7 +29,7 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
           <span>اختر لون الكارت المفضّل:</span>
         </div>
         <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
-          ألوان معتمدة ☕
+          ألوان معتمدة
         </span>
       </div>
 

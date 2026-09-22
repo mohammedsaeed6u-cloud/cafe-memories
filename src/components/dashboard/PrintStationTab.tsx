@@ -105,10 +105,10 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
 
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { id: 'standard-2x6', label: 'شريط 2×6 بوصة (قياسي)', icon: '🎞️' },
-              { id: 'dual-4x6', label: 'مزدوج 4×6 مع خط قص', icon: '✂️' },
-              { id: 'thermal-80mm', label: 'حراري 80 مم (ملصقات)', icon: '🧾' },
-              { id: 'thermal-58mm', label: 'حراري 58 مم (مدمج)', icon: '🏷️' },
+              { id: 'standard-2x6', label: 'شريط 2×6 بوصة (قياسي)', icon: 'film' },
+              { id: 'dual-4x6', label: 'مزدوج 4×6 مع خط قص', icon: 'scissors' },
+              { id: 'thermal-80mm', label: 'حراري 80 مم (ملصقات)', icon: 'receipt' },
+              { id: 'thermal-58mm', label: 'حراري 58 مم (مدمج)', icon: 'tag' },
             ].map((fmt) => (
               <button
                 key={fmt.id}
@@ -184,7 +184,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
             ) : (
               <BellOff className="w-3.5 h-3.5 text-stone-400" />
             )}
-            <span>تنبيه صوتي للطلبات 🔔</span>
+            <span>تنبيه صوتي للطلبات</span>
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
                 soundAlertEnabled ? 'bg-amber-200 text-amber-900' : 'bg-stone-200 text-stone-600'
@@ -240,7 +240,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                       </h4>
                       {item.totalVisits && item.totalVisits >= 5 ? (
                         <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-400 to-amber-600 text-stone-950 font-black text-[9px] shadow-xs flex items-center gap-1 shrink-0">
-                          <span>👑</span>
+                          <span className="text-[10px] font-mono">VIP</span>
                           <span>VIP ذهبي (#{item.totalVisits})</span>
                         </span>
                       ) : item.totalVisits && item.totalVisits >= 3 ? (

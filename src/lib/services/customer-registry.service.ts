@@ -1,4 +1,4 @@
-﻿export interface RegisteredCustomer {
+export interface RegisteredCustomer {
   phone: string;
   name: string;
   role?: string;
@@ -142,5 +142,21 @@ export class CustomerRegistryService {
       lastVisit: now,
       totalVisits: 1,
     };
+  }
+
+  /**
+   * Retrieves all registered real customers for the given cafe.
+   */
+  static getRegisteredCustomers(cafeSlug: string = 'espresso-lab'): RegisteredCustomer[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const crmKey = this.getCrmKey(cafeSlug);
+      const existingRaw = localStorage.getItem(crmKey);
+      if (existingRaw) {
+        const parsed = JSON.parse(existingRaw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
   }
 }

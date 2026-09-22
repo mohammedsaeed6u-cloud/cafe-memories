@@ -11,6 +11,7 @@ export interface BusinessBranding {
   name: string;
   logoUrl?: string;
   tagline?: string;
+  instagramHandle?: string;
 }
 
 export interface FreeGiftOffer {
@@ -22,6 +23,12 @@ export interface FreeGiftOffer {
 export type FrameShapeStyle = 'rounded' | 'sharp' | 'polaroid' | 'pill';
 
 export type PhotoboothCardMode =
+  | 'ticket_express'
+  | 'spotify_player'
+  | 'ios_gallery_light'
+  | 'ios_gallery_dark'
+  | 'ios_camera'
+  | 'ios_imessage'
   | 'korean_noir'
   | 'cafe_latte'
   | 'retro_film'
@@ -119,6 +126,11 @@ export interface PhotoboothFrame {
   borderRadius?: number | string;
   customText?: string;
   isCustom?: boolean;
+  songTitle?: string;
+  songArtist?: string;
+  ticketLabel?: string;
+  ticketSeat?: string;
+  dimensionsPreset?: 'strip_2x6' | 'grid_4x6' | 'wide_4x3' | 'polaroid_vintage' | 'cinema_6x2' | 'custom';
 }
 
 export type WallDisplayMode = 'board' | 'grid' | 'slideshow';

@@ -109,7 +109,7 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
     }
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border bg-stone-100 text-stone-800 border-stone-300">
-        <span>✨</span>
+        <span className="text-[10px] font-mono">STAR</span>
         <span>{roleKey || 'زائر مميز'}</span>
       </span>
     );
@@ -318,7 +318,7 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
                           </span>
                           {customer.totalVisits >= 5 ? (
                             <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-amber-400 to-amber-600 text-stone-950 font-black text-[9px] shadow-xs flex items-center gap-0.5">
-                              <span>👑</span>
+                              <span className="text-[10px] font-mono">VIP</span>
                               <span>VIP ذهبي</span>
                             </span>
                           ) : customer.totalVisits >= 3 ? (

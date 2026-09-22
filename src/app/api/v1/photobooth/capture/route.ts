@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
       } : null,
       freeGift: {
         code: voucherCode,
-        title: 'قطعة كوكيز أو حلى مجانية مع شريط صورك 🥐🍪',
+        title: 'قطعة كوكيز أو حلى مجانية مع شريط صورك ',
         description: 'استلم هديتك المجانية من الكاونتر عند إبراز كود الهدية مع طباعة الشريط!',
       },
     });

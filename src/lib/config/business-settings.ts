@@ -78,7 +78,7 @@ export const DEFAULT_BUSINESS_CONFIG: BusinessConfig = {
   ],
   freeGift: {
     enabled: true,
-    title: 'قطعة كوكيز أو حلى مجاناً مع شريط صورك 🥐🍪',
+    title: 'قطعة كوكيز أو حلى مجاناً مع شريط صورك ',
     description: 'استلم هديتك المجانية فوراً من الباريستا أو الكاونتر عند إبراز كود الهدية!',
     terms: 'صالحة للاستلام الفوري مع طباعة شريط الصور',
   },

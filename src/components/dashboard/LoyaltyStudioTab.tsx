@@ -324,7 +324,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                           </span>
                           {isSelected && (
                             <span className="w-5 h-5 rounded-full bg-amber-500 text-stone-950 flex items-center justify-center text-xs font-black">
-                              ✓
+                              •
                             </span>
                           )}
                         </div>
@@ -417,7 +417,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                   })}
                 </div>
                 <p className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-xl mt-3 font-medium">
-                  💡 نصيحة: 6 خانات تمنح العميل حافزاً سريعاً، بينما 10 خانات هي المعيار الذهبي لكافيهات القهوة المختصة.
+                  ملاحظة: 6 خانات تمنح العميل حافزاً سريعاً، بينما 10 خانات هي المعيار الذهبي لكافيهات القهوة المختصة.
                 </p>
               </div>
 
@@ -492,7 +492,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                           <span>{m.rewardTitle}</span>
                           {m.isGrandPrize && (
                             <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">
-                              الجائزة الكبرى 🏆
+                              الجائزة الكبرى
                             </span>
                           )}
                         </h5>
@@ -736,15 +736,15 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                 template={template}
                 brandName={brandName}
                 brandLogoUrl={brandLogoUrl}
-                customerName="سارة المهندس"
-                customerPhone="01019882233"
+                customerName="ضيف الكافيه"
+                customerPhone=""
                 interactive={true}
               />
             </div>
 
             {/* Quick Tips */}
             <p className="text-[10px] text-stone-400 text-center mt-3 leading-relaxed">
-              💡 اضغط على الأختام لتجربة نغمة الرنين (WebAudio Chime) أو اقلب البطاقة لعرض باركود الباريستا.
+              اضغط على الأختام لتجربة نغمة الرنين (WebAudio Chime) أو اقلب البطاقة لعرض باركود الباريستا.
             </p>
           </div>
         </div>

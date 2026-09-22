@@ -176,6 +176,8 @@ export function switchActiveStaff(staffId: string): ActiveStaffSession | null {
   return session;
 }
 
+export const setActiveStaffMember = switchActiveStaff;
+
 export function getActiveStaffSession(): ActiveStaffSession | null {
   if (hasLocalStorage()) {
     return readJson<ActiveStaffSession | null>(SESSION_STORAGE_KEY, null);

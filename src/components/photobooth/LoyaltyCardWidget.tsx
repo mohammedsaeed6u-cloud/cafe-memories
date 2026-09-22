@@ -83,7 +83,7 @@ export const LoyaltyCardWidget: React.FC<LoyaltyCardWidgetProps> = ({
           <span className="text-[11px]">
             {remaining > 0
               ? `متبقي ${remaining} ${remaining === 1 ? 'زيارة' : 'زيارات'} للحصول على ${nextRewardTitle}`
-              : '🎉 مبروك! اكتملت بطاقتك وأصبحت هديتك جاهزة للاستلام'}
+              : 'اكتملت بطاقتك وأصبحت هديتك جاهزة للاستلام'}
           </span>
         </div>
       </div>

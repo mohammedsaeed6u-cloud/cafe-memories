@@ -1,0 +1,19 @@
+# memories
+
+> Café Moments. Lasting Loyalty. The loyalty, photobooth, and live wall platform for specialty coffee shops and independent venues.
+
+## Overview
+memories transforms casual coffee visits into lasting customer loyalty through zero-app photobooth experiences, ambient TV walls, and digital loyalty passes.
+
+## Key Features
+- Zero-App Photobooth: Guests scan a QR code on table coasters with standard mobile camera to capture memories.
+- Live Community TV Wall: Curated guest photos broadcast to ambient 4K in-store displays with offline caching.
+- Digital Loyalty Passes: Brand stories and reward stamps with automated fraud protection.
+- Korean & Specialty Coffee Aesthetics: Life Four Cuts inspired vertical film strips, polaroids, and artisanal coasters.
+
+## Canonical URLs
+- Home: https://memories-c9w.pages.dev/
+- Customer Experience: https://memories-c9w.pages.dev/c/espresso-lab
+- Live Wall Display: https://memories-c9w.pages.dev/wall/screen-1
+- Privacy Policy: https://memories-c9w.pages.dev/privacy
+- Terms of Service: https://memories-c9w.pages.dev/terms

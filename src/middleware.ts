@@ -27,6 +27,11 @@ export async function middleware(request: NextRequest) {
     pathname === '/login' ||
     pathname === '/auth/callback';
 
+  const hasStaffSession = request.cookies.has('memories_staff_session');
+  if (hasStaffSession) {
+    return supabaseResponse;
+  }
+
   if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey.includes('placeholder')) {
     if (!isPublicRoute && (pathname.startsWith('/dashboard') || pathname.startsWith('/admin'))) {
       const url = request.nextUrl.clone();
@@ -65,9 +70,7 @@ export async function middleware(request: NextRequest) {
     console.error('Middleware auth check error:', error);
   }
 
-  const isDemoSession = request.cookies.get('cafe_demo_session')?.value === 'true';
-
-  if (!user && !isDemoSession && !isPublicRoute) {
+  if (!user && !isPublicRoute) {
     if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';

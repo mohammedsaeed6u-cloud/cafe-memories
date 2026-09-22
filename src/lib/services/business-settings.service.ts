@@ -4,6 +4,8 @@ import { DEFAULT_BUSINESS_SETTINGS } from '@/lib/constants/photobooth-presets';
 const STORAGE_PREFIX = 'memories_business_settings_';
 
 export class BusinessSettingsService {
+  private static memoryStore = new Map<string, string>();
+
   private static getStorageKey(cafeSlug: string): string {
     return `${STORAGE_PREFIX}${cafeSlug}`;
   }
@@ -12,21 +14,20 @@ export class BusinessSettingsService {
     const defaultShotCount = DEFAULT_BUSINESS_SETTINGS.defaultShotCount || 3;
     const defaultOrientation = DEFAULT_BUSINESS_SETTINGS.defaultOrientation || 'vertical';
 
-    if (typeof window === 'undefined') {
-      return {
-        ...DEFAULT_BUSINESS_SETTINGS,
-        cafeSlug,
-        frames: (DEFAULT_BUSINESS_SETTINGS.frames || []).map((f) => ({
-          ...f,
-          shotCount: defaultShotCount,
-          orientation: defaultOrientation,
-        })),
-      };
+    let stored: string | null = null;
+    if (typeof window !== 'undefined') {
+      try {
+        stored = localStorage.getItem(this.getStorageKey(cafeSlug));
+      } catch (e) {
+        console.warn('Failed to read localStorage:', e);
+      }
+    }
+    if (!stored) {
+      stored = this.memoryStore.get(this.getStorageKey(cafeSlug)) || null;
     }
 
-    try {
-      const stored = localStorage.getItem(this.getStorageKey(cafeSlug));
-      if (stored) {
+    if (stored) {
+      try {
         const parsed = JSON.parse(stored);
         const defaultShotCount = Math.max(
           Number(parsed.defaultShotCount) || DEFAULT_BUSINESS_SETTINGS.defaultShotCount,
@@ -43,7 +44,7 @@ export class BusinessSettingsService {
         const defaultHeightCm =
           parsed.defaultHeightCm ?? DEFAULT_BUSINESS_SETTINGS.defaultHeightCm ?? 15.2;
         const defaultCardMode =
-          parsed.defaultCardMode || DEFAULT_BUSINESS_SETTINGS.defaultCardMode || 'korean_noir';
+          parsed.defaultCardMode || DEFAULT_BUSINESS_SETTINGS.defaultCardMode || 'ticket_express';
 
         const rawFrames =
           parsed.frames && parsed.frames.length > 0
@@ -86,25 +87,38 @@ export class BusinessSettingsService {
           lockFrameForCustomers:
             parsed.lockFrameForCustomers ?? DEFAULT_BUSINESS_SETTINGS.lockFrameForCustomers ?? true,
         };
+      } catch (err) {
+        console.warn('Failed to read settings from localStorage', err);
       }
-    } catch (err) {
-      console.warn('Failed to read settings from localStorage', err);
     }
 
-    return { ...DEFAULT_BUSINESS_SETTINGS, cafeSlug };
+    return {
+      ...DEFAULT_BUSINESS_SETTINGS,
+      cafeSlug,
+      frames: (DEFAULT_BUSINESS_SETTINGS.frames || []).map((f) => ({
+        ...f,
+        shotCount: defaultShotCount,
+        orientation: defaultOrientation,
+      })),
+    };
   }
 
   static saveSettings(settings: BusinessSettings): void {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(this.getStorageKey(settings.cafeSlug), JSON.stringify(settings));
-      window.dispatchEvent(
-        new CustomEvent('memories-settings-updated', {
-          detail: settings,
-        })
-      );
-    } catch (err) {
-      console.error('Failed to save settings to localStorage', err);
+    const key = this.getStorageKey(settings.cafeSlug);
+    const serialized = JSON.stringify(settings);
+    this.memoryStore.set(key, serialized);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(key, serialized);
+        window.dispatchEvent(
+          new CustomEvent('memories-settings-updated', {
+            detail: settings,
+          })
+        );
+      } catch (err) {
+        console.error('Failed to save settings to localStorage', err);
+      }
     }
   }
 

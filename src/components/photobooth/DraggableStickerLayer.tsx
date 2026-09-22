@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { PlacedSticker } from '@/types/photobooth';
 import { CURATED_STICKER_SET } from '@/lib/constants/photobooth-presets';
 import { Sparkles, Trash2, X, Plus, Move } from 'lucide-react';
+import { DestructiveConfirmModal } from '@/components/ui/DestructiveConfirmModal';
 
 interface DraggableStickerLayerProps {
   stickers: PlacedSticker[];
@@ -162,6 +163,7 @@ export const StickerControlTray: React.FC<{
   className?: string;
 }> = ({ onAddSticker, stickersCount, onClearAll, className = '' }) => {
   const [customEmoji, setCustomEmoji] = useState('');
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,14 +184,27 @@ export const StickerControlTray: React.FC<{
         {stickersCount > 0 && (
           <button
             type="button"
-            onClick={onClearAll}
-            className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 transition"
+            onClick={() => setIsConfirmModalOpen(true)}
+            className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 transition hover:scale-105 active:scale-95 cursor-pointer"
           >
             <Trash2 className="w-3 h-3" />
             <span>مسح الستيكرز ({stickersCount})</span>
           </button>
         )}
       </div>
+
+      <DestructiveConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={() => {
+          onClearAll();
+          setIsConfirmModalOpen(false);
+        }}
+        title="تأكيد مسح جميع الستيكرات"
+        description={`هل أنت متأكد من رغبتك في إزالة جميع الملصقات (${stickersCount}) من كارت التصوير؟`}
+        confirmLabel="نعم، امسح الستيكرات"
+        cancelLabel="إلغاء والاحتفاظ بها"
+      />
 
       {/* Curated quick emoji pills */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none">
@@ -212,7 +227,7 @@ export const StickerControlTray: React.FC<{
           type="text"
           value={customEmoji}
           onChange={(e) => setCustomEmoji(e.target.value)}
-          placeholder="أو اكتب أي إيموجي تحبه (مثال: 🍓 🌸 ☕)..."
+          placeholder="أو اكتب كود الرمز (مثال: EST, VIP, CAFE)..."
           className="flex-1 text-xs px-3 py-2 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-stone-50/50"
         />
         <button

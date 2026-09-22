@@ -485,7 +485,7 @@ describe('Requirement 2: High-Precision Business Printing Engine', () => {
       expect(html).toContain(`src="${mockDataUrl}"`);
       expect(html).toContain(`src="${secondUrl}"`);
       expect(html).toContain('.dual-cut-line');
-      expect(html).toContain('✂');
+      expect(html).toContain('cut-indicator-line');
     });
 
     it('constructs valid thermal printer HTML with high contrast container', () => {

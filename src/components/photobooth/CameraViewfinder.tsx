@@ -273,7 +273,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
               <div className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full flex items-center gap-2 border border-white/15">
                 <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                 <span className="text-[10px] font-mono font-bold text-white tracking-widest uppercase">
-                  SHOT #{String(visitNumber).padStart(2, '0')} ✦ LEICA FRAME
+                  SHOT #{String(visitNumber).padStart(2, '0')} • LEICA FRAME
                 </span>
               </div>
             </div>
@@ -290,7 +290,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
               {countdown}
             </span>
             <div className="mt-4 px-4 py-1.5 bg-black/80 rounded-full text-white text-xs font-bold border border-white/20">
-              ✦ استعد للقطة
+              استعد للقطة
             </div>
           </div>
         )}
@@ -378,7 +378,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
       </div>
 
       <p className="text-[10px] text-stone-400 mt-3 font-mono text-center">
-        ✦ لقطة حية موثقة لكل زيارة لاكتمال كارت ذكرياتك • {brandName}
+        • لقطة حية موثقة لكل زيارة لاكتمال كارت ذكرياتك • {brandName}
       </p>
     </div>
   );

@@ -131,7 +131,7 @@ export class CardCanvasExportService {
 
     ctx.fillStyle = palette.accentColor;
     ctx.font = '32px serif';
-    ctx.fillText('✦', 60 + ctx.measureText(options.cafeName || 'Memories Café').width + 16, 88);
+    ctx.fillText('', 60 + ctx.measureText(options.cafeName || 'Memories Café').width + 16, 88);
 
     // Customer Identity
     ctx.fillStyle = palette.textColor;
@@ -185,7 +185,7 @@ export class CardCanvasExportService {
         ctx.font = `bold ${Math.floor(slotSize * 0.45)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('☕', x + slotSize / 2, y + slotSize / 2);
+        ctx.fillText('', x + slotSize / 2, y + slotSize / 2);
       } else {
         ctx.fillStyle = palette.slotBg;
         ctx.fill();
@@ -214,7 +214,7 @@ export class CardCanvasExportService {
     if (activeStamps >= totalSlots) {
       ctx.fillStyle = palette.accentColor;
       ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText('★ مبروك! قهوتك القادمة مجانية من الكافيه ★', 60, footerY + 32);
+      ctx.fillText('قهوتك القادمة مجانية من الكافيه', 60, footerY + 32);
     } else {
       const remaining = totalSlots - activeStamps;
       ctx.fillText(`متبقي ${remaining} ${remaining === 1 ? 'ختم' : 'أختام'} للمكافأة`, 60, footerY + 32);
@@ -224,7 +224,7 @@ export class CardCanvasExportService {
     ctx.fillStyle = `${palette.textColor}66`;
     ctx.font = '18px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('Powered by Café Memories ✦ Photobooth & Loyalty', width - 60, height - 40);
+    ctx.fillText('Powered by Café Memories • Photobooth & Loyalty', width - 60, height - 40);
     ctx.restore();
 
     return canvas.toDataURL('image/png');
@@ -258,7 +258,7 @@ export class CardCanvasExportService {
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
             title,
-            text: 'كارت الولاء الرقمي الخاص بي في الكافيه ☕✨',
+            text: 'كارت الولاء الرقمي الخاص بي في الكافيه ',
             files: [file],
           });
           return true;

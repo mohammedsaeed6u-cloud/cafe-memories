@@ -509,6 +509,23 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
 
             <div>
               <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                حساب إنستغرام المتجر للمنشن (Instagram Handle)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-stone-400 font-bold text-xs">@</span>
+                <input
+                  type="text"
+                  value={(branding.instagramHandle || '').replace('@', '')}
+                  onChange={(e) => setBranding({ ...branding, instagramHandle: `@${e.target.value.replace('@', '')}` })}
+                  className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-stone-50/50 font-mono"
+                  placeholder="مثلاً: espressolab.eg"
+                />
+              </div>
+              <p className="text-[10px] text-stone-500 mt-1">يظهر للعميل في نهاية التجربة لعمل منشن للمكان في ستوري إنستغرام</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-700 mb-1.5">
                 نص التذييل / ذقن الكارت (Custom Chin / Footer Note)
               </label>
               <input
@@ -519,7 +536,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   setActiveFrame((prev) => ({ ...prev, customText: e.target.value }));
                 }}
                 className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-stone-50/50"
-                placeholder="مثلاً: special coffee memories ♡ أو A SENSE OF PLACE"
+                placeholder="مثلاً: special coffee memories أو A SENSE OF PLACE"
               />
             </div>
 
@@ -808,7 +825,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
-                  📱 رأسي (Vertical)
+                  رأسي (Vertical)
                 </button>
                 <button
                   type="button"
@@ -819,7 +836,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                       : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
-                  🖼️ أفقي عريض (Horizontal)
+                  أفقي عريض (Horizontal)
                 </button>
               </div>
             </div>
@@ -1054,7 +1071,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 border-2 border-amber-600 shadow-xs shrink-0" />
-                    <span className="text-xs text-stone-800 truncate">🎨 ألوان مخصصة</span>
+                    <span className="text-xs text-stone-800 truncate">ألوان مخصصة</span>
                   </div>
                   {isCustomColorMode && <Check className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
                 </button>
@@ -1187,7 +1204,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                     className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
                   />
                   <span className="text-xs font-bold text-stone-700">
-                    {allowCustomerColors ? 'مسموح للعميل الاختيار' : '🔒 الكارت مقفول بلون واحد'}
+                    {allowCustomerColors ? 'مسموح للعميل الاختيار' : 'الكارت مقفول بلون واحد'}
                   </span>
                 </label>
               </div>
@@ -1235,7 +1252,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 </div>
               ) : (
                 <div className="p-3 bg-stone-100 rounded-xl text-center text-xs text-stone-600 font-medium border border-stone-200">
-                  🔒 تم قفل الألوان — سيظهر الكارت للعملاء باللون الأساسي المعتمد فقط.
+                  تم قفل الألوان — سيظهر الكارت للعملاء باللون الأساسي المعتمد فقط.
                 </div>
               )}
             </div>

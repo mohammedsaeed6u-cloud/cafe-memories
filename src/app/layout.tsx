@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Cairo, Plus_Jakarta_Sans } from 'next/font/google';
+import { Cairo, Playfair_Display, Montserrat } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 
@@ -10,16 +10,26 @@ const cairo = Cairo({
   display: 'swap',
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-playfair',
+  display: 'swap',
+});
+
+const montserrat = Montserrat({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-sans',
+  variable: '--font-montserrat',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'Memories • The Loyalty & Live Wall Layer for Specialty Cafés',
+  title: 'memories • Café Moments. Lasting Loyalty.',
   description: 'منظومة كبائن التصوير والذكريات وشاشات العرض الحية وبطاقات الولاء لكافيهات السبيشالتي',
+  verification: {
+    google: 'fjoLJpquhynVk0PmXH6VssgvRRrhiuynBz8G4PDHiME',
+  },
 };
 
 export default function RootLayout({
@@ -28,8 +38,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning className={cn(cairo.variable, plusJakarta.variable)}>
-      <body className="min-h-screen bg-white text-stone-900 font-cairo antialiased selection:bg-amber-500/20 selection:text-amber-900">
+    <html
+      lang="ar"
+      dir="rtl"
+      suppressHydrationWarning
+      className={cn(cairo.variable, playfair.variable, montserrat.variable)}
+    >
+      <body className="min-h-screen bg-[#FAF6EE] text-[#3B2F2A] font-cairo antialiased selection:bg-[#B85C43]/20 selection:text-[#1E3A32]">
         {children}
       </body>
     </html>

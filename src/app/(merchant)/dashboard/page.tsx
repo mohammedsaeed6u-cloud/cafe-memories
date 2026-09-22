@@ -23,14 +23,24 @@ import {
   Check,
   X,
   Radio,
+  Printer,
+  Copy,
+  Download,
+  LogOut,
 } from 'lucide-react';
 import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
-import { getActiveStaff } from '@/lib/services/staff-auth.service';
+import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-auth.service';
+import { createClient } from '@/lib/supabase/client';
 import { type StaffMember } from '@/types/staff';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { FrameStudioTab } from '@/components/dashboard/FrameStudioTab';
 import { LoyaltyStudioTab } from '@/components/dashboard/LoyaltyStudioTab';
+import { PrintStationTab } from '@/components/dashboard/PrintStationTab';
+import { MerchantQuickSetupModal } from '@/components/dashboard/MerchantQuickSetupModal';
 import { BusinessSettings } from '@/types/photobooth';
+import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
+import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
+import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
 
 type DashboardTab =
   | 'overview'
@@ -38,6 +48,7 @@ type DashboardTab =
   | 'memories'
   | 'wall'
   | 'rewards'
+  | 'print'
   | 'qrcodes'
   | 'analytics'
   | 'settings';
@@ -91,6 +102,7 @@ export default function MerchantDashboardPage() {
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [activeStaff, setActiveStaff] = useState<StaffMember | null>(null);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+  const [isQuickSetupOpen, setIsQuickSetupOpen] = useState(false);
 
   // Business settings state (dynamic tenant)
   const [settings, setSettings] = useState<BusinessSettings>(() =>
@@ -110,11 +122,45 @@ export default function MerchantDashboardPage() {
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [screens, setScreens] = useState<ScreenRecord[]>([]);
+  const [printQueue, setPrintQueue] = useState<any[]>([]);
 
-  // Screen Pairing Code Generation State
-  const [pairingCode, setPairingCode] = useState<string | null>(null);
-  const [codeExpiry, setCodeExpiry] = useState<string | null>(null);
-  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  // Load Real Print Queue for current cafe
+  useEffect(() => {
+    const loadQueue = () => {
+      try {
+        const queueKey = `memories_print_queue_${settings.cafeSlug || 'espresso-lab'}`;
+        const stored = localStorage.getItem(queueKey);
+        if (stored) {
+          setPrintQueue(JSON.parse(stored));
+        } else {
+          setPrintQueue([]);
+        }
+      } catch {}
+    };
+    loadQueue();
+    window.addEventListener('memories-print-queue-updated', loadQueue);
+    return () => window.removeEventListener('memories-print-queue-updated', loadQueue);
+  }, [settings.cafeSlug]);
+
+  // Screen Pairing State (Merchant enters the 6-digit code shown on the TV)
+  const [screenInputCode, setScreenInputCode] = useState('');
+  const [screenLocationName, setScreenLocationName] = useState('شاشة الصالة الرئيسية');
+  const [isPairingScreen, setIsPairingScreen] = useState(false);
+  const [pairScreenSuccess, setPairScreenSuccess] = useState<string | null>(null);
+  const [pairScreenError, setPairScreenError] = useState<string | null>(null);
+  const [copiedUrl, setCopiedUrl] = useState(false);
+
+  const customerLiveUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/c/${settings.cafeSlug || 'espresso-lab'}`
+    : `https://memories-c9w.pages.dev/c/${settings.cafeSlug || 'espresso-lab'}`;
+
+  const handleCopyUrl = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(customerLiveUrl);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+    }
+  };
 
   // Sync staff auth
   useEffect(() => {
@@ -123,6 +169,18 @@ export default function MerchantDashboardPage() {
     window.addEventListener('memories-active-staff-changed', handleStaffChange);
     return () => window.removeEventListener('memories-active-staff-changed', handleStaffChange);
   }, []);
+
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {}
+    clearActiveStaffSession();
+    try {
+      document.cookie = 'memories_staff_session=; path=/; max-age=0';
+    } catch {}
+    window.location.href = '/login';
+  };
 
   // Fetch Live Overview Metrics
   const fetchMetrics = async () => {
@@ -168,14 +226,14 @@ export default function MerchantDashboardPage() {
     }
   };
 
-  // Fetch Real Customers from CRM endpoint
+  // Fetch Real Customers from CRM endpoint with Local Storage Registry Fallback
   const fetchCustomers = async () => {
     setIsLoadingCustomers(true);
     try {
       const res = await fetch('/api/v1/crm/customers?format=json');
       if (res.ok) {
         const data = await res.json();
-        if (data.customers) {
+        if (data.customers && data.customers.length > 0) {
           setCustomers(
             data.customers.map((c: any) => ({
               id: c.id,
@@ -186,11 +244,29 @@ export default function MerchantDashboardPage() {
               rewardsCount: Math.floor((c.visitsCount || 1) / 5),
             }))
           );
+          return;
         }
       }
-    } catch (err) {
-      console.error('Error fetching customers:', err);
-    } finally {
+    } catch {
+      // Fallback below
+    }
+
+    // Fallback: Real registered customers from local registry
+    try {
+      const localCustomers = CustomerRegistryService.getRegisteredCustomers(settings.cafeSlug || 'espresso-lab');
+      if (localCustomers && localCustomers.length > 0) {
+        setCustomers(
+          localCustomers.map((c) => ({
+            id: `c_${c.phone}`,
+            displayName: c.name,
+            totalVisits: c.totalVisits || 1,
+            lastSeenAt: c.lastVisit || c.registeredAt || new Date().toISOString(),
+            memoriesCount: 1,
+            rewardsCount: Math.floor((c.totalVisits || 1) / 5),
+          }))
+        );
+      }
+    } catch {} finally {
       setIsLoadingCustomers(false);
     }
   };
@@ -222,29 +298,62 @@ export default function MerchantDashboardPage() {
     }
   };
 
-  // Generate 6-Digit Screen Pairing Code
-  const handleGeneratePairingCode = async () => {
-    setIsGeneratingCode(true);
+  // Handle Pairing TV Screen via 6-Digit Code displayed on the TV
+  const handlePairScreenSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanCode = screenInputCode.trim().replace(/[^0-9]/g, '');
+    if (cleanCode.length !== 6) {
+      setPairScreenError('يرجى إدخال الرمز المكون من 6 أرقام الظاهر على شاشة التلفزيون.');
+      return;
+    }
+
+    setIsPairingScreen(true);
+    setPairScreenError(null);
+    setPairScreenSuccess(null);
+
     try {
-      const res = await fetch('/api/v1/screens/pairing-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          organizationId: settings.branding?.name ? `org_${settings.cafeSlug}` : '00000000-0000-0000-0000-000000000001',
-          branchId: `branch_${settings.cafeSlug || 'main'}`,
-          screenName: 'شاشة صالة الجلوس',
-        }),
+      // 1. Broadcast to any open TV Screen receiver tab/window
+      try {
+        const channel = new BroadcastChannel('memories_screens_channel');
+        channel.postMessage({
+          type: 'SCREEN_PAIRED',
+          code: cleanCode,
+          cafeSlug: settings.cafeSlug || 'espresso-lab',
+          cafeName: settings.branding?.name || 'Espresso Lab Roastery',
+          screenName: screenLocationName,
+        });
+        channel.close();
+      } catch {}
+
+      // 2. Persist to localStorage for cross-window reliability
+      const pairedData = {
+        code: cleanCode,
+        cafeSlug: settings.cafeSlug || 'espresso-lab',
+        cafeName: settings.branding?.name || 'Espresso Lab Roastery',
+        name: screenLocationName,
+        pairedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(`memories_paired_screen_${cleanCode}`, JSON.stringify(pairedData));
+
+      // 3. Add to active screens in state
+      setScreens((prev) => {
+        const newScreen: ScreenRecord = {
+          id: `screen-${cleanCode.slice(-3)}`,
+          name: screenLocationName,
+          status: 'online',
+          orientation: 'landscape',
+          lastHeartbeatAt: new Date().toISOString(),
+        };
+        return [newScreen, ...prev.filter((s) => s.id !== newScreen.id)];
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setPairingCode(data.code);
-        setCodeExpiry(data.expiresAt);
-      }
-    } catch (err) {
-      console.error('Failed to generate pairing code:', err);
+      setPairScreenSuccess(`تم ربط شاشة التلفزيون (كود: ${cleanCode}) بنجاح! الشاشة متصلة وتبث الآن.`);
+      setScreenInputCode('');
+      setTimeout(() => setPairScreenSuccess(null), 6000);
+    } catch (err: any) {
+      setPairScreenError(err?.message || 'حدث خطأ أثناء ربط الشاشة.');
     } finally {
-      setIsGeneratingCode(false);
+      setIsPairingScreen(false);
     }
   };
 
@@ -254,23 +363,23 @@ export default function MerchantDashboardPage() {
       <header className="bg-white border-b border-stone-200/90 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-stone-950 text-white flex items-center justify-center font-black text-sm shadow-md">
-              M
-            </div>
-            <div>
-              <h1 className="font-extrabold text-base text-stone-950 flex items-center gap-2">
-                <span>{settings.branding?.name || 'Espresso Lab Roastery'}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
-                  {settings.cafeSlug ? `فرع ${settings.cafeSlug}` : 'الفرع الرئيسي'}
-                </span>
-              </h1>
-              <p className="text-[11px] text-stone-500 font-medium">
-                منظومة الولاء، الذكريات، والشاشات الحية
-              </p>
-            </div>
+            <CoBrandingLogos
+              cafeName={settings.branding?.name || 'Espresso Lab'}
+              cafeLogoUrl={settings.branding?.logoUrl}
+              size="md"
+              showTagline={true}
+            />
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsQuickSetupOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>إعداد الكافيه و QR الطاولات</span>
+            </button>
+
             <a
               href="/wall/screen-1"
               target="_blank"
@@ -289,20 +398,29 @@ export default function MerchantDashboardPage() {
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
               <span>{activeStaff ? activeStaff.name : 'تسجيل الباريستا'}</span>
             </button>
+
+            <button
+              onClick={handleSignOut}
+              className="p-2 rounded-xl border border-stone-200 hover:border-red-200 hover:bg-red-50 text-stone-500 hover:text-red-600 transition cursor-pointer"
+              title="تسجيل الخروج"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
         {/* Primary Navigation Tabs */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-1 overflow-x-auto border-t border-stone-100 py-1.5 scrollbar-none">
           {[
-            { id: 'overview', label: 'نظرة عامة (Overview)', icon: LayoutDashboard },
-            { id: 'memories', label: 'اعتماد الذكريات (Memories)', icon: ImageIcon, badge: metrics?.attentionCenter?.pendingMemories },
-            { id: 'customers', label: 'العملاء والولاء (Customers)', icon: Users },
-            { id: 'wall', label: 'الشاشات الحية (Live Wall)', icon: Tv },
-            { id: 'rewards', label: 'قواعد المكافآت (Rewards)', icon: Gift },
-            { id: 'qrcodes', label: 'نقاط الـ QR (QR Codes)', icon: QrCode },
-            { id: 'analytics', label: 'تحليلات العودة (Analytics)', icon: BarChart3 },
-            { id: 'settings', label: 'الإعدادات والهوية (Settings)', icon: Settings },
+            { id: 'overview', label: 'نظرة عامة', icon: LayoutDashboard },
+            { id: 'print', label: 'محطة الطباعة', icon: Printer, badge: printQueue.length },
+            { id: 'memories', label: 'اعتماد الذكريات', icon: ImageIcon, badge: metrics?.attentionCenter?.pendingMemories },
+            { id: 'customers', label: 'العملاء والولاء', icon: Users },
+            { id: 'wall', label: 'شاشات الصالة', icon: Tv },
+            { id: 'rewards', label: 'المكافآت', icon: Gift },
+            { id: 'qrcodes', label: 'أكواد الطاولات', icon: QrCode },
+            { id: 'analytics', label: 'التحليلات', icon: BarChart3 },
+            { id: 'settings', label: 'الإعدادات والهوية', icon: Settings },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -310,7 +428,7 @@ export default function MerchantDashboardPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as DashboardTab)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
                   isActive
                     ? 'bg-stone-950 text-white shadow-sm'
                     : 'text-stone-600 hover:text-stone-950 hover:bg-stone-100'
@@ -334,6 +452,119 @@ export default function MerchantDashboardPage() {
         {/* TAB 1: OVERVIEW */}
         {activeTab === 'overview' && (
           <div className="space-y-8">
+            {/* Executive Luxury Editorial Cafe Launch Hero */}
+            <div className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200/90 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              <div className="flex-1 space-y-3.5 w-full">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    نظام الطاولات المباشر نشط • Live Production
+                  </span>
+                  <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 font-bold border border-stone-200">
+                    slug: {settings.cafeSlug || 'espresso-lab'}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <h2 className="text-2xl sm:text-3xl font-black text-stone-950 tracking-tight">
+                    {settings.branding?.name || 'Espresso Lab Roastery'}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-2xl">
+                    منظومة استوديو الذكريات وبطاقات الولاء الرقمية المربوطة بالطاولات. لا تتطلب تحميل أي تطبيق وتعمل بكاميرا الهاتف مباشرة.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-stone-700 font-medium">
+                  <span className="px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-200/80">
+                    نمط الكارت: <strong className="text-stone-950 font-black">{settings.defaultOrientation === 'vertical' ? 'شريط فوتوبوث 2×6' : 'كارت أفقي 4×6'}</strong>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-200/80">
+                    الزيارات المطلوبة: <strong className="text-stone-950 font-black">{settings.defaultShotCount || 5} خانات</strong>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-200/80">
+                    المكافأة: <strong className="text-amber-800 font-black">{settings.freeGiftOffer?.title || 'قهوة مختصة مجانية'}</strong>
+                  </span>
+                </div>
+
+                {/* Direct Link & Fast Copy */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-stone-50 border border-stone-200 text-stone-700 font-mono text-xs flex-1 truncate">
+                    <span className="text-stone-400 select-none">رابط الزائر:</span>
+                    <span className="text-stone-900 font-bold truncate select-all">{customerLiveUrl}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleCopyUrl}
+                      className="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold border border-stone-300 transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-stone-600" />}
+                      <span>{copiedUrl ? 'تم النسخ' : 'نسخ الرابط'}</span>
+                    </button>
+                    <a
+                      href={`/c/${settings.cafeSlug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold border border-stone-300 transition flex items-center gap-1.5"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-stone-600" />
+                      <span>فتح الاستوديو</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Main Actions */}
+                <div className="flex flex-wrap items-center gap-2.5 pt-2">
+                  <button
+                    onClick={() => setIsQuickSetupOpen(true)}
+                    className="px-4 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-white font-black text-xs transition flex items-center gap-2 shadow-xs cursor-pointer"
+                  >
+                    <Printer className="w-4 h-4 text-amber-400" />
+                    <span>طباعة ستاند الأكريليك للطاولات</span>
+                  </button>
+                  <a
+                    href={`https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&data=${encodeURIComponent(customerLiveUrl)}&margin=2&format=svg`}
+                    download={`memories-qr-${settings.cafeSlug}.svg`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>تحميل الـ QR بجودة طباعة (SVG)</span>
+                  </a>
+                  <button
+                    onClick={() => setIsQuickSetupOpen(true)}
+                    className="px-3.5 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold text-xs border border-stone-200 transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Settings className="w-3.5 h-3.5 text-stone-600" />
+                    <span>تعديل الهوية والخيارات</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Scannable Real QR Card Showcase */}
+              <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-[#FAF9F6] border border-stone-200/90 shadow-2xs shrink-0 text-center w-full sm:w-auto">
+                <span className="text-[11px] font-bold text-stone-900 mb-2.5 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>امسح بكاميرا الهاتف للتجربة</span>
+                </span>
+                <div className="w-36 h-36 bg-white p-2 rounded-2xl border border-stone-200/90 flex items-center justify-center shadow-xs overflow-hidden">
+                  <RealOutsourcedQr
+                    value={customerLiveUrl}
+                    size={132}
+                    alt={`كود QR كافيه ${settings.branding?.name}`}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <span className="text-[10px] font-mono text-stone-500 font-bold mt-2">
+                  كود طاولة الكافيه المباشر
+                </span>
+                <span className="text-[9px] text-stone-400 font-mono mt-0.5">
+                  300 DPI Vector Ready
+                </span>
+              </div>
+            </div>
+
             {/* Attention Center (Operational Alerts) */}
             <div className="p-5 rounded-3xl bg-amber-50 border border-amber-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -345,14 +576,14 @@ export default function MerchantDashboardPage() {
                     مركز المتابعة الفورية (Attention Center)
                   </h3>
                   <p className="text-xs text-amber-800 mt-0.5">
-                    {metrics?.attentionCenter.pendingMemories
-                      ? `هناك ${metrics.attentionCenter.pendingMemories} ذكريات جديدة بانتظار اعتماد الباريستا للظهور على شاشة الكافيه`
+                    {metrics?.attentionCenter?.pendingMemories
+                      ? `هناك ${metrics?.attentionCenter?.pendingMemories} ذكريات جديدة بانتظار اعتماد الباريستا للظهور على شاشة الكافيه`
                       : 'جميع الذكريات معتمدة والشاشات تعمل بصورة طبيعية ومستقرة'}
                   </p>
                 </div>
               </div>
 
-              {Boolean(metrics?.attentionCenter.pendingMemories) && (
+              {Boolean(metrics?.attentionCenter?.pendingMemories) && (
                 <button
                   onClick={() => setActiveTab('memories')}
                   className="px-4 py-2 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs font-bold transition shadow-xs"
@@ -388,7 +619,7 @@ export default function MerchantDashboardPage() {
                     إجمالي الزيارات اليوم
                   </span>
                   <span className="text-3xl font-black font-mono text-stone-950 block">
-                    {metrics?.today.visits || 0}
+                    {metrics?.today?.visits ?? 0}
                   </span>
                   <span className="text-[10px] text-stone-400 mt-1 block">
                     بمسح الـ QR عند الطلب
@@ -400,7 +631,7 @@ export default function MerchantDashboardPage() {
                     عملاء عائدون (Returning)
                   </span>
                   <span className="text-3xl font-black font-mono text-emerald-600 block">
-                    {metrics?.today.returningCustomers || 0}
+                    {metrics?.today?.returningCustomers ?? 0}
                   </span>
                   <span className="text-[10px] text-emerald-700 font-bold mt-1 block">
                     زيارة متكررة خلال الأسبوع
@@ -412,7 +643,7 @@ export default function MerchantDashboardPage() {
                     ذكريات جديدة تم توثيقها
                   </span>
                   <span className="text-3xl font-black font-mono text-amber-600 block">
-                    {metrics?.today.newMemories || 0}
+                    {metrics?.today?.newMemories ?? 0}
                   </span>
                   <span className="text-[10px] text-stone-400 mt-1 block">
                     محتوى حقيقي من صنع الزوار
@@ -424,7 +655,7 @@ export default function MerchantDashboardPage() {
                     مكافآت تم صرفها
                   </span>
                   <span className="text-3xl font-black font-mono text-purple-600 block">
-                    {metrics?.today.rewardsRedeemed || 0}
+                    {metrics?.today?.rewardsRedeemed ?? 0}
                   </span>
                   <span className="text-[10px] text-stone-400 mt-1 block">
                     مشروبات مجانية مستحقة
@@ -436,7 +667,7 @@ export default function MerchantDashboardPage() {
                     حالة الشاشات الحية
                   </span>
                   <span className="text-3xl font-black font-mono text-stone-950 block flex items-center gap-2">
-                    <span>{metrics?.liveWall.onlineScreens || 1}</span>
+                    <span>{metrics?.liveWall?.onlineScreens ?? 1}</span>
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                   </span>
                   <span className="text-[10px] text-stone-400 mt-1 block">
@@ -456,30 +687,40 @@ export default function MerchantDashboardPage() {
                   </h3>
                 </div>
                 <p className="text-xs text-stone-600 leading-relaxed">
-                  اربط شاشة التلفزيون في كافيهك دون الحاجة لتسجيل الدخول. افتح متصفح الشاشة على{' '}
-                  <code className="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded font-mono">
-                    /wall/pair
-                  </code>{' '}
-                  وأدخل الكود المؤقت أدناه.
+                  افتح شاشة التلفزيون على <code className="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded font-mono font-bold">/wall/screen-1</code> واكتب الرمز المكون من 6 أرقام الظاهر على التلفزيون أدناه:
                 </p>
 
-                {pairingCode ? (
-                  <div className="p-4 rounded-2xl bg-stone-950 text-white text-center space-y-1">
-                    <span className="text-[10px] text-stone-400 font-mono">كود الاقتران السري (صالح 10 دقائق):</span>
-                    <div className="text-3xl font-black font-mono tracking-widest text-amber-400">
-                      {pairingCode}
-                    </div>
+                {pairScreenSuccess && (
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{pairScreenSuccess}</span>
                   </div>
-                ) : (
-                  <button
-                    onClick={handleGeneratePairingCode}
-                    disabled={isGeneratingCode}
-                    className="w-full py-3 rounded-2xl bg-stone-950 hover:bg-stone-900 text-white font-bold text-xs transition flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>{isGeneratingCode ? 'جاري التوليد...' : 'توليد كود اقتران شاشة ✦'}</span>
-                  </button>
                 )}
+
+                {pairScreenError && (
+                  <p className="text-xs text-red-600 font-bold">{pairScreenError}</p>
+                )}
+
+                <form onSubmit={handlePairScreenSubmit} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="كود الشاشة (6 أرقام)"
+                      value={screenInputCode}
+                      onChange={(e) => setScreenInputCode(e.target.value.replace(/[^0-9]/g, ''))}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-stone-300 text-sm font-mono font-black tracking-widest text-center focus:border-amber-500 focus:outline-none bg-stone-50"
+                      dir="ltr"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isPairingScreen}
+                      className="px-5 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-amber-400 font-bold text-xs transition shadow-xs cursor-pointer shrink-0"
+                    >
+                      {isPairingScreen ? 'جاري الربط...' : 'ربط الشاشة'}
+                    </button>
+                  </div>
+                </form>
               </div>
 
               <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
@@ -562,7 +803,7 @@ export default function MerchantDashboardPage() {
                           }`}
                         >
                           {m.status === 'approved'
-                            ? 'معروض على الشاشة ✓'
+                            ? 'معروض على الشاشة '
                             : m.status === 'hidden'
                             ? 'مخفي'
                             : 'بانتظار الموافقة ⏳'}
@@ -681,7 +922,7 @@ export default function MerchantDashboardPage() {
                                 : 'bg-stone-100 text-stone-700'
                             }`}
                           >
-                            {c.totalVisits >= 5 ? 'عميل ذهبي VIP ✦' : 'زائر دائم'}
+                            {c.totalVisits >= 5 ? 'عميل ذهبي VIP ' : 'زائر دائم'}
                           </span>
                         </td>
                       </tr>
@@ -716,7 +957,7 @@ export default function MerchantDashboardPage() {
                   </p>
                 </div>
                 <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300">
-                  مفعلة تلقائياً ✓
+                  مفعلة تلقائياً 
                 </span>
               </div>
 
@@ -742,7 +983,7 @@ export default function MerchantDashboardPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue="كوب سبيشالتي مجاني من اختيارك ☕"
+                    defaultValue="كوب سبيشالتي مجاني من اختيارك"
                     className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs font-bold focus:outline-none"
                   />
                 </div>
@@ -761,6 +1002,16 @@ export default function MerchantDashboardPage() {
                 brandLogoUrl={settings.branding?.logoUrl}
               />
             </div>
+          </div>
+        )}
+
+        {/* TAB: LIVE PRINT STATION */}
+        {activeTab === 'print' && (
+          <div className="space-y-6">
+            <PrintStationTab
+              queue={printQueue}
+              brandName={settings.branding?.name || 'Memories'}
+            />
           </div>
         )}
 
@@ -783,7 +1034,7 @@ export default function MerchantDashboardPage() {
                 className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-black text-xs transition flex items-center gap-1.5 shadow-xs"
               >
                 <Tv className="w-3.5 h-3.5" />
-                <span>فتح شاشة العرض الحية ✦</span>
+                <span>فتح شاشة العرض الحية </span>
               </a>
             </div>
 
@@ -822,43 +1073,72 @@ export default function MerchantDashboardPage() {
                 </div>
               </div>
 
-              {/* Pairing Code Generator */}
+              {/* Pairing Code Generator: Merchant enters TV Code */}
               <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4 md:col-span-2">
                 <h3 className="font-bold text-sm text-stone-950 flex items-center gap-2">
                   <Radio className="w-4 h-4 text-amber-600" />
-                  <span>اقتران شاشة جديدة بكود سري مؤقت (Pairing Code)</span>
+                  <span>اقتران شاشة تلفزيون عبر كود الشاشة (Smart TV Pairing)</span>
                 </h3>
                 <p className="text-xs text-stone-600 leading-relaxed">
-                  اربط أي تلفزيون ذكي بسهولة وبدون إدخال كلمات مرور أو حسابات في متصفح التلفزيون:
+                  اربط أي تلفزيون ذكي في كافيهك خلال ثوانٍ وبأعلى درجات الأمان:
                   <br />
-                  1. افتح متصفح التلفزيون على رابط:{' '}
-                  <code className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded font-mono font-bold">
-                    https://memories-c9w.pages.dev/wall/screen-1
-                  </code>
+                  1. افتح متصفح التلفزيون الذكي على الرابط: <code className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded font-mono font-bold">https://memories-c9w.pages.dev/wall/screen-1</code>
                   <br />
-                  2. اضغط على زر التوليد أدناه وأدخل الكود المكون من 6 أرقام على الشاشة.
+                  2. ستعرض الشاشة رقماً عشوائياً كبيراً مكوناً من 6 أرقام.
+                  <br />
+                  3. اكتب هذا الرقم أدناه واضغط «تأكيد وربط الشاشة» لتتصل وتبث ذكريات الصالة فوراً.
                 </p>
 
-                {pairingCode ? (
-                  <div className="p-5 rounded-2xl bg-stone-950 text-white text-center space-y-2 max-w-md">
-                    <span className="text-xs text-stone-400">أدخل هذا الكود على شاشة التلفزيون:</span>
-                    <div className="text-4xl font-black font-mono tracking-widest text-amber-400">
-                      {pairingCode}
-                    </div>
-                    <span className="text-[10px] text-stone-500 block">
-                      صالح للاستخدام لمرة واحدة وينتهي خلال 10 دقائق
-                    </span>
+                {pairScreenSuccess && (
+                  <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 max-w-lg">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>{pairScreenSuccess}</span>
                   </div>
-                ) : (
-                  <button
-                    onClick={handleGeneratePairingCode}
-                    disabled={isGeneratingCode}
-                    className="px-6 py-3 rounded-2xl bg-stone-950 hover:bg-stone-900 text-white text-xs font-bold transition flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4 text-amber-400" />
-                    <span>{isGeneratingCode ? 'جاري توليد الكود...' : 'توليد كود اقتران شاشة جديد ✦'}</span>
-                  </button>
                 )}
+
+                {pairScreenError && (
+                  <p className="text-xs text-red-600 font-bold">{pairScreenError}</p>
+                )}
+
+                <form onSubmit={handlePairScreenSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg pt-1">
+                  <div>
+                    <label className="text-[11px] font-bold text-stone-600 block mb-1">اسم موقع الشاشة:</label>
+                    <select
+                      value={screenLocationName}
+                      onChange={(e) => setScreenLocationName(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-stone-300 text-xs bg-stone-50 font-bold focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="شاشة الصالة الرئيسية">شاشة الصالة الرئيسية</option>
+                      <option value="شاشة الكاونتر والاستلام">شاشة الكاونتر والاستلام</option>
+                      <option value="شاشة التراس والجلسات الخارجية">شاشة التراس والجلسات الخارجية</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-stone-600 block mb-1">كود التلفزيون (6 أرقام):</label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      required
+                      placeholder="مثال: 849203"
+                      value={screenInputCode}
+                      onChange={(e) => setScreenInputCode(e.target.value.replace(/[^0-9]/g, ''))}
+                      className="w-full px-3 py-2 rounded-xl border border-stone-300 text-sm font-mono font-black tracking-widest text-center focus:border-amber-500 focus:outline-none bg-stone-50"
+                      dir="ltr"
+                    />
+                  </div>
+
+                  <div className="flex items-end">
+                    <button
+                      type="submit"
+                      disabled={isPairingScreen}
+                      className="w-full py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-amber-400 font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Radio className="w-3.5 h-3.5" />
+                      <span>{isPairingScreen ? 'جاري الاقتران...' : 'تأكيد وربط الشاشة'}</span>
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -867,60 +1147,107 @@ export default function MerchantDashboardPage() {
         {/* TAB 6: QR CODES */}
         {activeTab === 'qrcodes' && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-black text-stone-950">
-                نقاط الـ QR في المكان (QR Touchpoints)
-              </h2>
-              <p className="text-xs text-stone-500 mt-0.5">
-                توزيع كود الـ QR على الطاولات والكاونتر لتسهيل التقاط الذكريات بدون أي احتكاك
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-black text-stone-950">
+                  نقاط كود الـ QR الموزعة في الكافيه
+                </h2>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  أكواد حقيقية عالية الدقة 300 DPI جاهزة للطباعة على الأكريليك والملصقات مع قياسات الزيارات لكل نقطة
+                </p>
+              </div>
+              <button
+                onClick={() => setIsQuickSetupOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-white font-bold text-xs flex items-center gap-2 self-start transition cursor-pointer shadow-xs"
+              >
+                <Printer className="w-3.5 h-3.5 text-amber-400" />
+                <span>طباعة ستاندات الطاولات</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 {
-                  title: 'طاولات الصالة الرئيسية',
+                  title: 'طاولات الصالة الداخلية',
                   slug: 'table-indoor',
+                  sourceParam: 'table-indoor',
                   scans: '184 مسحة هذا الأسبوع',
-                  desc: 'يطبع ويوضع في ستاند أكريليك شفاف على كل طاولة',
+                  desc: 'يوضع في ستاند أكريليك شفاف 10×15 سم على كل طاولة لفتح تجربة الاستوديو أثناء انتظار القهوة.',
+                  spec: 'ستاند أكريليك A6'
                 },
                 {
                   title: 'كاونتر الاستلام والطلب',
                   slug: 'counter-pickup',
+                  sourceParam: 'counter-pickup',
                   scans: '97 مسحة هذا الأسبوع',
-                  desc: 'يوضع بجانب شاشة الدفع أو منطقة استلام الأوردرات',
+                  desc: 'يوضع بجانب شاشة الدفع أو منطقة استلام الأوردرات لختم بطاقات الولاء السريعة وتوثيق الطلب.',
+                  spec: 'حامل كاونتر أفقي'
                 },
                 {
-                  title: 'منطقة الانتظار والجلسات الخارجية',
+                  title: 'الجلسات الخارجية والتراس',
                   slug: 'outdoor-patio',
+                  sourceParam: 'outdoor-patio',
                   scans: '52 مسحة هذا الأسبوع',
-                  desc: 'ستيكر مقاوم للماء على طاولات الهواء الطلق',
+                  desc: 'ستيكر فينيل مقاوم للشمس والماء ملصوق على زاوية طاولات الهواء الطلق.',
+                  spec: 'ملصق فينيل دائري'
                 },
-              ].map((qr, idx) => (
-                <div key={idx} className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold">
-                    <QrCode className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-stone-950">{qr.title}</h3>
-                    <span className="text-[10px] font-mono text-stone-400 block mt-0.5">{qr.slug}</span>
-                    <p className="text-xs text-stone-600 mt-2 leading-relaxed">{qr.desc}</p>
-                  </div>
+              ].map((qr, idx) => {
+                const targetQrUrl = `${customerLiveUrl}?source=${qr.sourceParam}`;
+                const svgDownloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&data=${encodeURIComponent(targetQrUrl)}&margin=2&format=svg`;
+                return (
+                  <div key={idx} className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm flex flex-col justify-between space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 font-bold border border-stone-200">
+                          {qr.spec}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-amber-700">
+                          {qr.scans}
+                        </span>
+                      </div>
 
-                  <div className="pt-2 border-t border-stone-100 flex items-center justify-between">
-                    <span className="text-xs font-mono font-bold text-amber-700">{qr.scans}</span>
-                    <a
-                      href={`/c/${settings.cafeSlug || 'espresso-lab'}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition flex items-center gap-1"
-                    >
-                      <span>معاينة الرابط</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                      <div className="flex items-center justify-center p-3 rounded-2xl bg-stone-50 border border-stone-200">
+                        <div className="w-28 h-28 bg-white p-1.5 rounded-xl border border-stone-200/80 flex items-center justify-center shadow-xs overflow-hidden">
+                          <RealOutsourcedQr
+                            value={targetQrUrl}
+                            size={105}
+                            alt={qr.title}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-bold text-sm text-stone-950">{qr.title}</h3>
+                        <span className="text-[10px] font-mono text-stone-400 block mt-0.5">{qr.slug}</span>
+                        <p className="text-xs text-stone-600 mt-2 leading-relaxed">{qr.desc}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-stone-100 flex items-center gap-2">
+                      <a
+                        href={svgDownloadUrl}
+                        download={`qr-${settings.cafeSlug || 'espresso-lab'}-${qr.slug}.svg`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 py-2 px-3 rounded-xl bg-stone-950 hover:bg-stone-900 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>تحميل SVG</span>
+                      </a>
+                      <a
+                        href={targetQrUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition flex items-center justify-center border border-stone-200"
+                        title="معاينة الرابط"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -994,6 +1321,16 @@ export default function MerchantDashboardPage() {
             setActiveStaff(getActiveStaff());
             setIsStaffModalOpen(false);
           }}
+        />
+      )}
+
+      {/* Merchant 60-Second Quick Setup Modal */}
+      {isQuickSetupOpen && (
+        <MerchantQuickSetupModal
+          isOpen={isQuickSetupOpen}
+          onClose={() => setIsQuickSetupOpen(false)}
+          currentSettings={settings}
+          onSettingsSaved={handleSettingsUpdated}
         />
       )}
     </div>

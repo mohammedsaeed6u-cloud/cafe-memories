@@ -56,13 +56,13 @@ export const ShareStoryWidget: React.FC<ShareStoryWidgetProps> = ({
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: `ذكرياتي في ${brandName}`,
-          text: `أحلى لحظات فوتوبوث في ${brandName} ${cafeHandle} ✨ #Memories #Photobooth`,
+          text: `أحلى لحظات فوتوبوث في ${brandName} ${cafeHandle} #Memories #Photobooth`,
           files: [file],
         });
       } else {
         // Fallback: Copy caption
         await navigator.clipboard.writeText(
-          `أحلى لحظات فوتوبوث في ${brandName} ${cafeHandle} ✨ #Memories #Photobooth`
+          `أحلى لحظات فوتوبوث في ${brandName} ${cafeHandle} #Memories #Photobooth`
         );
         setCopiedNotice(true);
         setTimeout(() => setCopiedNotice(false), 3500);
@@ -104,7 +104,7 @@ export const ShareStoryWidget: React.FC<ShareStoryWidgetProps> = ({
           className="py-3 px-4 rounded-2xl bg-gradient-to-r from-pink-600 via-rose-600 to-amber-600 hover:from-pink-700 hover:to-amber-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 hover:scale-[1.01]"
         >
           <Camera className="w-4 h-4" />
-          <span>مشاركة على الستوري 📸</span>
+          <span>مشاركة على الستوري</span>
         </button>
       </div>
 
@@ -112,7 +112,7 @@ export const ShareStoryWidget: React.FC<ShareStoryWidgetProps> = ({
         <div className="p-3 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-2 animate-in fade-in">
           <Lock className="w-4 h-4 text-amber-700 shrink-0" />
           <span>
-            🔒 التحميل عالي الدقة مقفول! اطلب مجدداً واجمع باقي الصور ({remaining} صور متبقية) لإلغاء القفل وتحميل الكارت بدقة عالية.
+            التحميل عالي الدقة مقفول! اطلب مجدداً واجمع باقي الصور ({remaining} صور متبقية) لإلغاء القفل وتحميل الكارت بدقة عالية.
           </span>
         </div>
       )}

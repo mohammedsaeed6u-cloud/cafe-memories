@@ -6,8 +6,8 @@ export default function CustomerLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex justify-center">
-      <div className="w-full max-w-md min-h-screen flex flex-col bg-[#FAF8F5] relative shadow-xl border-x border-stone-200/80">
+    <div className="min-h-screen bg-[#FAF9F6] text-stone-900 flex flex-col items-center selection:bg-amber-500/30 selection:text-amber-900">
+      <div className="w-full max-w-xl min-h-screen flex flex-col relative px-3 sm:px-4">
         {children}
       </div>
     </div>

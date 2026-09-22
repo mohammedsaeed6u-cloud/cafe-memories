@@ -1,19 +1,53 @@
 @import "tailwindcss";
 
+@theme {
+  --color-forest: #1E3A32;
+  --color-forest-dark: #142721;
+  --color-forest-light: #2A4F44;
+
+  --color-terracotta: #B85C43;
+  --color-terracotta-dark: #9B4A33;
+  --color-terracotta-light: #CF735A;
+
+  --color-warm-beige: #E8DCC6;
+  --color-warm-beige-light: #F7F2E7;
+  --color-warm-beige-dark: #D3C4A7;
+
+  --color-espresso: #3B2F2A;
+  --color-espresso-dark: #261E1A;
+  --color-espresso-light: #5A473F;
+
+  --color-olive: #8A9A7B;
+  --color-olive-dark: #6F7F60;
+  --color-olive-light: #A7B69A;
+
+  --font-playfair: var(--font-playfair), 'Playfair Display', Georgia, serif;
+  --font-montserrat: var(--font-montserrat), 'Montserrat', sans-serif;
+  --font-cairo: var(--font-cairo), 'Cairo', sans-serif;
+}
+
 @layer base {
   :root {
-    --background: #FFFFFF;
-    --foreground: #0C0A09;
+    --background: #FAF6EE;
+    --foreground: #3B2F2A;
     --font-cairo: 'Cairo', sans-serif;
-    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-playfair: 'Playfair Display', Georgia, serif;
+    --font-montserrat: 'Montserrat', sans-serif;
+  }
+
+  .dark {
+    --background: #0E1A16;
+    --foreground: #FAF6EE;
+    color-scheme: dark;
   }
 
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-cairo), var(--font-sans), system-ui, sans-serif;
+    font-family: var(--font-cairo), var(--font-montserrat), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 }
 
@@ -31,6 +65,40 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #A8A29E;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #142721;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #2A4F44;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #B85C43;
+}
+
+/* Universal Shimmer & Loading Animation */
+@keyframes memories-shimmer {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: memories-shimmer 2s infinite ease-in-out;
 }
 
 /* Staff PIN modal error shake */
@@ -224,16 +292,16 @@
   box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
 }
 
-/* Photobooth Dynamic Multi-Format Strip & Card Print Styles */
+/* Professional Multi-Format Print Style Sheet */
 @media print {
   @page {
     size: auto;
-    margin: 0;
+    margin: 12mm;
   }
 
   html, body {
-    background-color: transparent !important;
-    background: transparent !important;
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
     color: #1c1917 !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -243,15 +311,28 @@
     print-color-adjust: exact !important;
   }
 
-  body * {
+  /* Universal print hidden elements */
+  nav,
+  header,
+  footer,
+  button,
+  .print\:hidden,
+  [role="dialog"],
+  [role="region"],
+  [role="progressbar"],
+  .lucide-x {
+    display: none !important;
+  }
+
+  /* Specific photobooth strip print optimization when present */
+  body:has(#printable-strip) * {
     visibility: hidden !important;
   }
-
-  #printable-strip, #printable-strip * {
+  body:has(#printable-strip) #printable-strip,
+  body:has(#printable-strip) #printable-strip * {
     visibility: visible !important;
   }
-
-  #printable-strip {
+  body:has(#printable-strip) #printable-strip {
     position: fixed !important;
     top: 0 !important;
     left: 50% !important;
@@ -265,7 +346,7 @@
     break-inside: avoid !important;
   }
 
-  button, .lucide-x, [role="dialog"] > div > button {
-    display: none !important;
+  a[href]::after {
+    content: "" !important;
   }
 }

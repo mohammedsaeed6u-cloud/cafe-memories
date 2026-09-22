@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://memories-c9w.pages.dev/sitemap.xml

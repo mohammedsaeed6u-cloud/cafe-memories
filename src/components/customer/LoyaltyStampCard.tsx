@@ -52,7 +52,7 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           title: `كارت ولائي في ${brandName}`,
-          text: `كارت ذكرياتي في ${brandName} ✦ ${state.stampedCount}/${LOYALTY_TOTAL_SLOTS} ختم ✨ #Memories`,
+          text: `كارت ذكرياتي في ${brandName} • ${state.stampedCount}/${LOYALTY_TOTAL_SLOTS} ختم • Memories`,
           files: [file],
         });
         return;
@@ -82,8 +82,8 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
   return (
     <div className="lux-sheen lux-paper lux-lift w-full rounded-[1.75rem] p-5 relative overflow-hidden select-none">
       {/* Guilloche-style corner ornaments */}
-      <div className="absolute top-2.5 left-3.5 text-[#C9A227] text-lg drop-shadow-[0_1px_1px_rgba(255,246,214,0.8)]" aria-hidden>✦</div>
-      <div className="absolute bottom-2.5 right-3.5 text-[#C9A227] text-lg drop-shadow-[0_1px_1px_rgba(255,246,214,0.8)]" aria-hidden>✦</div>
+      <div className="absolute top-2.5 left-3.5 text-[#C9A227] text-xs font-mono font-bold" aria-hidden>NO.</div>
+      <div className="absolute bottom-2.5 right-3.5 text-[#C9A227] text-xs font-mono font-bold" aria-hidden>NO.</div>
       {/* Double-frame money-style inner border */}
       <div className="absolute inset-2 rounded-[1.3rem] border border-[#C9A227]/25 pointer-events-none" aria-hidden />
 
@@ -98,7 +98,7 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
               كارت ولاء <span className="lux-gold-text">{brandName}</span>
             </h4>
             <p className="text-[10px] text-[#8C6B47] font-semibold">
-              {customerName ? `كارت ${customerName} • ` : ''}صورة لكل زيارة ✦ الخانة الأخيرة هديتك
+              {customerName ? `كارت ${customerName} • ` : ''}صورة لكل زيارة • الخانة الأخيرة هديتك
             </p>
           </div>
         </div>
@@ -174,14 +174,14 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
       <div className="mt-1 pt-3 border-t border-[#C9A227]/25">
         {isGiftReady ? (
           <div className="lux-sheen relative overflow-hidden bg-gradient-to-l from-amber-400 via-amber-300 to-amber-400 rounded-2xl p-3 text-center text-stone-950 shadow-[0_10px_26px_-10px_rgba(245,158,11,0.6)] border border-amber-500/60">
-            <p className="font-black text-sm">🎁 كارتك اكتملت — هديتك جاهزة!</p>
+            <p className="font-black text-sm">كارتك اكتملت — هديتك جاهزة!</p>
             {onClaimGift && (
               <button
                 type="button"
                 onClick={onClaimGift}
                 className="lux-cta mt-2 w-full py-2 rounded-xl text-amber-300 text-xs font-black transition"
               >
-                اطلب هديتك الآن ✦
+                اطلب هديتك الآن
               </button>
             )}
           </div>
@@ -261,7 +261,7 @@ async function composeCardImage(
   ctx.fillText(`كارت ولاء ${brandName}`, width / 2, 46);
   ctx.fillStyle = '#8C6B47';
   ctx.font = '600 14px system-ui, sans-serif';
-  ctx.fillText(customerName ? `${customerName} • كل صورة = ختم` : 'كل صورة = ختم ✦ الخانة الأخيرة هديتك', width / 2, 72);
+  ctx.fillText(customerName ? `${customerName} • كل صورة = ختم` : 'كل صورة = ختم • الخانة الأخيرة هديتك', width / 2, 72);
 
   const state = getStampState(slots);
 
@@ -323,7 +323,7 @@ async function composeCardImage(
   ctx.fillStyle = state.isComplete ? '#F59E0B' : '#635345';
   ctx.font = '800 16px system-ui, sans-serif';
   const footerText = state.isComplete
-    ? '🎁 كارتك اكتملت — هديتك جاهزة!'
+    ? 'كارتك اكتملت — هديتك جاهزة!'
     : `${state.stampedCount} / ${LOYALTY_TOTAL_SLOTS} أختام • متبقي ${state.remaining} للهدية`;
   ctx.fillText(footerText, width / 2, height - padding + 10);
 

@@ -382,8 +382,7 @@ export function generatePrintHTML(
             <img class="strip-img" id="target-strip" src="${dataUrl}" alt="Photobooth Strip Left 2x6" />
           </div>
           <div class="dual-cut-line">
-            <span class="cut-indicator">✂</span>
-            <span class="cut-indicator">✂</span>
+            <span class="cut-indicator-line"></span>
           </div>
           <div class="dual-strip-column strip-right">
             <img class="strip-img" src="${secondStrip}" alt="Photobooth Strip Right 2x6" />

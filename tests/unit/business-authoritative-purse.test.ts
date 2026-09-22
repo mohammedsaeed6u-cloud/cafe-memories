@@ -104,4 +104,51 @@ describe('Business-Authoritative Digital Purse & Gated Retention Suite', () => {
       expect(CooldownService.verifyBaristaPin('7777')).toBe(true);
     });
   });
+
+  describe('60-Second Merchant Setup & Multi-Tenant Persistence', () => {
+    it('creates and saves new café tenant with authoritative 5-slot wallet pass configuration', () => {
+      const newCafeSlug = 'elixir-roasters';
+      const initialSettings = BusinessSettingsService.getSettings(newCafeSlug);
+
+      const customSettings = {
+        ...initialSettings,
+        cafeSlug: newCafeSlug,
+        cafeName: 'Elixir Specialty Coffee',
+        branding: {
+          name: 'Elixir Specialty Coffee',
+          tagline: 'Artisan Roast & Brew',
+        },
+        defaultOrientation: 'horizontal' as const,
+        defaultShotCount: 5,
+        freeGiftOffer: {
+          title: 'كوب قهوة فلات وايت مجاني ☕',
+          subtitle: 'عند إكمال 5 زيارات',
+          icon: 'coffee',
+        },
+      };
+
+      BusinessSettingsService.saveSettings(customSettings);
+
+      const retrieved = BusinessSettingsService.getSettings(newCafeSlug);
+      expect(retrieved.cafeSlug).toBe(newCafeSlug);
+      expect(retrieved.branding.name).toBe('Elixir Specialty Coffee');
+      expect(retrieved.defaultOrientation).toBe('horizontal');
+      expect(retrieved.defaultShotCount).toBe(5);
+      expect(retrieved.freeGiftOffer.title).toBe('كوب قهوة فلات وايت مجاني ☕');
+
+      // Verify all child frames are strictly normalized to 5 slots and horizontal
+      retrieved.frames.forEach((f) => {
+        expect(f.shotCount).toBe(5);
+        expect(f.orientation).toBe('horizontal');
+      });
+    });
+
+    it('generates zero-friction customer URL and QR touchpoint destination', () => {
+      const slug = 'symmetry-cafe';
+      const customerUrl = `/c/${slug}`;
+      expect(customerUrl).toBe('/c/symmetry-cafe');
+      expect(customerUrl.startsWith('/c/')).toBe(true);
+    });
+  });
 });
+

@@ -30,6 +30,7 @@ import {
 } from '@/types/loyalty-card';
 import { LoyaltyCardService } from '@/lib/services/loyalty-card.service';
 import { CardCanvasExportService } from '@/lib/services/card-canvas-export.service';
+import { AddToWalletButtons } from '@/components/wallet/AddToWalletButtons';
 
 export interface LoyaltyCardViewProps {
   template: LoyaltyCardTemplate;
@@ -52,7 +53,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
   brandName = 'Memories Cafe',
   brandLogoUrl,
   customerName = 'ضيف مميز',
-  customerPhone = '01000000000',
+  customerPhone = '',
   interactive = true,
   onStampChange,
   showBackDefault = false,
@@ -150,25 +151,6 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
       }
     }
   };
-
-  const handleDemoStamp = () => {
-    if (activeState.activeStamps >= template.slotCount) {
-      // Reset if completed
-      const resetState = LoyaltyCardService.createInitialCardState(
-        activeState.cafeSlug || 'espresso-lab',
-        customerPhone,
-        template,
-        customerName
-      );
-      setInternalState(resetState);
-      if (onStampChange) onStampChange(0, resetState);
-      return;
-    }
-
-    const nextSlot = activeState.activeStamps + 1;
-    handleSlotClick(nextSlot);
-  };
-
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExportCard = async () => {
@@ -534,7 +516,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                           className="absolute top-0 right-0 w-3.5 h-3.5 bg-amber-500 text-stone-950 flex items-center justify-center rounded-bl-lg text-[7px] font-black"
                           title={milestone?.rewardTitle}
                         >
-                          ★
+                          #
                         </div>
                       )}
                     </div>
@@ -550,7 +532,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                   <Sparkles className="w-3 h-3 text-amber-400 flex-shrink-0" />
                   <span>
                     {milestoneProgress.isComplete
-                      ? '🎉 اكتملت البطاقة — استلم هديتك الكبرى!'
+                      ? 'اكتملت البطاقة — استلم هديتك الكبرى!'
                       : milestoneProgress.nextMilestone
                       ? `متبقي ${milestoneProgress.stampsToNext} أختام للحصول على: ${milestoneProgress.nextMilestone.rewardTitle}`
                       : `متبقي ${milestoneProgress.stampsToNext} أختام لاكتمال البطاقة`}
@@ -666,7 +648,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                       className="flex items-center justify-between bg-amber-500/15 border border-amber-400/30 px-2 py-1 rounded-lg text-[9px]"
                     >
                       <span className="font-bold text-amber-200 truncate">
-                        🎁 {reward.rewardTitle}
+                        {reward.rewardTitle}
                       </span>
                       <span className="font-mono font-black text-amber-300 bg-black/40 px-1.5 py-0.5 rounded">
                         {reward.code}
@@ -675,7 +657,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                   ))
                 ) : (
                   <p className="text-[9px] text-stone-400 text-center py-1">
-                    أكمل الأختام المطلوبة لفتح قسائم الهدايا التلقائية ✨
+                    أكمل الأختام المطلوبة لفتح قسائم الهدايا التلقائية
                   </p>
                 )}
               </div>
@@ -684,21 +666,11 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
         </div>
       </div>
 
-      {/* Interactive Control Dock below Card */}
       {interactive && (
         <div className="mt-4 w-full max-w-sm flex items-center justify-between gap-2 px-3 py-2 bg-white/90 backdrop-blur-md rounded-2xl border border-stone-200 shadow-sm text-xs">
-          <button
-            type="button"
-            onClick={handleDemoStamp}
-            className="flex-1 py-1.5 px-3 bg-stone-900 hover:bg-stone-800 text-amber-300 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>
-              {activeState.activeStamps >= template.slotCount
-                ? 'إعادة تعيين ↺'
-                : 'ختم تجريبي ✦'}
-            </span>
-          </button>
+          <div className="flex-1 py-1.5 px-3 bg-stone-100 text-stone-700 rounded-xl font-bold flex items-center justify-center gap-1.5 text-[11px]">
+            <span>{activeState.activeStamps} / {template.slotCount} أختام مكتملة</span>
+          </div>
 
           <button
             type="button"
@@ -750,6 +722,23 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
               <VolumeX className="w-3.5 h-3.5" />
             )}
           </button>
+        </div>
+      )}
+
+      {interactive && (
+        <div className="pt-2 w-full flex items-center justify-center">
+          <AddToWalletButtons
+            passData={{
+              cafeSlug: activeState.cafeSlug || template.id.split('-')[0] || 'espresso-lab',
+              cafeName: brandName,
+              customerPhone: customerPhone,
+              customerName: customerName,
+              stampedCount: activeState.activeStamps,
+              maxSlots: activeState.totalSlots || template.slotCount,
+              giftTitle: template.milestones[0]?.rewardTitle || 'مشروب مجاني مميز',
+              instagramHandle: '@' + brandName.toLowerCase().replace(/\s+/g, ''),
+            }}
+          />
         </div>
       )}
     </div>
