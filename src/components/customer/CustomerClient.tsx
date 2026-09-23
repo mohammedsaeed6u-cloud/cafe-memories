@@ -426,13 +426,13 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none touch-pan-x">
             {[
-              { id: 'polaroid_vintage', label: 'بولارويد كلاسيك', icon: 'FILM' },
-              { id: 'korean_noir', label: 'نوار كوري عاجي', icon: 'RAW' },
-              { id: 'ticket_express', label: 'تذكرة الكافيه', icon: 'PASS' },
-              { id: 'ios_camera', label: 'كاميرا آيفون', icon: 'CAM' },
-              { id: 'spotify_player', label: 'مشغل سبوتيفاي', icon: 'AUD' },
-              { id: 'ios_gallery_light', label: 'ألبوم آيفون', icon: 'IOS' },
-              { id: 'ios_imessage', label: 'آي مسج', icon: 'MSG' },
+              { id: 'polaroid_vintage', label: 'بولارويد كلاسيك', icon: '🎞️' },
+              { id: 'korean_noir', label: 'نوار كوري عاجي', icon: '☕' },
+              { id: 'ticket_express', label: 'تذكرة الكافيه', icon: '🎟️' },
+              { id: 'ios_camera', label: 'كاميرا آيفون', icon: '📷' },
+              { id: 'spotify_player', label: 'مشغل سبوتيفاي', icon: '🎵' },
+              { id: 'ios_gallery_light', label: 'ألبوم آيفون', icon: '🖼️' },
+              { id: 'ios_imessage', label: 'آي مسج', icon: '💬' },
             ].map((mode) => {
               const isActive = cardMode === mode.id;
               return (
