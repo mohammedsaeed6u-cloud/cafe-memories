@@ -9,6 +9,8 @@ import { AddToWalletButtons } from '@/components/wallet/AddToWalletButtons';
 interface CustomerLoyaltyCardProps {
   loyaltyData: CustomerLoyaltyData;
   giftTitle?: string;
+  brandName?: string;
+  instagramHandle?: string;
   onOpenStaffStamp: () => void;
   className?: string;
 }
@@ -16,6 +18,8 @@ interface CustomerLoyaltyCardProps {
 export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
   loyaltyData,
   giftTitle = 'مشروب مجاني مميز',
+  brandName = 'كافيه الذكريات',
+  instagramHandle = '@memories',
   onOpenStaffStamp,
   className = '',
 }) => {
@@ -79,12 +83,12 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
             <AddToWalletButtons
               passData={{
                 cafeSlug: cafeSlug || 'espresso-lab',
-                cafeName: 'Espresso Lab Roastery',
+                cafeName: brandName || 'كافيه الذكريات',
                 customerPhone: customerPhone || 'guest',
                 stampedCount,
                 maxSlots,
                 giftTitle,
-                instagramHandle: '@espressolab.om',
+                instagramHandle: instagramHandle || '@memories',
               }}
             />
           </div>

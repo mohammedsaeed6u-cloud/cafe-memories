@@ -9,7 +9,8 @@ import {
   DEFAULT_BUSINESS_SETTINGS,
 } from '@/lib/constants/photobooth-presets';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
-import { PhotoboothFrame, BusinessSettings } from '@/types/photobooth';
+import { StripComposerService } from '@/lib/services/strip-composer.service';
+import { PhotoboothFrame, BusinessSettings, PlacedSticker } from '@/types/photobooth';
 
 describe('Photobooth Frames Template System', () => {
   describe('Deliverable 2: Core Frame Visual Identities', () => {
@@ -248,6 +249,65 @@ describe('Photobooth Frames Template System', () => {
       expect(iosMessage).toBeDefined();
       expect(iosCamera?.cardMode).toBe('ios_camera');
       expect(iosMessage?.cardMode).toBe('ios_imessage');
+    });
+  });
+
+  describe('StripComposerService Sticker & Theme Rendering', () => {
+    it('composes a strip with stickers and custom spotify track in mock environment without errors', async () => {
+      const mockCanvas = {
+        width: 0,
+        height: 0,
+        getContext: () => ({
+          save: () => {},
+          restore: () => {},
+          beginPath: () => {},
+          closePath: () => {},
+          moveTo: () => {},
+          lineTo: () => {},
+          arc: () => {},
+          arcTo: () => {},
+          fill: () => {},
+          stroke: () => {},
+          fillRect: () => {},
+          strokeRect: () => {},
+          fillText: () => {},
+          measureText: () => ({ width: 100 }),
+          drawImage: () => {},
+          translate: () => {},
+          rotate: () => {},
+          setLineDash: () => {},
+        }),
+        toDataURL: () => 'data:image/png;base64,MOCK_STRIP',
+      };
+
+      const originalDocument = globalThis.document;
+      // @ts-expect-error Mocking document for headless node
+      globalThis.document = {
+        createElement: (tag: string) => {
+          if (tag === 'canvas') return mockCanvas;
+          return {};
+        },
+      };
+
+      const sampleStickers: PlacedSticker[] = [
+        { id: 'stk-1', emoji: '☕', x: 50, y: 50, rotation: 10, scale: 1 },
+        { id: 'stk-2', emoji: '✨', x: 20, y: 30, rotation: -5, scale: 1.2 },
+      ];
+
+      const url = await StripComposerService.composeStrip({
+        photos: [],
+        frame: {
+          ...DEFAULT_PHOTOBOOTH_FRAMES[0],
+          songTitle: 'Morning Coffee',
+          songArtist: 'Lofi Cafe Beats',
+        },
+        branding: { name: 'Espresso Lab' },
+        cardMode: 'spotify_player',
+        stickers: sampleStickers,
+      });
+
+      expect(url).toBe('data:image/png;base64,MOCK_STRIP');
+      globalThis.document = originalDocument;
     });
   });
 });

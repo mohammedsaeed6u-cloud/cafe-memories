@@ -120,7 +120,22 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [liveWallConsent, setLiveWallConsent] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stickers, setStickers] = useState<PlacedSticker[]>([]);
+  const [isStickerTrayOpen, setIsStickerTrayOpen] = useState(false);
   const [activeCaptureSlot, setActiveCaptureSlot] = useState<number | null>(null);
+
+  const handleAddSticker = (emoji: string) => {
+    if (!emoji.trim()) return;
+    const randomOffset = (Math.random() - 0.5) * 20;
+    const newSticker: PlacedSticker = {
+      id: `stk_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      emoji: emoji.trim(),
+      x: Math.max(15, Math.min(85, 50 + randomOffset)),
+      y: Math.max(15, Math.min(85, 40 + randomOffset)),
+      rotation: Math.round((Math.random() - 0.5) * 30),
+      scale: 1,
+    };
+    setStickers((prev) => [...prev, newSticker]);
+  };
 
   // Customer Onboarding / Registration Form State
   const [regName, setRegName] = useState('');
@@ -439,9 +454,9 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
           {/* Sub-customizer for Spotify */}
           {cardMode === 'spotify_player' && (
-            <div className="p-3 bg-white border border-stone-200/90 rounded-2xl space-y-2.5 text-xs shadow-2xs">
+            <div className="p-3.5 bg-white border border-stone-200/90 rounded-2xl space-y-3 text-xs shadow-2xs">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-bold text-stone-700">اللون:</span>
+                <span className="text-[11px] font-bold text-stone-700">لون الخلفية:</span>
                 {[
                   { id: '#384C5A', name: 'Slate Blue', hex: '#384C5A' },
                   { id: '#4E483E', name: 'Warm Taupe', hex: '#4E483E' },
@@ -452,7 +467,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                     key={c.id}
                     type="button"
                     onClick={() => setSpotifyBg(c.hex)}
-                    className={`flex items-center gap-1.5 px-2 py-1 rounded-xl border text-[10px] font-bold transition ${
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-xl border text-[10px] font-bold transition cursor-pointer ${
                       spotifyBg === c.hex ? 'border-amber-500 ring-2 ring-amber-400/40' : 'border-stone-200'
                     }`}
                   >
@@ -461,27 +476,111 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   </button>
                 ))}
               </div>
+
+              {/* Song Selection & Presets */}
+              <div className="space-y-2 pt-1 border-t border-stone-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-stone-700">الأغنية المفضلة للكارت:</span>
+                  <span className="text-[10px] text-stone-400 font-mono">SPOTIFY DOCK</span>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { title: 'Morning Coffee', artist: 'Lofi Cafe Beats' },
+                    { title: 'Nobody Gets Me', artist: 'SZA • SOS' },
+                    { title: 'صباح ومساء', artist: 'فيروز' },
+                    { title: 'Golden Hour', artist: 'JVKE' },
+                    { title: 'نسم علينا الهوى', artist: 'فيروز' },
+                  ].map((preset) => (
+                    <button
+                      key={preset.title}
+                      type="button"
+                      onClick={() => setSpotifyTrack(preset)}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
+                        spotifyTrack.title === preset.title
+                          ? 'bg-amber-100 text-amber-900 border-amber-300 font-black'
+                          : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
+                      }`}
+                    >
+                      🎵 {preset.title}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                  <input
+                    type="text"
+                    value={spotifyTrack.title}
+                    onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="اسم الأغنية..."
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:border-amber-500 font-bold"
+                  />
+                  <input
+                    type="text"
+                    value={spotifyTrack.artist}
+                    onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, artist: e.target.value }))}
+                    placeholder="اسم الفنان / الألبوم..."
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:border-amber-500 font-bold"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
           {/* Sub-customizer for Cafe Table / Spot */}
           {cardMode === 'ticket_express' && (
-            <div className="p-3 bg-white border border-stone-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-              <span className="text-[11px] font-bold text-stone-700">موقع الجلسة:</span>
-              <div className="flex items-center gap-1.5">
-                {['طاولة 04 • صالة', 'طاولة 08 • تراس', 'جلسة بار • كاونتر'].map((seat) => (
-                  <button
-                    key={seat}
-                    type="button"
-                    onClick={() => setTicketSeat(seat)}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
-                      ticketSeat === seat ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-stone-50 border-stone-200 text-stone-600'
-                    }`}
-                  >
-                    {seat}
-                  </button>
-                ))}
+            <div className="p-3.5 bg-white border border-stone-200/90 rounded-2xl space-y-2 text-xs shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-stone-700">موقع الجلسة بالكافيه:</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {['طاولة 04 • صالة', 'طاولة 08 • تراس', 'جلسة بار • كاونتر'].map((seat) => (
+                    <button
+                      key={seat}
+                      type="button"
+                      onClick={() => setTicketSeat(seat)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
+                        ticketSeat === seat ? 'bg-amber-100 text-amber-900 border-amber-300 font-black' : 'bg-stone-50 border-stone-200 text-stone-600'
+                      }`}
+                    >
+                      {seat}
+                    </button>
+                  ))}
+                </div>
               </div>
+              <input
+                type="text"
+                value={ticketSeat}
+                onChange={(e) => setTicketSeat(e.target.value)}
+                placeholder="أو اكتب رقم طاولتك (مثال: طاولة VIP 12)..."
+                className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:border-amber-500 font-bold"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* 5.5. STICKERS & DOODLES DECORATION TRAY */}
+        <div className="w-full space-y-2">
+          <button
+            type="button"
+            onClick={() => setIsStickerTrayOpen(!isStickerTrayOpen)}
+            className="w-full py-2.5 px-4 rounded-2xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-bold text-xs shadow-2xs transition flex items-center justify-between cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-600" />
+              <span>تزيين الكارت بالملصقات والإيموجي (Stickers &amp; Doodles)</span>
+            </div>
+            <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 font-bold">
+              {stickers.length > 0 ? `${stickers.length} ملصق بالكارت` : 'إضافة ملصقات +'}
+            </span>
+          </button>
+
+          {isStickerTrayOpen && (
+            <div className="animate-in fade-in duration-200">
+              <StickerControlTray
+                onAddSticker={handleAddSticker}
+                onClearAll={() => setStickers([])}
+                stickersCount={stickers.length}
+              />
             </div>
           )}
         </div>
@@ -522,6 +621,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
               <CustomerLoyaltyCard
                 loyaltyData={loyaltyData}
                 giftTitle={settings.freeGiftOffer.title}
+                brandName={settings.branding.name}
+                instagramHandle={settings.branding.instagramHandle}
                 onOpenStaffStamp={() => setIsStaffStampModalOpen(true)}
               />
             </div>

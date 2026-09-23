@@ -444,10 +444,10 @@ export class StripComposerService {
 
         ctx.strokeStyle = effectiveAccent;
         ctx.lineWidth = 3;
-        ctx.setLineDash([8, 6]);
+        if (typeof ctx.setLineDash === 'function') ctx.setLineDash([8, 6]);
         this.roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
         ctx.stroke();
-        ctx.setLineDash([]);
+        if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
 
         ctx.font = '40px sans-serif';
         ctx.textAlign = 'center';
@@ -468,15 +468,15 @@ export class StripComposerService {
 
         ctx.strokeStyle = effectiveBorder;
         ctx.lineWidth = 2;
-        ctx.setLineDash([6, 6]);
+        if (typeof ctx.setLineDash === 'function') ctx.setLineDash([6, 6]);
         this.roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
         ctx.stroke();
-        ctx.setLineDash([]);
+        if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
 
         ctx.fillStyle = isSpotifyPlayer ? 'rgba(255,255,255,0.4)' : '#A8A29E';
         ctx.font = 'bold 18px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('الزيارة القادمة #' + visitNumber, slotCenterX, slotCenterY + 6);
+        ctx.fillText('اللقطة #' + visitNumber, slotCenterX, slotCenterY + 6);
       }
     }
 
@@ -747,6 +747,25 @@ export class StripComposerService {
         ctx.fillStyle = effectiveText;
         const chinNote = frame.customText || branding.tagline || 'special coffee memory';
         ctx.fillText(chinNote, width / 2, footerY + 22);
+      }
+    }
+
+    // Draw Placed Stickers onto Canvas (at exact percentage coordinates)
+    if (stickers && stickers.length > 0) {
+      for (const sticker of stickers) {
+        ctx.save();
+        const posX = (sticker.x / 100) * width;
+        const posY = (sticker.y / 100) * height;
+        ctx.translate(posX, posY);
+        if (sticker.rotation) {
+          ctx.rotate((sticker.rotation * Math.PI) / 180);
+        }
+        const fontSize = Math.round(36 * (sticker.scale || 1) * (width / 600));
+        ctx.font = `${fontSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(sticker.emoji, 0, 0);
+        ctx.restore();
       }
     }
 
