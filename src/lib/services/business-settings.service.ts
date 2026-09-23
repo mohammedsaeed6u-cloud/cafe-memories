@@ -88,6 +88,7 @@ export class BusinessSettingsService {
           cafeSlug: cafeSlug || parsed.cafeSlug || DEFAULT_BUSINESS_SETTINGS.cafeSlug,
           branding: sanitizedBranding,
           freeGiftOffer: { ...DEFAULT_BUSINESS_SETTINGS.freeGiftOffer, ...(parsed.freeGiftOffer || {}) },
+          loyaltyMaxVisits: Number(parsed.loyaltyMaxVisits) || DEFAULT_BUSINESS_SETTINGS.loyaltyMaxVisits || 5,
           defaultShotCount,
           defaultOrientation,
           defaultFrameShape,

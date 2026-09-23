@@ -626,6 +626,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
     tagline: 'SPECIALTY COFFEE & ROASTERY',
   },
   defaultShotCount: 3,
+  loyaltyMaxVisits: 5,
   defaultOrientation: 'vertical',
   defaultFrameShape: 'rounded',
   defaultBorderRadius: 22,

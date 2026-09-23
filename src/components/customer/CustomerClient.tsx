@@ -144,6 +144,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
   // Total slots authoritative from merchant
   const totalCardSlots = Math.max(selectedFrame.shotCount || 3, 1);
+  const loyaltyMaxVisits = settings.loyaltyMaxVisits || 5;
 
   // Hydrate persisted session from storage
   useEffect(() => {
@@ -156,7 +157,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       if (storedRole) setCustomerProfession(storedRole);
 
       // Restore loyalty data
-      const loyalty = LoyaltyPurseService.getData(storedPhone, cafeSlug, 5);
+      const loyalty = LoyaltyPurseService.getData(storedPhone, cafeSlug, loyaltyMaxVisits);
       setLoyaltyData(loyalty);
 
       // Check wall consent answer
@@ -181,7 +182,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       }
     };
     requestAnimationFrame(hydrateSession);
-  }, [cafeSlug]);
+  }, [cafeSlug, loyaltyMaxVisits]);
 
   // Current photos to display: customer's actual captured photos
   const currentDisplayPhotos = todayPhoto
@@ -193,8 +194,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
   // Direct Staff Stamp Handler
   const handleStaffStampSuccess = () => {
-    const res = LoyaltyPurseService.addDirectStamp(customerPhone, cafeSlug, 5);
-    setLoyaltyData(LoyaltyPurseService.getData(customerPhone, cafeSlug, 5));
+    const res = LoyaltyPurseService.addDirectStamp(customerPhone, cafeSlug, loyaltyMaxVisits);
+    setLoyaltyData(LoyaltyPurseService.getData(customerPhone, cafeSlug, loyaltyMaxVisits));
   };
 
   // Customer Registration & Check-in Handler
@@ -207,7 +208,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     CustomerRegistryService.registerCustomer(clean, name, 'coffee_lover', cafeSlug);
     setCustomerPhone(clean);
     setCustomerName(name);
-    const updatedLoyalty = LoyaltyPurseService.getData(clean, cafeSlug, 5);
+    const updatedLoyalty = LoyaltyPurseService.getData(clean, cafeSlug, loyaltyMaxVisits);
     setLoyaltyData(updatedLoyalty);
     setRegSuccessNotice(`تم تثبيت كارت الولاء بنجاح للعميل (${name})! يمكنك الآن التقاط صورك وختم زياراتك.`);
     setTimeout(() => setRegSuccessNotice(null), 4000);
@@ -218,7 +219,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     setCustomerName('');
     localStorage.removeItem('memories_customer_phone');
     localStorage.removeItem('memories_customer_name');
-    setLoyaltyData(LoyaltyPurseService.getData('', cafeSlug, 5));
+    setLoyaltyData(LoyaltyPurseService.getData('', cafeSlug, loyaltyMaxVisits));
   };
 
   // Add or Replace Photo Handler (from camera or file upload)

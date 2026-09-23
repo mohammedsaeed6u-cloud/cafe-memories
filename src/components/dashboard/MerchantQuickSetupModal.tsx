@@ -90,6 +90,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
       },
       defaultOrientation: orientation,
       defaultShotCount: shotCount,
+      loyaltyMaxVisits: shotCount,
       freeGiftOffer: {
         ...currentSettings.freeGiftOffer,
         title: giftTitle.trim() || 'كوب قهوة مجاني',

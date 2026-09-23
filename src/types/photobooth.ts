@@ -156,6 +156,7 @@ export interface BusinessSettings {
   defaultHeightCm?: number;
   defaultLayoutType?: PhotoboothLayoutType; // Korean, Latte, Film, Sakura, Polaroid
   freeGiftOffer: FreeGiftOffer;
+  loyaltyMaxVisits?: number;
   activeFrameId: string;
   frames: PhotoboothFrame[];
   wallSettings?: WallDisplaySettings;
