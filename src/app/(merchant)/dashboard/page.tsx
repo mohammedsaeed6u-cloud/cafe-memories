@@ -665,6 +665,14 @@ export default function MerchantDashboardPage() {
               <CreditCard className="w-3.5 h-3.5 text-amber-700" />
               <span>الاشتراك والباقة</span>
             </button>
+            <a
+              href="/barista"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-xs font-bold text-amber-950 flex items-center gap-1.5 transition cursor-pointer"
+              title="فتح محطة الباريستا المستقلة للكاونتر"
+            >
+              <Coffee className="w-3.5 h-3.5 text-amber-700" />
+              <span>محطة الباريستا</span>
+            </a>
             <button
               onClick={() => setIsBaristaRedeemOpen(true)}
               className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer"
