@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { BusinessSettings, StripOrientation } from '@/types/photobooth';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
+import { PrintService } from '@/lib/services/print.service';
 
 interface MerchantQuickSetupModalProps {
   isOpen: boolean;
@@ -39,7 +40,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
   const [cafeName, setCafeName] = useState(currentSettings.branding?.name || 'Espresso Lab Roastery');
   const [cafeSlug, setCafeSlug] = useState(currentSettings.cafeSlug || 'espresso-lab');
   const [orientation, setOrientation] = useState<StripOrientation>(currentSettings.defaultOrientation || 'vertical');
-  const [shotCount, setShotCount] = useState<number>(currentSettings.defaultShotCount || 5);
+  const [shotCount, setShotCount] = useState<number>(currentSettings.defaultShotCount || 3);
   const [giftTitle, setGiftTitle] = useState(currentSettings.freeGiftOffer?.title || 'كوب قهوة مختصة مجاني');
   const [copiedLink, setCopiedLink] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
@@ -126,7 +127,14 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
   const handlePrintStand = () => {
     if (typeof window === 'undefined') return;
-    window.print();
+    if (document.getElementById('table-stand-print')) {
+      PrintService.printTableStand('table-stand-print', {
+        title: `ستاند طاولة - ${cafeName}`,
+        cafeName,
+      });
+    } else {
+      window.print();
+    }
   };
 
   return (
@@ -481,7 +489,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                   rel="noreferrer"
                   className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <span>تجربة كارت العميل في نافذة جديدة</span>
+                  <span>فتح كارت العميل في نافذة جديدة</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
 

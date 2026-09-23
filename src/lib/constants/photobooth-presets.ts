@@ -1418,7 +1418,7 @@ export const PHOTOBOOTH_FRAME_TEMPLATES: PhotoboothFrameTemplate[] = [
     shotCount: 3,
     layoutType: 'cinema_horizontal',
     cardMode: 'cinema_horizontal',
-    description: '3 كادرات سينمائية عريضة 16:9 جنباً إلى جنب مع أشرطة لقطات الأفلام وشريط ترجمة وهمي',
+    description: '3 كادرات سينمائية عريضة 16:9 جنباً إلى جنب مع أشرطة لقطات الأفلام وشريط نصوص سينمائي مستوحى من لقطات الأفلام',
     badge: 'CINEMA SCOPE',
     icon: 'cinema',
     defaultBg: '#09090B',

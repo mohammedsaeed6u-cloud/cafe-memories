@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Tv, Shield, Wifi, ExternalLink } from 'lucide-react';
+import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
 
 export function MarketingWallSection() {
   return (
@@ -84,26 +85,13 @@ export function MarketingWallSection() {
 
               {/* Scannable Live Wall QR & Callout */}
               <div className="w-full sm:w-2/5 flex flex-col items-center justify-center text-center space-y-2">
-                <div className="p-2.5 bg-white rounded-2xl shadow-md border border-stone-200">
-                  <div className="w-20 h-20 bg-stone-950 rounded-xl p-1.5 flex flex-col items-center justify-center">
-                    <div className="grid grid-cols-4 gap-1 w-full h-full">
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-amber-400 rounded-xs"></div>
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-transparent"></div>
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-amber-400 rounded-xs"></div>
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-transparent"></div>
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-white rounded-xs"></div>
-                      <div className="bg-transparent"></div>
-                      <div className="bg-white rounded-xs"></div>
-                    </div>
+                <div className="p-2 bg-white rounded-2xl shadow-md border border-stone-200">
+                  <div className="w-20 h-20 flex items-center justify-center overflow-hidden rounded-xl bg-white">
+                    <RealOutsourcedQr
+                      value="https://memories-c9w.pages.dev/c/espresso-lab"
+                      size={80}
+                      alt="رمز مسح تجربة الزائر الحية"
+                    />
                   </div>
                 </div>
                 <span className="text-[9px] font-mono font-bold text-amber-400 tracking-wider">

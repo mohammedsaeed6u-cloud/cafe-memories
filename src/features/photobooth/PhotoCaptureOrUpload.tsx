@@ -47,7 +47,7 @@ export const PhotoCaptureOrUpload: React.FC<PhotoCaptureOrUploadProps> = ({
         className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-500 hover:to-amber-700 text-white font-black text-sm sm:text-base shadow-lg shadow-amber-900/15 transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] cursor-pointer"
       >
         <Camera className="w-5 h-5 text-amber-200" />
-        <span>توثيق لقطة زيارة اليوم بالكاميرا</span>
+        <span>التقاط صورة بكاميرا الهاتف</span>
       </button>
 
       <button

@@ -21,9 +21,32 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { STAFF_ROSTER } from '@/types/staff';
-import { verifyStaffPin, setActiveStaffMember } from '@/lib/services/staff-auth.service';
+import { verifyStaffPin, verifyPinOnly, setActiveStaffMember } from '@/lib/services/staff-auth.service';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
+
+function GoogleIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
 
 type AuthTab = 'signup' | 'signin' | 'pin';
 
@@ -170,7 +193,7 @@ export default function LoginPage() {
           }
         }
 
-        // If not found anywhere, ask them to create account rather than falling back to demo
+        // If not found anywhere, prompt merchant to create an account
         if (!signedInName) {
           setErrorMsg('هذا البريد غير مسجل بعد. يمكنك إنشاء حساب كافيه جديد به الآن.');
           setAuthTab('signup');
@@ -208,7 +231,7 @@ export default function LoginPage() {
     setErrorMsg(null);
 
     try {
-      const result = await verifyStaffPin(selectedStaffId, pin);
+      const result = await verifyPinOnly(pin);
 
       if (!result.success) {
         setErrorMsg(result.error || 'الرمز السري غير صحيح.');
@@ -216,7 +239,7 @@ export default function LoginPage() {
         return;
       }
 
-      setSuccessMsg(`أهلاً بك، ${result.staff?.name}! جاري الدخول للوحة التحكم...`);
+      setSuccessMsg(`أهلاً بك، ${result.staff?.name || 'الباريستا'}! جاري الدخول للوحة التحكم...`);
       document.cookie = 'memories_staff_session=1; path=/; max-age=86400; SameSite=Lax';
       setTimeout(() => {
         window.location.href = '/dashboard';
@@ -224,6 +247,34 @@ export default function LoginPage() {
     } catch (err: any) {
       setErrorMsg(err.message || 'تعذر التحقق من الرمز.');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google OAuth Handler
+  const handleGoogleAuth = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const supabase = createClient();
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-c9w.pages.dev';
+      const redirectTo = `${origin}/auth/callback`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      if (error) {
+        setErrorMsg(error.message);
+        setLoading(false);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'تعذر الاتصال بخدمة تسجيل الدخول عبر Google.');
       setLoading(false);
     }
   };
@@ -327,104 +378,112 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* --- FORM 1: MERCHANT EMAIL AUTH (SIGNUP OR SIGNIN) --- */}
+        {/* --- FORM 1: MERCHANT AUTH (GOOGLE & EMAIL) --- */}
         {(authTab === 'signup' || authTab === 'signin') && (
-          <form onSubmit={handleEmailAuth} className="space-y-4">
-            {authTab === 'signup' && (
+          <div className="space-y-4">
+            {/* Google Direct Sign-In / Registration Button */}
+            <button
+              type="button"
+              onClick={handleGoogleAuth}
+              disabled={loading}
+              className="w-full py-3 px-4 rounded-xl bg-white hover:bg-stone-50 border border-stone-200/90 text-stone-800 font-bold text-xs transition-all shadow-2xs hover:shadow-xs flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+            >
+              <GoogleIcon className="w-4 h-4 shrink-0" />
+              <span>
+                {authTab === 'signup'
+                  ? 'التسجيل المباشر بحساب Google'
+                  : 'تسجيل الدخول بحساب Google'}
+              </span>
+            </button>
+
+            {/* Modern Subtle Divider */}
+            <div className="relative flex items-center justify-center my-1">
+              <div className="w-full border-t border-stone-200/80" />
+              <span className="absolute bg-white px-3 text-[10px] font-bold text-stone-400 select-none">
+                أو عبر البريد الإلكتروني
+              </span>
+            </div>
+
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              {authTab === 'signup' && (
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                    اسم الكافيه أو العلامة التجارية:
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: مقهى الأندلس، Roastery 101..."
+                      value={cafeName}
+                      onChange={(e) => setCafeName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition"
+                    />
+                    <Store className="w-4 h-4 text-stone-400 absolute left-3 top-3 pointer-events-none" />
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                  اسم الكافيه أو العلامة التجارية:
+                  البريد الإلكتروني للتاجر:
                 </label>
                 <div className="relative">
                   <input
-                    type="text"
+                    type="email"
                     required
-                    placeholder="مثال: مقهى الأندلس، Roastery 101..."
-                    value={cafeName}
-                    onChange={(e) => setCafeName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition"
+                    placeholder="owner@yourcafe.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition font-mono"
+                    dir="ltr"
                   />
-                  <Store className="w-4 h-4 text-stone-400 absolute left-3 top-3 pointer-events-none" />
+                  <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-3 pointer-events-none" />
                 </div>
               </div>
-            )}
 
-            <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                البريد الإلكتروني للتاجر:
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                  كلمة المرور:
+                </label>
+                <PasswordInput
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
                   required
-                  placeholder="owner@yourcafe.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition font-mono"
-                  dir="ltr"
+                  className="bg-stone-50/70 text-xs"
                 />
-                <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-3 pointer-events-none" />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                كلمة المرور:
-              </label>
-              <PasswordInput
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="bg-stone-50/70 text-xs"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition-all shadow-sm hover:shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <span>جاري المعالجة...</span>
-              ) : authTab === 'signup' ? (
-                <>
-                  <UserPlus className="w-4 h-4" />
-                  <span>إنشاء حساب كافيه وبدء الاستخدام فوراً</span>
-                </>
-              ) : (
-                <>
-                  <LogIn className="w-4 h-4" />
-                  <span>تسجيل الدخول إلى لوحة التحكم</span>
-                </>
-              )}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition-all shadow-sm hover:shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <span>جاري المعالجة...</span>
+                ) : authTab === 'signup' ? (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    <span>إنشاء حساب كافيه وبدء الاستخدام فوراً</span>
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4" />
+                    <span>تسجيل الدخول إلى لوحة التحكم</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
         )}
 
         {/* --- FORM 2: BARISTA / STAFF PIN AUTH --- */}
         {authTab === 'pin' && (
           <form onSubmit={handlePinAuth} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                اختر موظف الصالة أو الباريستا:
-              </label>
-              <select
-                value={selectedStaffId}
-                onChange={(e) => setSelectedStaffId(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs font-bold text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition"
-              >
-                {STAFF_ROSTER.map((staff) => (
-                  <option key={staff.id} value={staff.id}>
-                    {staff.name} — ({staff.role === 'manager' ? 'مدير الفرع' : 'باريستا الصالة'})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                رمز المرور السريع (4 أرقام):
+              <label className="block text-xs font-bold text-stone-700 mb-1.5 text-center">
+                أدخل رمز PIN الباريستا المعتمد (4 أرقام):
               </label>
               <input
                 type="password"
@@ -433,10 +492,11 @@ export default function LoginPage() {
                 placeholder="••••"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-full px-3.5 py-3 rounded-xl border border-stone-200 bg-stone-50/70 text-center text-lg font-mono font-black tracking-widest text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition"
+                className="w-full px-3.5 py-3.5 rounded-xl border border-stone-200 bg-stone-50/70 text-center text-2xl font-mono font-black tracking-[0.4em] text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition shadow-2xs"
+                autoFocus
               />
-              <p className="text-[10px] text-stone-500 mt-1 text-center font-medium">
-                رمز PIN المعتمد الخاص بحساب الموظف في الفرع
+              <p className="text-[11px] text-stone-500 mt-2 text-center font-medium">
+                دخول سريع لطاقم الكافيه بدون الحاجة لإدخال البريد الإلكتروني
               </p>
             </div>
 

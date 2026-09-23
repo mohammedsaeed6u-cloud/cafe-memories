@@ -120,6 +120,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [liveWallConsent, setLiveWallConsent] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stickers, setStickers] = useState<PlacedSticker[]>([]);
+  const [activeCaptureSlot, setActiveCaptureSlot] = useState<number | null>(null);
 
   // Customer Onboarding / Registration Form State
   const [regName, setRegName] = useState('');
@@ -205,10 +206,18 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     setLoyaltyData(LoyaltyPurseService.getData('', cafeSlug, 5));
   };
 
-  // Add Photo Handler (from camera or file upload)
-  const handleCommitPhoto = (photoBase64: string) => {
-    const updated = [...accumulatedPhotos, photoBase64];
+  // Add or Replace Photo Handler (from camera or file upload)
+  const handleCommitPhoto = (photoBase64: string, targetSlot?: number) => {
+    const slotIdx = targetSlot !== undefined ? targetSlot : (activeCaptureSlot !== null ? activeCaptureSlot : accumulatedPhotos.length);
+    let updated: string[];
+    if (slotIdx < accumulatedPhotos.length) {
+      updated = [...accumulatedPhotos];
+      updated[slotIdx] = photoBase64;
+    } else {
+      updated = [...accumulatedPhotos, photoBase64];
+    }
     setAccumulatedPhotos(updated);
+    setActiveCaptureSlot(null);
 
     const clean = customerPhone.trim().replace(/[^0-9]/g, '') || 'guest';
     try {
@@ -238,23 +247,31 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     localStorage.setItem(`memories_wall_consent_${cafeSlug}_${clean}`, consent ? 'true' : 'false');
     setIsWallConsentModalOpen(false);
 
-    // If consent given, broadcast to wall feed
+    // If consent given, broadcast to wall feed and notify connected TV screens
     if (consent) {
       try {
         const wallItem = {
           id: createTrackedId('wall'),
-          customer: customerName || 'ضيف مميز',
-          caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'Memories'}`,
-          time: 'الآن',
-          frames: accumulatedPhotos,
-          theme: 'white',
+          customerName: customerName || 'ضيف مميز',
+          photoUrl: accumulatedPhotos[0] || '',
+          caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'Memories'} ✨☕`,
+          timeFormatted: 'الآن',
+          visitNumber: loyaltyData.stampedCount || 1,
+          createdAt: new Date().toISOString(),
           visibility: 'live_wall',
           status: 'approved',
         };
         const existingFeed = JSON.parse(localStorage.getItem(`memories_wall_feed_${cafeSlug}`) || '[]');
         const newFeed = [wallItem, ...existingFeed].slice(0, 20);
         localStorage.setItem(`memories_wall_feed_${cafeSlug}`, JSON.stringify(newFeed));
+        localStorage.setItem('memories_wall_cache_screen-1', JSON.stringify(newFeed));
         window.dispatchEvent(new CustomEvent('memories-wall-updated', { detail: newFeed }));
+
+        try {
+          const channel = new BroadcastChannel('memories_screens_channel');
+          channel.postMessage({ type: 'WALL_NEW_PHOTO', item: wallItem, feed: newFeed });
+          channel.close();
+        } catch {}
       } catch {}
     }
 
@@ -367,16 +384,22 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             stickers={stickers}
             onUpdateStickers={setStickers}
             isStickersInteractive={true}
-            onSlotClick={() => setIsCameraModalOpen(true)}
+            onSlotClick={(slotIdx) => {
+              setActiveCaptureSlot(slotIdx);
+              setIsCameraModalOpen(true);
+            }}
             dimensionPreset={selectedFrame.dimensionsPreset || (selectedFrame.widthCm === 10 ? 'grid_4x6' : 'strip_2x6')}
           />
         </div>
 
-        {/* 4. PRIMARY ACTION: TAKE TODAY'S PHOTO OR UPLOAD */}
+        {/* 4. PRIMARY ACTION: TAKE PHOTO OR UPLOAD */}
         <PhotoCaptureOrUpload
-          canShoot={LoyaltyPurseService.canCustomerShoot(customerPhone, cafeSlug, accumulatedPhotos.length)}
-          onOpenLiveCamera={() => setIsCameraModalOpen(true)}
-          onUploadPhoto={handleCommitPhoto}
+          canShoot={true}
+          onOpenLiveCamera={() => {
+            setActiveCaptureSlot(accumulatedPhotos.length < totalCardSlots ? accumulatedPhotos.length : 0);
+            setIsCameraModalOpen(true);
+          }}
+          onUploadPhoto={(b64) => handleCommitPhoto(b64)}
         />
 
         {/* 5. VIRAL THEME PILLS SELECTOR */}
@@ -577,7 +600,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             </button>
             <CameraViewfinder
               brandName={settings.branding.name}
-              visitNumber={accumulatedPhotos.length + 1}
+              visitNumber={(activeCaptureSlot !== null ? activeCaptureSlot : accumulatedPhotos.length) + 1}
               onCaptureComplete={(photo: string) => {
                 handleCommitPhoto(photo);
                 setIsCameraModalOpen(false);

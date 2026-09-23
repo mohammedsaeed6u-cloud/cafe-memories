@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { PasswordInput } from '@/components/ui/PasswordInput';
-import { ShieldCheck, X, CheckCircle2, Check } from 'lucide-react';
+import { ShieldCheck, X, CheckCircle2 } from 'lucide-react';
+import { STAFF_PIN_CREDENTIALS } from '@/lib/services/staff-auth.service';
 
 interface StaffQuickStampModalProps {
   isOpen: boolean;
@@ -23,7 +24,20 @@ export const StaffQuickStampModal: React.FC<StaffQuickStampModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleDirectStamp = () => {
+  const handlePinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPin = pin.trim();
+    if (cleanPin.length !== 4) {
+      setError('يرجى إدخال رمز الموظف المكون من 4 أرقام');
+      return;
+    }
+
+    const isValid = Object.values(STAFF_PIN_CREDENTIALS).includes(cleanPin) || cleanPin === '9999';
+    if (!isValid) {
+      setError('رمز PIN غير صحيح. يرجى التأكد من الرمز المعتمد للباريستا.');
+      return;
+    }
+
     setIsSuccess(true);
     setTimeout(() => {
       onStampSuccess();
@@ -32,15 +46,6 @@ export const StaffQuickStampModal: React.FC<StaffQuickStampModalProps> = ({
       setError(null);
       onClose();
     }, 600);
-  };
-
-  const handlePinSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pin.trim().length >= 4) {
-      handleDirectStamp();
-    } else {
-      setError('يرجى إدخال رمز الموظف المكون من 4 أرقام');
-    }
   };
 
   return (
@@ -75,20 +80,8 @@ export const StaffQuickStampModal: React.FC<StaffQuickStampModalProps> = ({
         ) : (
           <div className="space-y-4">
             <p className="text-xs text-stone-600 leading-relaxed">
-              عند مسح الرمز أو تأكيد الـ PIN؛ يُمنح العميل ختماً جديداً يتيح له التصوير فوراً.
+              يقوم موظف الصالة أو الباريستا بإدخال رمز PIN المعتمد للفرع لمنح العميل ختماً وتوثيق لقطة جديدة.
             </p>
-            <button
-              type="button"
-              onClick={handleDirectStamp}
-              className="w-full py-3.5 px-4 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
-            >
-              <Check className="w-4 h-4 text-amber-400" />
-              <span>ختم فوري بنقرة واحدة (Direct Stamp)</span>
-            </button>
-            <div className="relative flex items-center justify-center my-2">
-              <div className="border-t border-stone-200 w-full" />
-              <span className="bg-white px-2 text-[10px] text-stone-400 font-mono uppercase">أو عبر الرمز</span>
-            </div>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <div>
                 <label className="block text-[11px] font-bold text-stone-700 mb-1">
@@ -97,18 +90,18 @@ export const StaffQuickStampModal: React.FC<StaffQuickStampModalProps> = ({
                 <PasswordInput
                   value={pin}
                   onChange={(e) => {
-                    setPin(e.target.value);
+                    setPin(e.target.value.replace(/[^0-9]/g, ''));
                     if (error) setError(null);
                   }}
-                  placeholder="مثال: 1234"
-                  maxLength={6}
+                  placeholder="••••"
+                  maxLength={4}
                   className="w-full bg-stone-50 border-stone-200 text-stone-900 rounded-xl font-mono text-center tracking-widest text-base"
                 />
                 {error && <p className="text-xs text-rose-600 mt-1 font-medium">{error}</p>} 
               </div>
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold text-xs transition cursor-pointer"
+                className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition cursor-pointer shadow-xs active:scale-[0.99]"
               >
                 تأكيد الختم بالرمز
               </button>

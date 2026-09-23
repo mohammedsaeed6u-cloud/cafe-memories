@@ -548,6 +548,99 @@ export class PrintService {
   }
 
   /**
+   * Prints an acrylic table tent card / standee (A6 standard: 105x148mm) in isolated iframe.
+   */
+  static printTableStand(
+    elementId: string = 'table-stand-print',
+    options?: { title?: string; cafeName?: string }
+  ): void {
+    if (typeof window === 'undefined') return;
+
+    const sourceEl = document.getElementById(elementId);
+    if (!sourceEl) {
+      window.print();
+      return;
+    }
+
+    let stylesHtml = '';
+    const styleSheets = document.querySelectorAll('link[rel="stylesheet"], style');
+    styleSheets.forEach((node) => {
+      stylesHtml += node.outerHTML;
+    });
+
+    const cloned = sourceEl.cloneNode(true) as HTMLElement;
+    cloned.style.margin = '0 auto';
+    cloned.style.boxShadow = 'none';
+    cloned.style.transform = 'none';
+    cloned.style.position = 'relative';
+    cloned.style.width = '100%';
+    cloned.style.maxWidth = '100%';
+
+    const css = `
+      @page {
+        size: 105mm 148mm;
+        margin: 0mm;
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #FFFFFF !important;
+        width: 105mm;
+        height: 148mm;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      .standee-container {
+        width: 105mm;
+        height: 148mm;
+        padding: 6mm;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: #FFFFFF;
+      }
+      .standee-box {
+        width: 100%;
+        height: 100%;
+        border: 2px solid #1c1917;
+        border-radius: 12px;
+        padding: 5mm;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+      }
+    `;
+
+    const html = `
+      <!DOCTYPE html>
+      <html dir="rtl" lang="ar">
+      <head>
+        <meta charset="utf-8" />
+        <title>${options?.title || 'Table Standee A6'}</title>
+        ${stylesHtml}
+        <style>${css}</style>
+      </head>
+      <body>
+        <div class="standee-container">
+          <div class="standee-box">
+            ${cloned.outerHTML}
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    this.executeIframePrint(html);
+  }
+
+  /**
    * Executes zero-margin print job via isolated hidden iframe.
    */
   private static executeIframePrint(html: string): void {

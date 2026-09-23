@@ -138,7 +138,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
   const [customTextColor, setCustomTextColor] = useState(activeFrame.textColor || '#1C1917');
   const [customAccent, setCustomAccent] = useState(activeFrame.accentColor || '#D97706');
 
-  // Empty preview slots (no demo photos - clean production preview)
+  // Clean production preview slots ready for live capture
   const samplePhotos: string[] = [];
 
   const handlePreviewAddSticker = (emoji: string) => {

@@ -829,7 +829,7 @@ export default function MerchantDashboardPage() {
               <div className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-[#FAF9F6] border border-stone-200/90 shadow-2xs shrink-0 text-center w-full sm:w-auto">
                 <span className="text-[11px] font-bold text-stone-900 mb-2.5 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  <span>امسح بكاميرا الهاتف للتجربة</span>
+                  <span>امسح بكاميرا الهاتف للفتح المباشر</span>
                 </span>
                 <div className="w-36 h-36 bg-white p-2 rounded-2xl border border-stone-200/90 flex items-center justify-center shadow-xs overflow-hidden">
                   <RealOutsourcedQr

@@ -57,7 +57,7 @@ export function MarketingHero() {
         </p>
       </div>
 
-      {/* Real Co-Branding Showcase Pill */}
+      {/* Platform Real Independence Badge */}
       <div className="mt-6 flex items-center justify-center">
         <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-stone-200/90 shadow-2xs text-xs font-bold text-stone-700">
           <div className="flex items-center gap-1.5 text-stone-900 font-black">
@@ -66,10 +66,10 @@ export function MarketingHero() {
             </div>
             <span>memories</span>
           </div>
-          <span className="text-amber-500 font-black">×</span>
-          <span className="text-stone-900 font-bold">Espresso Lab Specialty Bar</span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold">
-            شراكة حية
+          <span className="text-amber-500 font-black">•</span>
+          <span className="text-stone-800 font-bold">منظومة مخصصة لهوية وعلامة مقهاك المستقلة</span>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+            White-Label Ready
           </span>
         </div>
       </div>
@@ -77,19 +77,19 @@ export function MarketingHero() {
       {/* Primary Action CTAs */}
       <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto">
         <Link
-          href="/c/espresso-lab"
+          href="/login"
           className="w-full sm:w-auto text-sm py-4 px-8 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-500 hover:to-amber-700 text-white font-black shadow-lg shadow-amber-900/15 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
-          <span>خوض تجربة الزائر الحية</span>
+          <span>ابدأ تجربة مقهاك مجاناً</span>
           <ArrowRight className="w-4 h-4 text-white rotate-180" />
         </Link>
 
         <Link
-          href="/dashboard"
+          href="/c/espresso-lab"
           className="w-full sm:w-auto text-sm py-4 px-7 rounded-2xl bg-white hover:bg-stone-50 border border-stone-300 text-stone-800 font-bold shadow-xs transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
-          <Tv className="w-4 h-4 text-amber-700" />
-          <span>دخول لوحة تحكم الكافيه</span>
+          <Sparkles className="w-4 h-4 text-amber-700" />
+          <span>معاينة كارت الزائر الحي</span>
         </Link>
       </div>
 

@@ -346,6 +346,31 @@
     break-inside: avoid !important;
   }
 
+  /* Table Standee A6 print optimization when present */
+  body:has(#table-stand-print) * {
+    visibility: hidden !important;
+  }
+  body:has(#table-stand-print) #table-stand-print,
+  body:has(#table-stand-print) #table-stand-print * {
+    visibility: visible !important;
+  }
+  body:has(#table-stand-print) #table-stand-print {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 auto !important;
+    padding: 24px !important;
+    box-shadow: none !important;
+    border: 2px solid #1c1917 !important;
+    border-radius: 16px !important;
+    background-color: #FFFFFF !important;
+    width: 105mm !important;
+    max-width: 105mm !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
   a[href]::after {
     content: "" !important;
   }

@@ -16,8 +16,8 @@ interface SearchItem {
 const SEARCH_ITEMS: SearchItem[] = [
   {
     id: 'customer',
-    title: 'تجربة العميل وكارت التصوير',
-    description: 'محاكاة كاملة لكاميرا العميل وكارت تصوير بولارويد مع أختام الولاء',
+    title: 'منظومة العميل وكارت التوثيق',
+    description: 'واجهة كاميرا الهاتف وكارت التوثيق الفوري مع أختام الولاء التفاعلية',
     category: 'التطبيقات',
     href: '/c/espresso-lab',
     icon: Camera,

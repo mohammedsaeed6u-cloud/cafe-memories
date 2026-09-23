@@ -126,7 +126,7 @@ export function MobileNavMenu({ onOpenSearch }: { onOpenSearch: () => void }) {
               >
                 <span className="flex items-center gap-2">
                   <Camera className="w-4 h-4 text-[#B85C43]" />
-                  <span>تجربة كارت العميل </span>
+                  <span>كارت وتوثيق العميل</span>
                 </span>
                 <ArrowRight className="w-3.5 h-3.5 rotate-180 text-[#8A9A7B]" />
               </Link>

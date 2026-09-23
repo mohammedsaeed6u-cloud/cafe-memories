@@ -7,7 +7,6 @@ export function generateStaticParams() {
     { cafeSlug: 'roastery-house' },
     { cafeSlug: 'cova-milano' },
     { cafeSlug: 'memories-flagship' },
-    { cafeSlug: 'demo' },
     { cafeSlug: 'memories' },
     { cafeSlug: 'specialty-coffee' },
   ];

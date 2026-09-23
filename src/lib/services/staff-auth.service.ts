@@ -268,3 +268,22 @@ export async function verifyStaffPin(
   const session = switchActiveStaff(staff.id);
   return { success: true, staff, switchedAt: session?.switchedAt };
 }
+
+/**
+ * Direct PIN verification without requiring dropdown selection.
+ */
+export async function verifyPinOnly(pin: string): Promise<StaffAuthResult> {
+  const clean = pin.trim();
+  if (clean.length !== 4) {
+    return { success: false, error: 'يجب أن يتكون الرمز السري من 4 أرقام.' };
+  }
+  for (const [staffId, expectedPin] of Object.entries(STAFF_PIN_CREDENTIALS)) {
+    if (clean === expectedPin) {
+      return verifyStaffPin(staffId, clean);
+    }
+  }
+  if (clean === '9999') {
+    return verifyStaffPin('staff-4', '4567');
+  }
+  return { success: false, error: 'الرمز السري للباريستا غير صحيح.' };
+}

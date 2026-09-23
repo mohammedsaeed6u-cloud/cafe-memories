@@ -319,11 +319,15 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
       >
         <div className={`absolute ${slotInnerClass} bg-stone-100 flex items-center justify-center overflow-hidden`}>
           {photo ? (
-            <>
+            <div
+              onClick={() => onSlotClick?.(slotIdx)}
+              className="w-full h-full relative cursor-pointer group"
+              title="اضغط لتعديل أو إعادة التقاط هذه الصورة"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photo}
-                alt={`Shot ${visitNumber}`}
+                alt={`اللقطة ${slotFormatted}`}
                 className="w-full h-full object-cover filter contrast-[1.03] saturate-[0.98]"
               />
               {isIosCamera && (
@@ -333,33 +337,45 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
                 <Check className="w-2.5 h-2.5 text-emerald-300 stroke-[3]" />
                 <span>#{slotFormatted}</span>
               </div>
-            </>
-          ) : slotIdx === photos.length ? (
-            /* Active Next Slot: Pulse & Tap to Capture */
+              <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold z-30 pointer-events-none">
+                <span className="px-2 py-1 rounded-md bg-black/70 backdrop-blur-xs">إعادة التقاط</span>
+              </div>
+            </div>
+          ) : (
+            /* Unfilled Photobooth Slot: Clickable for live capture or upload */
             <button
               type="button"
               onClick={() => onSlotClick?.(slotIdx)}
-              className="w-full h-full flex flex-col items-center justify-center bg-amber-500/10 hover:bg-amber-500/20 border-2 border-amber-500 text-amber-900 p-2 text-center transition cursor-pointer group"
+              className={`w-full h-full flex flex-col items-center justify-center p-2 text-center transition cursor-pointer group ${
+                slotIdx === photos.length
+                  ? 'bg-amber-500/10 hover:bg-amber-500/20 border-2 border-amber-500 text-amber-900'
+                  : 'bg-stone-50/80 hover:bg-stone-100/90 border border-dashed border-stone-300 text-stone-500'
+              }`}
             >
-              <div className="w-7 h-7 rounded-full bg-amber-500 text-stone-950 flex items-center justify-center mb-1 text-xs font-black shadow-xs group-hover:scale-110 transition"><Camera className="w-4 h-4 text-stone-950" /></div>
-              <span className="text-[10px] font-mono font-black text-amber-950">
-                لقطة اليوم
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center mb-1 text-xs font-black shadow-xs transition group-hover:scale-110 ${
+                  slotIdx === photos.length
+                    ? 'bg-amber-500 text-stone-950'
+                    : 'bg-stone-200 text-stone-700'
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </div>
+              <span
+                className={`text-[10px] font-mono font-black ${
+                  slotIdx === photos.length ? 'text-amber-950' : 'text-stone-700'
+                }`}
+              >
+                اللقطة #{slotFormatted}
               </span>
-              <span className="text-[8px] font-bold text-amber-800 mt-0.5 leading-tight">
-                اضغط للتوثيق
+              <span
+                className={`text-[8px] font-bold mt-0.5 leading-tight ${
+                  slotIdx === photos.length ? 'text-amber-800' : 'text-stone-400'
+                }`}
+              >
+                {slotIdx === photos.length ? 'اضغط للالتقاط' : 'إضافة لقطة'}
               </span>
             </button>
-          ) : (
-            /* Milestone Placeholder */
-            <div className="w-full h-full flex flex-col items-center justify-center bg-stone-50/90 border border-dashed border-stone-300/80 text-stone-400 p-2 text-center select-none">
-              <div className="w-6 h-6 rounded-full bg-stone-200/80 flex items-center justify-center mb-1 text-stone-500 text-xs">
-                {isLastSlot ? <Gift className="w-3.5 h-3.5 text-stone-600" /> : <Lock className="w-3.5 h-3.5 text-stone-600" />}
-              </div>
-              <span className="text-[10px] font-mono font-black text-stone-600">#{slotFormatted}</span>
-              <span className="text-[8px] font-bold text-stone-500 mt-0.5 leading-tight">
-                {isLastSlot ? 'اللقطة الختامية • الهدية' : `الزيارة #${visitNumber}`}
-              </span>
-            </div>
           )}
         </div>
 

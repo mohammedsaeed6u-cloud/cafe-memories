@@ -3,8 +3,7 @@ import { WallClient } from '@/components/wall/WallClient';
 export function generateStaticParams() {
   return [
     { screenId: 'screen-1' },
-    { screenId: 'screen-101' },
-    { screenId: 'demo' }
+    { screenId: 'screen-101' }
   ];
 }
 

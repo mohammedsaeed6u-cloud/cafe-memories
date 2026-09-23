@@ -74,8 +74,8 @@ export class LoyaltyPurseService {
     return { success: true, newCount, isCardComplete };
   }
 
-  public static canCustomerShoot(customerPhone: string, cafeSlug: string, currentPhotosCount: number): boolean {
-    const data = this.getData(customerPhone, cafeSlug);
-    return data.stampedCount > currentPhotosCount;
+  public static canCustomerShoot(customerPhone?: string, cafeSlug?: string, currentPhotosCount?: number): boolean {
+    // Customer photobooth sessions are open to capture all strip photos
+    return true;
   }
 }

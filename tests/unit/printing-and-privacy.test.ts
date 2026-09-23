@@ -521,5 +521,14 @@ describe('Requirement 2: High-Precision Business Printing Engine', () => {
         PrintService.printElement('non-existent-strip-id');
       }).not.toThrow();
     });
+
+    it('executes printTableStand safely without crashing in headless environment', () => {
+      expect(() => {
+        PrintService.printTableStand('table-stand-print', {
+          title: 'Standee Test',
+          cafeName: 'Test Cafe',
+        });
+      }).not.toThrow();
+    });
   });
 });

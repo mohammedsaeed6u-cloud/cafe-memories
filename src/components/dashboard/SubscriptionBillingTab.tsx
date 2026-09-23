@@ -181,7 +181,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                 {subscription.status === 'active'
                   ? 'الاشتراك نشط • Active'
                   : subscription.status === 'trialing'
-                  ? 'فترة تجريبية مجانية • Trial'
+                  ? 'فترة تجربة نشطة • Trial'
                   : 'معلق'}
               </span>
 
