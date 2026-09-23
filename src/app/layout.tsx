@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Cairo, Playfair_Display, Montserrat } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -24,11 +24,29 @@ const montserrat = Montserrat({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  themeColor: '#FAF6EE',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://memories-c9w.pages.dev'),
   title: 'memories • منصة تجربة عملاء وولاء المقاهي المختصة',
   description: 'تحويل كل زيارة في مقهاك إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير عبر الهاتف بدون تطبيق، شاشات صالة حية، وكروت ولاء في محفظة Apple و Google Wallet.',
   keywords: ['كافيهات', 'ولاء العملاء', 'فوتوبوث كافيه', 'شاشات الصالة الحية', 'قهوة مختصة', 'بطاقات ولاء رقمية'],
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Memories',
+  },
   openGraph: {
     title: 'memories • منصة تجربة عملاء وولاء المقاهي المختصة',
     description: 'تحويل كل زيارة في مقهاك إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',

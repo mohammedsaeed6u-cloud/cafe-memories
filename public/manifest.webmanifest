@@ -1,0 +1,58 @@
+{
+  "name": "Memories • استوديو ذكريات المقاهي المختصة",
+  "short_name": "Memories",
+  "description": "استوديو تصوير فوتوبوث تفاعلي، شاشات عرض الصالة الحية، وبطاقات ولاء رقمية لمحفظة Apple و Google Wallet",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF6EE",
+  "theme_color": "#FAF6EE",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "استوديو الصور",
+      "short_name": "الاستوديو",
+      "description": "التقاط وتوثيق لقطة الزيارة",
+      "url": "/c/espresso-lab",
+      "icons": [
+        {
+          "src": "/icon.svg",
+          "sizes": "512x512"
+        }
+      ]
+    },
+    {
+      "name": "شاشة الصالة الحية",
+      "short_name": "الشاشة",
+      "description": "بث ذكريات الصالة الذكية",
+      "url": "/wall/screen-1",
+      "icons": [
+        {
+          "src": "/icon.svg",
+          "sizes": "512x512"
+        }
+      ]
+    },
+    {
+      "name": "لوحة تحكم التاجر",
+      "short_name": "لوحة التحكم",
+      "description": "إدارة الفروع والباريستا والاشتراك",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icon.svg",
+          "sizes": "512x512"
+        }
+      ]
+    }
+  ]
+}
