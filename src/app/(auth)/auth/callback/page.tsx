@@ -122,7 +122,7 @@ export default function AuthCallbackPage() {
           <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-white text-xs font-bold transition shadow-xs"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>العودة لصفحة الدخول</span>

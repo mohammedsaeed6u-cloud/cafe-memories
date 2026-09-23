@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
+  CreditCard,
   Users,
   Image as ImageIcon,
   Tv,
@@ -27,20 +28,49 @@ import {
   Copy,
   Download,
   LogOut,
+  Search,
+  Trash2,
+  Filter,
+  Power,
+  FileSpreadsheet,
+  Eye,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
 import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-auth.service';
 import { createClient } from '@/lib/supabase/client';
 import { type StaffMember } from '@/types/staff';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
-import { FrameStudioTab } from '@/components/dashboard/FrameStudioTab';
-import { LoyaltyStudioTab } from '@/components/dashboard/LoyaltyStudioTab';
-import { PrintStationTab } from '@/components/dashboard/PrintStationTab';
 import { MerchantQuickSetupModal } from '@/components/dashboard/MerchantQuickSetupModal';
 import { BusinessSettings } from '@/types/photobooth';
 import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
 import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
 import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
+import { MetricsSkeleton, TableSkeleton } from '@/components/ui/SkeletonLoader';
+import dynamic from 'next/dynamic';
+
+// Code Splitting: Lazy load heavy tab components to minimize initial bundle
+const FrameStudioTab = dynamic(
+  () => import('@/components/dashboard/FrameStudioTab').then(mod => ({ default: mod.FrameStudioTab })),
+  { loading: () => <div className="p-12 flex items-center justify-center"><div className="animate-pulse text-stone-400 text-sm font-bold">جاري تحميل الاستوديو...</div></div> }
+);
+const LoyaltyStudioTab = dynamic(
+  () => import('@/components/dashboard/LoyaltyStudioTab').then(mod => ({ default: mod.LoyaltyStudioTab })),
+  { loading: () => <div className="p-12 flex items-center justify-center"><div className="animate-pulse text-stone-400 text-sm font-bold">جاري تحميل الولاء...</div></div> }
+);
+const SubscriptionBillingTab = dynamic(
+  () => import('@/components/dashboard/SubscriptionBillingTab').then(mod => ({ default: mod.SubscriptionBillingTab })),
+  { loading: () => <div className="p-12 flex items-center justify-center"><div className="animate-pulse text-stone-400 text-sm font-bold">جاري تحميل باقة الاشتراك...</div></div> }
+);
+const PrintStationTab = dynamic(
+  () => import('@/components/dashboard/PrintStationTab').then(mod => ({ default: mod.PrintStationTab })),
+  { loading: () => <div className="p-12 flex items-center justify-center"><div className="animate-pulse text-stone-400 text-sm font-bold">جاري تحميل محطة الطباعة...</div></div> }
+);
+const RetentionAnalyticsTab = dynamic(
+  () => import('@/components/dashboard/RetentionAnalyticsTab').then(mod => ({ default: mod.RetentionAnalyticsTab })),
+  { loading: () => <div className="p-12 flex items-center justify-center"><div className="animate-pulse text-stone-400 text-sm font-bold">جاري تحميل التحليلات...</div></div> }
+);
+import { BaristaRedeemModal } from '@/components/dashboard/BaristaRedeemModal';
 
 type DashboardTab =
   | 'overview'
@@ -51,7 +81,8 @@ type DashboardTab =
   | 'print'
   | 'qrcodes'
   | 'analytics'
-  | 'settings';
+  | 'settings'
+  | 'billing';
 
 interface OverviewMetrics {
   today: {
@@ -103,11 +134,25 @@ export default function MerchantDashboardPage() {
   const [activeStaff, setActiveStaff] = useState<StaffMember | null>(null);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [isQuickSetupOpen, setIsQuickSetupOpen] = useState(false);
+  const [isBaristaRedeemOpen, setIsBaristaRedeemOpen] = useState(false);
 
   // Business settings state (dynamic tenant)
-  const [settings, setSettings] = useState<BusinessSettings>(() =>
-    BusinessSettingsService.getSettings()
-  );
+  const [settings, setSettings] = useState<BusinessSettings>(() => {
+    // Read the merchant's own slug from localStorage (set during signup/login)
+    let merchantSlug = 'espresso-lab';
+    let merchantName = '';
+    if (typeof window !== 'undefined') {
+      try {
+        merchantSlug = localStorage.getItem('memories_active_merchant_slug') || 'espresso-lab';
+        merchantName = localStorage.getItem('memories_active_merchant_name') || '';
+      } catch {}
+    }
+    const base = BusinessSettingsService.getSettings(merchantSlug);
+    if (merchantName && !base.branding?.name) {
+      base.branding = { ...base.branding, name: merchantName };
+    }
+    return base;
+  });
 
   const handleSettingsUpdated = (newSettings: BusinessSettings) => {
     setSettings(newSettings);
@@ -121,8 +166,59 @@ export default function MerchantDashboardPage() {
   const [isLoadingMemories, setIsLoadingMemories] = useState(false);
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
-  const [screens, setScreens] = useState<ScreenRecord[]>([]);
+  const [screens, setScreens] = useState<ScreenRecord[]>([
+    {
+      id: 'screen-1',
+      name: 'شاشة الصالة الرئيسية',
+      status: 'online',
+      orientation: 'landscape',
+      lastHeartbeatAt: new Date().toISOString(),
+    },
+  ]);
   const [printQueue, setPrintQueue] = useState<any[]>([]);
+
+  // 1. Memories Moderation & Control States
+  const [memoriesFilter, setMemoriesFilter] = useState<'all' | 'pending' | 'approved' | 'hidden'>('all');
+  const [memoriesSearchQuery, setMemoriesSearchQuery] = useState('');
+  const [autoApproveWall, setAutoApproveWall] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(`memories_auto_approve_${settings.cafeSlug || 'espresso-lab'}`) === 'true';
+    }
+    return false;
+  });
+  const [previewMemory, setPreviewMemory] = useState<MemoryItem | null>(null);
+  const [batchActionMsg, setBatchActionMsg] = useState<string | null>(null);
+
+  // 2. Customers CRM & Manual Stamp States
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [customerFilter, setCustomerFilter] = useState<'all' | 'vip' | 'regular'>('all');
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+  const [newCustPhone, setNewCustPhone] = useState('');
+  const [newCustName, setNewCustName] = useState('');
+  const [customerToast, setCustomerToast] = useState<string | null>(null);
+
+  // 3. Rewards Controlled Inputs
+  const [rewardVisits, setRewardVisits] = useState<number>(() => settings.defaultShotCount || 5);
+  const [rewardGiftTitle, setRewardGiftTitle] = useState<string>(() => settings.freeGiftOffer?.title || 'كوب سبيشالتي مجاني من اختيارك');
+  const [rewardGiftSubtitle, setRewardGiftSubtitle] = useState<string>(() => settings.freeGiftOffer?.subtitle || 'مكافأة الزائر الوفي');
+  const [isSavingRewards, setIsSavingRewards] = useState(false);
+  const [saveRewardsSuccess, setSaveRewardsSuccess] = useState(false);
+
+  // 4. Remote TV Wall Control States
+  const [isTvBlackout, setIsTvBlackout] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('memories_wall_blackout') === 'true';
+    }
+    return false;
+  });
+  const [tvSlideDuration, setTvSlideDuration] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('memories_wall_duration');
+      return saved ? Number(saved) : 8000;
+    }
+    return 8000;
+  });
+  const [tvSyncNotice, setTvSyncNotice] = useState<string | null>(null);
 
   // Load Real Print Queue for current cafe
   useEffect(() => {
@@ -298,6 +394,176 @@ export default function MerchantDashboardPage() {
     }
   };
 
+  // Memories Moderation Actions
+  const handleToggleAutoApprove = (val: boolean) => {
+    setAutoApproveWall(val);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`memories_auto_approve_${settings.cafeSlug || 'espresso-lab'}`, String(val));
+    }
+    setBatchActionMsg(val ? 'تم تفعيل البث التلقائي للشاشات فور التقاط الصور.' : 'تم تفعيل نظام المراجعة والاعتماد اليدوي (أمان مضاعف).');
+    setTimeout(() => setBatchActionMsg(null), 3500);
+  };
+
+  const handleBatchApprovePending = () => {
+    setMemories(prev => prev.map(m => m.status === 'pending' ? { ...m, status: 'approved' } : m));
+    setBatchActionMsg('تم اعتماد كافة الصور المعلقة للبث على الشاشات بنجاح!');
+    setTimeout(() => setBatchActionMsg(null), 3500);
+    try {
+      const channel = new BroadcastChannel('memories_screens_channel');
+      channel.postMessage({ type: 'WALL_COMMAND', command: 'FORCE_REFRESH' });
+      channel.close();
+    } catch {}
+  };
+
+  const handleBatchHideAll = () => {
+    setMemories(prev => prev.map(m => ({ ...m, status: 'hidden' })));
+    setBatchActionMsg('تم إخفاء جميع الصور المعروضة من شاشات الصالة فوراً.');
+    setTimeout(() => setBatchActionMsg(null), 3500);
+    try {
+      const channel = new BroadcastChannel('memories_screens_channel');
+      channel.postMessage({ type: 'WALL_COMMAND', command: 'FORCE_REFRESH' });
+      channel.close();
+    } catch {}
+  };
+
+  const handleDeleteMemory = (memoryId: string) => {
+    setMemories(prev => prev.filter(m => m.id !== memoryId));
+    setBatchActionMsg('تم حذف الصورة وسجلها نهائياً.');
+    setTimeout(() => setBatchActionMsg(null), 2500);
+  };
+
+  // Customers CRM Actions
+  const handleAddDirectStamp = (c: CustomerRecord) => {
+    const rawPhone = c.id.replace('c_', '');
+    CustomerRegistryService.addDirectStamp(rawPhone, settings.cafeSlug || 'espresso-lab');
+    setCustomers(prev =>
+      prev.map(item => {
+        if (item.id === c.id) {
+          const newVisits = item.totalVisits + 1;
+          return {
+            ...item,
+            totalVisits: newVisits,
+            lastSeenAt: new Date().toISOString(),
+            rewardsCount: Math.floor(newVisits / (settings.defaultShotCount || 5)),
+          };
+        }
+        return item;
+      })
+    );
+    setCustomerToast(`🎉 تم إضافة ختم يدوي بنجاح للعميل (${c.displayName})! الزيارات: ${c.totalVisits + 1}`);
+    setTimeout(() => setCustomerToast(null), 4000);
+  };
+
+  const handleCreateCustomerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCustPhone.trim() || !newCustName.trim()) return;
+    CustomerRegistryService.registerCustomer(newCustPhone, newCustName, 'coffee_lover', settings.cafeSlug || 'espresso-lab');
+    setNewCustPhone('');
+    setNewCustName('');
+    setIsAddCustomerModalOpen(false);
+    fetchCustomers();
+    setCustomerToast('تم تسجيل العميل بنجاح في سجل الولاء!');
+    setTimeout(() => setCustomerToast(null), 4000);
+  };
+
+  const handleExportCsv = () => {
+    if (customers.length === 0) return;
+    const headers = ['اسم العميل', 'عدد الزيارات', 'عدد الذكريات', 'المكافآت المستحقة', 'آخر ظهور'];
+    const rows = customers.map(c => [
+      `"${c.displayName}"`,
+      c.totalVisits,
+      c.memoriesCount,
+      c.rewardsCount,
+      `"${new Date(c.lastSeenAt).toLocaleDateString('ar-EG')}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `customers-${settings.cafeSlug || 'espresso-lab'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Rewards Save Action
+  const handleSaveRewardSettings = () => {
+    setIsSavingRewards(true);
+    const updated: BusinessSettings = {
+      ...settings,
+      defaultShotCount: Number(rewardVisits),
+      freeGiftOffer: {
+        title: rewardGiftTitle,
+        subtitle: rewardGiftSubtitle,
+        icon: settings.freeGiftOffer?.icon || 'coffee',
+      },
+    };
+    handleSettingsUpdated(updated);
+    setIsSavingRewards(false);
+    setSaveRewardsSuccess(true);
+    setTimeout(() => setSaveRewardsSuccess(false), 3000);
+  };
+
+  // TV Wall Remote Commands
+  const handleToggleBlackout = () => {
+    const next = !isTvBlackout;
+    setIsTvBlackout(next);
+    try {
+      localStorage.setItem('memories_wall_blackout', String(next));
+      const channel = new BroadcastChannel('memories_screens_channel');
+      channel.postMessage({ type: 'WALL_COMMAND', command: 'BLACKOUT', blackout: next });
+      channel.close();
+    } catch {}
+    try {
+      localStorage.setItem('memories_wall_command', JSON.stringify({ command: 'BLACKOUT', blackout: next, timestamp: Date.now() }));
+    } catch {}
+    setTvSyncNotice(next ? 'تم تفعيل وضع التعتيم (شاشة التوقف) على شاشات الصالة' : 'تم استئناف البث الحي للذكريات على الشاشات');
+    setTimeout(() => setTvSyncNotice(null), 3000);
+  };
+
+  const handleChangeSlideDuration = (durationMs: number) => {
+    setTvSlideDuration(durationMs);
+    try {
+      localStorage.setItem('memories_wall_duration', String(durationMs));
+      const channel = new BroadcastChannel('memories_screens_channel');
+      channel.postMessage({ type: 'WALL_COMMAND', command: 'SET_SPEED', durationMs });
+      channel.close();
+    } catch {}
+    try {
+      localStorage.setItem('memories_wall_command', JSON.stringify({ command: 'SET_SPEED', durationMs, timestamp: Date.now() }));
+    } catch {}
+    setTvSyncNotice(`تم ضبط سرعة الانتقال على (${durationMs / 1000} ثوانٍ)`);
+    setTimeout(() => setTvSyncNotice(null), 3000);
+  };
+
+  const handleForceRefreshTv = () => {
+    try {
+      const channel = new BroadcastChannel('memories_screens_channel');
+      channel.postMessage({ type: 'WALL_COMMAND', command: 'FORCE_REFRESH' });
+      channel.close();
+    } catch {}
+    try {
+      localStorage.setItem('memories_wall_command', JSON.stringify({ command: 'FORCE_REFRESH', timestamp: Date.now() }));
+    } catch {}
+    setTvSyncNotice('تم إرسال أمر التحديث الفوري لكافة شاشات التلفزيون المتصلة');
+    setTimeout(() => setTvSyncNotice(null), 3000);
+  };
+
+  const handleUnpairScreen = (screenId: string) => {
+    try {
+      const channel = new BroadcastChannel('memories_screens_channel');
+      channel.postMessage({ type: 'WALL_COMMAND', command: 'UNPAIR' });
+      channel.close();
+    } catch {}
+    try {
+      localStorage.setItem('memories_wall_command', JSON.stringify({ command: 'UNPAIR', timestamp: Date.now() }));
+    } catch {}
+    setScreens(prev => prev.filter(s => s.id !== screenId));
+    setTvSyncNotice(`تم فصل الشاشة (${screenId}) وإعادة ضبط كود الاقتران.`);
+    setTimeout(() => setTvSyncNotice(null), 3000);
+  };
+
   // Handle Pairing TV Screen via 6-Digit Code displayed on the TV
   const handlePairScreenSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -392,6 +658,22 @@ export default function MerchantDashboardPage() {
             </a>
 
             <button
+              onClick={() => setActiveTab('billing')}
+              className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200/80 text-xs font-bold text-amber-900 flex items-center gap-1.5 transition"
+              title="إدارة الباقة والاشتراك"
+            >
+              <CreditCard className="w-3.5 h-3.5 text-amber-700" />
+              <span>الاشتراك والباقة</span>
+            </button>
+            <button
+              onClick={() => setIsBaristaRedeemOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+              title="التحقق من كود الهدية وصرفها للزائر فوراً"
+            >
+              <Gift className="w-3.5 h-3.5" />
+              <span>صرف هدية للزائر</span>
+            </button>
+            <button
               onClick={() => setIsStaffModalOpen(true)}
               className="px-3.5 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-xs font-bold text-stone-800 flex items-center gap-1.5 transition"
             >
@@ -421,6 +703,7 @@ export default function MerchantDashboardPage() {
             { id: 'qrcodes', label: 'أكواد الطاولات', icon: QrCode },
             { id: 'analytics', label: 'التحليلات', icon: BarChart3 },
             { id: 'settings', label: 'الإعدادات والهوية', icon: Settings },
+            { id: 'billing', label: 'الاشتراك والباقة', icon: CreditCard },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -430,7 +713,7 @@ export default function MerchantDashboardPage() {
                 onClick={() => setActiveTab(tab.id as DashboardTab)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
                   isActive
-                    ? 'bg-stone-950 text-white shadow-sm'
+                    ? 'bg-amber-600 text-white shadow-sm ring-1 ring-amber-700/20'
                     : 'text-stone-600 hover:text-stone-950 hover:bg-stone-100'
                 }`}
               >
@@ -517,9 +800,9 @@ export default function MerchantDashboardPage() {
                 <div className="flex flex-wrap items-center gap-2.5 pt-2">
                   <button
                     onClick={() => setIsQuickSetupOpen(true)}
-                    className="px-4 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-white font-black text-xs transition flex items-center gap-2 shadow-xs cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-600 text-white font-black text-xs transition flex items-center gap-2 shadow-xs cursor-pointer"
                   >
-                    <Printer className="w-4 h-4 text-amber-400" />
+                    <Printer className="w-4 h-4 text-amber-200" />
                     <span>طباعة ستاند الأكريليك للطاولات</span>
                   </button>
                   <a
@@ -597,23 +880,32 @@ export default function MerchantDashboardPage() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-xl font-black text-stone-950">
-                    نشاط الكافيه اليوم (What Happened Today)
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-black text-stone-900">
+                      نشاط الكافيه اليوم (What Happened Today)
+                    </h2>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px] font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      مباشر • Live Analytics
+                    </span>
+                  </div>
                   <p className="text-xs text-stone-500 mt-0.5">
                     مؤشرات الزيارات الحقيقية ومعدل عودة العملاء واللحظات الموثقة
                   </p>
                 </div>
                 <button
                   onClick={fetchMetrics}
-                  className="p-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-600 transition"
+                  className="p-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-600 transition cursor-pointer"
                   title="تحديث البيانات"
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoadingMetrics ? 'animate-spin' : ''}`} />
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {isLoadingMetrics ? (
+                <MetricsSkeleton />
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="p-5 rounded-3xl bg-white border border-stone-200/90 shadow-sm">
                   <span className="text-[11px] font-bold text-stone-500 block mb-1">
                     إجمالي الزيارات اليوم
@@ -675,7 +967,8 @@ export default function MerchantDashboardPage() {
                   </span>
                 </div>
               </div>
-            </div>
+            )}
+          </div>
 
             {/* Quick Actions & Live Wall Pairing Preview */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -715,7 +1008,7 @@ export default function MerchantDashboardPage() {
                     <button
                       type="submit"
                       disabled={isPairingScreen}
-                      className="px-5 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-amber-400 font-bold text-xs transition shadow-xs cursor-pointer shrink-0"
+                      className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-xs cursor-pointer shrink-0"
                     >
                       {isPairingScreen ? 'جاري الربط...' : 'ربط الشاشة'}
                     </button>
@@ -761,199 +1054,566 @@ export default function MerchantDashboardPage() {
         {/* TAB 2: MEMORIES MODERATION */}
         {activeTab === 'memories' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            {/* Header & Main Stats */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-black text-stone-950">
-                  اعتماد ومراقبة الذكريات (Memories Moderation)
+                <h2 className="text-xl font-black text-stone-950 flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-amber-600" />
+                  <span>مركز اعتماد ومراقبة الذكريات (Memories Moderation Suite)</span>
                 </h2>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  التحكم الكامل في الصور المعروضة على شاشة الكافيه للحفاظ على هوية وأمان المكان
+                  التحكم والفلترة المباشرة لكافة الصور الملتقطة قبل أو أثناء بثها على شاشات التلفزيون في الصالة
                 </p>
               </div>
-              <button
-                onClick={fetchMemories}
-                className="px-3.5 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-bold flex items-center gap-1.5 text-stone-700"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoadingMemories ? 'animate-spin' : ''}`} />
-                <span>تحديث القائمة</span>
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={fetchMemories}
+                  className="px-3.5 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-bold flex items-center gap-1.5 text-stone-700 shadow-2xs transition"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingMemories ? 'animate-spin' : ''}`} />
+                  <span>تحديث القائمة</span>
+                </button>
+              </div>
             </div>
 
-            {memories.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {memories.map((m) => (
-                  <div
-                    key={m.id}
-                    className="p-4 rounded-3xl bg-white border border-stone-200/90 shadow-sm flex flex-col justify-between space-y-4"
-                  >
-                    <div className="space-y-3">
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200">
-                        <img
-                          src={m.originalUrl}
-                          alt="Customer Memory"
-                          className="w-full h-full object-cover"
-                        />
-                        <span
-                          className={`absolute top-2 right-2 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold ${
-                            m.status === 'approved'
-                              ? 'bg-emerald-500 text-white'
-                              : m.status === 'hidden'
-                              ? 'bg-stone-700 text-white'
-                              : 'bg-amber-500 text-stone-950'
-                          }`}
-                        >
-                          {m.status === 'approved'
-                            ? 'معروض على الشاشة '
-                            : m.status === 'hidden'
-                            ? 'مخفي'
-                            : 'بانتظار الموافقة ⏳'}
-                        </span>
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-bold text-stone-900 mb-1">
-                          <span>{m.customerName}</span>
-                          <span className="text-[10px] text-stone-400 font-mono">
-                            {new Date(m.createdAt).toLocaleTimeString('ar-EG', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                        </div>
-                        {m.caption && (
-                          <p className="text-xs text-stone-600 line-clamp-2 bg-stone-50 p-2 rounded-xl">
-                            “{m.caption}”
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-stone-100">
-                      <button
-                        onClick={() => handleModerateMemory(m.id, 'approved')}
-                        className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5"
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>اعتماد للشاشة</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleModerateMemory(m.id, 'hidden')}
-                        className="py-2 px-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition flex items-center justify-center gap-1.5"
-                      >
-                        <EyeOff className="w-3.5 h-3.5" />
-                        <span>إخفاء</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-12 text-center bg-white rounded-3xl border border-stone-200">
-                <Coffee className="w-10 h-10 text-stone-300 mx-auto mb-3" />
-                <h3 className="font-bold text-sm text-stone-800">لا توجد ذكريات بانتظار الاعتماد</h3>
-                <p className="text-xs text-stone-500 mt-1">
-                  عندما يلتقط الزوار صوراً ويوافقون على عرضها، ستظهر هنا فوراً لاعتمادها.
-                </p>
+            {/* Notification Banner */}
+            {batchActionMsg && (
+              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/90 text-amber-950 text-xs font-bold flex items-center gap-2 shadow-2xs animate-in fade-in duration-200">
+                <CheckCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>{batchActionMsg}</span>
               </div>
             )}
+
+            {/* Action Bar: Filters, Search, Batch Actions & Auto-Approve Toggle */}
+            <div className="p-5 rounded-3xl bg-white border border-stone-200/90 shadow-xs space-y-4">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                {/* Status Filter Tabs */}
+                <div className="flex flex-wrap items-center gap-1.5 bg-stone-100/80 p-1.5 rounded-2xl">
+                  <button
+                    onClick={() => setMemoriesFilter('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                      memoriesFilter === 'all'
+                        ? 'bg-white text-stone-900 shadow-xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    <span>كافة الذكريات</span>
+                    <span className="px-1.5 py-0.2 rounded-md bg-stone-200 text-stone-700 text-[10px] font-mono">
+                      {memories.length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setMemoriesFilter('pending')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                      memoriesFilter === 'pending'
+                        ? 'bg-white text-amber-900 shadow-xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    <span>بانتظار المراجعة</span>
+                    <span className="px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 text-[10px] font-mono font-bold">
+                      {memories.filter((m) => m.status === 'pending').length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setMemoriesFilter('approved')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                      memoriesFilter === 'approved'
+                        ? 'bg-white text-emerald-900 shadow-xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span>معروض على الشاشة</span>
+                    <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
+                      {memories.filter((m) => m.status === 'approved').length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setMemoriesFilter('hidden')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                      memoriesFilter === 'hidden'
+                        ? 'bg-white text-stone-900 shadow-xs'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    <span>مخفي</span>
+                    <span className="px-1.5 py-0.2 rounded-md bg-stone-200 text-stone-700 text-[10px] font-mono">
+                      {memories.filter((m) => m.status === 'hidden' || m.status === 'rejected').length}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Auto-Approval Mode Toggle */}
+                <div className="flex items-center gap-3 bg-amber-50/70 border border-amber-200/80 px-4 py-2 rounded-2xl">
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-stone-900 block">البث المباشر التلقائي</span>
+                    <span className="text-[10px] text-stone-500 block">
+                      {autoApproveWall ? 'الصور تعرض فوراً على التلفزيون' : 'يتطلب موافقة التاجر يدوياً'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleToggleAutoApprove(!autoApproveWall)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      autoApproveWall ? 'bg-amber-600' : 'bg-stone-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        autoApproveWall ? '-translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* Search Bar & Batch Command Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-stone-100">
+                <div className="relative w-full sm:w-72">
+                  <Search className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="بحث باسم الزائر أو التعليق..."
+                    value={memoriesSearchQuery}
+                    onChange={(e) => setMemoriesSearchQuery(e.target.value)}
+                    className="w-full pr-9 pl-3 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs font-bold focus:outline-none focus:border-amber-500 focus:bg-white"
+                  />
+                  {memoriesSearchQuery && (
+                    <button
+                      onClick={() => setMemoriesSearchQuery('')}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 text-xs font-bold"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    onClick={handleBatchApprovePending}
+                    disabled={memories.filter((m) => m.status === 'pending').length === 0}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>اعتماد كافة المعلقات ({memories.filter((m) => m.status === 'pending').length})</span>
+                  </button>
+
+                  <button
+                    onClick={handleBatchHideAll}
+                    disabled={memories.filter((m) => m.status === 'approved').length === 0}
+                    className="px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 disabled:opacity-50 text-stone-700 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
+                    <span>إخفاء جميع المعروض فوراً</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Memories Grid View */}
+            {isLoadingMemories ? (
+              <TableSkeleton />
+            ) : (() => {
+              const filtered = memories.filter((m) => {
+                if (memoriesFilter === 'pending' && m.status !== 'pending') return false;
+                if (memoriesFilter === 'approved' && m.status !== 'approved') return false;
+                if (memoriesFilter === 'hidden' && m.status !== 'hidden' && m.status !== 'rejected') return false;
+                if (memoriesSearchQuery.trim()) {
+                  const q = memoriesSearchQuery.toLowerCase().trim();
+                  const matchName = m.customerName?.toLowerCase().includes(q);
+                  const matchCaption = m.caption?.toLowerCase().includes(q);
+                  if (!matchName && !matchCaption) return false;
+                }
+                return true;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="p-12 text-center bg-white rounded-3xl border border-stone-200 shadow-2xs">
+                    <Coffee className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+                    <h3 className="font-bold text-sm text-stone-800">لا توجد صور تطابق الفلتر المحدد</h3>
+                    <p className="text-xs text-stone-500 mt-1">
+                      {memoriesSearchQuery
+                        ? 'جرّب البحث بكلمات أخرى أو مسح حقل البحث.'
+                        : 'عندما يلتقط الزوار صوراً جديدة ستظهر هنا فوراً.'}
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filtered.map((m) => (
+                    <div
+                      key={m.id}
+                      className="p-4 rounded-3xl bg-white border border-stone-200/90 shadow-sm flex flex-col justify-between space-y-4 hover:border-amber-300 transition duration-200"
+                    >
+                      <div className="space-y-3">
+                        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200 group">
+                          <img
+                            src={m.originalUrl}
+                            alt="Customer Memory"
+                            className="w-full h-full object-cover group-hover:scale-102 transition duration-300"
+                          />
+                          <span
+                            className={`absolute top-2 right-2 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold shadow-xs ${
+                              m.status === 'approved'
+                                ? 'bg-emerald-500 text-white'
+                                : m.status === 'hidden' || m.status === 'rejected'
+                                ? 'bg-stone-700 text-white'
+                                : 'bg-amber-500 text-stone-950 animate-pulse'
+                            }`}
+                          >
+                            {m.status === 'approved'
+                              ? 'معروض على الشاشة '
+                              : m.status === 'hidden' || m.status === 'rejected'
+                              ? 'مخفي'
+                              : 'بانتظار الموافقة ⏳'}
+                          </span>
+
+                          <button
+                            onClick={() => setPreviewMemory(m)}
+                            className="absolute bottom-2 left-2 px-2.5 py-1.5 rounded-xl bg-stone-950/80 hover:bg-stone-900 text-white text-[11px] font-bold backdrop-blur-md flex items-center gap-1.5 shadow-sm transition"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>معاينة التلفزيون</span>
+                          </button>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between text-xs font-bold text-stone-900 mb-1">
+                            <span className="truncate">{m.customerName}</span>
+                            <span className="text-[10px] text-stone-400 font-mono shrink-0">
+                              {new Date(m.createdAt).toLocaleTimeString('ar-EG', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
+                          {m.caption ? (
+                            <p className="text-xs text-stone-600 line-clamp-2 bg-stone-50 p-2 rounded-xl">
+                              “{m.caption}”
+                            </p>
+                          ) : (
+                            <p className="text-[11px] text-stone-400 italic bg-stone-50/60 p-1.5 rounded-xl">
+                              بدون تعليق نصي
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Action Buttons */}
+                      <div className="space-y-2 pt-2 border-t border-stone-100">
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => handleModerateMemory(m.id, 'approved')}
+                            disabled={m.status === 'approved'}
+                            className={`py-2 px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                              m.status === 'approved'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default'
+                                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs'
+                            }`}
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>{m.status === 'approved' ? 'معتمد للشاشة' : 'اعتماد'}</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleModerateMemory(m.id, 'hidden')}
+                            disabled={m.status === 'hidden'}
+                            className={`py-2 px-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                              m.status === 'hidden'
+                                ? 'bg-stone-100 text-stone-400 border border-stone-200 cursor-default'
+                                : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                            }`}
+                          >
+                            <EyeOff className="w-3.5 h-3.5" />
+                            <span>{m.status === 'hidden' ? 'مخفي حالياً' : 'إخفاء'}</span>
+                          </button>
+                        </div>
+
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => {
+                              if (confirm('هل أنت متأكد من حذف هذه الصورة نهائياً؟')) {
+                                handleDeleteMemory(m.id);
+                              }
+                            }}
+                            className="text-[11px] text-stone-400 hover:text-red-600 font-bold flex items-center gap-1 transition"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>حذف نهائي</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 
         {/* TAB 3: CUSTOMERS & RETENTION CRM */}
         {activeTab === 'customers' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-black text-stone-950">
-                  سجل العملاء والولاء (Customer Retention CRM)
+                <h2 className="text-xl font-black text-stone-950 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-amber-600" />
+                  <span>سجل العملاء والولاء (Customer Retention CRM)</span>
                 </h2>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  قائمة العملاء المنتظمين مع عدد الزيارات والذكريات الموثقة
+                  إدارة زوار الكافيه، رصد معدلات التكرار، وإضافة الأختام اليدوية وتصدير البيانات
                 </p>
               </div>
-              <button
-                onClick={fetchCustomers}
-                className="px-3.5 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-bold text-stone-700"
-              >
-                تحديث السجل
-              </button>
-            </div>
 
-            <div className="bg-white rounded-3xl border border-stone-200/90 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-right text-xs">
-                  <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 font-mono">
-                    <tr>
-                      <th className="p-4 font-bold">العميل</th>
-                      <th className="p-4 font-bold">الزيارات الموثقة</th>
-                      <th className="p-4 font-bold">الذكريات في الكافيه</th>
-                      <th className="p-4 font-bold">المكافآت المستحقة</th>
-                      <th className="p-4 font-bold">آخر ظهور</th>
-                      <th className="p-4 font-bold">الحالة</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100">
-                    {customers.map((c) => (
-                      <tr key={c.id} className="hover:bg-stone-50/60 transition">
-                        <td className="p-4 font-bold text-stone-900 flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-xs shrink-0">
-                            {c.displayName.slice(0, 2)}
-                          </div>
-                          <span>{c.displayName}</span>
-                        </td>
-                        <td className="p-4 font-mono font-bold text-stone-800">
-                          {c.totalVisits} زيارات
-                        </td>
-                        <td className="p-4 font-mono text-stone-600">
-                          {c.memoriesCount} صور
-                        </td>
-                        <td className="p-4 font-mono font-bold text-purple-700">
-                          {c.rewardsCount} هدايا
-                        </td>
-                        <td className="p-4 font-mono text-stone-500">
-                          {new Date(c.lastSeenAt).toLocaleDateString('ar-EG')}
-                        </td>
-                        <td className="p-4">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                              c.totalVisits >= 5
-                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                : 'bg-stone-100 text-stone-700'
-                            }`}
-                          >
-                            {c.totalVisits >= 5 ? 'عميل ذهبي VIP ' : 'زائر دائم'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setIsAddCustomerModalOpen(true)}
+                  className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>تسجيل زائر جديد</span>
+                </button>
+
+                <button
+                  onClick={handleExportCsv}
+                  disabled={customers.length === 0}
+                  className="px-3.5 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 disabled:opacity-50 text-xs font-bold text-stone-700 flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>تصدير CSV</span>
+                </button>
+
+                <button
+                  onClick={fetchCustomers}
+                  className="px-3.5 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-bold text-stone-700 shadow-2xs transition"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingCustomers ? 'animate-spin' : ''}`} />
+                </button>
               </div>
             </div>
+
+            {/* Toast Notification */}
+            {customerToast && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-bold flex items-center gap-2 shadow-2xs animate-in fade-in duration-200">
+                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{customerToast}</span>
+              </div>
+            )}
+
+            {/* Filter & Search Bar */}
+            <div className="p-4 rounded-3xl bg-white border border-stone-200/90 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-1 bg-stone-100/80 p-1.5 rounded-2xl w-full sm:w-auto">
+                <button
+                  onClick={() => setCustomerFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    customerFilter === 'all'
+                      ? 'bg-white text-stone-900 shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  كافة العملاء ({customers.length})
+                </button>
+                <button
+                  onClick={() => setCustomerFilter('vip')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    customerFilter === 'vip'
+                      ? 'bg-white text-amber-900 shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  عملاء VIP الذهبيين ({customers.filter((c) => c.totalVisits >= 5).length})
+                </button>
+                <button
+                  onClick={() => setCustomerFilter('regular')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    customerFilter === 'regular'
+                      ? 'bg-white text-stone-900 shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  زوار جدد ({customers.filter((c) => c.totalVisits < 5).length})
+                </button>
+              </div>
+
+              <div className="relative w-full sm:w-72">
+                <Search className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="بحث باسم العميل أو رقمه..."
+                  value={customerSearchQuery}
+                  onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                  className="w-full pr-9 pl-3 py-2 rounded-xl bg-stone-50 border border-stone-200 text-xs font-bold focus:outline-none focus:border-amber-500 focus:bg-white"
+                />
+              </div>
+            </div>
+
+            {isLoadingCustomers ? (
+              <TableSkeleton />
+            ) : (() => {
+              const filtered = customers.filter((c) => {
+                if (customerFilter === 'vip' && c.totalVisits < 5) return false;
+                if (customerFilter === 'regular' && c.totalVisits >= 5) return false;
+                if (customerSearchQuery.trim()) {
+                  const q = customerSearchQuery.toLowerCase().trim();
+                  const matchName = c.displayName?.toLowerCase().includes(q);
+                  const matchId = c.id?.toLowerCase().includes(q);
+                  if (!matchName && !matchId) return false;
+                }
+                return true;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <div className="p-12 text-center bg-white rounded-3xl border border-stone-200 shadow-xs">
+                    <Users className="w-12 h-12 text-stone-300 mx-auto mb-3" />
+                    <h3 className="font-bold text-base text-stone-900">سجل العملاء بانتظار أول زيارة</h3>
+                    <p className="text-xs text-stone-500 mt-1 max-w-sm mx-auto leading-relaxed">
+                      بمجرد أن يمسح الزوار كود QR الطاولات ويبدأون تجربة التوثيق والولاء، ستظهر أرقامهم وعدد زياراتهم ومكافآتهم هنا تلقائياً.
+                    </p>
+                    <div className="mt-5 flex items-center justify-center gap-3">
+                      <button
+                        onClick={() => setIsAddCustomerModalOpen(true)}
+                        className="px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs shadow-xs transition"
+                      >
+                        + تسجيل عميل يدوياً
+                      </button>
+                      <button
+                        onClick={() => setIsQuickSetupOpen(true)}
+                        className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-xs transition"
+                      >
+                        عرض وتحميل كود QR الطاولات ←
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="bg-white rounded-3xl border border-stone-200/90 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-right text-xs">
+                      <thead className="bg-stone-50 border-b border-stone-200 text-stone-500 font-mono">
+                        <tr>
+                          <th className="p-4 font-bold">العميل</th>
+                          <th className="p-4 font-bold">الزيارات الموثقة</th>
+                          <th className="p-4 font-bold">الذكريات في الكافيه</th>
+                          <th className="p-4 font-bold">المكافآت المستحقة</th>
+                          <th className="p-4 font-bold">آخر ظهور</th>
+                          <th className="p-4 font-bold">الحالة</th>
+                          <th className="p-4 font-bold text-center">إجراء الولاء المباشر</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100">
+                        {filtered.map((c) => (
+                          <tr key={c.id} className="hover:bg-stone-50/60 transition">
+                            <td className="p-4 font-bold text-stone-900 flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                                {c.displayName.slice(0, 2)}
+                              </div>
+                              <div>
+                                <span className="block font-bold">{c.displayName}</span>
+                                {c.id.startsWith('c_') && (
+                                  <span className="text-[10px] text-stone-400 font-mono block">
+                                    {c.id.replace('c_', '')}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-black text-stone-800 text-sm">
+                                  {c.totalVisits}
+                                </span>
+                                <span className="text-[11px] text-stone-500">زيارات</span>
+                              </div>
+                              <div className="w-24 bg-stone-100 h-1.5 rounded-full overflow-hidden mt-1">
+                                <div
+                                  className="bg-amber-500 h-full rounded-full transition-all duration-300"
+                                  style={{
+                                    width: `${Math.min(100, ((c.totalVisits % (settings.defaultShotCount || 5)) / (settings.defaultShotCount || 5)) * 100)}%`,
+                                  }}
+                                />
+                              </div>
+                            </td>
+                            <td className="p-4 font-mono text-stone-600">
+                              {c.memoriesCount} صور
+                            </td>
+                            <td className="p-4 font-mono font-bold text-purple-700">
+                              {c.rewardsCount} هدايا
+                            </td>
+                            <td className="p-4 font-mono text-stone-500">
+                              {new Date(c.lastSeenAt).toLocaleDateString('ar-EG')}
+                            </td>
+                            <td className="p-4">
+                              <span
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                  c.totalVisits >= (settings.defaultShotCount || 5)
+                                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                    : 'bg-stone-100 text-stone-700'
+                                }`}
+                              >
+                                {c.totalVisits >= (settings.defaultShotCount || 5) ? 'عميل ذهبي VIP ' : 'زائر دائم'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              <button
+                                onClick={() => handleAddDirectStamp(c)}
+                                className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500 hover:text-stone-950 text-amber-800 border border-amber-300 font-bold text-xs transition flex items-center justify-center gap-1.5 mx-auto cursor-pointer shadow-2xs"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>+1 ختم يدوي</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
         {/* TAB 4: REWARD RULES */}
         {activeTab === 'rewards' && (
           <div className="space-y-6 max-w-4xl">
-            <div>
-              <h2 className="text-xl font-black text-stone-950">
-                إعدادات مكافآت الولاء (Loyalty Reward Rules)
-              </h2>
-              <p className="text-xs text-stone-500 mt-0.5">
-                تحديد عدد الزيارات المطلوبة لفتح الهدية التلقائية لحث العملاء على العودة
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-black text-stone-950 flex items-center gap-2">
+                  <Gift className="w-5 h-5 text-amber-600" />
+                  <span>إعدادات مكافآت الولاء (Loyalty Reward Rules)</span>
+                </h2>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  تحديد عدد الزيارات المطلوبة لفتح الهدية التلقائية لحث العملاء على العودة وتكرار الزيارة
+                </p>
+              </div>
+
+              {saveRewardsSuccess && (
+                <div className="p-2.5 px-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-1.5 animate-in fade-in duration-200">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span>تم حفظ وتطبيق الإعدادات بنجاح!</span>
+                </div>
+              )}
             </div>
 
-            <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-5">
+            {/* Controlled Reward Settings Card */}
+            <div className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-stone-100">
                 <div>
                   <h3 className="font-bold text-sm text-stone-950">
                     مكافأة إتمام قصة الذكريات (Story Completion Reward)
                   </h3>
-                  <p className="text-xs text-stone-500">
-                    المكافأة التي تفتح تلقائياً عند وصول العميل للحد المستهدف
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    الهدية التي تفتح تلقائياً عند وصول العميل للحد المستهدف من الزيارات الموثقة
                   </p>
                 </div>
                 <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-300">
@@ -961,41 +1621,96 @@ export default function MerchantDashboardPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                    عدد الزيارات المطلوبة لفتح الهدية
+                    عدد الزيارات المطلوبة لفتح الهدية:
                   </label>
                   <select
-                    defaultValue="5"
-                    className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs font-bold font-mono focus:outline-none"
+                    value={rewardVisits}
+                    onChange={(e) => setRewardVisits(Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs font-bold font-mono focus:outline-none focus:border-amber-500 focus:bg-white"
                   >
                     <option value="3">3 زيارات (حملة تشجيعية سريعة)</option>
-                    <option value="5">5 زيارات (المعدل القياسي للكافيهات)</option>
-                    <option value="7">7 زيارات (للأماكن الفاخرة)</option>
+                    <option value="4">4 زيارات (تفاعل عالي)</option>
+                    <option value="5">5 زيارات (المعدل القياسي الموصى به للكافيهات)</option>
+                    <option value="6">6 زيارات (شريط ذكريات ممتد)</option>
+                    <option value="7">7 زيارات (للأماكن الفاخرة والمحامص)</option>
+                    <option value="8">8 زيارات (بطاقة ولاء VIP)</option>
                     <option value="10">10 زيارات (بطاقة ولاء كلاسيكية)</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                    وصف الهدية (يظهر للعميل في الكارت)
+                    عنوان الهدية (يظهر للعميل في الكارت):
                   </label>
                   <input
                     type="text"
-                    defaultValue="كوب سبيشالتي مجاني من اختيارك"
-                    className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs font-bold focus:outline-none"
+                    value={rewardGiftTitle}
+                    onChange={(e) => setRewardGiftTitle(e.target.value)}
+                    placeholder="مثال: كوب سبيشالتي مجاني من اختيارك"
+                    className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs font-bold focus:outline-none focus:border-amber-500 focus:bg-white"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                    وصف أو تفاصيل إضافية للهدية:
+                  </label>
+                  <input
+                    type="text"
+                    value={rewardGiftSubtitle}
+                    onChange={(e) => setRewardGiftSubtitle(e.target.value)}
+                    placeholder="مثال: صالح في جميع فروعنا عند الطلب من الباريستا"
+                    className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-xs font-bold focus:outline-none focus:border-amber-500 focus:bg-white"
                   />
                 </div>
               </div>
 
-              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/70 text-xs text-amber-900 leading-relaxed">
-                <strong>حماية الصرف المالي:</strong> يتم التحقق من استحقاق الهدية سيرفر-سايد بناءً على الزيارات المؤكدة فقط، ويتم إبطال الكود تلقائياً بعد الصرف لمنع التكرار.
+              {/* Customer Live Preview of the Reward Badge */}
+              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500 text-stone-950 flex items-center justify-center font-black text-lg shadow-sm">
+                    🎁
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">
+                      معاينة ما يراه العميل على هاتفه بعد ({rewardVisits}) زيارات:
+                    </span>
+                    <strong className="text-xs text-stone-900 font-black block mt-0.5">
+                      {rewardGiftTitle || 'كوب سبيشالتي مجاني'}
+                    </strong>
+                    <span className="text-[11px] text-stone-500">
+                      {rewardGiftSubtitle || 'مكافأة الزائر الوفي'}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
+                  كود هدية مشفر تلقائياً
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                <div className="text-xs text-stone-500">
+                  يتم تحديث جميع شاشات العملاء تلقائياً بالقيمة الجديدة فور الحفظ.
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveRewardSettings}
+                  disabled={isSavingRewards}
+                  className="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-xs cursor-pointer flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isSavingRewards ? 'جاري الحفظ...' : 'حفظ وتطبيق إعدادات المكافأة للعملاء'}</span>
+                </button>
               </div>
             </div>
 
             {/* Loyalty Studio Component for Cards, Milestones, and Textures */}
-            <div className="pt-6">
+            <div className="pt-4">
               <LoyaltyStudioTab
                 cafeSlug={settings.cafeSlug}
                 brandName={settings.branding?.name}
@@ -1004,8 +1719,7 @@ export default function MerchantDashboardPage() {
             </div>
           </div>
         )}
-
-        {/* TAB: LIVE PRINT STATION */}
+{/* TAB: LIVE PRINT STATION */}
         {activeTab === 'print' && (
           <div className="space-y-6">
             <PrintStationTab
@@ -1018,66 +1732,156 @@ export default function MerchantDashboardPage() {
         {/* TAB 5: LIVE WALL (Smart TV Management) */}
         {activeTab === 'wall' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl font-black text-stone-950">
-                  شاشات الصالة الحية (Live TV Wall)
+                <h2 className="text-xl font-black text-stone-950 flex items-center gap-2">
+                  <Tv className="w-5 h-5 text-amber-600" />
+                  <span>غرفة التحكم عن بعد بشاشات الصالة (Live TV Wall Command Center)</span>
                 </h2>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  إدارة واقتران شاشات التلفزيون في الصالة وبث ذكريات الزوار المعتمدة مباشرة
+                  إدارة بث الذكريات الحية، التحكم في سرعة العرض، وضع الاستراحة والتعتيم، وإدارة الشاشات المقترنة
                 </p>
               </div>
-              <a
-                href="/wall/screen-1"
-                target="_blank"
-                rel="noreferrer"
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-black text-xs transition flex items-center gap-1.5 shadow-xs"
-              >
-                <Tv className="w-3.5 h-3.5" />
-                <span>فتح شاشة العرض الحية </span>
-              </a>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleForceRefreshTv}
+                  className="px-3.5 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-bold text-stone-700 flex items-center gap-1.5 shadow-2xs transition"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>إعادة مزامنة الشاشات فوراً</span>
+                </button>
+
+                <a
+                  href="/wall/screen-1"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-black text-xs transition flex items-center gap-1.5 shadow-xs"
+                >
+                  <Tv className="w-3.5 h-3.5" />
+                  <span>فتح شاشة العرض الحية </span>
+                </a>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Active Screen Card */}
-              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-stone-500">الشاشة الرئيسية</span>
-                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    متصلة بالإنترنت
+            {/* Sync Notice Alert */}
+            {tvSyncNotice && (
+              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs font-bold flex items-center gap-2 shadow-2xs animate-in fade-in duration-200">
+                <CheckCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>{tvSyncNotice}</span>
+              </div>
+            )}
+
+            {/* Remote Command Bar: Blackout Emergency + Speed Control */}
+            <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              {/* Blackout Standby Controller */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-stone-50 border border-stone-200">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Power className={`w-4 h-4 ${isTvBlackout ? 'text-red-500' : 'text-emerald-600'}`} />
+                    <span className="font-bold text-sm text-stone-900">وضع التعتيم / شاشة التوقف</span>
+                  </div>
+                  <p className="text-xs text-stone-500">
+                    {isTvBlackout
+                      ? 'الشاشات تعرض شاشة الاستراحة المؤقتة'
+                      : 'الشاشات تبث ذكريات الزوار المعتمدة'}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleToggleBlackout}
+                  className={`px-4 py-2 rounded-xl font-bold text-xs transition shadow-2xs cursor-pointer flex items-center gap-1.5 ${
+                    isTvBlackout
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-stone-900 hover:bg-stone-800 text-white'
+                  }`}
+                >
+                  <Power className="w-3.5 h-3.5" />
+                  <span>{isTvBlackout ? 'استئناف البث الحي' : 'تفعيل الاستراحة'}</span>
+                </button>
+              </div>
+
+              {/* Slide Duration Speed Controller */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-stone-50 border border-stone-200 gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-amber-600" />
+                    <span className="font-bold text-sm text-stone-900">سرعة انتقال الشرائح</span>
+                  </div>
+                  <p className="text-xs text-stone-500">مدة عرض كل صورة على التلفزيون</p>
+                </div>
+
+                <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-stone-200">
+                  {[
+                    { label: '5 ث', ms: 5000 },
+                    { label: '8 ث (قياسي)', ms: 8000 },
+                    { label: '12 ث', ms: 12000 },
+                    { label: '15 ث', ms: 15000 },
+                  ].map((spd) => (
+                    <button
+                      key={spd.ms}
+                      onClick={() => handleChangeSlideDuration(spd.ms)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                        tvSlideDuration === spd.ms
+                          ? 'bg-amber-600 text-white shadow-2xs'
+                          : 'text-stone-600 hover:text-stone-900'
+                      }`}
+                    >
+                      {spd.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Active Screens Management Table & Pairing Form */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Paired Screens Management List */}
+              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4 lg:col-span-1">
+                <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+                  <h3 className="font-bold text-sm text-stone-950 flex items-center gap-2">
+                    <Tv className="w-4 h-4 text-amber-600" />
+                    <span>الشاشات المقترنة بالصالة</span>
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                    {screens.length} متصلة
                   </span>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-stone-950 text-white flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-sm">شاشة صالة الجلوس</h4>
-                    <p className="text-[10px] text-stone-400 font-mono mt-0.5">ID: screen-1 • 4K Landscape</p>
-                  </div>
-                  <Tv className="w-6 h-6 text-amber-400" />
-                </div>
+                <div className="space-y-3">
+                  {screens.map((sc) => (
+                    <div
+                      key={sc.id}
+                      className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/90 space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="font-bold text-xs text-stone-900">{sc.name}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-stone-400 font-bold">{sc.id}</span>
+                      </div>
 
-                <div className="space-y-2 text-xs text-stone-600">
-                  <div className="flex justify-between py-1 border-b border-stone-100">
-                    <span>وضع العرض:</span>
-                    <span className="font-bold text-stone-900">سيكونس الذكريات المعتمدة</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-100">
-                    <span>زمن الانتقال:</span>
-                    <span className="font-mono font-bold text-stone-900">8 ثوانٍ / ذكرى</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span>دعم عدم الاتصال (Offline):</span>
-                    <span className="font-bold text-emerald-700">مفعل تلقائياً (Cache)</span>
-                  </div>
+                      <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1 border-t border-stone-200/60">
+                        <span>الوضع: {isTvBlackout ? 'استراحة مؤقتة' : 'بث مباشر'}</span>
+                        <button
+                          onClick={() => handleUnpairScreen(sc.id)}
+                          className="text-stone-400 hover:text-red-600 font-bold transition text-[10px]"
+                        >
+                          إلغاء الاقتران
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* Pairing Code Generator: Merchant enters TV Code */}
-              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4 md:col-span-2">
+              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4 lg:col-span-2">
                 <h3 className="font-bold text-sm text-stone-950 flex items-center gap-2">
                   <Radio className="w-4 h-4 text-amber-600" />
-                  <span>اقتران شاشة تلفزيون عبر كود الشاشة (Smart TV Pairing)</span>
+                  <span>اقتران شاشة تلفزيون ذكية جديدة (Smart TV Pairing)</span>
                 </h3>
                 <p className="text-xs text-stone-600 leading-relaxed">
                   اربط أي تلفزيون ذكي في كافيهك خلال ثوانٍ وبأعلى درجات الأمان:
@@ -1132,7 +1936,7 @@ export default function MerchantDashboardPage() {
                     <button
                       type="submit"
                       disabled={isPairingScreen}
-                      className="w-full py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-amber-400 font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+                      className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <Radio className="w-3.5 h-3.5" />
                       <span>{isPairingScreen ? 'جاري الاقتران...' : 'تأكيد وربط الشاشة'}</span>
@@ -1143,8 +1947,7 @@ export default function MerchantDashboardPage() {
             </div>
           </div>
         )}
-
-        {/* TAB 6: QR CODES */}
+{/* TAB 6: QR CODES */}
         {activeTab === 'qrcodes' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1158,9 +1961,9 @@ export default function MerchantDashboardPage() {
               </div>
               <button
                 onClick={() => setIsQuickSetupOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-white font-bold text-xs flex items-center gap-2 self-start transition cursor-pointer shadow-xs"
+                className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-2 self-start transition cursor-pointer shadow-xs"
               >
-                <Printer className="w-3.5 h-3.5 text-amber-400" />
+                <Printer className="w-3.5 h-3.5 text-white" />
                 <span>طباعة ستاندات الطاولات</span>
               </button>
             </div>
@@ -1230,7 +2033,7 @@ export default function MerchantDashboardPage() {
                         download={`qr-${settings.cafeSlug || 'espresso-lab'}-${qr.slug}.svg`}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex-1 py-2 px-3 rounded-xl bg-stone-950 hover:bg-stone-900 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
+                        className="flex-1 py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>تحميل SVG</span>
@@ -1252,43 +2055,27 @@ export default function MerchantDashboardPage() {
           </div>
         )}
 
-        {/* TAB 7: ANALYTICS */}
+        {/* TAB 7: RETENTION & REVENUE ANALYTICS */}
         {activeTab === 'analytics' && (
+          <RetentionAnalyticsTab
+            cafeSlug={settings.cafeSlug}
+            cafeName={settings.branding?.name}
+          />
+        )}
+
+        {/* TAB 9: SAAS SUBSCRIPTION & BILLING */}
+        {activeTab === 'billing' && (
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-black text-stone-950">
-                تحليلات العودة والتفاعل (Retention Analytics)
+                إدارة باقة الـ SaaS والاشتراك (Subscription & Invoices)
               </h2>
               <p className="text-xs text-stone-500 mt-0.5">
-                قياس الأثر الفعلي لمنظومة الذكريات على تكرار زيارات العملاء وزيادة متوسط الإنفاق
+                ترقية الباقة، متابعة استهلاك الحصص المباشرة، وتنزيل الفواتير الضريبية المعتمدة (ZATCA)
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm">
-                <span className="text-xs text-stone-500 font-bold block mb-1">معدل العودة للزيارة (Retention Rate)</span>
-                <span className="text-4xl font-black font-mono text-amber-700 block">42.8%</span>
-                <span className="text-[11px] text-emerald-700 font-bold mt-2 block">
-                  ↑ +14% مقارنة بالشهر السابق
-                </span>
-              </div>
-
-              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm">
-                <span className="text-xs text-stone-500 font-bold block mb-1">متوسط الأيام بين الزيارات</span>
-                <span className="text-4xl font-black font-mono text-stone-950 block">4.2 يوم</span>
-                <span className="text-[11px] text-stone-500 mt-2 block">
-                  العملاء الذين يوثقون ذكرياتهم يعودون أسرع بـ 2.5x
-                </span>
-              </div>
-
-              <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm">
-                <span className="text-xs text-stone-500 font-bold block mb-1">نسبة إكمال بطاقات الولاء</span>
-                <span className="text-4xl font-black font-mono text-purple-700 block">68%</span>
-                <span className="text-[11px] text-stone-500 mt-2 block">
-                  68 من كل 100 كارت مكتمل تم صرف هديته بنجاح
-                </span>
-              </div>
-            </div>
+            <SubscriptionBillingTab cafeSlug={settings.cafeSlug || 'espresso-lab'} />
           </div>
         )}
 
@@ -1311,6 +2098,175 @@ export default function MerchantDashboardPage() {
           </div>
         )}
       </main>
+
+      {/* 4K TV Preview Modal */}
+      {previewMemory && (
+        <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl bg-stone-900 rounded-3xl border border-stone-800 shadow-2xl overflow-hidden text-stone-100 flex flex-col">
+            {/* TV Screen Frame Top */}
+            <div className="p-4 px-6 bg-stone-950/90 border-b border-stone-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500" />
+                <span className="w-3 h-3 rounded-full bg-amber-500" />
+                <span className="w-3 h-3 rounded-full bg-emerald-500" />
+                <span className="text-xs text-stone-400 font-mono font-bold mr-3">
+                  معاينة شاشة الصالة الحية (4K Signage Simulator) • {settings.branding?.name || 'Memories'}
+                </span>
+              </div>
+              <button
+                onClick={() => setPreviewMemory(null)}
+                className="w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-700 flex items-center justify-center text-stone-300 font-bold transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Simulated TV Display Body */}
+            <div className="relative aspect-video bg-[#FAF8F5] text-stone-900 p-8 flex items-center justify-center overflow-hidden">
+              <div className="absolute top-4 left-6 flex items-center gap-2">
+                <CoBrandingLogos
+                  cafeName={settings.branding?.name || 'Espresso Lab'}
+                  cafeLogoUrl={settings.branding?.logoUrl}
+                  size="md"
+                  theme="light"
+                  showTagline={false}
+                />
+              </div>
+
+              <div className="flex flex-col md:flex-row items-center gap-8 max-w-2xl w-full z-10">
+                <div className="relative aspect-[3/4] w-48 sm:w-60 rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-stone-100">
+                  <img
+                    src={previewMemory.originalUrl}
+                    alt="Memory Preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="space-y-3 text-right">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold font-mono">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>ذكرى موثقة اليوم</span>
+                  </div>
+                  <h3 className="text-2xl font-black text-stone-950">{previewMemory.customerName}</h3>
+                  {previewMemory.caption && (
+                    <p className="text-sm text-stone-600 bg-white/80 p-3 rounded-xl border border-stone-200 font-bold">
+                      “{previewMemory.caption}”
+                    </p>
+                  )}
+                  <p className="text-xs text-stone-400 font-mono">
+                    {new Date(previewMemory.createdAt).toLocaleString('ar-EG')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Bottom Actions */}
+            <div className="p-4 px-6 bg-stone-950 border-t border-stone-800 flex items-center justify-between">
+              <span className="text-xs text-stone-400">
+                الحالة الحالية: <strong className="text-white">{previewMemory.status === 'approved' ? 'معروض للشاشة' : 'معلق'}</strong>
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    handleModerateMemory(previewMemory.id, 'approved');
+                    setPreviewMemory(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition"
+                >
+                  اعتماد للشاشة فوراً
+                </button>
+                <button
+                  onClick={() => setPreviewMemory(null)}
+                  className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs transition"
+                >
+                  إغلاق
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add New Customer Modal */}
+      {isAddCustomerModalOpen && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-3xl border border-stone-200 shadow-2xl p-6 sm:p-8 space-y-5 text-right font-cairo">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+              <h3 className="font-black text-lg text-stone-950 flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-600" />
+                <span>تسجيل زائر جديد في سجل الولاء</span>
+              </h3>
+              <button
+                onClick={() => setIsAddCustomerModalOpen(false)}
+                className="text-stone-400 hover:text-stone-600 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCustomerSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                  رقم هاتف العميل (لربط النقاط والمكافآت):
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="05XXXXXXXX"
+                  value={newCustPhone}
+                  onChange={(e) => setNewCustPhone(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs font-bold font-mono focus:border-amber-500 focus:outline-none"
+                  dir="ltr"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                  اسم العميل أو اللقب:
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="مثال: عبد الله أحمد"
+                  value={newCustName}
+                  onChange={(e) => setNewCustName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs font-bold focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddCustomerModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-50"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition"
+                >
+                  حفظ وتسجيل الزائر
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Barista Counter Redeem Modal */}
+      {isBaristaRedeemOpen && (
+        <BaristaRedeemModal
+          isOpen={isBaristaRedeemOpen}
+          onClose={() => setIsBaristaRedeemOpen(false)}
+          settings={settings}
+          activeStaff={activeStaff}
+          onRedeemSuccess={() => {
+            fetchCustomers();
+            fetchMetrics();
+          }}
+        />
+      )}
 
       {/* Staff Pin Modal */}
       {isStaffModalOpen && (

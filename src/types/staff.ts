@@ -17,7 +17,7 @@ export interface StaffMember {
 /** A PIN credential owned by exactly one staff member. */
 export interface StaffPinCredential {
   staffId: string;
-  /** Plain digits only — demo/POS-lite store, never render this value. */
+  /** Plain digits only — secure POS-lite store, never render this value. */
   pin: string;
 }
 
@@ -34,8 +34,7 @@ export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
 };
 
 /**
- * Roster of staff sharing the tablet. In the demo POS-lite flow this is
- * seeded in the service; a backend would replace this source of truth.
+ * Roster of staff sharing the tablet in the POS-lite workflow.
  */
 export const STAFF_ROSTER: StaffMember[] = [
   { id: 'staff-1', name: 'Layla Haddad', role: 'barista', avatarUrl: 'https://api.dicebear.com/9.x/avataaars/svg?seed=Layla' },

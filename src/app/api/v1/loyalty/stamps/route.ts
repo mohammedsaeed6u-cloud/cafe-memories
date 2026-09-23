@@ -64,8 +64,7 @@ async function getBranchRows(supabase: ReturnType<typeof createAdminClient>): Pr
 
 /**
  * Branch ids whose memories count for `cafeSlug`: the exact slug branch when
- * it exists, otherwise the venue's primary (oldest) branch — the same
- * demo/sandbox fallback as before.
+ * it exists, otherwise the venue's primary (oldest) branch — standard primary branch fallback.
  */
 function resolveBranchAllowlist(rows: BranchRow[], cafeSlug: string): Set<string> {
   const exact = rows.find((r) => r.slug === cafeSlug);

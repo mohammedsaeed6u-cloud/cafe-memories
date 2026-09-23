@@ -130,10 +130,10 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/80 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className="w-full max-w-2xl bg-white rounded-3xl border border-stone-200 shadow-2xl overflow-hidden my-6 font-cairo text-right">
         {/* Header */}
-        <div className="bg-stone-950 text-white p-6 relative">
+        <div className="bg-stone-900 text-white p-6 relative">
           <button
             onClick={onClose}
             className="absolute top-5 left-5 p-2 rounded-full text-stone-400 hover:text-white hover:bg-stone-800 transition"
@@ -236,7 +236,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={!cafeName.trim() || !cafeSlug.trim()}
-                  className="px-6 py-3 rounded-2xl bg-stone-950 hover:bg-stone-900 text-white font-black text-sm flex items-center gap-2 transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                  className="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-sm flex items-center gap-2 transition active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   <span>التالي: نظام الكارت والزيارات</span>
                   <ArrowLeft className="w-4 h-4" />
@@ -407,7 +407,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
                       copiedLink
                         ? 'bg-emerald-600 text-white'
-                        : 'bg-stone-950 hover:bg-stone-800 text-white'
+                        : 'bg-stone-800 hover:bg-stone-700 text-white'
                     }`}
                   >
                     {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -428,7 +428,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                   id="table-stand-print"
                   className="max-w-[260px] mx-auto bg-white p-5 rounded-2xl border-2 border-stone-800 shadow-md flex flex-col items-center space-y-3"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-stone-950 text-white flex items-center justify-center text-[10px] font-mono font-bold">
+                  <div className="w-8 h-8 rounded-xl bg-stone-800 text-white flex items-center justify-center text-[10px] font-mono font-bold">
                     M
                   </div>
                   <div>
@@ -488,7 +488,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-white text-xs font-bold transition cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black transition cursor-pointer shadow-sm"
                 >
                   الدخول للوحة التحكم
                 </button>

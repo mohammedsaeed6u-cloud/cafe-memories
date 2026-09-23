@@ -63,12 +63,12 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-xs font-cairo animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs font-cairo animate-in fade-in duration-200">
       <div className="relative w-full max-w-lg bg-[#FAF9F6] border border-stone-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-stone-200/80 bg-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-stone-950 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-stone-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
               <Smartphone className="w-4 h-4 text-amber-400" />
             </div>
             <div>
@@ -97,7 +97,7 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
             }}
             className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               activeWallet === 'apple'
-                ? 'bg-stone-950 text-white shadow-xs'
+                ? 'bg-stone-900 text-white shadow-xs'
                 : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
             }`}
           >
@@ -114,7 +114,7 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
             }}
             className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               activeWallet === 'google'
-                ? 'bg-stone-950 text-white shadow-xs'
+                ? 'bg-stone-900 text-white shadow-xs'
                 : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
             }`}
           >
@@ -338,7 +338,7 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               <button
                 type="button"
                 onClick={handleDownloadApplePass}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
               >
                 <Download className="w-4 h-4 text-amber-400" />
                 <span>إضافة إلى Apple Wallet (.pkpass)</span>
@@ -347,7 +347,7 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               <button
                 type="button"
                 onClick={handleSaveGoogleWallet}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
               >
                 <ExternalLink className="w-4 h-4 text-amber-400" />
                 <span>حفظ في Google Wallet</span>

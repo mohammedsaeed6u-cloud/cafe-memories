@@ -13,6 +13,7 @@ import { MarketingVisualSteps } from '@/features/marketing/components/MarketingV
 import { MarketingRetentionLoop } from '@/features/marketing/components/MarketingRetentionLoop';
 import { MarketingWallSection } from '@/features/marketing/components/MarketingWallSection';
 import { MarketingPricing } from '@/features/marketing/components/MarketingPricing';
+import { MarketingTrustSection } from '@/features/marketing/components/MarketingTrustSection';
 import { MarketingFaq } from '@/features/marketing/components/MarketingFaq';
 import { MarketingFooter } from '@/features/marketing/components/MarketingFooter';
 
@@ -57,6 +58,9 @@ export default function HomePage() {
 
         {/* Transparent Pricing */}
         <MarketingPricing />
+
+        {/* Security & Privacy Trust Section */}
+        <MarketingTrustSection />
 
         {/* FAQ Accordion */}
         <MarketingFaq />

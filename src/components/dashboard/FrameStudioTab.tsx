@@ -138,13 +138,8 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
   const [customTextColor, setCustomTextColor] = useState(activeFrame.textColor || '#1C1917');
   const [customAccent, setCustomAccent] = useState(activeFrame.accentColor || '#D97706');
 
-  // Sample photos for live preview in studio
-  const samplePhotos = [
-    'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=500&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=500&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=500&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&auto=format&fit=crop&q=80',
-  ].slice(0, Math.max((activeFrame.shotCount || 3) - 1, 1));
+  // Empty preview slots (no demo photos - clean production preview)
+  const samplePhotos: string[] = [];
 
   const handlePreviewAddSticker = (emoji: string) => {
     if (!emoji.trim()) return;

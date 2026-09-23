@@ -65,7 +65,7 @@ export function getStampState(
 }
 
 /**
- * Local fallback (demo / offline mode): maps locally stored photo data URLs
+ * Local fallback (client-offline mode): maps locally stored photo data URLs
  * onto stamp slots. Photos arrive oldest-first from storage.
  */
 export function mapLocalPhotosToSlots(

@@ -212,7 +212,7 @@ export class StripComposerService {
       ctx.fillStyle = '#4A121A';
       ctx.textAlign = 'center';
       ctx.font = '900 28px serif';
-      ctx.fillText('THE SNAP EXPRESS', width / 2, headerBoxY + 40);
+      ctx.fillText('MEMORIES STUDIO', width / 2, headerBoxY + 40);
 
       ctx.font = 'bold 12px monospace';
       ctx.fillStyle = '#8B2635';
@@ -221,7 +221,7 @@ export class StripComposerService {
       // Star & Train icon representation
       ctx.font = '16px serif';
       ctx.fillStyle = '#4A121A';
-      ctx.fillText('THE SNAP EXPRESS', width / 2, headerBoxY + 92);
+      ctx.fillText('MEMORIES STUDIO', width / 2, headerBoxY + 92);
       ctx.restore();
     } else if (isSpotifyPlayer) {
       // Spotify Top Bar
@@ -508,7 +508,7 @@ export class StripComposerService {
       ctx.textAlign = 'center';
       ctx.fillStyle = '#4A121A';
       ctx.font = '900 18px serif';
-      ctx.fillText('TRAIN TICKET', width / 2, footY);
+      ctx.fillText('PHOTO PASS', width / 2, footY);
 
       ctx.fillStyle = '#8B2635';
       ctx.font = '12px serif';

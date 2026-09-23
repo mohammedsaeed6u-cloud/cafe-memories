@@ -9,7 +9,7 @@ export interface TenantSummary {
   id: string;
   name: string;
   slug: string;
-  tier: 'free' | 'pro' | 'enterprise';
+  tier: 'digital' | 'print' | 'multi_location' | 'enterprise' | 'free' | 'pro';
   status: 'active' | 'suspended' | 'trial';
   features: TenantFeatureFlags;
   dailyPhotos: number;

@@ -44,7 +44,7 @@ export class BusinessSettingsService {
         const defaultHeightCm =
           parsed.defaultHeightCm ?? DEFAULT_BUSINESS_SETTINGS.defaultHeightCm ?? 15.2;
         const defaultCardMode =
-          parsed.defaultCardMode || DEFAULT_BUSINESS_SETTINGS.defaultCardMode || 'ticket_express';
+          parsed.defaultCardMode || DEFAULT_BUSINESS_SETTINGS.defaultCardMode || 'korean_noir';
 
         const rawFrames =
           parsed.frames && parsed.frames.length > 0
@@ -63,11 +63,30 @@ export class BusinessSettingsService {
           cardMode: f.cardMode || defaultCardMode,
         }));
 
+        // Legacy Sanitization: Automatically upgrade legacy presets to refined Polaroid Vintage / Warm Cream
+        const sanitizedActiveFrameId =
+          parsed.activeFrameId === 'snap-express' ? 'polaroid-cream' : parsed.activeFrameId || DEFAULT_BUSINESS_SETTINGS.activeFrameId;
+        const sanitizedCardMode =
+          defaultCardMode === 'ticket_express' ? 'polaroid_vintage' : defaultCardMode;
+        const sanitizedPaletteId =
+          parsed.activeColorPaletteId || DEFAULT_BUSINESS_SETTINGS.activeColorPaletteId;
+
+        const rawBranding = parsed.branding || {};
+        const sanitizedBrandingName =
+          !rawBranding.name || rawBranding.name.toLowerCase() === 'memories'
+            ? 'Espresso Lab'
+            : rawBranding.name;
+        const sanitizedBranding = {
+          ...DEFAULT_BUSINESS_SETTINGS.branding,
+          ...rawBranding,
+          name: sanitizedBrandingName,
+        };
+
         return {
           ...DEFAULT_BUSINESS_SETTINGS,
           ...parsed,
           cafeSlug: cafeSlug || parsed.cafeSlug || DEFAULT_BUSINESS_SETTINGS.cafeSlug,
-          branding: { ...DEFAULT_BUSINESS_SETTINGS.branding, ...(parsed.branding || {}) },
+          branding: sanitizedBranding,
           freeGiftOffer: { ...DEFAULT_BUSINESS_SETTINGS.freeGiftOffer, ...(parsed.freeGiftOffer || {}) },
           defaultShotCount,
           defaultOrientation,
@@ -76,10 +95,10 @@ export class BusinessSettingsService {
           defaultDimensionsPreset: parsed.defaultDimensionsPreset || 'strip_2x6',
           defaultWidthCm,
           defaultHeightCm,
-          defaultCardMode,
+          defaultCardMode: sanitizedCardMode,
+          activeFrameId: sanitizedActiveFrameId,
           frames: normalizedFrames,
-          activeColorPaletteId:
-            parsed.activeColorPaletteId || DEFAULT_BUSINESS_SETTINGS.activeColorPaletteId,
+          activeColorPaletteId: sanitizedPaletteId,
           allowCustomerColorChoice:
             parsed.allowCustomerColorChoice ?? DEFAULT_BUSINESS_SETTINGS.allowCustomerColorChoice,
           allowedColorIds:

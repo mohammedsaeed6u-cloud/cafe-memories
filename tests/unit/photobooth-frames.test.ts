@@ -214,7 +214,7 @@ describe('Photobooth Frames Template System', () => {
 
       const snapFrame = DEFAULT_PHOTOBOOTH_FRAMES.find((f) => f.id === 'snap-express');
       expect(snapFrame).toBeDefined();
-      expect(snapFrame?.ticketSeat).toBe('ROW 15 • SEAT A33');
+      expect(snapFrame?.ticketSeat).toBe('SPECIALTY EDITION');
 
       // 2. Spotify Photostrip with colorways
       const spotifyTemplate = PHOTOBOOTH_FRAME_TEMPLATES.find((t) => t.id === 'spotify_photostrip_2x6');

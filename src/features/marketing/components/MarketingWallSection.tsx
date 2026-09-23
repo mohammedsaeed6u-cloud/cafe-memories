@@ -7,72 +7,120 @@ import { Tv, Shield, Wifi, ExternalLink } from 'lucide-react';
 export function MarketingWallSection() {
   return (
     <section id="live-wall" className="py-20 px-6 max-w-6xl mx-auto border-t border-stone-200/80">
-      <div className="p-8 sm:p-12 rounded-3xl bg-stone-950 text-white shadow-xl relative overflow-hidden">
-        {/* Subtle Ambient Glow */}
+      <div className="p-8 sm:p-12 rounded-3xl bg-[#1E1917] text-white shadow-xl relative overflow-hidden border border-[#2E2724]">
+        {/* Subtle Ambient Warm Glow */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="space-y-5 text-right">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-mono text-amber-400 font-bold">
               <Tv className="w-3.5 h-3.5" />
-              <span>DIGITAL SIGNAGE & LIVE WALL</span>
+              <span>LIVING MEMORY WALL</span>
             </div>
 
             <h2
               className="text-3xl sm:text-4xl font-black text-white font-serif leading-tight"
               style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
             >
-              شاشة الصالة الحية: نبض المكان وتفاعل مجتمع المقهى.
+              مقهاك يحصل على جدار ذكريات حي خاص به.
             </h2>
 
             <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-              حوّل أي شاشة تلفزيون عادية داخل الصالة إلى بورد ذكريات رقمي بدقة 4K. بمجرد أن يكمل العميل شريطه ويمنح موافقته الصريحة، تظهر لقطته بأناقة فائقة على الشاشة مع تنبيه صوتي راقٍ واحتفال بصري محبب.
+              حوّل أي شاشة تلفزيون ذكية داخل الصالة إلى بورد ذكريات تفاعلي يعرض لحظات رواد المكان المعتمدة. بمجرد موافقة الزائر الصريحة واعتماد الباريستا السريع، تنضم لقطته للجدار مع أوقات الزيارة في تدفق بصري راقٍ دون الكشف عن أي بيانات شخصية خاصة.
             </p>
 
             <div className="space-y-2.5 pt-2 text-xs text-stone-300 font-medium">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>خصوصية تامة: لا تعرض أي صورة إلا بموافقة العميل الصريحة.</span>
+                <span>موافقة مسبقة واعتماد إداري: لا تظهر أي صورة دون موافقة الزائر ومراجعة الطاقم.</span>
               </div>
               <div className="flex items-center gap-2">
                 <Wifi className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>تعمل بسلاسة حتى لو انقطع اتصال الإنترنت بفضل الـ Offline Cache.</span>
+                <span>وضع ملء الشاشة الكامل (Fullscreen Mode) متوافق مع أي متصفح شاشة ذكية.</span>
               </div>
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
               <Link
                 href="/wall/screen-1"
-                className="w-full sm:w-auto text-xs font-bold py-3.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 transition flex items-center justify-center gap-2 shadow-sm"
+                className="w-full sm:w-auto text-xs font-bold py-3.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
-                <span>فتح شاشة الصالة التجريبية</span>
+                <span>معاينة شاشة الصالة الحية (Live Wall)</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
 
-          {/* Wall Mockup Visual */}
-          <div className="p-4 sm:p-6 bg-stone-900 rounded-2xl border border-stone-800 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-800 text-[10px] font-mono text-stone-400">
-              <span className="text-amber-400 font-bold">LIVE 4K STREAM</span>
-              <span>ESPRESSO LAB SPECIALTY BAR</span>
+          {/* Wall Mockup Visual: Authentic 4K Smart TV Digital Signage */}
+          <div className="p-4 sm:p-5 bg-[#120F0E] rounded-3xl border border-stone-800 shadow-2xl space-y-3 ring-1 ring-white/10">
+            <div className="flex items-center justify-between pb-2.5 border-b border-stone-800/80 text-[10px] font-mono text-stone-400">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-amber-400 font-bold">LIVE BROADCAST • 4K OLED</span>
+              </div>
+              <span className="text-stone-300 font-bold">ESPRESSO LAB ROASTERY</span>
             </div>
 
-            <div className="aspect-video bg-stone-950 rounded-xl border border-stone-800 overflow-hidden relative flex items-center justify-center p-4">
-              <div className="text-center space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-stone-800 text-amber-400 flex items-center justify-center mx-auto">
-                  <Tv className="w-5 h-5" />
+            <div className="aspect-[16/10] bg-[#1A1614] rounded-2xl border border-stone-800 overflow-hidden relative flex flex-col sm:flex-row items-center p-3 sm:p-4 gap-4">
+              {/* Featured Polaroid Memory */}
+              <div className="relative w-full sm:w-3/5 h-full rounded-xl overflow-hidden shadow-lg border-2 border-white/90 bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80"
+                  alt="Customer Live Wall Feature"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-stone-950/90 via-stone-950/60 to-transparent text-white text-right">
+                  <div className="flex items-center justify-between text-[9px] font-mono mb-0.5">
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500/80 text-stone-950 font-bold">
+                      الزيارة #4
+                    </span>
+                    <span className="text-stone-300">منذ ١٠ دقائق</span>
+                  </div>
+                  <h4 className="text-xs font-black text-white">سارة عبد الله</h4>
+                  <p className="text-[10px] text-stone-200 font-medium">"أحلى فلات وايت وذكريات مع الأصحاب ☕✨"</p>
                 </div>
-                <h4 className="text-sm font-bold text-white">Community Live Board</h4>
-                <p className="text-[10px] text-stone-400 max-w-xs mx-auto">
-                  تحديث تلقائي كل 20 ثانية لعرض أحدث اللقطات المعتمدة وباركود الطاولات.
-                </p>
+              </div>
+
+              {/* Scannable Live Wall QR & Callout */}
+              <div className="w-full sm:w-2/5 flex flex-col items-center justify-center text-center space-y-2">
+                <div className="p-2.5 bg-white rounded-2xl shadow-md border border-stone-200">
+                  <div className="w-20 h-20 bg-stone-950 rounded-xl p-1.5 flex flex-col items-center justify-center">
+                    <div className="grid grid-cols-4 gap-1 w-full h-full">
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-amber-400 rounded-xs"></div>
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-transparent"></div>
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-amber-400 rounded-xs"></div>
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-transparent"></div>
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-white rounded-xs"></div>
+                      <div className="bg-transparent"></div>
+                      <div className="bg-white rounded-xs"></div>
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[9px] font-mono font-bold text-amber-400 tracking-wider">
+                  SCAN TO JOIN WALL
+                </span>
+                <span className="text-[8px] text-stone-400 leading-tight">
+                  التقط صورتك بهاتفك لتظهر فوراً على شاشة الصالة
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-[10px] font-mono text-stone-500 pt-1">
-              <span>Auto Sync • 20s Interval</span>
-              <span>100% Consent Controlled</span>
+            <div className="flex items-center justify-between text-[9px] font-mono text-stone-400 pt-1">
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>تحديث متزامن فوري • Ultra Smooth</span>
+              </span>
+              <span>100% بموافقة العميل واعتماد الموظف</span>
             </div>
           </div>
         </div>

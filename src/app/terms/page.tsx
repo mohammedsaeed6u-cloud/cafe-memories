@@ -11,7 +11,7 @@ export default function TermsOfServicePage() {
       <header className="bg-white border-b border-stone-200/80 sticky top-0 z-30 shadow-xs">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-stone-950 text-white flex items-center justify-center font-bold text-xs">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-bold text-xs">
               <Sparkles className="w-4 h-4 text-amber-500" />
             </div>
             <span className="font-extrabold text-stone-950 text-base">Memories • شروط الخدمة</span>

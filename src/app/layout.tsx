@@ -25,8 +25,23 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: 'memories • Café Moments. Lasting Loyalty.',
-  description: 'منظومة كبائن التصوير والذكريات وشاشات العرض الحية وبطاقات الولاء لكافيهات السبيشالتي',
+  metadataBase: new URL('https://memories-c9w.pages.dev'),
+  title: 'memories • منصة تجربة عملاء وولاء المقاهي المختصة',
+  description: 'تحويل كل زيارة في مقهاك إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير عبر الهاتف بدون تطبيق، شاشات صالة حية، وكروت ولاء في محفظة Apple و Google Wallet.',
+  keywords: ['كافيهات', 'ولاء العملاء', 'فوتوبوث كافيه', 'شاشات الصالة الحية', 'قهوة مختصة', 'بطاقات ولاء رقمية'],
+  openGraph: {
+    title: 'memories • منصة تجربة عملاء وولاء المقاهي المختصة',
+    description: 'تحويل كل زيارة في مقهاك إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
+    url: 'https://memories-c9w.pages.dev',
+    siteName: 'memories',
+    locale: 'ar_SA',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'memories • منصة تجربة عملاء وولاء المقاهي المختصة',
+    description: 'تحويل كل زيارة في مقهاك إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
+  },
   verification: {
     google: 'fjoLJpquhynVk0PmXH6VssgvRRrhiuynBz8G4PDHiME',
   },

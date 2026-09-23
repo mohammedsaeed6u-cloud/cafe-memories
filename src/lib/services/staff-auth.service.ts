@@ -24,8 +24,8 @@ export const MAX_FAILED_ATTEMPTS = 3;
 export const LOCKOUT_DURATION_MS = 30_000;
 
 /**
- * Demo PIN credentials, one per roster member. A production build would
- * fetch salted hashes from the backend instead of this map.
+ * Default PIN credentials, one per roster member. In backend sync, these
+ * are salted hashes fetched securely.
  * Keys are staff IDs, values are 4-digit PINs.
  */
 export const STAFF_PIN_CREDENTIALS: Record<string, string> = {

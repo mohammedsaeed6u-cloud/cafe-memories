@@ -19,7 +19,6 @@ import { CustomerLoyaltyCard } from '@/features/loyalty/CustomerLoyaltyCard';
 import { StaffQuickStampModal } from '@/features/loyalty/StaffQuickStampModal';
 import { LoyaltyPurseService, CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
 import { PhotoboothResponsiveCard } from '@/features/photobooth/PhotoboothResponsiveCard';
-import { AestheticSampleToggle } from '@/features/photobooth/AestheticSampleToggle';
 import { PhotoCaptureOrUpload } from '@/features/photobooth/PhotoCaptureOrUpload';
 import { InstagramMentionPrompt } from '@/features/social/InstagramMentionPrompt';
 import { WallConsentModal } from '@/features/wall-consent/WallConsentModal';
@@ -48,13 +47,6 @@ const createGiftCode = () => `GIFT-${Math.floor(1000 + Math.random() * 9000)}`;
 const createTrackedId = (prefix: string) =>
   `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-const AESTHETIC_PREVIEW_PORTRAITS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&auto=format&fit=crop&q=80',
-];
-
 export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   // Business settings state
   const [settings, setSettings] = useState<BusinessSettings>(() =>
@@ -62,7 +54,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   );
 
   const [selectedPaletteId, setSelectedPaletteId] = useState<string>(() => {
-    return settings.activeColorPaletteId || 'ticket-express-cream';
+    return settings.activeColorPaletteId || 'memories-signature';
   });
 
   const staffLabel =
@@ -81,7 +73,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       settings.frames[0];
     return {
       ...base,
-      templateId: settings.defaultTemplateId || base?.templateId || 'snap_express_ticket_2x6',
+      templateId: settings.defaultTemplateId || base?.templateId || 'korean_noir_2x6',
       layoutType: settings.defaultLayoutType || base?.layoutType,
       shotCount: settings.defaultShotCount || base?.shotCount || 3,
       orientation: settings.defaultOrientation || base?.orientation || 'vertical',
@@ -91,7 +83,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   });
 
   const [cardMode, setCardMode] = useState<PhotoboothCardMode>(
-    settings.defaultCardMode || 'ticket_express'
+    settings.defaultCardMode || 'polaroid_vintage'
   );
 
   // Sub-customizer states for viral frames
@@ -128,9 +120,6 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [liveWallConsent, setLiveWallConsent] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stickers, setStickers] = useState<PlacedSticker[]>([]);
-
-  // Preview Mode with high-aesthetic portraits (defaults to false for real customer card)
-  const [isPreviewWithSamples, setIsPreviewWithSamples] = useState<boolean>(false);
 
   // Customer Onboarding / Registration Form State
   const [regName, setRegName] = useState('');
@@ -170,7 +159,6 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             const list = JSON.parse(saved);
             if (Array.isArray(list) && list.length > 0) {
               setAccumulatedPhotos(list);
-              setIsPreviewWithSamples(false); // Switch to real card if photos exist
             }
           } catch {}
         }
@@ -179,13 +167,10 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     requestAnimationFrame(hydrateSession);
   }, [cafeSlug]);
 
-  // Current photos to display: samples if preview mode, or customer's actual photos
-  const currentDisplayPhotos =
-    isPreviewWithSamples && accumulatedPhotos.length === 0
-      ? AESTHETIC_PREVIEW_PORTRAITS.slice(0, totalCardSlots)
-      : todayPhoto
-      ? [...accumulatedPhotos, todayPhoto]
-      : accumulatedPhotos;
+  // Current photos to display: customer's actual captured photos
+  const currentDisplayPhotos = todayPhoto
+    ? [...accumulatedPhotos, todayPhoto]
+    : accumulatedPhotos;
 
   // Check completion
   const isCardCompleted = accumulatedPhotos.length >= totalCardSlots || (todayPhoto && accumulatedPhotos.length + 1 >= totalCardSlots);
@@ -220,9 +205,8 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
     setLoyaltyData(LoyaltyPurseService.getData('', cafeSlug, 5));
   };
 
-  // Add Photo Handler (from camera, file upload, or test shot)
+  // Add Photo Handler (from camera or file upload)
   const handleCommitPhoto = (photoBase64: string) => {
-    setIsPreviewWithSamples(false);
     const updated = [...accumulatedPhotos, photoBase64];
     setAccumulatedPhotos(updated);
 
@@ -244,12 +228,6 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         setIsCompletionRewardOpen(true);
       }
     }
-  };
-
-  // Quick aesthetic test shot
-  const handleQuickSampleShot = () => {
-    const nextIdx = accumulatedPhotos.length % AESTHETIC_PREVIEW_PORTRAITS.length;
-    handleCommitPhoto(AESTHETIC_PREVIEW_PORTRAITS[nextIdx]);
   };
 
   // Handle Wall Consent Answer
@@ -344,7 +322,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         <CoBrandingHeader branding={settings.branding} />
       </div>
 
-      <main className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-4 flex flex-col items-center space-y-5">
+      <main className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-3 flex flex-col items-center space-y-4">
         {/* Registration Success Toast */}
         {regSuccessNotice && (
           <div className="w-full p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-xs">
@@ -353,115 +331,69 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
           </div>
         )}
 
-        {/* 2. REAL CUSTOMER REGISTRATION / IDENTIFICATION */}
-        {!customerPhone ? (
-          <div className="w-full p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-sm text-stone-900 space-y-3">
-            <div className="flex items-center gap-2.5 border-b border-stone-100 pb-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-bold shadow-xs">
-                <UserCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-sm text-stone-950">
-                  تسجيل كارت الولاء وبدء التوثيق
-                </h3>
-                <p className="text-[11px] text-stone-500">
-                  سجّل اسمك ورقمك لحفظ أختامك وصورك في كارتك واستلام هديتك فوراً
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleRegisterCustomer} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div>
-                <label className="text-[11px] font-bold text-stone-700 block mb-1">الاسم أو اللقب:</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="مثال: أحمد، سارة، ضيف الكافيه..."
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-bold text-stone-700 block mb-1">رقم الموبايل:</label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="01xxxxxxxxx"
-                  value={regPhone}
-                  onChange={(e) => setRegPhone(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none font-mono"
-                  dir="ltr"
-                />
-              </div>
-              <div className="sm:col-span-2 pt-1">
-                <button
-                  type="submit"
-                  className="w-full py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-amber-400 font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-amber-400" />
-                  <span>تثبيت الكارت وبدء التصوير</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        ) : (
-          <div className="w-full p-3 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                <CheckCircle className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="font-extrabold text-stone-950">{customerName || 'ضيف مميز'}</span>
-                <span className="text-[10px] text-stone-500 font-mono block" dir="ltr">{customerPhone}</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleClearCustomer}
-              className="text-[10px] text-stone-400 hover:text-stone-700 underline cursor-pointer"
-            >
-              تغيير الحساب
-            </button>
-          </div>
-        )}
-
-        {/* 3. CUSTOMER DIGITAL LOYALTY CARD WITH QR CODE */}
-        <CustomerLoyaltyCard
-          loyaltyData={loyaltyData}
-          giftTitle={settings.freeGiftOffer.title}
-          onOpenStaffStamp={() => setIsStaffStampModalOpen(true)}
-        />
-
-        {/* 3. PHOTOBOOTH STRIP SPECIFICATIONS & SAMPLE PREVIEW TOGGLE */}
-        <div className="w-full flex items-center justify-between px-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-stone-700">
-              {selectedFrame.widthCm === 10 ? 'كارت بوستكارد 4×6' : 'شريط طولي 2×6'}:
-            </span>
-            <span className="text-[10px] font-mono text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full font-bold">
-              {totalCardSlots} لقطات
+        {/* 2. CARD HEADER STRIP: Title and slots badge */}
+        <div className="w-full flex items-center justify-between px-1 pt-1">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm sm:text-base font-black text-stone-950">
+              كارت ذكرياتك
+            </h2>
+            <span className="text-[10px] font-mono text-amber-900 bg-amber-100/90 border border-amber-300/80 px-2.5 py-0.5 rounded-full font-bold">
+              {totalCardSlots} لقطات • {selectedFrame.widthCm === 10 ? 'بوستكارد 4×6' : 'شريط 2×6'}
             </span>
           </div>
 
-          <AestheticSampleToggle
-            isPreviewMode={isPreviewWithSamples}
-            onToggle={setIsPreviewWithSamples}
+          <div className="flex items-center gap-1.5 text-xs text-stone-600 font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{accumulatedPhotos.length} من {totalCardSlots} لقطات موثقة</span>
+          </div>
+        </div>
+
+        {/* 3. HERO PHOTOBOOTH CARD: FRONT AND CENTER WITH ITS SLOTS */}
+        <div className="w-full flex justify-center py-1 animate-in zoom-in-95 duration-200">
+          <PhotoboothResponsiveCard
+            photos={currentDisplayPhotos}
+            frame={{
+              ...selectedFrame,
+              shotCount: totalCardSlots,
+              cardMode,
+              bgColor: cardMode === 'spotify_player' ? spotifyBg : selectedFrame.bgColor,
+              songTitle: spotifyTrack.title,
+              songArtist: spotifyTrack.artist,
+              ticketSeat,
+            }}
+            branding={settings.branding}
+            freeGiftOffer={settings.freeGiftOffer}
+            cardMode={cardMode}
+            stickers={stickers}
+            onUpdateStickers={setStickers}
+            isStickersInteractive={true}
+            onSlotClick={() => setIsCameraModalOpen(true)}
+            dimensionPreset={selectedFrame.dimensionsPreset || (selectedFrame.widthCm === 10 ? 'grid_4x6' : 'strip_2x6')}
           />
         </div>
 
-        {/* 4. VIRAL THEME PILLS SELECTOR */}
-        <div className="w-full space-y-2">
+        {/* 4. PRIMARY ACTION: TAKE TODAY'S PHOTO OR UPLOAD */}
+        <PhotoCaptureOrUpload
+          canShoot={LoyaltyPurseService.canCustomerShoot(customerPhone, cafeSlug, accumulatedPhotos.length)}
+          onOpenLiveCamera={() => setIsCameraModalOpen(true)}
+          onUploadPhoto={handleCommitPhoto}
+        />
+
+        {/* 5. VIRAL THEME PILLS SELECTOR */}
+        <div className="w-full space-y-2 pt-1">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[11px] font-bold text-stone-600">اختر طابع الكارت المفضل:</span>
+            <span className="text-[10px] text-amber-700 font-mono font-bold">THEMES</span>
+          </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none touch-pan-x">
             {[
-              { id: 'ticket_express', label: 'تذكرة قطار', icon: 'EXP' },
+              { id: 'polaroid_vintage', label: 'بولارويد كلاسيك', icon: 'FILM' },
+              { id: 'korean_noir', label: 'نوار كوري عاجي', icon: 'RAW' },
+              { id: 'ticket_express', label: 'تذكرة الكافيه', icon: 'PASS' },
+              { id: 'ios_camera', label: 'كاميرا آيفون', icon: 'CAM' },
               { id: 'spotify_player', label: 'مشغل سبوتيفاي', icon: 'AUD' },
               { id: 'ios_gallery_light', label: 'ألبوم آيفون', icon: 'IOS' },
-              { id: 'ios_gallery_dark', label: 'آيفون دارك', icon: 'DARK' },
-              { id: 'ios_camera', label: 'كاميرا آيفون', icon: 'CAM' },
               { id: 'ios_imessage', label: 'آي مسج', icon: 'MSG' },
-              { id: 'korean_noir', label: 'نوار كوري', icon: 'RAW' },
-              { id: 'polaroid_vintage', label: 'بولارويد', icon: 'FILM' },
             ].map((mode) => {
               const isActive = cardMode === mode.id;
               return (
@@ -471,7 +403,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                   onClick={() => setCardMode(mode.id as PhotoboothCardMode)}
                   className={`px-3 py-2 rounded-2xl border text-xs font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
                     isActive
-                      ? 'bg-amber-500 text-stone-950 border-amber-500 shadow-xs font-black'
+                      ? 'bg-amber-600 text-white border-amber-600 shadow-xs font-black'
                       : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-200'
                   }`}
                 >
@@ -509,17 +441,17 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             </div>
           )}
 
-          {/* Sub-customizer for Ticket Express */}
+          {/* Sub-customizer for Cafe Table / Spot */}
           {cardMode === 'ticket_express' && (
             <div className="p-3 bg-white border border-stone-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-              <span className="text-[11px] font-bold text-stone-700">المقعد / الطاولة:</span>
+              <span className="text-[11px] font-bold text-stone-700">موقع الجلسة:</span>
               <div className="flex items-center gap-1.5">
-                {['ROW 15 • SEAT A33', 'TABLE 04 • VIP', 'CAR 02 • SEAT B12'].map((seat) => (
+                {['طاولة 04 • صالة', 'طاولة 08 • تراس', 'جلسة بار • كاونتر'].map((seat) => (
                   <button
                     key={seat}
                     type="button"
                     onClick={() => setTicketSeat(seat)}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition ${
+                    className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
                       ticketSeat === seat ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-stone-50 border-stone-200 text-stone-600'
                     }`}
                   >
@@ -531,39 +463,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
           )}
         </div>
 
-        {/* 5. THE HERO PHOTOBOOTH CARD (2x6 or 4x6) */}
-        <div className="w-full flex justify-center py-2 animate-in zoom-in-95 duration-200">
-          <PhotoboothResponsiveCard
-            photos={currentDisplayPhotos}
-            frame={{
-              ...selectedFrame,
-              shotCount: totalCardSlots,
-              cardMode,
-              bgColor: cardMode === 'spotify_player' ? spotifyBg : selectedFrame.bgColor,
-              songTitle: spotifyTrack.title,
-              songArtist: spotifyTrack.artist,
-              ticketSeat,
-            }}
-            branding={settings.branding}
-            freeGiftOffer={settings.freeGiftOffer}
-            cardMode={cardMode}
-            stickers={stickers}
-            onUpdateStickers={setStickers}
-            isStickersInteractive={true}
-            onSlotClick={() => setIsCameraModalOpen(true)}
-            dimensionPreset={selectedFrame.dimensionsPreset || (selectedFrame.widthCm === 10 ? 'grid_4x6' : 'strip_2x6')}
-          />
-        </div>
-
-        {/* 6. PHOTO CAPTURE & UPLOAD ACTIONS */}
-        <PhotoCaptureOrUpload
-          canShoot={LoyaltyPurseService.canCustomerShoot(customerPhone, cafeSlug, accumulatedPhotos.length)}
-          onOpenLiveCamera={() => setIsCameraModalOpen(true)}
-          onUploadPhoto={handleCommitPhoto}
-          onQuickSampleShot={handleQuickSampleShot}
-        />
-
-        {/* 7. HIGH RES DOWNLOAD DIRECT ACTION */}
+        {/* 6. HIGH RES DOWNLOAD DIRECT ACTION */}
         <button
           type="button"
           onClick={handlePrintOrDownload}
@@ -572,6 +472,89 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
           <Download className="w-4 h-4 text-amber-600" />
           <span>تحميل شريط الذكريات عالي الدقة (300 DPI)</span>
         </button>
+
+        {/* 7. CUSTOMER DIGITAL LOYALTY CARD & WALLET SECTION */}
+        <div className="w-full pt-2">
+          {customerPhone ? (
+            <div className="space-y-3">
+              <div className="w-full p-3 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="font-extrabold text-stone-950">{customerName || 'ضيف مميز'}</span>
+                    <span className="text-[10px] text-stone-500 font-mono block" dir="ltr">{customerPhone}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearCustomer}
+                  className="text-[10px] text-stone-400 hover:text-stone-700 underline cursor-pointer"
+                >
+                  تغيير الحساب
+                </button>
+              </div>
+
+              <CustomerLoyaltyCard
+                loyaltyData={loyaltyData}
+                giftTitle={settings.freeGiftOffer.title}
+                onOpenStaffStamp={() => setIsStaffStampModalOpen(true)}
+              />
+            </div>
+          ) : (
+            <div className="w-full p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-sm text-stone-900 space-y-3">
+              <div className="flex items-center gap-2.5 border-b border-stone-100 pb-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-bold shadow-xs">
+                  <UserCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-stone-950">
+                    احفظ أختامك وصورك في محفظة هاتفك
+                  </h3>
+                  <p className="text-[11px] text-stone-500">
+                    سجّل رقمك لحفظ أختام كارتك واستلام هديتك الفورية عند اكتماله
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleRegisterCustomer} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="text-[11px] font-bold text-stone-700 block mb-1">الاسم أو اللقب:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="مثال: أحمد، سارة، ضيف الكافيه..."
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-stone-700 block mb-1">رقم الموبايل:</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="01xxxxxxxxx"
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none font-mono"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="sm:col-span-2 pt-1">
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-white" />
+                    <span>حفظ كارت الولاء والأختام</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
 
         {/* 8. INSTAGRAM MENTION PROMPT BANNER */}
         <InstagramMentionPrompt
@@ -584,7 +567,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
       {/* Live Camera Viewfinder Modal */}
       {isCameraModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-900/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-stone-950 rounded-3xl p-4 overflow-hidden border border-stone-800 shadow-2xl relative">
+          <div className="w-full max-w-md bg-stone-900 rounded-3xl p-4 overflow-hidden border border-stone-700 shadow-2xl relative">
             <button
               type="button"
               onClick={() => setIsCameraModalOpen(false)}

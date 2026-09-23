@@ -159,4 +159,68 @@ export class CustomerRegistryService {
     } catch {}
     return [];
   }
+
+  /**
+   * Adds a direct loyalty stamp (+1 visit) to a registered customer.
+   */
+  static addDirectStamp(phone: string, cafeSlug: string = 'espresso-lab'): RegisteredCustomer | null {
+    if (typeof window === 'undefined') return null;
+    const clean = phone.trim().replace(/[^0-9]/g, '');
+    try {
+      const crmKey = this.getCrmKey(cafeSlug);
+      const existingRaw = localStorage.getItem(crmKey);
+      let list: RegisteredCustomer[] = [];
+      if (existingRaw) {
+        try {
+          list = JSON.parse(existingRaw);
+        } catch {}
+      }
+
+      const idx = list.findIndex((c) => c.phone === clean);
+      if (idx >= 0) {
+        list[idx] = {
+          ...list[idx],
+          totalVisits: (list[idx].totalVisits || 1) + 1,
+          lastVisit: new Date().toISOString(),
+        };
+        localStorage.setItem(crmKey, JSON.stringify(list));
+        return list[idx];
+      } else {
+        // Customer not in CRM list yet, register them with 1 visit
+        const newCust: RegisteredCustomer = {
+          phone: clean,
+          name: `عميل ${clean.slice(-4)}`,
+          registeredAt: new Date().toISOString(),
+          lastVisit: new Date().toISOString(),
+          totalVisits: 1,
+        };
+        list.push(newCust);
+        localStorage.setItem(crmKey, JSON.stringify(list));
+        return newCust;
+      }
+    } catch (err) {
+      console.warn('Failed to add direct stamp', err);
+      return null;
+    }
+  }
+
+  /**
+   * Removes a customer from the CRM registry.
+   */
+  static deleteCustomer(phone: string, cafeSlug: string = 'espresso-lab'): boolean {
+    if (typeof window === 'undefined') return false;
+    const clean = phone.trim().replace(/[^0-9]/g, '');
+    try {
+      const crmKey = this.getCrmKey(cafeSlug);
+      const existingRaw = localStorage.getItem(crmKey);
+      if (existingRaw) {
+        const list: RegisteredCustomer[] = JSON.parse(existingRaw);
+        const filtered = list.filter((c) => c.phone !== clean);
+        localStorage.setItem(crmKey, JSON.stringify(filtered));
+        return true;
+      }
+    } catch {}
+    return false;
+  }
 }
+

@@ -15,8 +15,8 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
       <div className="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between">
         {/* Brand Logo & Monogram */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-stone-900 text-amber-400 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200">
-            <MemoriesArchIcon size={20} color="#FBBF24" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200">
+            <MemoriesArchIcon size={20} color="#FFFFFF" />
           </div>
           <div>
             <span
@@ -74,10 +74,10 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
 
           <Link
             href="/c/espresso-lab"
-            className="text-xs font-bold px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white shadow-xs transition flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
+            className="text-xs font-bold px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white shadow-xs transition flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
           >
             <span>تجربة الزائر الحية</span>
-            <ArrowRight className="w-3 h-3 text-amber-400 rotate-180" />
+            <ArrowRight className="w-3 h-3 text-white rotate-180" />
           </Link>
         </div>
       </div>

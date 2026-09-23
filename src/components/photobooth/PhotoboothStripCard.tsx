@@ -30,6 +30,7 @@ import {
   Gift,
   Lock,
   Mic,
+  Coffee,
 } from 'lucide-react';
 import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
 import { DraggableStickerLayer } from './DraggableStickerLayer';
@@ -356,7 +357,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
               </div>
               <span className="text-[10px] font-mono font-black text-stone-600">#{slotFormatted}</span>
               <span className="text-[8px] font-bold text-stone-500 mt-0.5 leading-tight">
-                {isLastSlot ? (freeGiftOffer.title || 'هدية الاكتمال') : `الزيارة #${visitNumber}`}
+                {isLastSlot ? 'اللقطة الختامية • الهدية' : `الزيارة #${visitNumber}`}
               </span>
             </div>
           )}
@@ -407,17 +408,17 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
               <div className="absolute inset-1 border border-[#4A121A]/30 rounded-lg pointer-events-none" />
               {/* Arched Title */}
               <div className="text-center font-serif font-black tracking-[0.18em] text-[#4A121A] text-sm uppercase leading-tight drop-shadow-2xs">
-                THE SNAP EXPRESS
+                MEMORIES STUDIO
               </div>
               <div className="text-[8px] font-mono uppercase tracking-[0.25em] text-[#8B2635] font-bold mt-0.5">
-                MEMORIES RAILWAY • SPECIALTY LINE
+                SPECIALTY COFFEE • PHOTO EXPERIENCE
               </div>
 
-              {/* Steam Locomotive Icon & Stars */}
+              {/* Specialty Coffee Emblem & Arch */}
               <div className="flex items-center justify-center gap-2 mt-1 text-[#4A121A]">
-                <span className="text-[10px] text-[#8B2635] font-mono">EXP</span>
-                <LocomotiveTrainSvg size={42} color="#4A121A" />
-                <span className="text-[10px] text-[#8B2635] font-mono">EXP</span>
+                <span className="text-[10px] text-[#8B2635] font-mono">EST</span>
+                <Coffee className="w-4 h-4 text-[#8B2635]" />
+                <span className="text-[10px] text-[#8B2635] font-mono">2026</span>
               </div>
             </div>
           </div>
@@ -566,24 +567,22 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         {isTicketExpress && (
           <div className="relative z-10 mt-3 pt-2 text-center text-[#4A121A]">
             <div className="font-serif font-black tracking-widest text-xs uppercase mb-0.5">
-              TRAIN TICKET
+              PHOTO PASS
             </div>
             <div className="flex items-center justify-center gap-1.5 text-[8px] mb-1.5 text-[#8B2635]">
               <span className="text-[9px] font-mono font-bold">STUDIO</span>
             </div>
 
-            {/* Cutout Ticket Punch Notch Pill */}
-            <div className="relative mx-auto w-fit px-5 py-1 rounded-full border-2 border-[#4A121A] bg-[#FAF5EC] font-mono text-[9px] font-black tracking-wider uppercase shadow-2xs">
-              <span className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 bg-stone-900 rounded-full border border-[#4A121A]" />
-              <span>{frame.ticketSeat || 'ROW 15 • SEAT A33'}</span>
-              <span className="absolute -right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 bg-stone-900 rounded-full border border-[#4A121A]" />
+            {/* Clean Roastery Badge Pill */}
+            <div className="relative mx-auto w-fit px-4 py-1 rounded-full border border-[#4A121A]/40 bg-[#FAF5EC] font-mono text-[9px] font-bold tracking-wider uppercase shadow-2xs">
+              <span>{frame.ticketSeat || 'SPECIALTY EDITION'}</span>
             </div>
 
             {/* Barcode Strip */}
             <div className="flex flex-col items-center mt-2 opacity-85">
               <TicketBarcodeSvg width={130} height={18} color="#4A121A" />
               <span className="text-[7px] font-mono tracking-widest text-[#4A121A] mt-0.5 font-bold">
-                #EXP-2026-A33 • FIRST CLASS
+                #MEMORIES-HOSPITALITY • VERIFIED VISIT
               </span>
             </div>
           </div>

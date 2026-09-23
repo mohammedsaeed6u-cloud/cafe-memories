@@ -116,15 +116,26 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
     };
   }, [startCamera]);
 
-  // Capture single frame with active filter applied
+  // Capture single frame with active filter applied in true 3:4 photobooth aspect ratio
   const captureFrame = useCallback((): string | null => {
     if (!videoRef.current || !canvasRef.current) return null;
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    const size = Math.min(video.videoWidth || 1080, video.videoHeight || 1080);
-    canvas.width = size;
-    canvas.height = size;
+    const vWidth = video.videoWidth || 1080;
+    const vHeight = video.videoHeight || 1440;
+
+    // Calculate crop for authentic 3:4 vertical photobooth slot
+    let cropWidth = vWidth;
+    let cropHeight = Math.round(vWidth * (4 / 3));
+
+    if (cropHeight > vHeight) {
+      cropHeight = vHeight;
+      cropWidth = Math.round(vHeight * (3 / 4));
+    }
+
+    canvas.width = cropWidth;
+    canvas.height = cropHeight;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
@@ -137,15 +148,15 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
       // Browser does not support ctx.filter
     }
 
-    const sx = (video.videoWidth - size) / 2;
-    const sy = (video.videoHeight - size) / 2;
+    const sx = Math.max(0, (vWidth - cropWidth) / 2);
+    const sy = Math.max(0, (vHeight - cropHeight) / 2);
 
     if (facingMode === 'user') {
-      ctx.translate(size, 0);
+      ctx.translate(cropWidth, 0);
       ctx.scale(-1, 1);
     }
 
-    ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+    ctx.drawImage(video, sx, sy, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
     return canvas.toDataURL('image/jpeg', 0.94);
   }, [facingMode, activeFilter]);
@@ -201,8 +212,8 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col items-center select-none font-sans">
-      {/* Viewfinder Frame Container */}
-      <div className="relative w-full aspect-square bg-stone-950 rounded-2xl overflow-hidden shadow-2xl border border-stone-800">
+      {/* Viewfinder Frame Container (3:4 Vertical Photobooth Proportion) */}
+      <div className="relative w-full aspect-[3/4] max-h-[72vh] bg-stone-900 rounded-2xl overflow-hidden shadow-2xl border border-stone-800">
         <canvas ref={canvasRef} className="hidden" />
 
         {/* Video feed or captured photo preview */}
@@ -233,7 +244,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
 
         {/* Loading / Error */}
         {!isCameraReady && !cameraError && !capturedPhoto && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-950 text-white p-6 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-900 text-white p-6 text-center">
             <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mb-3" />
             <p className="font-semibold text-base">جاري تشغيل كاميرا الاستوديو...</p>
             <p className="text-stone-400 text-xs mt-1">تأكد من إعطاء إذن الكاميرا</p>
@@ -241,7 +252,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
         )}
 
         {cameraError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-950 text-white p-6 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-900 text-white p-6 text-center">
             <Camera className="w-10 h-10 text-rose-500 mb-3" />
             <p className="font-bold text-rose-400 text-sm leading-relaxed">{cameraError}</p>
             <button

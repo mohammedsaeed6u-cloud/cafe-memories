@@ -3,9 +3,13 @@ import { CustomerClient } from '@/components/customer/CustomerClient';
 export function generateStaticParams() {
   return [
     { cafeSlug: 'espresso-lab' },
+    { cafeSlug: 'artisan-roastery' },
     { cafeSlug: 'roastery-house' },
     { cafeSlug: 'cova-milano' },
     { cafeSlug: 'memories-flagship' },
+    { cafeSlug: 'demo' },
+    { cafeSlug: 'memories' },
+    { cafeSlug: 'specialty-coffee' },
   ];
 }
 

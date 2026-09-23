@@ -43,9 +43,9 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
       {/* 1. OUR BRAND: MEMORIES */}
       <div className="flex items-center gap-2">
         <div
-          className={`${iconSizes.box} bg-stone-950 text-amber-400 flex items-center justify-center shadow-xs border border-stone-800 shrink-0`}
+          className={`${iconSizes.box} bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shadow-xs border border-amber-600/30 shrink-0`}
         >
-          <MemoriesArchIcon size={iconSizes.icon} color="#FBBF24" />
+          <MemoriesArchIcon size={iconSizes.icon} color="#FFFFFF" />
         </div>
         <div className="text-left">
           <span

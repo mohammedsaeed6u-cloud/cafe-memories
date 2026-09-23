@@ -22,7 +22,7 @@ export const AddToWalletButtons: React.FC<AddToWalletButtonsProps> = ({
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-stone-950 hover:bg-stone-900 text-white text-xs font-bold transition shadow-xs cursor-pointer border border-stone-800"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition shadow-xs cursor-pointer border border-stone-800"
           title="حفظ في Apple Wallet"
         >
           {/* Apple Logo */}
