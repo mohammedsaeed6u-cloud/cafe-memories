@@ -325,6 +325,38 @@ export function WallClient({ screenId }: WallClientProps) {
     return () => clearInterval(timer);
   }, [isPlaying, memories.length, slideIntervalMs]);
 
+  // 6. Smart TV Remote Control & Keyboard Navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setIsPlaying((prev) => !prev);
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullscreen();
+      } else if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        setIsBlackout((prev) => !prev);
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        fetchApprovedMemories();
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setCurrentIndex((prev) => (prev + 1) % (memories.length || 1));
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setCurrentIndex((prev) => (prev - 1 + (memories.length || 1)) % (memories.length || 1));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [memories.length, fetchApprovedMemories]);
+
   // Refresh pairing code
   const handleRegenerateCode = () => {
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();

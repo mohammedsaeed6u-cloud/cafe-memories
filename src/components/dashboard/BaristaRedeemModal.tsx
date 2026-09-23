@@ -40,7 +40,7 @@ export function BaristaRedeemModal({
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
   const cafeSlug = settings.cafeSlug || 'espresso-lab';
-  const requiredVisits = settings.defaultShotCount || 5;
+  const requiredVisits = (settings as any).loyaltyMaxVisits || 5;
   const giftTitle = settings.freeGiftOffer?.title || 'كوب سبيشالتي مجاني من اختيارك';
 
   const getRedemptionsKey = (phone: string) => `memories_redemptions_${cafeSlug}_${phone}`;
