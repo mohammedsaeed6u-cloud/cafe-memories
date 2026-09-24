@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronDown, HelpCircle } from 'lucide-react';
+import React from 'react';
+import { HelpCircle } from 'lucide-react';
+import { AppleAccordion, AppleAccordionItem } from '@/components/ui/ark/AppleAccordion';
 
 interface FaqItem {
   question: string;
@@ -36,48 +37,22 @@ const FAQ_DATA: FaqItem[] = [
 ];
 
 export function FaqAccordion() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
-
-  const toggle = (idx: number) => {
-    setOpenIndex(openIndex === idx ? null : idx);
-  };
-
   return (
-    <div className="space-y-4 max-w-3xl mx-auto font-cairo text-right">
-      {FAQ_DATA.map((item, idx) => {
-        const isOpen = openIndex === idx;
-        return (
-          <div
+    <div className="max-w-3xl mx-auto font-cairo text-right">
+      <AppleAccordion defaultValue={['faq-0']} collapsible multiple>
+        {FAQ_DATA.map((item, idx) => (
+          <AppleAccordionItem
             key={idx}
-            className="rounded-3xl border border-[#E8DCC6] dark:border-[#2A4F44] bg-white dark:bg-[#142721] overflow-hidden transition-all duration-200 shadow-2xs hover:shadow-xs"
+            value={`faq-${idx}`}
+            title={item.question}
+            icon={<HelpCircle className="w-4 h-4 text-[#0071E3]" />}
           >
-            <button
-              onClick={() => toggle(idx)}
-              aria-expanded={isOpen}
-              className="w-full p-5 sm:p-6 flex items-center justify-between gap-4 text-right cursor-pointer group"
-            >
-              <span className="font-bold text-sm sm:text-base text-[#1E3A32] dark:text-[#FAF6EE] group-hover:text-[#B85C43] transition-colors">
-                {item.question}
-              </span>
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border transition-all duration-200 ${
-                  isOpen
-                    ? 'bg-[#1E3A32] text-[#FAF6EE] border-[#1E3A32] rotate-180'
-                    : 'bg-[#FAF6EE] dark:bg-[#1E3A32] text-[#3B2F2A] dark:text-[#FAF6EE] border-[#E8DCC6] dark:border-[#2A4F44]'
-                }`}
-              >
-                <ChevronDown className="w-4 h-4" />
-              </div>
-            </button>
-
-            {isOpen && (
-              <div className="px-5 sm:px-6 pb-6 pt-1 text-xs sm:text-sm text-[#3B2F2A]/80 dark:text-[#FAF6EE]/80 leading-relaxed border-t border-[#E8DCC6]/60 dark:border-[#2A4F44]/60 animate-in fade-in duration-200">
-                {item.answer}
-              </div>
-            )}
-          </div>
-        );
-      })}
+            <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
+              {item.answer}
+            </p>
+          </AppleAccordionItem>
+        ))}
+      </AppleAccordion>
     </div>
   );
 }

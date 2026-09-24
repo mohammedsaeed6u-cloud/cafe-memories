@@ -179,7 +179,7 @@ const StaffPinModalBody: React.FC<{
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in"
       role="dialog"
       aria-modal="true"
       aria-label="Staff quick PIN switcher"
@@ -187,7 +187,7 @@ const StaffPinModalBody: React.FC<{
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-stone-900 shadow-2xl border border-stone-200">
+      <div className="relative apple-glass bg-white/90 dark:bg-[#1C1C1E]/95 rounded-[28px] p-6 sm:p-8 max-w-sm w-full text-stone-900 dark:text-white shadow-2xl border border-white/60 dark:border-white/10 apple-font">
         <button
           type="button"
           onClick={onClose}

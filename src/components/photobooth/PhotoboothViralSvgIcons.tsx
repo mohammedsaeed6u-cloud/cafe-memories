@@ -239,6 +239,8 @@ export function IosBatterySvg({ size = 12, color = 'currentColor', level = 0.88,
   );
 }
 
+
+
 /**
  * Apple Photos Tab Bar: Library Icon
  */

@@ -47,6 +47,7 @@ import {
   SpotifyRepeatSvg,
   IosCellularBarsSvg,
   IosBatterySvg,
+  IosWifiSvg,
   IosPhotosLibrarySvg,
   IosPhotosForYouSvg,
   IosPhotosAlbumsSvg,
@@ -413,15 +414,15 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         style={{
           backgroundColor: isLuxuryGlass ? undefined : effectiveBg,
           background: isLuxuryGlass
-            ? 'radial-gradient(ellipse 95% 50% at 50% -10%, rgba(221, 2, 0, 0.55) 0%, transparent 70%), radial-gradient(ellipse 80% 50% at 95% 105%, rgba(217, 217, 217, 0.3) 0%, transparent 65%), linear-gradient(180deg, #120909 0%, #09080A 50%, #050507 100%)'
+            ? 'radial-gradient(circle at 18% 10%, rgba(221, 2, 0, 0.52) 0%, rgba(85, 16, 13, 0.28) 28%, transparent 60%), radial-gradient(circle at 85% 85%, rgba(217, 217, 217, 0.42) 0%, rgba(180, 180, 180, 0.16) 32%, transparent 65%), linear-gradient(165deg, #1A0706 0%, #0A0404 45%, #000000 100%)'
             : undefined,
           boxShadow: isLuxuryGlass
-            ? '0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 35px -5px rgba(221, 2, 0, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35)'
+            ? '0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 35px -5px rgba(221, 2, 0, 0.3), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35)'
             : undefined,
           backdropFilter: isLuxuryGlass ? 'blur(24px)' : undefined,
           borderColor: isLuxuryGlass ? 'rgba(255, 255, 255, 0.18)' : (isArabicaGold ? '#D4AF37' : effectiveBorder),
           color: effectiveText,
-          borderRadius: isLuxuryGlass ? '26px' : borderRadiusValue,
+          borderRadius: isLuxuryGlass ? '28px' : borderRadiusValue,
         }}
         className={`relative transition-all duration-300 select-none shadow-[0_6px_24px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.06)] border overflow-hidden print:shadow-none print:border-none ${cardContainerClass}`}
       >
@@ -438,26 +439,41 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         {/* HEADER RENDERING PER THEME                                    */}
         {/* ------------------------------------------------------------- */}
 
-        {/* LUXURY GLASS HEADER (Inspired by Luxury Color Palettes: Alabaster Grey, Racing Red, Black Cherry, Coffee Bean) */}
+        {/* LUXURY GLASS & APPLE AMBIENT HEADER (Exact match to uploaded Image 1) */}
         {isLuxuryGlass && (
-          <div className="relative z-10 mb-3.5 px-2 text-left">
-            <div className="flex items-center justify-between mb-2">
+          <div className="relative z-10 mb-3.5 px-1 text-left apple-font">
+            {/* Apple iOS Status Bar (2:08, Signal, WiFi, Battery 63% matching Image 1) */}
+            <div className="flex items-center justify-between px-1.5 pb-2.5 text-white/90 text-[10px] font-semibold tracking-tight border-b border-white/[0.08]">
+              <span className="font-mono tracking-tighter">2:08</span>
+              <div className="flex items-center gap-1.5">
+                <IosCellularBarsSvg size={10} color="#FFFFFF" />
+                <IosWifiSvg size={10} color="#FFFFFF" />
+                <div className="flex items-center gap-0.5 font-mono text-[8.5px]">
+                  <span>63%</span>
+                  <IosBatterySvg size={10} color="#FFFFFF" level={0.63} />
+                </div>
+              </div>
+            </div>
+
+            {/* Top Star Badge: "✦ studio" (Matching Image 1) */}
+            <div className="flex items-center justify-between mt-2.5 mb-1 px-1">
               <div className="flex items-center gap-1.5 text-white/90">
-                <span className="text-sm text-white drop-shadow-xs font-serif">✦</span>
-                <span className="text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase font-bold">
-                  {branding.name ? branding.name.toLowerCase() : 'memories.studio'}
+                <span className="text-xs font-serif text-white drop-shadow-xs">✦</span>
+                <span className="text-[10.5px] font-mono tracking-widest text-[#D9D9D9] uppercase font-bold">
+                  studio
                 </span>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-[#DD0200]/20 border border-[#DD0200]/40 text-[#DD0200] text-[8px] font-mono font-black tracking-widest uppercase">
-                COLLECTION
+              <span className="px-2 py-0.5 rounded-full bg-[#DD0200]/20 border border-[#DD0200]/40 text-[#DD0200] text-[7.5px] font-mono font-black tracking-widest uppercase">
+                PALETTES
               </span>
             </div>
 
-            <div className="text-center py-1">
-              <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-sm font-sans">
+            {/* Center Typography: "Luxury Color Palettes" (Exact match to Image 1) */}
+            <div className="text-center py-2">
+              <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white drop-shadow-md">
                 Luxury Color
               </h3>
-              <p className="text-[11px] font-medium tracking-wide text-[#D9D9D9]/80 mt-0.5">
+              <p className="text-[11px] font-medium tracking-[0.2em] text-[#D9D9D9]/80 uppercase mt-0.5">
                 Palettes
               </p>
             </div>
@@ -785,34 +801,50 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           </div>
         )}
 
-        {/* LUXURY GLASS FOOTER */}
+        {/* LUXURY GLASS & BENTO PALETTE FOOTER (Matching uploaded Image 2) */}
         {isLuxuryGlass && (
-          <div className="relative z-10 mt-3.5 px-1.5 space-y-2">
-            {/* Swatches pill grid inspired directly by user palette */}
-            <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-xl bg-white/[0.04] border border-white/10 backdrop-blur-md">
-              <div className="h-6 rounded-lg bg-[#D9D9D9] flex items-center justify-center text-[7px] font-mono font-bold text-stone-900 shadow-2xs" title="Alabaster Grey #D9D9D9">
-                ALA
+          <div className="relative z-10 mt-3.5 px-1 space-y-2 apple-font">
+            {/* Bento Swatches Grid matching Image 2 */}
+            <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-white/[0.05] border border-white/10 backdrop-blur-md">
+              <div
+                className="h-8 rounded-lg bg-[#D9D9D9] p-1 flex flex-col justify-between text-left shadow-2xs border border-white/40"
+                title="Alabaster Grey #D9D9D9"
+              >
+                <span className="text-[6.5px] font-bold text-[#1A0706] leading-none truncate">Alabaster</span>
+                <span className="text-[6px] font-mono text-[#1A0706]/70 leading-none">#D9D9D9</span>
               </div>
-              <div className="h-6 rounded-lg bg-[#DD0200] flex items-center justify-center text-[7px] font-mono font-black text-white shadow-2xs" title="Racing Red #DD0200">
-                RED
+              <div
+                className="h-8 rounded-lg bg-[#DD0200] p-1 flex flex-col justify-between text-left shadow-2xs border border-red-400/40"
+                title="Racing Red #DD0200"
+              >
+                <span className="text-[6.5px] font-black text-white leading-none truncate">Racing Red</span>
+                <span className="text-[6px] font-mono text-white/80 leading-none">#DD0200</span>
               </div>
-              <div className="h-6 rounded-lg bg-[#55100D] flex items-center justify-center text-[7px] font-mono font-black text-white/90 shadow-2xs" title="Black Cherry #55100D">
-                CHR
+              <div
+                className="h-8 rounded-lg bg-[#55100D] p-1 flex flex-col justify-between text-left shadow-2xs border border-rose-900/60"
+                title="Black Cherry #55100D"
+              >
+                <span className="text-[6.5px] font-black text-white leading-none truncate">Cherry</span>
+                <span className="text-[6px] font-mono text-white/80 leading-none">#55100D</span>
               </div>
-              <div className="h-6 rounded-lg bg-[#1A0706] flex items-center justify-center text-[7px] font-mono font-bold text-white/60 border border-white/10 shadow-2xs" title="Coffee Bean #1A0706">
-                COF
+              <div
+                className="h-8 rounded-lg bg-[#1A0706] p-1 flex flex-col justify-between text-left shadow-2xs border border-white/10"
+                title="Coffee Bean #1A0706"
+              >
+                <span className="text-[6.5px] font-bold text-[#D9D9D9] leading-none truncate">Coffee</span>
+                <span className="text-[6px] font-mono text-[#D9D9D9]/70 leading-none">#1A0706</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-[8px] font-mono text-[#D9D9D9]/70 pt-0.5">
+            <div className="flex items-center justify-between text-[8px] font-mono text-[#D9D9D9]/75 pt-0.5 px-0.5">
               <span className="uppercase tracking-widest">{dateFormatted}</span>
-              <span className="tracking-widest uppercase text-white/90 font-bold">HEX // #DD0200</span>
+              <span className="tracking-widest uppercase text-white/90 font-bold">LUXURY // HIG</span>
             </div>
           </div>
         )}
 
         {/* 6. STANDARD MINIMALIST ARTISANAL FOOTER */}
-        {!isTicketExpress && !isSpotifyPlayer && !isIosGallery && !isIosCamera && !isIosIMessage && (
+        {!isTicketExpress && !isSpotifyPlayer && !isIosGallery && !isIosCamera && !isIosIMessage && !isLuxuryGlass && (
           <div
             style={{ borderColor: isArabicaGold ? '#D4AF37' : effectiveBorder }}
             className="relative z-10 mt-2.5 pt-1.5 border-t-[0.5px] flex items-center justify-between text-[8px] opacity-85 font-mono px-1"
