@@ -18,6 +18,7 @@ import { CoBrandingHeader } from '@/features/co-branding/CoBrandingHeader';
 import { CustomerLoyaltyCard } from '@/features/loyalty/CustomerLoyaltyCard';
 import { StaffQuickStampModal } from '@/features/loyalty/StaffQuickStampModal';
 import { LoyaltyPurseService, CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
+import { VoucherService } from '@/lib/services/voucher.service';
 import { PhotoboothResponsiveCard } from '@/features/photobooth/PhotoboothResponsiveCard';
 import { PhotoCaptureOrUpload } from '@/features/photobooth/PhotoCaptureOrUpload';
 import { InstagramMentionPrompt } from '@/features/social/InstagramMentionPrompt';
@@ -246,7 +247,19 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
   // Direct Staff Stamp Handler
   const handleStaffStampSuccess = () => {
     const res = LoyaltyPurseService.addDirectStamp(customerPhone, cafeSlug, loyaltyMaxVisits);
-    setLoyaltyData(LoyaltyPurseService.getData(customerPhone, cafeSlug, loyaltyMaxVisits));
+    const updated = LoyaltyPurseService.getData(customerPhone, cafeSlug, loyaltyMaxVisits);
+    setLoyaltyData(updated);
+    if (res.isCardComplete) {
+      const issued = VoucherService.issueVoucher({
+        cafeSlug,
+        customerPhone,
+        customerName: customerName || 'ضيف مميز',
+        giftTitle: settings.freeGiftOffer.title,
+        giftSubtitle: settings.freeGiftOffer.subtitle,
+      });
+      setGiftCode(issued.code);
+      setIsCompletionRewardOpen(true);
+    }
   };
 
   // Customer Registration & Check-in Handler
@@ -256,7 +269,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
     const name = regName.trim();
     if (!clean || clean.length < 8 || !name) return;
 
-    CustomerRegistryService.registerCustomer(clean, name, 'coffee_lover', cafeSlug);
+    CustomerRegistryService.registerCustomer(clean, name, 'vip_guest', cafeSlug);
     setCustomerPhone(clean);
     setCustomerName(name);
     const updatedLoyalty = LoyaltyPurseService.getData(clean, cafeSlug, loyaltyMaxVisits);
@@ -294,8 +307,14 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
 
     // Check if card just completed!
     if (updated.length >= totalCardSlots) {
-      const code = createGiftCode();
-      setGiftCode(code);
+      const issued = VoucherService.issueVoucher({
+        cafeSlug,
+        customerPhone: clean,
+        customerName: customerName || 'ضيف مميز',
+        giftTitle: settings.freeGiftOffer.title,
+        giftSubtitle: settings.freeGiftOffer.subtitle,
+      });
+      setGiftCode(issued.code);
 
       // Trigger 1-time TV Wall Consent if not answered yet
       if (!hasAnsweredWallConsent) {

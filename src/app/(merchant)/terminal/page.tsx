@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { CustomerRegistryService, RegisteredCustomer } from '@/lib/services/customer-registry.service';
 import { LoyaltyPurseService, CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
+import { VoucherService, IssuedVoucher } from '@/lib/services/voucher.service';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { getIndustryProfile } from '@/lib/constants/photobooth-presets';
 import { CooldownService } from '@/lib/services/cooldown.service';
@@ -68,6 +69,8 @@ export default function StaffTerminalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<RegisteredCustomer | null>(null);
   const [loyaltyData, setLoyaltyData] = useState<CustomerLoyaltyData | null>(null);
+  const [activeVoucher, setActiveVoucher] = useState<IssuedVoucher | null>(null);
+  const [customerVouchers, setCustomerVouchers] = useState<IssuedVoucher[]>([]);
   const [redeemedCount, setRedeemedCount] = useState(0);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
@@ -192,10 +195,41 @@ export default function StaffTerminalPage() {
     setTimeout(() => setSuccessNotice(null), 3000);
   };
 
-  const handleLookup = (phoneQuery: string) => {
+  const handleLookup = (query: string) => {
     setErrorNotice(null);
     setSuccessNotice(null);
-    const clean = phoneQuery.trim().replace(/[^0-9]/g, '');
+    setActiveVoucher(null);
+    setCustomerVouchers([]);
+
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setSelectedCustomer(null);
+      setLoyaltyData(null);
+      return;
+    }
+
+    // 1. Check if user typed or scanned a Voucher Code (e.g. GIFT-1234 or 4 digits)
+    const voucherLookup = VoucherService.lookupVoucher(trimmed, cafeSlug);
+    if (voucherLookup.found && voucherLookup.voucher) {
+      const v = voucherLookup.voucher;
+      setActiveVoucher(v);
+      const cust: RegisteredCustomer = {
+        phone: v.customerPhone,
+        name: v.customerName,
+        role: 'vip_guest',
+        registeredAt: v.issuedAt,
+        lastVisit: v.issuedAt,
+        totalVisits: requiredVisits,
+      };
+      setSelectedCustomer(cust);
+      const lData = LoyaltyPurseService.getData(v.customerPhone, cafeSlug, requiredVisits);
+      setLoyaltyData(lData);
+      setCustomerVouchers(VoucherService.getCustomerVouchers(v.customerPhone, cafeSlug));
+      return;
+    }
+
+    // 2. Lookup by phone number
+    const clean = trimmed.replace(/[^0-9]/g, '');
     if (!clean || clean.length < 6) {
       setSelectedCustomer(null);
       setLoyaltyData(null);
@@ -209,6 +243,10 @@ export default function StaffTerminalPage() {
       setSelectedCustomer(found);
       const lData = LoyaltyPurseService.getData(found.phone, cafeSlug, requiredVisits);
       setLoyaltyData(lData);
+      const vList = VoucherService.getCustomerVouchers(found.phone, cafeSlug);
+      setCustomerVouchers(vList);
+      const activeOne = vList.find((v) => v.status === 'ACTIVE');
+      if (activeOne) setActiveVoucher(activeOne);
       try {
         const stored = localStorage.getItem(`memories_redemptions_${cafeSlug}_${found.phone}`);
         setRedeemedCount(stored ? Number(stored) : 0);
@@ -221,7 +259,7 @@ export default function StaffTerminalPage() {
         const cust: RegisteredCustomer = {
           phone: clean,
           name: direct.name,
-          role: direct.role || 'loyal_customer',
+          role: direct.role || 'vip_guest',
           registeredAt: new Date().toISOString(),
           lastVisit: new Date().toISOString(),
           totalVisits: direct.totalVisits || 1,
@@ -229,6 +267,10 @@ export default function StaffTerminalPage() {
         setSelectedCustomer(cust);
         const lData = LoyaltyPurseService.getData(clean, cafeSlug, requiredVisits);
         setLoyaltyData(lData);
+        const vList = VoucherService.getCustomerVouchers(clean, cafeSlug);
+        setCustomerVouchers(vList);
+        const activeOne = vList.find((v) => v.status === 'ACTIVE');
+        if (activeOne) setActiveVoucher(activeOne);
         try {
           const stored = localStorage.getItem(`memories_redemptions_${cafeSlug}_${clean}`);
           setRedeemedCount(stored ? Number(stored) : 0);
@@ -238,7 +280,7 @@ export default function StaffTerminalPage() {
       } else {
         setSelectedCustomer(null);
         setLoyaltyData(null);
-        setErrorNotice('لم يتم العثور على عميل مسجل بهذا الرقم. تأكد من إدخال الرقم بشكل صحيح.');
+        setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
       }
     }
   };
@@ -273,8 +315,29 @@ export default function StaffTerminalPage() {
     setTimeout(() => setSuccessNotice(null), 4000);
   };
 
+  // Instant Voucher Redemption
+  const handleRedeemVoucherDirect = (voucherCode: string) => {
+    const res = VoucherService.redeemVoucher(voucherCode, cafeSlug, staffMember?.name || `${industry.staffLabel} المناوب`);
+    if (res.success && res.voucher) {
+      setActiveVoucher(res.voucher);
+      if (selectedCustomer) {
+        setCustomerVouchers(VoucherService.getCustomerVouchers(selectedCustomer.phone, cafeSlug));
+      }
+      recordShiftRedemption();
+      SoundEffectsService.playRewardCelebration();
+      setSuccessNotice(`تم استبدال الهدية بنجاح! تم اعتماد الكود (${res.voucher.code}) وتسليم "${res.voucher.giftTitle}" للعميل (${res.voucher.customerName}).`);
+      setTimeout(() => setSuccessNotice(null), 5000);
+    } else {
+      setErrorNotice(res.error || 'فشل استبدال الهدية.');
+    }
+  };
+
   // Redeem Action (Claim Free Gift)
   const handleRedeemGift = () => {
+    if (activeVoucher && activeVoucher.status === 'ACTIVE') {
+      handleRedeemVoucherDirect(activeVoucher.code);
+      return;
+    }
     if (!selectedCustomer || !loyaltyData) return;
     try {
       const nextRedeemed = redeemedCount + 1;
@@ -531,7 +594,7 @@ export default function StaffTerminalPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-stone-900 flex items-center gap-1.5">
                     <Search className="w-4 h-4 text-amber-600" />
-                    <span>بحث عن عميل برقم الجوال:</span>
+                    <span>بحث برقم الجوال أو رمز الهدية (GIFT-XXXX):</span>
                   </span>
                   <span className="text-[10px] font-mono text-stone-400">PHONE SEARCH</span>
                 </div>
@@ -540,7 +603,7 @@ export default function StaffTerminalPage() {
                   <input
                     type="tel"
                     dir="ltr"
-                    placeholder="01xxxxxxxxx"
+                    placeholder="رقم الهاتف أو كود الهدية GIFT-XXXX"
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
@@ -594,6 +657,50 @@ export default function StaffTerminalPage() {
                       {loyaltyData.stampedCount} من {requiredVisits} أختام
                     </span>
                   </div>
+
+                  {/* Active Voucher Banner (If customer has an issued voucher or looked up by code) */}
+                  {activeVoucher && (
+                    <div className={`p-4 rounded-2xl border transition-all ${
+                      activeVoucher.status === 'ACTIVE'
+                        ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300 shadow-sm'
+                        : 'bg-stone-50 border-stone-200'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold ${
+                            activeVoucher.status === 'ACTIVE' ? 'bg-emerald-600 text-white' : 'bg-stone-300 text-stone-700'
+                          }`}>
+                            <Gift className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-black text-sm text-stone-900 tracking-wider">
+                                {activeVoucher.code}
+                              </span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                activeVoucher.status === 'ACTIVE'
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                  : 'bg-stone-200 text-stone-600'
+                              }`}>
+                                {activeVoucher.status === 'ACTIVE' ? 'جاهز للاستبدال 🎁' : 'تم استبداله مسبقاً'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-stone-700 font-bold mt-0.5">{activeVoucher.giftTitle}</p>
+                          </div>
+                        </div>
+
+                        {activeVoucher.status === 'ACTIVE' && (
+                          <button
+                            type="button"
+                            onClick={() => handleRedeemVoucherDirect(activeVoucher.code)}
+                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm transition active:scale-95 cursor-pointer"
+                          >
+                            صرف الهدية بالكود
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Progress Visual */}
                   <div className="space-y-2">

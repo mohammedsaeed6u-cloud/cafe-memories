@@ -46,7 +46,7 @@ const DEFAULT_FEATURED_MEMORIES: WallMemoryItem[] = [
     id: 'wall-mem-1',
     customerName: 'سارة عبد الله',
     photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
-    caption: 'أحلى جلسة وقهوة فلات وايت مع سارة ☕✨',
+    caption: 'أحلى وقت وتوثيق لحظات لا تُنسى مع سارة ✨',
     visitNumber: 4,
     timeFormatted: 'منذ ١٠ دقائق',
     createdAt: new Date().toISOString(),
@@ -64,7 +64,7 @@ const DEFAULT_FEATURED_MEMORIES: WallMemoryItem[] = [
     id: 'wall-mem-3',
     customerName: 'نورة المنصور',
     photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=80',
-    caption: 'الكورتادو رايق جداً كالعادة 🤍',
+    caption: 'أجواء استثنائية وتجربة رايقة كالعادة 🤍',
     visitNumber: 3,
     timeFormatted: 'منذ ٤٥ دقيقة',
     createdAt: new Date().toISOString(),
@@ -520,7 +520,7 @@ export function WallClient({ screenId }: WallClientProps) {
 
         <div className="text-center space-y-5 max-w-md z-10">
           <div className="w-24 h-24 rounded-3xl bg-amber-50 border-2 border-amber-200 text-amber-700 flex items-center justify-center mx-auto shadow-md animate-pulse">
-            <Coffee className="w-12 h-12" />
+            <Sparkles className="w-12 h-12 text-amber-600" />
           </div>
           <div className="space-y-2">
             <h2 className="text-3xl font-black text-stone-950 tracking-tight">{brandName}</h2>

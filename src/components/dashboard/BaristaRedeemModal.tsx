@@ -13,6 +13,7 @@ import {
   Check,
 } from 'lucide-react';
 import { CustomerRegistryService, RegisteredCustomer } from '@/lib/services/customer-registry.service';
+import { VoucherService, IssuedVoucher } from '@/lib/services/voucher.service';
 import { BusinessSettings } from '@/types/photobooth';
 import { StaffMember } from '@/types/staff';
 
@@ -41,7 +42,7 @@ export function BaristaRedeemModal({
 
   const cafeSlug = settings.cafeSlug || 'memories';
   const requiredVisits = settings.loyaltyMaxVisits || 5;
-  const giftTitle = settings.freeGiftOffer?.title || 'كوب سبيشالتي مجاني من اختيارك';
+  const giftTitle = settings.freeGiftOffer?.title || 'هدية خاصة مجانية من اختيارك';
 
   const getRedemptionsKey = (phone: string) => `memories_redemptions_${cafeSlug}_${phone}`;
 
@@ -73,7 +74,7 @@ export function BaristaRedeemModal({
         const cust: RegisteredCustomer = {
           phone: clean,
           name: direct.name,
-          role: direct.role || 'coffee_lover',
+          role: direct.role || 'vip_guest',
           registeredAt: new Date().toISOString(),
           lastVisit: new Date().toISOString(),
           totalVisits: direct.totalVisits || 1,
@@ -195,7 +196,7 @@ export function BaristaRedeemModal({
               </div>
               <div className="p-3.5 rounded-xl bg-white border border-amber-200 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <Coffee className="w-4 h-4 text-amber-600" />
+                  <Gift className="w-4 h-4 text-amber-600" />
                   <span className="font-bold text-stone-900">الهدية المستحقة:</span>
                 </div>
                 <strong className="text-amber-800 font-black">{giftTitle}</strong>
