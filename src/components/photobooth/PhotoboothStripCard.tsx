@@ -414,14 +414,14 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         style={{
           backgroundColor: isLuxuryGlass ? undefined : effectiveBg,
           background: isLuxuryGlass
-            ? 'radial-gradient(circle at 18% 10%, rgba(221, 2, 0, 0.52) 0%, rgba(85, 16, 13, 0.28) 28%, transparent 60%), radial-gradient(circle at 85% 85%, rgba(217, 217, 217, 0.42) 0%, rgba(180, 180, 180, 0.16) 32%, transparent 65%), linear-gradient(165deg, #1A0706 0%, #0A0404 45%, #000000 100%)'
+            ? 'radial-gradient(circle at 18% 10%, rgba(221, 2, 0, 0.22) 0%, rgba(85, 16, 13, 0.10) 28%, transparent 60%), radial-gradient(circle at 85% 85%, rgba(255, 255, 255, 0.85) 0%, transparent 65%), linear-gradient(165deg, #EAEAEA 0%, #D9D9D9 45%, #C8C8C8 100%)'
             : undefined,
           boxShadow: isLuxuryGlass
-            ? '0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 35px -5px rgba(221, 2, 0, 0.3), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35)'
+            ? '0 25px 60px -15px rgba(0, 0, 0, 0.25), 0 0 30px -5px rgba(221, 2, 0, 0.15), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9)'
             : undefined,
           backdropFilter: isLuxuryGlass ? 'blur(24px)' : undefined,
-          borderColor: isLuxuryGlass ? 'rgba(255, 255, 255, 0.18)' : (isArabicaGold ? '#D4AF37' : effectiveBorder),
-          color: effectiveText,
+          borderColor: isLuxuryGlass ? 'rgba(85, 16, 13, 0.22)' : (isArabicaGold ? '#D4AF37' : effectiveBorder),
+          color: isLuxuryGlass ? '#1A0706' : effectiveText,
           borderRadius: isLuxuryGlass ? '28px' : borderRadiusValue,
         }}
         className={`relative transition-all duration-300 select-none shadow-[0_6px_24px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.06)] border overflow-hidden print:shadow-none print:border-none ${cardContainerClass}`}
@@ -439,41 +439,41 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         {/* HEADER RENDERING PER THEME                                    */}
         {/* ------------------------------------------------------------- */}
 
-        {/* LUXURY GLASS & APPLE AMBIENT HEADER (Exact match to uploaded Image 1) */}
+        {/* LUXURY GLASS & APPLE ALABASTER HEADER (Exact match to uploaded Image 1 & 2) */}
         {isLuxuryGlass && (
           <div className="relative z-10 mb-3.5 px-1 text-left apple-font">
-            {/* Apple iOS Status Bar (2:08, Signal, WiFi, Battery 63% matching Image 1) */}
-            <div className="flex items-center justify-between px-1.5 pb-2.5 text-white/90 text-[10px] font-semibold tracking-tight border-b border-white/[0.08]">
+            {/* Apple iOS Status Bar (2:08, Signal, WiFi, Battery 63% in Coffee Bean #1A0706) */}
+            <div className="flex items-center justify-between px-1.5 pb-2.5 text-[#1A0706] text-[10px] font-semibold tracking-tight border-b border-[#1A0706]/10">
               <span className="font-mono tracking-tighter">2:08</span>
               <div className="flex items-center gap-1.5">
-                <IosCellularBarsSvg size={10} color="#FFFFFF" />
-                <IosWifiSvg size={10} color="#FFFFFF" />
+                <IosCellularBarsSvg size={10} color="#1A0706" />
+                <IosWifiSvg size={10} color="#1A0706" />
                 <div className="flex items-center gap-0.5 font-mono text-[8.5px]">
                   <span>63%</span>
-                  <IosBatterySvg size={10} color="#FFFFFF" level={0.63} />
+                  <IosBatterySvg size={10} color="#1A0706" level={0.63} />
                 </div>
               </div>
             </div>
 
-            {/* Top Star Badge: "✦ studio" (Matching Image 1) */}
+            {/* Top Star Badge: "✦ studio" in Coffee Bean & Racing Red */}
             <div className="flex items-center justify-between mt-2.5 mb-1 px-1">
-              <div className="flex items-center gap-1.5 text-white/90">
-                <span className="text-xs font-serif text-white drop-shadow-xs">✦</span>
-                <span className="text-[10.5px] font-mono tracking-widest text-[#D9D9D9] uppercase font-bold">
+              <div className="flex items-center gap-1.5 text-[#1A0706]">
+                <span className="text-xs font-serif text-[#1A0706] drop-shadow-xs">✦</span>
+                <span className="text-[10.5px] font-mono tracking-widest text-[#1A0706] uppercase font-bold">
                   studio
                 </span>
               </div>
-              <span className="px-2 py-0.5 rounded-full bg-[#DD0200]/20 border border-[#DD0200]/40 text-[#DD0200] text-[7.5px] font-mono font-black tracking-widest uppercase">
+              <span className="px-2 py-0.5 rounded-full bg-[#DD0200] text-white text-[7.5px] font-mono font-black tracking-widest uppercase shadow-xs">
                 PALETTES
               </span>
             </div>
 
-            {/* Center Typography: "Luxury Color Palettes" (Exact match to Image 1) */}
+            {/* Center Typography: "Luxury Color Palettes" in Coffee Bean & Black Cherry */}
             <div className="text-center py-2">
-              <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white drop-shadow-md">
+              <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1A0706] drop-shadow-xs">
                 Luxury Color
               </h3>
-              <p className="text-[11px] font-medium tracking-[0.2em] text-[#D9D9D9]/80 uppercase mt-0.5">
+              <p className="text-[11px] font-bold tracking-[0.2em] text-[#55100D] uppercase mt-0.5">
                 Palettes
               </p>
             </div>
@@ -805,40 +805,40 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         {isLuxuryGlass && (
           <div className="relative z-10 mt-3.5 px-1 space-y-2 apple-font">
             {/* Bento Swatches Grid matching Image 2 */}
-            <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-white/[0.05] border border-white/10 backdrop-blur-md">
+            <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-black/[0.04] border border-black/10 backdrop-blur-md">
               <div
-                className="h-8 rounded-lg bg-[#D9D9D9] p-1 flex flex-col justify-between text-left shadow-2xs border border-white/40"
-                title="Alabaster Grey #D9D9D9"
+                className="h-8 rounded-lg bg-[#D9D9D9] p-1 flex flex-col justify-between text-left shadow-2xs border border-white/60"
+                title="Alabaster Grey #D9D9D9 (Background)"
               >
                 <span className="text-[6.5px] font-bold text-[#1A0706] leading-none truncate">Alabaster</span>
                 <span className="text-[6px] font-mono text-[#1A0706]/70 leading-none">#D9D9D9</span>
               </div>
               <div
                 className="h-8 rounded-lg bg-[#DD0200] p-1 flex flex-col justify-between text-left shadow-2xs border border-red-400/40"
-                title="Racing Red #DD0200"
+                title="Racing Red #DD0200 (Accent)"
               >
                 <span className="text-[6.5px] font-black text-white leading-none truncate">Racing Red</span>
                 <span className="text-[6px] font-mono text-white/80 leading-none">#DD0200</span>
               </div>
               <div
                 className="h-8 rounded-lg bg-[#55100D] p-1 flex flex-col justify-between text-left shadow-2xs border border-rose-900/60"
-                title="Black Cherry #55100D"
+                title="Black Cherry #55100D (Velvet)"
               >
                 <span className="text-[6.5px] font-black text-white leading-none truncate">Cherry</span>
                 <span className="text-[6px] font-mono text-white/80 leading-none">#55100D</span>
               </div>
               <div
                 className="h-8 rounded-lg bg-[#1A0706] p-1 flex flex-col justify-between text-left shadow-2xs border border-white/10"
-                title="Coffee Bean #1A0706"
+                title="Coffee Bean #1A0706 (Foundation)"
               >
                 <span className="text-[6.5px] font-bold text-[#D9D9D9] leading-none truncate">Coffee</span>
                 <span className="text-[6px] font-mono text-[#D9D9D9]/70 leading-none">#1A0706</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-[8px] font-mono text-[#D9D9D9]/75 pt-0.5 px-0.5">
-              <span className="uppercase tracking-widest">{dateFormatted}</span>
-              <span className="tracking-widest uppercase text-white/90 font-bold">LUXURY // HIG</span>
+            <div className="flex items-center justify-between text-[8px] font-mono text-[#1A0706]/75 pt-0.5 px-0.5">
+              <span className="uppercase tracking-widest font-semibold">{dateFormatted}</span>
+              <span className="tracking-widest uppercase text-[#DD0200] font-bold">ALABASTER // HIG</span>
             </div>
           </div>
         )}

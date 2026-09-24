@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Layers, Repeat, Zap, Tv, Printer, Award } from 'lucide-react';
+import { Layers, Repeat, Zap, Tv, Printer, Award, ArrowUpRight } from 'lucide-react';
 
 export function MarketingRetentionLoop() {
   const pillars = [
@@ -50,19 +50,16 @@ export function MarketingRetentionLoop() {
   ];
 
   return (
-    <section id="business-operation" className="py-20 px-6 max-w-6xl mx-auto border-t border-white/10/80">
+    <section id="business-operation" className="py-24 px-6 max-w-6xl mx-auto border-t border-white/10 apple-font">
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
-          OPERATIONAL EXCELLENCE • تشغيل واستثمار البيزنس
-        </span>
-        <h2
-          className="text-3xl sm:text-5xl font-black text-white mt-2.5 font-serif"
-          style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-        >
-          كيف يعمل النظام في نشاطك التجاري لتحقيق أعلى عائد؟
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase mb-3 backdrop-blur-xl">
+          <span>OPERATIONAL EXCELLENCE • تشغيل واستثمار البيزنس</span>
+        </div>
+        <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
+          هندسة تشغيلية تضاعف عودة الزوار.
         </h2>
-        <p className="text-sm sm:text-base text-stone-300 mt-3.5 leading-relaxed">
-          هندسة تشغيلية مصممة خصيصاً لتفادي تعقيدات العتاد والبرمجيات المزعجة، ولتمنح علامتك التجارية سلاحاً تسويقياً فريداً يميزك عن المنافسين.
+        <p className="text-sm sm:text-base text-[#D9D9D9]/80 mt-3.5 leading-relaxed">
+          حلول برمجية سلسة مصممة خصيصاً لتفادي تعقيدات العتاد والبرمجيات المزعجة، ولتمنح علامتك التجارية سلاحاً تسويقياً فريداً يميزك عن المنافسين.
         </p>
       </div>
 
@@ -72,33 +69,31 @@ export function MarketingRetentionLoop() {
           return (
             <div
               key={p.num}
-              className="p-7 rounded-3xl bg-white/[0.04] border border-white/10/90 shadow-xs flex flex-col justify-between hover:shadow-md transition-all duration-200"
+              className="p-7 rounded-[30px] bg-gradient-to-b from-white/[0.04] to-white/[0.02] border border-white/10 shadow-lg flex flex-col justify-between hover:border-white/20 transition-all duration-300 backdrop-blur-xl group"
             >
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shadow-xs">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 border border-white/20 group-hover:scale-110 transition-transform">
                     <Icon className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-xs font-mono font-bold text-stone-400">
+                  <span className="text-xs font-mono font-bold text-[#D9D9D9]/60">
                     PILLAR {p.num}
                   </span>
                 </div>
 
-                <h3
-                  className="font-black text-base text-white mb-2.5 font-serif leading-snug"
-                  style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-                >
+                <h3 className="font-bold text-lg text-white mb-2 leading-snug">
                   {p.title}
                 </h3>
-                <p className="text-xs text-stone-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#D9D9D9]/80 leading-relaxed">
                   {p.desc}
                 </p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-stone-100">
-                <span className="text-[11px] font-bold text-amber-800 block">
-                  {p.benefit}
+              <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[#DD0200] flex items-center gap-1">
+                  <span>{p.benefit}</span>
                 </span>
+                <ArrowUpRight className="w-3.5 h-3.5 text-[#DD0200] opacity-50 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
           );

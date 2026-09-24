@@ -7,15 +7,16 @@ describe('Luxury Glass Crimson & Alabaster Theme Suite', () => {
     const mode = PHOTOBOOTH_CARD_MODES.find((m) => m.id === 'luxury_glass');
     expect(mode).toBeDefined();
     expect(mode?.defaultAccent).toBe('#DD0200'); // Racing Red
-    expect(mode?.defaultText).toBe('#D9D9D9');   // Alabaster Grey
-    expect(mode?.defaultBg).toBe('#08080B');     // Coffee Bean / Deep Obsidian
+    expect(mode?.defaultText).toBe('#1A0706');   // Coffee Bean
+    expect(mode?.defaultBg).toBe('#D9D9D9');     // Alabaster Grey (Light background per user specification)
   });
 
   it('includes luxury-glass-cherry in PRESET_COLOR_PALETTES', () => {
     const palette = PRESET_COLOR_PALETTES.find((p) => p.id === 'luxury-glass-cherry');
     expect(palette).toBeDefined();
     expect(palette?.accentColor).toBe('#DD0200');
-    expect(palette?.textColor).toBe('#D9D9D9');
+    expect(palette?.textColor).toBe('#1A0706');
+    expect(palette?.bgColor).toBe('#D9D9D9');
   });
 
   it('includes luxury-glass-cherry in DEFAULT_PHOTOBOOTH_FRAMES', () => {

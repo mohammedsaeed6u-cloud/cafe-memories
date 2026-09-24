@@ -430,7 +430,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#FAF9F6] text-stone-900 flex flex-col items-center selection:bg-amber-500/20 pb-16">
+    <div className="w-full min-h-screen bg-transparent text-white flex flex-col items-center selection:bg-[#DD0200] selection:text-white pb-16 apple-font">
       {/* 1. CO-BRANDING HEADER: memories × Business */}
       <div className="w-full pt-3 px-3 sm:px-4">
         <CoBrandingHeader branding={settings.branding} />
@@ -439,37 +439,37 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
       <main className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-3 flex flex-col items-center space-y-4">
         {/* Registration Success Toast */}
         {regSuccessNotice && (
-          <div className="w-full p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-xs">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="w-full p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-lg backdrop-blur-md">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{regSuccessNotice}</span>
           </div>
         )}
 
         {/* TOP LEVEL SEGMENTED NAVIGATION: Clear separation between Photobooth Studio and Loyalty Pass */}
-        <div className="w-full grid grid-cols-2 p-1.5 bg-stone-200/80 rounded-2xl border border-stone-300/70 shadow-inner">
+        <div className="w-full grid grid-cols-2 p-1.5 bg-white/[0.06] rounded-full border border-white/10 shadow-2xl backdrop-blur-xl">
           <button
             type="button"
             onClick={() => setActiveTab('studio')}
-            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-full text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'studio'
-                ? 'bg-white text-stone-950 shadow-sm font-black'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'bg-white text-black shadow-lg font-black'
+                : 'text-stone-300 hover:text-white'
             }`}
           >
-            <Camera className="w-4 h-4 text-amber-600" />
+            <Camera className="w-4 h-4 text-[#DD0200]" />
             <span>استوديو الصور ({totalCardSlots} لقطات)</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('loyalty')}
-            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-full text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'loyalty'
-                ? 'bg-white text-stone-950 shadow-sm font-black'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'bg-white text-black shadow-lg font-black'
+                : 'text-stone-300 hover:text-white'
             }`}
           >
-            <Award className="w-4 h-4 text-amber-600" />
+            <Award className="w-4 h-4 text-[#DD0200]" />
             <span>كارت الولاء ({loyaltyData.stampedCount}/{loyaltyMaxVisits})</span>
           </button>
         </div>
@@ -480,16 +480,16 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             {/* Header Strip: Title and slots badge */}
             <div className="w-full flex items-center justify-between px-1 pt-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-black text-stone-950">
+                <h2 className="text-sm sm:text-base font-bold text-white">
                   شريط الذكريات
                 </h2>
-                <span className="text-[10px] font-mono text-amber-900 bg-amber-100/90 border border-amber-300/80 px-2.5 py-0.5 rounded-full font-bold">
+                <span className="text-[10px] font-mono text-[#D9D9D9] bg-white/10 border border-white/15 px-2.5 py-0.5 rounded-full font-bold">
                   {totalCardSlots} لقطات • {selectedFrame.widthCm === 10 ? 'بوستكارد 4×6' : 'شريط 2×6'}
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-stone-600 font-bold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="flex items-center gap-1.5 text-xs text-[#D9D9D9]/80 font-bold">
+                <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
                 <span>{accumulatedPhotos.length} من {totalCardSlots} لقطات موثقة</span>
               </div>
             </div>
@@ -534,8 +534,8 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             {/* Viral Theme Pills Selector */}
             <div className="w-full space-y-2 pt-1">
               <div className="flex items-center justify-between px-1">
-                <span className="text-[11px] font-bold text-stone-600">طابع وإطار الكارت:</span>
-                <span className="text-[10px] text-amber-700 font-mono font-bold">THEMES</span>
+                <span className="text-[11px] font-bold text-[#D9D9D9]/80">طابع وإطار الكارت:</span>
+                <span className="text-[10px] text-[#DD0200] font-mono font-bold">THEMES</span>
               </div>
               <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none touch-pan-x">
                 {[
@@ -554,10 +554,10 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                       key={mode.id}
                       type="button"
                       onClick={() => setCardMode(mode.id as PhotoboothCardMode)}
-                      className={`px-3 py-2 rounded-2xl border text-xs font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
+                      className={`px-3 py-2 rounded-full border text-xs font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
                         isActive
-                          ? 'bg-amber-600 text-white border-amber-600 shadow-xs font-black'
-                          : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-200'
+                          ? 'bg-[#DD0200] text-white border-[#DD0200] shadow-md shadow-red-950/50 font-black'
+                          : 'bg-white/10 hover:bg-white/20 text-[#D9D9D9] border-white/15 backdrop-blur-md'
                       }`}
                     >
                       <span className="text-sm">{mode.icon}</span>

@@ -26,16 +26,16 @@ describe('Apple Luxury Theme & Palette Presets', () => {
   it('includes luxury_glass in PHOTOBOOTH_CARD_MODES with exact palette colors', () => {
     const luxuryMode = PHOTOBOOTH_CARD_MODES.find((m) => m.id === 'luxury_glass');
     expect(luxuryMode).toBeDefined();
-    expect(luxuryMode?.defaultBg).toBe('#08080B');
+    expect(luxuryMode?.defaultBg).toBe('#D9D9D9');
     expect(luxuryMode?.defaultAccent).toBe('#DD0200');
-    expect(luxuryMode?.defaultText).toBe('#D9D9D9');
+    expect(luxuryMode?.defaultText).toBe('#1A0706');
   });
 
   it('contains luxury-glass-cherry palette in PRESET_COLOR_PALETTES', () => {
     const palette = PRESET_COLOR_PALETTES.find((p) => p.id === 'luxury-glass-cherry');
     expect(palette).toBeDefined();
     expect(palette?.accentColor).toBe('#DD0200');
-    expect(palette?.textColor).toBe('#D9D9D9');
+    expect(palette?.textColor).toBe('#1A0706');
   });
 
   it('registers luxury glass frame in DEFAULT_PHOTOBOOTH_FRAMES', () => {

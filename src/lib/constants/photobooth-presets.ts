@@ -68,10 +68,10 @@ export const PRESET_COLOR_PALETTES: {
 }[] = [
   {
     id: 'luxury-glass-cherry',
-    nameAr: 'جلاسي فاخر (Luxury Glass & Cherry)',
-    bgColor: '#08080B',
-    borderColor: 'rgba(255, 255, 255, 0.22)',
-    textColor: '#D9D9D9',
+    nameAr: 'ألاباستر فاخر (Alabaster & Racing Red)',
+    bgColor: '#D9D9D9',
+    borderColor: '#55100D',
+    textColor: '#1A0706',
     accentColor: '#DD0200',
   },
   {
@@ -231,11 +231,11 @@ export const PRESET_COLOR_PALETTES: {
 export const DEFAULT_PHOTOBOOTH_FRAMES: PhotoboothFrame[] = [
   {
     id: 'luxury-glass-cherry',
-    name: 'Luxury Glass & Black Cherry',
-    nameAr: 'جلاسي فاخر وبلاك شيري',
-    bgColor: '#08080B',
-    textColor: '#D9D9D9',
-    borderColor: 'rgba(255, 255, 255, 0.22)',
+    name: 'Luxury Glass & Alabaster',
+    nameAr: 'جلاسي ألاباستر فاخر (Alabaster)',
+    bgColor: '#D9D9D9',
+    textColor: '#1A0706',
+    borderColor: 'rgba(85, 16, 13, 0.22)',
     accentColor: '#DD0200',
     cornerEmojis: {
       topRight: 'LUXE',
@@ -682,16 +682,16 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   defaultDimensionsPreset: 'strip_2x6',
   defaultWidthCm: 5,
   defaultHeightCm: 15.2,
-  defaultCardMode: 'polaroid_vintage',
-  defaultTemplateId: 'polaroid_vintage_chin',
+  defaultCardMode: 'luxury_glass',
+  defaultTemplateId: 'luxury_glass_3cut',
   lockFrameForCustomers: true,
   freeGiftOffer: {
     title: 'هدية الزيارة أو خصم ترحيبي',
     subtitle: 'أظهر هذا الشريط لطاقم الخدمة لاستلام مكافأتك التقديرية مع الصورة المطبوعة',
     icon: 'reward',
   },
-  activeFrameId: 'polaroid-cream',
-  activeColorPaletteId: 'ticket-express-cream',
+  activeFrameId: 'luxury-glass-cherry',
+  activeColorPaletteId: 'luxury-glass-cherry',
   allowCustomerColorChoice: true,
   allowedColorIds: [
     'ticket-express-cream',
@@ -898,13 +898,13 @@ export interface PhotoboothModeInfo {
 export const PHOTOBOOTH_CARD_MODES: PhotoboothModeInfo[] = [
   {
     id: 'luxury_glass',
-    nameAr: 'جلاسي فاخر (Luxury Glass & Cherry)',
-    nameEn: 'Luxury Glass Crimson & Alabaster',
+    nameAr: 'ألاباستر فاخر (Alabaster Grey & Cherry)',
+    nameEn: 'Luxury Alabaster Glass & Crimson',
     icon: 'sparkles',
-    description: 'واجهة جلاسيمورفيزم فاخرة مع أورا حمراء عميقة، زجاج مسنفر، وهالة ألاباستر بتدرجات #DD0200 و #55100D و #D9D9D9',
-    defaultBg: '#08080B',
-    defaultBorder: 'rgba(255, 255, 255, 0.18)',
-    defaultText: '#D9D9D9',
+    description: 'واجهة ألاباستر زجاجية فاخرة باللون الفاتح للباك جراوند مع لمسات #DD0200 و #55100D و #1A0706',
+    defaultBg: '#D9D9D9',
+    defaultBorder: 'rgba(85, 16, 13, 0.20)',
+    defaultText: '#1A0706',
     defaultAccent: '#DD0200',
     filmBadge: '✦ LUXURY COLOR PALETTE',
     widthCm: 5,

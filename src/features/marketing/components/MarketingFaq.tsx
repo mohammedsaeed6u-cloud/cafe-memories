@@ -1,117 +1,102 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import React from 'react';
+import { AppleAccordion, AppleAccordionItem } from '@/components/ui/ark/AppleAccordion';
+import { HelpCircle } from 'lucide-react';
 
 export function MarketingFaq() {
   const faqs = [
     {
+      id: 'no-app',
       q: 'هل يحتاج العميل لتحميل أي تطبيق على هاتفه؟',
       a: 'لا، نهائياً. تعمل المنظومة مباشرة داخل متصفح هاتف الزائر (Safari / Chrome) بمجرد مسح رمز QR الطاولة، دون أي تحميل أو تسجيل حساب معقد.',
     },
     {
-      q: 'هل يحتاج مقهاي لشراء كابينة تصوير باهظة؟',
+      id: 'no-booth',
+      q: 'هل يحتاج المكان لشراء كابينة تصوير باهظة؟',
       a: 'لا حاجة لكابينة تصوير مخصصة. يلتقط الزائر الصور بكاميرا هاتفه الشخصية مباشرة من طاولته، مما يوفر مساحة الصالة وتكاليف الأجهزة.',
     },
     {
+      id: 'tv-screen',
       q: 'هل نحتاج بالضرورة إلى شاشة تلفزيون (TV) في الصالة؟',
       a: 'الشاشة ميزة تفاعلية اختيارية. يمكنك تشغيل شاشة الصالة الحية (Live Wall) على أي شاشة تلفزيون ذكية موجودة بالصالة عبر فتح الرابط المخصص للفرع بمتصفح الشاشة، أو الاكتفاء بالمنظومة الرقمية بالكامل على هواتف الزوار.',
     },
     {
+      id: 'printer',
       q: 'هل نحتاج إلى شراء طابعة مخصصة؟',
       a: 'الطابعة اختيارية تماماً. يمكنك العمل بالنظام الرقمي 100% حيث يحفظ الزائر كارت الذكرى في محفظة Apple و Google Wallet، وإذا رغبت في تقديم طباعة ورقية ملموسة، فالنظام متوافق مع أي طابعة صور لاسلكية تدعم بروتوكولات الطباعة القياسية.',
     },
     {
+      id: 'digital-only',
       q: 'هل يمكن تشغيل النظام بدون طباعة ورقية نهائياً؟',
       a: 'نعم، باقة DIGITAL مصممة للعمل رقمياً بالكامل: التقاط الهاتف، شاشة الصالة الحية، وحفظ كارت الولاء في المحفظة الإلكترونية بدون الحاجة لأي ورق أو أحبار.',
     },
     {
+      id: 'branding',
       q: 'هل يمكننا تخصيص الشعار والألوان والفريمات لتطابق هويتنا؟',
       a: 'نعم بالكامل. تتيح لك لوحة التحكم رفع شعار علامتك التجارية، اختيار ألوان الكارت، كتابة اسم حساب إنستغرام لعمل المنشن التلقائي، وتحديد نمط الفريم (كوري، نوار، إيديتوريال، أو بطاقة بريدية).',
     },
     {
+      id: 'loyalty',
       q: 'كيف يعمل نظام ولاء العملاء والأختام الرقمية؟',
       a: 'يحصل الزائر على كارت ولاء رقمي يُحفظ في محفظة الهاتف (Apple Wallet / Google Wallet). مع كل زيارة يمسح موظف الكاونتر أو الكاشير كود العميل السريع أو يُدخل رمز PIN لمنحه ختماً، وعند اكتمال الأختام تُفتح له المكافأة المستحقة.',
     },
     {
+      id: 'moderation',
       q: 'كيف تتم مراجعة واعتماد الصور قبل ظهورها على شاشة الصالة؟',
       a: 'تمر الصور بمرحلتين أمان: أولاً موافقة الزائر الصريحة على رغبته بالظهور في الشاشة، وثانياً مراجعة فورية من طاقم العمل عبر تبويب (اعتماد الذكريات) في لوحة التحكم لمنع ظهور أي محتوى غير لائق.',
     },
     {
+      id: 'deletion',
       q: 'هل يستطيع الزائر حذف صوره وبياناته في أي وقت؟',
       a: 'نعم، نحترم خصوصية الزوار تماماً. تحتوي واجهة الزائر على خيار طلب حذف الصورة والبيانات، كما يمكن لفريق العمل إخفاء أو حذف أي ذكرى مباشرة من لوحة التحكم.',
     },
     {
-      q: 'كم مدة الاحتفاظ بالصور في النظام؟',
-      a: 'تُحفظ صور الزوار المعتمدة طالما كان الحساب نشطاً لتمكين الزائر من استعراض ذكرياته واسترداد مكافآته، مع تطبيق ضغط WebP عالي الكفاءة، ويحق للعميل أو إدارة المنشأة طلب حذفها في أي لحظة.',
-    },
-    {
+      id: 'multi-branch',
       q: 'هل يمكنني إدارة أكثر من فرع لنشاطي التجاري من حساب واحد؟',
       a: 'نعم، عبر باقة MULTI-LOCATION يمكنك إضافة وإدارة فروعك بالكامل، تخصيص شاشة صالة منفصلة لكل فرع، ومتابعة تقارير الزيارات والولاء لكل موقع من لوحة إدارة موحدة.',
     },
     {
-      q: 'هل يمكن تصدير بيانات وتقارير العملاء؟',
-      a: 'نعم، تتيح لوحة التحكم تصدير سجل الزيارات وأرقام العملاء الذين وافقوا على الانضمام لبرنامج الولاء بصيغة CSV لاستخدامها في حملات رسائل الـ SMS التسويقية.',
-    },
-    {
+      id: 'pos',
       q: 'هل يتكامل النظام مع برامج نقاط البيع (POS)؟',
       a: 'يعمل النظام باستقلالية كاملة وسلاسة دون الحاجة لربط معقد مع الكاشير، كما نوفر في باقة المؤسسات (Enterprise) واجهات برمجة تطبيقات (Webhooks / API) للربط المباشر مع أنظمة نقاط البيع المعتمدة.',
     },
     {
-      q: 'ماذا يحدث إذا انقطع اتصال الإنترنت مؤقتاً في الصالة أو المتجر؟',
-      a: 'يستمر الزائر في استخدام كاميرا هاتفه عبر باقة بياناته الخاصة دون تأثر، وتخزن شاشة الصالة آخر الذكريات محلياً في الذاكرة المؤقتة لتعاود التحديث فور عودة الاتصال.',
-    },
-    {
+      id: 'cancellation',
       q: 'هل يمكنني إلغاء الاشتراك في أي وقت؟',
       a: 'نعم، اشتراكاتنا شهرية مرنة بدون عقود إلزامية سنوية أو شروط جزائية. يمكنك ترقية أو تخفيض أو إلغاء باقتك في أي وقت من لوحة الإعدادات.',
     },
   ];
 
-  const [openIdx, setOpenIdx] = useState<number | null>(0);
-
   return (
-    <section id="faq" className="py-20 px-6 max-w-4xl mx-auto border-t border-stone-200/80">
-      <div className="text-center mb-14">
-        <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
-          FREQUENTLY ASKED • إجابات واضحة
-        </span>
-        <h2
-          className="text-3xl sm:text-4xl font-black text-stone-950 mt-2 font-serif"
-          style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-        >
+    <section id="faq" className="py-24 px-6 max-w-4xl mx-auto border-t border-white/10 apple-font">
+      <div className="text-center mb-16">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase mb-3 backdrop-blur-xl">
+          <HelpCircle className="w-3.5 h-3.5 text-[#DD0200]" />
+          <span>FREQUENTLY ASKED • إجابات واضحة</span>
+        </div>
+        <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
           كل ما تحتاج معرفته قبل الانطلاق.
         </h2>
+        <p className="text-sm sm:text-base text-[#D9D9D9]/80 mt-3.5 max-w-xl mx-auto leading-relaxed">
+          إجابات دقيقة ومباشرة على أكثر الأسئلة شيوعاً حول تقنية الأستوديو وتشغيل البيزنس.
+        </p>
       </div>
 
-      <div className="space-y-3.5">
-        {faqs.map((f, i) => {
-          const isOpen = openIdx === i;
-          return (
-            <div
-              key={f.q}
-              className="rounded-2xl border border-stone-200/90 bg-white overflow-hidden shadow-2xs transition"
-            >
-              <button
-                type="button"
-                onClick={() => setOpenIdx(isOpen ? null : i)}
-                className="w-full p-5 text-right flex items-center justify-between gap-4 font-bold text-sm text-stone-900 cursor-pointer"
-              >
-                <span>{f.q}</span>
-                <ChevronDown
-                  className={`w-4 h-4 text-stone-500 shrink-0 transition-transform duration-200 ${
-                    isOpen ? 'rotate-180 text-stone-900' : ''
-                  }`}
-                />
-              </button>
-              {isOpen && (
-                <div className="px-5 pb-5 text-xs text-stone-600 leading-relaxed border-t border-stone-100 pt-3">
-                  {f.a}
-                </div>
-              )}
+      <AppleAccordion defaultValue={['no-app']} collapsible className="space-y-3">
+        {faqs.map((f) => (
+          <AppleAccordionItem
+            key={f.id}
+            value={f.id}
+            title={f.q}
+            className="rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] backdrop-blur-xl transition-all duration-200"
+          >
+            <div className="text-xs sm:text-sm text-[#D9D9D9]/80 leading-relaxed pt-1 pb-2">
+              {f.a}
             </div>
-          );
-        })}
-      </div>
+          </AppleAccordionItem>
+        ))}
+      </AppleAccordion>
     </section>
   );
 }
