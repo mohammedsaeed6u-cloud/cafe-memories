@@ -567,24 +567,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                 })}
               </div>
 
-              {/* Apple Luxury HIG & Bento Showcase (Driven by Ark UI) */}
-              {cardMode === 'luxury_glass' && (
-                <div className="w-full pt-1 animate-in fade-in duration-200">
-                  <AppleLuxuryShowcase
-                    onSelectPalette={(hex) => {
-                      setSelectedFrame((prev) => ({
-                        ...prev,
-                        accentColor: hex,
-                        borderColor: hex === '#D9D9D9' ? 'rgba(217, 217, 217, 0.4)' : 'rgba(255, 255, 255, 0.25)',
-                      }));
-                    }}
-                    onApplyTheme={() => {
-                      setCardMode('luxury_glass');
-                    }}
-                    activeColorHex={selectedFrame.accentColor || '#DD0200'}
-                  />
-                </div>
-              )}
+
 
               {/* Sub-customizer for Spotify */}
               {cardMode === 'spotify_player' && (

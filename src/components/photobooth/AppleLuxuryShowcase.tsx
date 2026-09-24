@@ -168,7 +168,7 @@ export function AppleLuxuryShowcase({
                   }}
                 />
 
-                {/* Top Badge: "✦ studio" in Coffee Bean & Racing Red */}
+                {/* Top Badge: "✦ studio" in Coffee Bean */}
                 <div className="relative z-10 flex items-center justify-between mb-4">
                   <div className="flex items-center gap-1.5 text-[#1A0706]">
                     <span className="text-xs font-serif text-[#1A0706] drop-shadow-xs">✦</span>
@@ -176,9 +176,6 @@ export function AppleLuxuryShowcase({
                       studio
                     </span>
                   </div>
-                  <span className="text-[9px] font-mono tracking-[0.2em] text-white uppercase px-2 py-0.5 rounded-full bg-[#DD0200] font-bold shadow-xs">
-                    ALABASTER BG
-                  </span>
                 </div>
 
                 {/* Center Title: "Luxury Color Palettes" in Coffee Bean #1A0706 */}
@@ -214,7 +211,7 @@ export function AppleLuxuryShowcase({
                 {/* Interactive Palette Color Dots */}
                 <div className="relative z-10 pt-4 border-t border-[#1A0706]/10 flex items-center justify-between">
                   <span className="text-[10px] font-mono text-[#1A0706]/80 tracking-widest uppercase font-bold">
-                    {selectedAccent === '#D9D9D9' ? 'ACTIVE // #D9D9D9 (اللون الفاتح للباك جراوند)' : `ACTIVE // ${selectedAccent}`}
+                    {`ACTIVE // ${selectedAccent}`}
                   </span>
                   <div className="flex items-center gap-2">
                     {PALETTE_DATA.map((p) => (
@@ -283,7 +280,7 @@ export function AppleLuxuryShowcase({
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-bold text-[#1A0706] block">Alabaster Grey</span>
-                      <span className="text-[10px] text-[#1A0706]/80 font-mono font-bold">اللون الفاتح للباك جراوند • PRIMARY BACKGROUND</span>
+                      <span className="text-[10px] text-[#1A0706]/80 font-mono font-bold">ARCHIVAL MOUNTING // #D9D9D9</span>
                     </div>
                     {copiedHex === '#D9D9D9' ? (
                       <span className="px-2.5 py-1 rounded-full bg-black/10 text-[10px] font-mono font-bold text-[#1A0706] flex items-center gap-1 animate-in fade-in">

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Cairo, Playfair_Display, Montserrat } from 'next/font/google';
+import { Cairo, Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 
@@ -17,15 +17,15 @@ const playfair = Playfair_Display({
   display: 'swap',
 });
 
-const montserrat = Montserrat({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-montserrat',
+  variable: '--font-jakarta',
   display: 'swap',
 });
 
 export const viewport: Viewport = {
-  themeColor: '#FAF6EE',
+  themeColor: '#141313',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'Memories',
   },
   openGraph: {
@@ -75,9 +75,9 @@ export default function RootLayout({
       lang="ar"
       dir="rtl"
       suppressHydrationWarning
-      className={cn(cairo.variable, playfair.variable, montserrat.variable)}
+      className={cn(cairo.variable, playfair.variable, jakarta.variable)}
     >
-      <body className="min-h-screen bg-[#FAF6EE] text-[#3B2F2A] font-cairo antialiased selection:bg-[#B85C43]/20 selection:text-[#1E3A32]">
+      <body className="min-h-screen bg-[#141313] text-[#e6e1e1] font-sans antialiased selection:bg-[#DD0200] selection:text-white">
         {children}
       </body>
     </html>

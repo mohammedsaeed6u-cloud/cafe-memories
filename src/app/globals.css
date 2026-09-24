@@ -1,53 +1,44 @@
 @import "tailwindcss";
 
 @theme {
-  --color-forest: #1E3A32;
-  --color-forest-dark: #142721;
-  --color-forest-light: #2A4F44;
+  --color-surface: #141313;
+  --color-surface-charcoal: #141212;
+  --color-surface-stone: #1F1D1D;
+  --color-surface-dim: #141313;
+  --color-surface-bright: #3b3939;
 
-  --color-terracotta: #B85C43;
-  --color-terracotta-dark: #9B4A33;
-  --color-terracotta-light: #CF735A;
+  --color-primary: #DD0200;
+  --color-primary-container: #DD0200;
+  --color-secondary: #55100D;
+  --color-secondary-container: #7C2D26;
 
-  --color-warm-beige: #E8DCC6;
-  --color-warm-beige-light: #F7F2E7;
-  --color-warm-beige-dark: #D3C4A7;
+  --color-alabaster: #FBF9F5;
+  --color-alabaster-muted: #D9D9D9;
+  --color-coffee-bean: #1A0706;
 
-  --color-espresso: #3B2F2A;
-  --color-espresso-dark: #261E1A;
-  --color-espresso-light: #5A473F;
-
-  --color-olive: #8A9A7B;
-  --color-olive-dark: #6F7F60;
-  --color-olive-light: #A7B69A;
+  --color-border-hairline: rgba(255, 255, 255, 0.08);
+  --color-border-accent: rgba(221, 2, 0, 0.35);
 
   --font-playfair: var(--font-playfair), 'Playfair Display', Georgia, serif;
-  --font-montserrat: var(--font-montserrat), 'Montserrat', sans-serif;
+  --font-jakarta: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
   --font-cairo: var(--font-cairo), 'Cairo', sans-serif;
 }
 
 @layer base {
   :root {
-    --background: #FAF6EE;
-    --foreground: #3B2F2A;
+    --background: #141313;
+    --foreground: #e6e1e1;
     --font-cairo: 'Cairo', sans-serif;
     --font-playfair: 'Playfair Display', Georgia, serif;
-    --font-montserrat: 'Montserrat', sans-serif;
-  }
-
-  .dark {
-    --background: #0E1A16;
-    --foreground: #FAF6EE;
-    color-scheme: dark;
+    --font-jakarta: 'Plus Jakarta Sans', sans-serif;
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
-    font-family: var(--font-cairo), var(--font-montserrat), system-ui, sans-serif;
+    background-color: #141313;
+    color: #e6e1e1;
+    font-family: var(--font-jakarta), var(--font-cairo), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.25s ease, color 0.25s ease;
   }
 }
 
