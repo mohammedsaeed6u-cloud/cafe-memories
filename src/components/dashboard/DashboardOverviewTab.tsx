@@ -215,12 +215,12 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             <RealOutsourcedQr
               value={customerLiveUrl}
               size={132}
-              alt={`كود QR كافيه ${settings.branding?.name}`}
+              alt={`كود QR منشأة ${settings.branding?.name}`}
               className="w-full h-full object-contain"
             />
           </div>
           <span className="text-[10px] font-mono text-stone-500 font-bold mt-2">
-            كود طاولة الكافيه المباشر
+            كود الطاولة ونقطة الزيارة المباشر
           </span>
           <span className="text-[9px] text-stone-400 font-mono mt-0.5">
             300 DPI Vector Ready
@@ -262,7 +262,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-black text-stone-900">
-                نشاط الكافيه اليوم (What Happened Today)
+                نشاط المنشأة اليوم (What Happened Today)
               </h2>
               <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px] font-bold flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>

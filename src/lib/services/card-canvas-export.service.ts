@@ -216,7 +216,7 @@ export class CardCanvasExportService {
     if (activeStamps >= totalSlots) {
       ctx.fillStyle = palette.accentColor;
       ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText('قهوتك القادمة مجانية من الكافيه', 60, footerY + 32);
+      ctx.fillText('هديتك القادمة مجانية من المنشأة', 60, footerY + 32);
     } else {
       const remaining = totalSlots - activeStamps;
       ctx.fillText(`متبقي ${remaining} ${remaining === 1 ? 'ختم' : 'أختام'} للمكافأة`, 60, footerY + 32);

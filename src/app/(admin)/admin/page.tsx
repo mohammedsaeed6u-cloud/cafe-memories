@@ -195,7 +195,7 @@ export default function SuperAdminPortalPage() {
               </div>
               <p className="text-2xl font-black text-stone-900">
                 {saasMetrics.activeSubscriptionsCount}{' '}
-                <span className="text-xs font-bold text-stone-500">كافيهات نشطة</span>
+                <span className="text-xs font-bold text-stone-500">منشآت ومتاجر نشطة</span>
               </p>
               <p className="text-[10px] text-stone-400 font-bold">
                 {saasMetrics.trialingCount} فروع في التجربة المجانية
@@ -239,7 +239,7 @@ export default function SuperAdminPortalPage() {
             <table className="w-full text-right border-collapse">
               <thead>
                 <tr className="border-b border-stone-200 bg-stone-50 text-[11px] font-black uppercase text-stone-500 tracking-wider">
-                  <th className="py-4 px-5">الكافيه / المشترك</th>
+                  <th className="py-4 px-5">المنشأة / المشترك</th>
                   <th className="py-4 px-5">باقة الـ SaaS الحالية</th>
                   <th className="py-4 px-5">دورة الفوترة</th>
                   <th className="py-4 px-5">مساهمة الـ MRR</th>
@@ -427,7 +427,7 @@ export default function SuperAdminPortalPage() {
             <table className="w-full text-right border-collapse">
               <thead>
                 <tr className="border-b border-stone-200 bg-stone-50 text-[11px] font-black uppercase text-stone-500 tracking-wider">
-                  <th className="py-4 px-5">الكافيه / المشترك</th>
+                  <th className="py-4 px-5">المنشأة / المشترك</th>
                   <th className="py-4 px-5 text-center">ميزة الطباعة 2x6</th>
                   <th className="py-4 px-5 text-center">ميزة شاشة العرض (TV Wall)</th>
                   <th className="py-4 px-5">المعاينة المباشرة</th>

@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
         .from('customers')
         .insert({
           anonymous_id: newAnonId,
-          display_name: 'ضيف الكافيه',
+          display_name: 'ضيف مميز',
         })
         .select()
         .single();

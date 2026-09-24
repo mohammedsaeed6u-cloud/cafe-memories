@@ -1021,7 +1021,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             {/* Primary Palette Selection */}
             <div>
               <label className="block text-xs font-bold text-stone-700 mb-2">
-                أ) اختر باليتة وثيم الكارت الأساسي للكافيه:
+                أ) اختر باليتة وثيم الكارت الأساسي للمنشأة:
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {PRESET_COLOR_PALETTES.map((palette) => {

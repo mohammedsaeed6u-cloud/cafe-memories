@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Generate permanent screen device token
     const deviceToken = 'scrtok_' + crypto.randomBytes(24).toString('hex');
-    const finalScreenName = screenName || codeRecord.screen_name || 'شاشة الكافيه الحية';
+    const finalScreenName = screenName || codeRecord.screen_name || 'شاشة الصالة الحية';
 
     // 3. Insert or update paired screen record
     const { data: screen, error: screenError } = await supabase

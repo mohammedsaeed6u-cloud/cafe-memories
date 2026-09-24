@@ -42,7 +42,7 @@ export function CookieConsentBanner() {
         </div>
 
         <p className="text-[11px] text-[#3B2F2A]/80 dark:text-[#FAF6EE]/80 leading-relaxed">
-          نستخدم ملفات تعريف الارتباط الضرورية لتشغيل جلسات الكافيهات، حفظ تفضيلات المظهر، وتأمين التحقق السحابي بدون تتبع إعلاني خارجي.{' '}
+          نستخدم ملفات تعريف الارتباط الضرورية لتشغيل جلسات المنشآت والمتاجر، حفظ تفضيلات المظهر، وتأمين التحقق السحابي بدون تتبع إعلاني خارجي.{' '}
           <Link
             href="/privacy"
             className="text-[#B85C43] underline hover:text-[#9B4A33] font-bold"

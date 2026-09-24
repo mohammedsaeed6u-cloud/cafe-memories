@@ -289,7 +289,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
     const clean = customerPhone.trim().replace(/[^0-9]/g, '') || 'guest';
     try {
       localStorage.setItem(`memories_card_photos_${cafeSlug}_${clean}`, JSON.stringify(updated));
-      CustomerRegistryService.registerCustomer(clean, customerName || 'ضيف الكافيه', 'coffee_lover', cafeSlug);
+      CustomerRegistryService.registerCustomer(clean, customerName || 'ضيف مميز', 'vip_guest', cafeSlug);
     } catch {}
 
     // Check if card just completed!
@@ -521,7 +521,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                 {[
                   { id: 'polaroid_vintage', label: 'بولارويد كلاسيك', icon: '🎞️' },
                   { id: 'korean_noir', label: 'نوار كوري عاجي', icon: '☕' },
-                  { id: 'ticket_express', label: 'تذكرة الكافيه', icon: '🎟️' },
+                  { id: 'ticket_express', label: 'تذكرة الزيارة', icon: '🎟️' },
                   { id: 'ios_camera', label: 'كاميرا آيفون', icon: '📷' },
                   { id: 'spotify_player', label: 'مشغل سبوتيفاي', icon: '🎵' },
                   { id: 'ios_gallery_light', label: 'ألبوم آيفون', icon: '🖼️' },
@@ -788,7 +788,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                       <input
                         type="text"
                         required
-                        placeholder="مثال: أحمد، سارة، ضيف الكافيه..."
+                        placeholder="مثال: أحمد، سارة، ضيفنا المميز..."
                         value={regName}
                         onChange={(e) => setRegName(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none"

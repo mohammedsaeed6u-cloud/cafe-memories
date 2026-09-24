@@ -39,7 +39,7 @@ export function FloatingContactButton() {
           <div className="space-y-2">
             {/* WhatsApp */}
             <OutboundLink
-              href="https://wa.me/201000000000?text=مرحبا،%20أود%20الاستفسار%20عن%20منظومة%20memories%20للكافيه"
+              href="https://wa.me/201000000000?text=مرحبا،%20أود%20الاستفسار%20عن%20منظومة%20memories"
               utmParams={{ source: 'memories_saas', medium: 'whatsapp_concierge', campaign: 'lead' }}
               className="w-full py-2.5 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-between shadow-xs transition hover:scale-[1.02] active:scale-[0.98]"
             >
@@ -70,7 +70,7 @@ export function FloatingContactButton() {
             >
               <span className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-[#B85C43]" />
-                <span>حجز استشارة لكافيهك</span>
+                <span>حجز استشارة لمنشأتك</span>
               </span>
               <span className="text-[10px] opacity-80">VIP</span>
             </a>

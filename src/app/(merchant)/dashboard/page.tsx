@@ -219,7 +219,7 @@ export default function MerchantDashboardPage() {
         setMemories(
           localPhotos.map((p: any, idx: number) => ({
             id: p.id || `m_${idx}`,
-            customerName: p.customerName || 'ضيف الكافيه',
+            customerName: p.customerName || 'ضيف مميز',
             originalUrl: p.url || p.photoUrl || (typeof p === 'string' ? p : ''),
             status: p.status || 'approved',
             visibility: p.visibility || 'public',

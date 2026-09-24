@@ -150,7 +150,7 @@ export function RetentionAnalyticsTab({
           <div>
             <h3 className="font-black text-base text-stone-950 flex items-center gap-2">
               <Flame className="w-5 h-5 text-amber-600" />
-              <span>قمع دورة ولاء الكافيه (The Core Loop Funnel)</span>
+              <span>قمع دورة ولاء العملاء (The Core Loop Funnel)</span>
             </h3>
             <p className="text-xs text-stone-500 mt-0.5">
               رحلة العميل الخماسية: مسح الكود ← التقاط الصور ← شاشة الصالة ← المحفظة الرقمية ← المكافأة والعودة

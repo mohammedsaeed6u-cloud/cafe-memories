@@ -143,7 +143,7 @@ export default function AuthCallbackPage() {
           </h2>
           <p className="text-xs text-stone-500">
             {isRedirecting
-              ? 'يتم تحويلك إلى لوحة تحكم الكافيه الآن...'
+              ? 'يتم تحويلك إلى لوحة التحكم الآن...'
               : 'يرجى الانتظار لحظات للتحقق من بيانات الجلسة.'}
           </p>
         </div>

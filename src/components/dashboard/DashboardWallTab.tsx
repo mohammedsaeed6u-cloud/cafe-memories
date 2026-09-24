@@ -131,7 +131,7 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
 
             <div>
               <label className="block text-xs font-bold text-stone-700 mb-1">
-                تسمية موقع الشاشة بالكافيه:
+                تسمية موقع شاشة العرض بالصالة:
               </label>
               <input
                 type="text"

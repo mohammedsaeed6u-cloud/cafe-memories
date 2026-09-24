@@ -736,7 +736,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                 template={template}
                 brandName={brandName}
                 brandLogoUrl={brandLogoUrl}
-                customerName="ضيف الكافيه"
+                customerName="ضيف مميز"
                 customerPhone=""
                 interactive={true}
               />

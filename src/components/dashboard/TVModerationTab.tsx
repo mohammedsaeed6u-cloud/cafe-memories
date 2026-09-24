@@ -40,7 +40,7 @@ export const TVModerationTab: React.FC<TVModerationTabProps> = ({
             setItems(
               data.memories.map((m: any) => ({
                 id: m.id,
-                name: m.customers?.display_name || 'زائر كافيه',
+                name: m.customers?.display_name || 'زائر مميز',
                 photoStripUrl: m.optimized_url || m.original_url,
                 status: m.status === 'approved' ? 'approved' : 'hidden',
                 caption: m.caption,
@@ -112,7 +112,7 @@ export const TVModerationTab: React.FC<TVModerationTabProps> = ({
         <div>
           <h3 className="text-lg font-black text-stone-900 flex items-center gap-2">
             <Monitor className="w-5 h-5 text-amber-600" />
-            <span>فرز واعتماد شرائط العرض على شاشة الكافيه (TV Wall)</span>
+            <span>فرز واعتماد شرائط العرض على شاشة الصالة (TV Wall)</span>
           </h3>
           <p className="text-xs text-stone-500 mt-1">
             تحكم بالصور المسموح بعرضها في الوقت الفعلي على شاشة العرض الحية — متصل بالخادم وSupabase RLS

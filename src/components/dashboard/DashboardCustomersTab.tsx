@@ -76,7 +76,7 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
     setNewCustName('');
     setIsAddModalOpen(false);
     onRefresh();
-    setToast('تم تسجيل العميل بنجاح في قاعدة بيانات الكافيه!');
+    setToast('تم تسجيل العميل بنجاح في قاعدة البيانات!');
     setTimeout(() => setToast(null), 3500);
   };
 
