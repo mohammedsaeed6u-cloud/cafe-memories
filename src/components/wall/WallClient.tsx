@@ -99,16 +99,16 @@ export function WallClient({ screenId }: WallClientProps) {
 
   const [brandName, setBrandName] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('memories_active_merchant_name') || 'Espresso Lab';
+      return localStorage.getItem('memories_active_merchant_name') || 'Memories Studio';
     }
-    return 'Espresso Lab';
+    return 'Memories Studio';
   });
   const [brandLogoUrl, setBrandLogoUrl] = useState<string | null>(null);
   const [cafeSlug, setCafeSlug] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('memories_active_merchant_slug') || 'espresso-lab';
+      return localStorage.getItem('memories_active_merchant_slug') || 'memories';
     }
-    return 'espresso-lab';
+    return 'memories';
   });
 
   useEffect(() => {
@@ -228,7 +228,7 @@ export function WallClient({ screenId }: WallClientProps) {
       channel.onmessage = (event) => {
         const data = event.data;
         if (data?.type === 'SCREEN_PAIRED' && (data.code === screenPairingCode || data.code === 'all')) {
-          handlePairedSuccess(data.cafeSlug || 'espresso-lab', data.cafeName || 'Espresso Lab');
+          handlePairedSuccess(data.cafeSlug || 'memories', data.cafeName || 'Memories Studio');
         }
         if (data?.type === 'WALL_NEW_PHOTO' && data.item) {
           setMemories((prev) => [data.item, ...prev.filter((m) => m.id !== data.item.id)]);
@@ -270,7 +270,7 @@ export function WallClient({ screenId }: WallClientProps) {
       if (e.key === `memories_paired_screen_${screenPairingCode}` && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          handlePairedSuccess(parsed.cafeSlug || 'espresso-lab', parsed.cafeName || 'Espresso Lab');
+          handlePairedSuccess(parsed.cafeSlug || 'memories', parsed.cafeName || 'Memories Studio');
         } catch {}
       }
       if (e.key === `memories_wall_feed_${cafeSlug}` && e.newValue) {

@@ -134,9 +134,9 @@ const SUBSCRIPTIONS_KEY = 'memories_tenant_subscriptions_v1';
 const INVOICES_KEY = 'memories_tenant_invoices_v1';
 
 const INITIAL_SUBSCRIPTIONS: Record<string, TenantSubscription> = {
-  'espresso-lab': {
-    id: 'sub-espresso-lab',
-    cafeSlug: 'espresso-lab',
+  'memories': {
+    id: 'sub-memories',
+    cafeSlug: 'memories',
     planId: 'print',
     billingInterval: 'monthly',
     status: 'active',
@@ -148,7 +148,7 @@ const INITIAL_SUBSCRIPTIONS: Record<string, TenantSubscription> = {
       last4: '4820',
       expiryMonth: 11,
       expiryYear: 2028,
-      cardHolderName: 'Espresso Lab Operations',
+      cardHolderName: 'Memories Studio Operations',
     },
     usage: {
       currentMonthVisits: 1840,
@@ -230,11 +230,11 @@ const INITIAL_SUBSCRIPTIONS: Record<string, TenantSubscription> = {
 };
 
 const INITIAL_INVOICES: Record<string, InvoiceRecord[]> = {
-  'espresso-lab': [
+  'memories': [
     {
       id: 'inv-2026-09-esp',
       invoiceNumber: 'ZATCA-INV-2026-0901',
-      cafeSlug: 'espresso-lab',
+      cafeSlug: 'memories',
       planId: 'print',
       amount: 600,
       taxAmount: 90,
@@ -250,7 +250,7 @@ const INITIAL_INVOICES: Record<string, InvoiceRecord[]> = {
     {
       id: 'inv-2026-08-esp',
       invoiceNumber: 'ZATCA-INV-2026-0801',
-      cafeSlug: 'espresso-lab',
+      cafeSlug: 'memories',
       planId: 'print',
       amount: 600,
       taxAmount: 90,

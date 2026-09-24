@@ -43,7 +43,7 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
   customers,
   onExportCsv,
   brandName = 'Memories',
-  cafeSlug = 'espresso-lab',
+  cafeSlug = 'memories',
 }) => {
   const [selectedPersona, setSelectedPersona] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');

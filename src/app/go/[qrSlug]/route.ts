@@ -27,7 +27,7 @@ export async function GET(
         .update({ scan_count: (qrCode.scan_count || 0) + 1, updated_at: new Date().toISOString() })
         .eq('id', qrCode.id);
 
-      const branchSlug = (qrCode.branches as any)?.slug || 'espresso-lab';
+      const branchSlug = (qrCode.branches as any)?.slug || 'memories';
       const targetUrl = new URL(`/c/${branchSlug}?ref=${qrSlug}&src=${qrCode.source}`, request.url);
       return NextResponse.redirect(targetUrl);
     }
@@ -36,6 +36,6 @@ export async function GET(
   }
 
   // Fallback to default active café
-  const fallbackUrl = new URL(`/c/espresso-lab?ref=${qrSlug || 'default'}`, request.url);
+  const fallbackUrl = new URL(`/c/memories?ref=${qrSlug || 'default'}`, request.url);
   return NextResponse.redirect(fallbackUrl);
 }

@@ -10,7 +10,7 @@ export class BusinessSettingsService {
     return `${STORAGE_PREFIX}${cafeSlug}`;
   }
 
-  static getSettings(cafeSlug: string = 'espresso-lab'): BusinessSettings {
+  static getSettings(cafeSlug: string = 'memories'): BusinessSettings {
     const defaultShotCount = DEFAULT_BUSINESS_SETTINGS.defaultShotCount || 3;
     const defaultOrientation = DEFAULT_BUSINESS_SETTINGS.defaultOrientation || 'vertical';
 
@@ -73,8 +73,8 @@ export class BusinessSettingsService {
 
         const rawBranding = parsed.branding || {};
         const sanitizedBrandingName =
-          !rawBranding.name || rawBranding.name.toLowerCase() === 'memories'
-            ? 'Espresso Lab'
+          !rawBranding.name || rawBranding.name.toLowerCase() === 'espresso lab'
+            ? 'Memories Studio'
             : rawBranding.name;
         const sanitizedBranding = {
           ...DEFAULT_BUSINESS_SETTINGS.branding,

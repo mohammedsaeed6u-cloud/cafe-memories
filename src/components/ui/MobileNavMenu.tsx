@@ -119,7 +119,7 @@ export function MobileNavMenu({ onOpenSearch }: { onOpenSearch: () => void }) {
             {/* Bottom Actions */}
             <div className="pt-6 border-t border-[#E8DCC6] dark:border-[#2A4F44] space-y-3">
               <Link
-                href="/c/espresso-lab"
+                href="/c/memories"
                 prefetch={false}
                 onClick={closeMenu}
                 className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-[#1E3A32] border border-[#E8DCC6] dark:border-[#2A4F44] text-xs font-bold text-[#1E3A32] dark:text-[#FAF6EE] flex items-center justify-between shadow-2xs hover:scale-[1.01] active:scale-[0.99] transition"

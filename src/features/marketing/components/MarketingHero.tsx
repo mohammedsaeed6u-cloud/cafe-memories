@@ -85,7 +85,7 @@ export function MarketingHero() {
         </Link>
 
         <Link
-          href="/c/espresso-lab"
+          href="/c/memories"
           className="w-full sm:w-auto text-sm py-4 px-7 rounded-2xl bg-white hover:bg-stone-50 border border-stone-300 text-stone-800 font-bold shadow-xs transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           <Sparkles className="w-4 h-4 text-amber-700" />
@@ -172,7 +172,7 @@ export function MarketingHero() {
               <div className="w-full mt-3 pt-2 border-t border-current/15 flex items-center justify-between text-[9px] font-mono font-black">
                 <div className="flex items-center gap-1">
                   <Coffee className="w-3 h-3 text-amber-600" />
-                  <span>ESPRESSO LAB</span>
+                  <span>MEMORIES STUDIO</span>
                 </div>
                 <span className="text-[8px] opacity-70">SEOUL × CAIRO</span>
               </div>

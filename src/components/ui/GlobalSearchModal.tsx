@@ -19,7 +19,7 @@ const SEARCH_ITEMS: SearchItem[] = [
     title: 'منظومة العميل وكارت التوثيق',
     description: 'واجهة كاميرا الهاتف وكارت التوثيق الفوري مع أختام الولاء التفاعلية',
     category: 'التطبيقات',
-    href: '/c/espresso-lab',
+    href: '/c/memories',
     icon: Camera,
   },
   {

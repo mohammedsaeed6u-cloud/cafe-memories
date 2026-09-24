@@ -54,7 +54,7 @@ export class CooldownService {
    */
   static checkAccess(
     identifier: string,
-    cafeSlug: string = 'espresso-lab'
+    cafeSlug: string = 'memories'
   ): AccessStatus {
     if (!identifier) {
       return {
@@ -140,7 +140,7 @@ export class CooldownService {
    * If customer had extra shots from orders, deduct 1 from their balance.
    * Otherwise, mark the 24-hour daily visit timestamp.
    */
-  static recordSession(identifier: string, cafeSlug: string = 'espresso-lab'): void {
+  static recordSession(identifier: string, cafeSlug: string = 'memories'): void {
     if (!identifier) return;
     const store = this.getStore();
     const key = this.makeKey(identifier, cafeSlug);
@@ -188,7 +188,7 @@ export class CooldownService {
     identifier: string,
     shotsCount: number,
     ordersCount: number = 1,
-    cafeSlug: string = 'espresso-lab'
+    cafeSlug: string = 'memories'
   ): number {
     if (!identifier || shotsCount <= 0) return 0;
     const store = this.getStore();
@@ -242,7 +242,7 @@ export class CooldownService {
    */
   static unlockForCustomer(
     identifier: string,
-    cafeSlug: string = 'espresso-lab',
+    cafeSlug: string = 'memories',
     overrideHours: number = 4
   ): void {
     if (!identifier) return;

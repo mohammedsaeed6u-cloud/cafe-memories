@@ -45,7 +45,7 @@ interface LoyaltyStudioTabProps {
 }
 
 export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
-  cafeSlug = 'espresso-lab',
+  cafeSlug = 'memories',
   brandName = 'Memories Cafe',
   brandLogoUrl,
 }) => {

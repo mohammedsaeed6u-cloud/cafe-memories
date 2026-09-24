@@ -15,7 +15,7 @@ interface ShareStoryWidgetProps {
 export const ShareStoryWidget: React.FC<ShareStoryWidgetProps> = ({
   stripDataUrl,
   brandName = 'Memories',
-  cafeHandle = '@espresso-lab',
+  cafeHandle = '@memories_studio',
   isCardComplete = false,
   completedShots = 1,
   totalShots = 3,

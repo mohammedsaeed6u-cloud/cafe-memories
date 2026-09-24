@@ -21,7 +21,7 @@ export class CustomerRegistryService {
    * Looks up if a customer phone is already registered.
    * Checks both direct phone-keyed storage and the CRM registry.
    */
-  static lookupCustomer(phone: string, cafeSlug: string = 'espresso-lab'): {
+  static lookupCustomer(phone: string, cafeSlug: string = 'memories'): {
     exists: boolean;
     name?: string;
     role?: string;
@@ -84,7 +84,7 @@ export class CustomerRegistryService {
     phone: string,
     name: string,
     role: string = 'coffee_lover',
-    cafeSlug: string = 'espresso-lab'
+    cafeSlug: string = 'memories'
   ): RegisteredCustomer {
     const clean = phone.trim().replace(/[^0-9]/g, '');
     const cleanName = name.trim();
@@ -147,7 +147,7 @@ export class CustomerRegistryService {
   /**
    * Retrieves all registered real customers for the given cafe.
    */
-  static getRegisteredCustomers(cafeSlug: string = 'espresso-lab'): RegisteredCustomer[] {
+  static getRegisteredCustomers(cafeSlug: string = 'memories'): RegisteredCustomer[] {
     if (typeof window === 'undefined') return [];
     try {
       const crmKey = this.getCrmKey(cafeSlug);
@@ -163,7 +163,7 @@ export class CustomerRegistryService {
   /**
    * Adds a direct loyalty stamp (+1 visit) to a registered customer.
    */
-  static addDirectStamp(phone: string, cafeSlug: string = 'espresso-lab'): RegisteredCustomer | null {
+  static addDirectStamp(phone: string, cafeSlug: string = 'memories'): RegisteredCustomer | null {
     if (typeof window === 'undefined') return null;
     const clean = phone.trim().replace(/[^0-9]/g, '');
     try {
@@ -207,7 +207,7 @@ export class CustomerRegistryService {
   /**
    * Removes a customer from the CRM registry.
    */
-  static deleteCustomer(phone: string, cafeSlug: string = 'espresso-lab'): boolean {
+  static deleteCustomer(phone: string, cafeSlug: string = 'memories'): boolean {
     if (typeof window === 'undefined') return false;
     const clean = phone.trim().replace(/[^0-9]/g, '');
     try {

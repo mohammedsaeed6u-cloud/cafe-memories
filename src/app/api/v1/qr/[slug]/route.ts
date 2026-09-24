@@ -44,7 +44,7 @@ export async function GET(
     .update({ scan_count: qrCode.scan_count + 1, updated_at: new Date().toISOString() })
     .eq('id', qrCode.id);
 
-  const destination = branch ? `/c/${branch.slug}?ref=${slug}&src=${qrCode.source}` : `/c/espresso-lab?ref=${slug}`;
+  const destination = branch ? `/c/${branch.slug}?ref=${slug}&src=${qrCode.source}` : `/c/memories?ref=${slug}`;
 
   return NextResponse.json({
     success: true,

@@ -139,11 +139,11 @@ export default function MerchantDashboardPage() {
   // Business settings state (dynamic tenant)
   const [settings, setSettings] = useState<BusinessSettings>(() => {
     // Read the merchant's own slug from localStorage (set during signup/login)
-    let merchantSlug = 'espresso-lab';
+    let merchantSlug = 'memories';
     let merchantName = '';
     if (typeof window !== 'undefined') {
       try {
-        merchantSlug = localStorage.getItem('memories_active_merchant_slug') || 'espresso-lab';
+        merchantSlug = localStorage.getItem('memories_active_merchant_slug') || 'memories';
         merchantName = localStorage.getItem('memories_active_merchant_name') || '';
       } catch {}
     }
@@ -182,7 +182,7 @@ export default function MerchantDashboardPage() {
   const [memoriesSearchQuery, setMemoriesSearchQuery] = useState('');
   const [autoApproveWall, setAutoApproveWall] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem(`memories_auto_approve_${settings.cafeSlug || 'espresso-lab'}`) === 'true';
+      return localStorage.getItem(`memories_auto_approve_${settings.cafeSlug || 'memories'}`) === 'true';
     }
     return false;
   });
@@ -224,7 +224,7 @@ export default function MerchantDashboardPage() {
   useEffect(() => {
     const loadQueue = () => {
       try {
-        const queueKey = `memories_print_queue_${settings.cafeSlug || 'espresso-lab'}`;
+        const queueKey = `memories_print_queue_${settings.cafeSlug || 'memories'}`;
         const stored = localStorage.getItem(queueKey);
         if (stored) {
           setPrintQueue(JSON.parse(stored));
@@ -247,8 +247,8 @@ export default function MerchantDashboardPage() {
   const [copiedUrl, setCopiedUrl] = useState(false);
 
   const customerLiveUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/c/${settings.cafeSlug || 'espresso-lab'}`
-    : `https://memories-c9w.pages.dev/c/${settings.cafeSlug || 'espresso-lab'}`;
+    ? `${window.location.origin}/c/${settings.cafeSlug || 'memories'}`
+    : `https://memories-c9w.pages.dev/c/${settings.cafeSlug || 'memories'}`;
 
   const handleCopyUrl = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -349,7 +349,7 @@ export default function MerchantDashboardPage() {
 
     // Fallback: Real registered customers from local registry
     try {
-      const localCustomers = CustomerRegistryService.getRegisteredCustomers(settings.cafeSlug || 'espresso-lab');
+      const localCustomers = CustomerRegistryService.getRegisteredCustomers(settings.cafeSlug || 'memories');
       if (localCustomers && localCustomers.length > 0) {
         setCustomers(
           localCustomers.map((c) => ({
@@ -398,7 +398,7 @@ export default function MerchantDashboardPage() {
   const handleToggleAutoApprove = (val: boolean) => {
     setAutoApproveWall(val);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(`memories_auto_approve_${settings.cafeSlug || 'espresso-lab'}`, String(val));
+      localStorage.setItem(`memories_auto_approve_${settings.cafeSlug || 'memories'}`, String(val));
     }
     setBatchActionMsg(val ? 'تم تفعيل البث التلقائي للشاشات فور التقاط الصور.' : 'تم تفعيل نظام المراجعة والاعتماد اليدوي (أمان مضاعف).');
     setTimeout(() => setBatchActionMsg(null), 3500);
@@ -435,7 +435,7 @@ export default function MerchantDashboardPage() {
   // Customers CRM Actions
   const handleAddDirectStamp = (c: CustomerRecord) => {
     const rawPhone = c.id.replace('c_', '');
-    CustomerRegistryService.addDirectStamp(rawPhone, settings.cafeSlug || 'espresso-lab');
+    CustomerRegistryService.addDirectStamp(rawPhone, settings.cafeSlug || 'memories');
     setCustomers(prev =>
       prev.map(item => {
         if (item.id === c.id) {
@@ -457,7 +457,7 @@ export default function MerchantDashboardPage() {
   const handleCreateCustomerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCustPhone.trim() || !newCustName.trim()) return;
-    CustomerRegistryService.registerCustomer(newCustPhone, newCustName, 'coffee_lover', settings.cafeSlug || 'espresso-lab');
+    CustomerRegistryService.registerCustomer(newCustPhone, newCustName, 'coffee_lover', settings.cafeSlug || 'memories');
     setNewCustPhone('');
     setNewCustName('');
     setIsAddCustomerModalOpen(false);
@@ -481,7 +481,7 @@ export default function MerchantDashboardPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `customers-${settings.cafeSlug || 'espresso-lab'}.csv`);
+    link.setAttribute('download', `customers-${settings.cafeSlug || 'memories'}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -584,8 +584,8 @@ export default function MerchantDashboardPage() {
         channel.postMessage({
           type: 'SCREEN_PAIRED',
           code: cleanCode,
-          cafeSlug: settings.cafeSlug || 'espresso-lab',
-          cafeName: settings.branding?.name || 'Espresso Lab Roastery',
+          cafeSlug: settings.cafeSlug || 'memories',
+          cafeName: settings.branding?.name || 'Memories Studio',
           screenName: screenLocationName,
         });
         channel.close();
@@ -594,8 +594,8 @@ export default function MerchantDashboardPage() {
       // 2. Persist to localStorage for cross-window reliability
       const pairedData = {
         code: cleanCode,
-        cafeSlug: settings.cafeSlug || 'espresso-lab',
-        cafeName: settings.branding?.name || 'Espresso Lab Roastery',
+        cafeSlug: settings.cafeSlug || 'memories',
+        cafeName: settings.branding?.name || 'Memories Studio',
         name: screenLocationName,
         pairedAt: new Date().toISOString(),
       };
@@ -630,7 +630,7 @@ export default function MerchantDashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <CoBrandingLogos
-              cafeName={settings.branding?.name || 'Espresso Lab'}
+              cafeName={settings.branding?.name || 'Memories Studio'}
               cafeLogoUrl={settings.branding?.logoUrl}
               size="md"
               showTagline={true}
@@ -752,13 +752,13 @@ export default function MerchantDashboardPage() {
                     نظام الطاولات المباشر نشط • Live Production
                   </span>
                   <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 font-bold border border-stone-200">
-                    slug: {settings.cafeSlug || 'espresso-lab'}
+                    slug: {settings.cafeSlug || 'memories'}
                   </span>
                 </div>
 
                 <div className="space-y-1">
                   <h2 className="text-2xl sm:text-3xl font-black text-stone-950 tracking-tight">
-                    {settings.branding?.name || 'Espresso Lab Roastery'}
+                    {settings.branding?.name || 'Memories Studio'}
                   </h2>
                   <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-2xl">
                     منظومة استوديو الذكريات وبطاقات الولاء الرقمية المربوطة بالطاولات. لا تتطلب تحميل أي تطبيق وتعمل بكاميرا الهاتف مباشرة.
@@ -2038,7 +2038,7 @@ export default function MerchantDashboardPage() {
                     <div className="pt-3 border-t border-stone-100 flex items-center gap-2">
                       <a
                         href={svgDownloadUrl}
-                        download={`qr-${settings.cafeSlug || 'espresso-lab'}-${qr.slug}.svg`}
+                        download={`qr-${settings.cafeSlug || 'memories'}-${qr.slug}.svg`}
                         target="_blank"
                         rel="noreferrer"
                         className="flex-1 py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
@@ -2083,7 +2083,7 @@ export default function MerchantDashboardPage() {
               </p>
             </div>
 
-            <SubscriptionBillingTab cafeSlug={settings.cafeSlug || 'espresso-lab'} />
+            <SubscriptionBillingTab cafeSlug={settings.cafeSlug || 'memories'} />
           </div>
         )}
 
@@ -2133,7 +2133,7 @@ export default function MerchantDashboardPage() {
             <div className="relative aspect-video bg-[#FAF8F5] text-stone-900 p-8 flex items-center justify-center overflow-hidden">
               <div className="absolute top-4 left-6 flex items-center gap-2">
                 <CoBrandingLogos
-                  cafeName={settings.branding?.name || 'Espresso Lab'}
+                  cafeName={settings.branding?.name || 'Memories Studio'}
                   cafeLogoUrl={settings.branding?.logoUrl}
                   size="md"
                   theme="light"

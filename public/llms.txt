@@ -13,7 +13,7 @@ memories transforms casual coffee visits into lasting customer loyalty through z
 
 ## Canonical URLs
 - Home: https://memories-c9w.pages.dev/
-- Customer Experience: https://memories-c9w.pages.dev/c/espresso-lab
+- Customer Experience: https://memories-c9w.pages.dev/c/memories
 - Live Wall Display: https://memories-c9w.pages.dev/wall/screen-1
 - Privacy Policy: https://memories-c9w.pages.dev/privacy
 - Terms of Service: https://memories-c9w.pages.dev/terms

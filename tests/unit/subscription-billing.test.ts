@@ -25,9 +25,9 @@ describe('SubscriptionBillingService - SaaS Tier Management', () => {
     expect(plan.popular).toBe(true);
   });
 
-  it('retrieves initial subscription for Espresso Lab correctly', () => {
-    const sub = SubscriptionBillingService.getSubscription('espresso-lab');
-    expect(sub.cafeSlug).toBe('espresso-lab');
+  it('retrieves initial subscription for Memories Studio correctly', () => {
+    const sub = SubscriptionBillingService.getSubscription('memories');
+    expect(sub.cafeSlug).toBe('memories');
     expect(sub.planId).toBe('print');
     expect(sub.status).toBe('active');
     expect(sub.paymentMethod.brand).toBe('mada');
@@ -35,12 +35,12 @@ describe('SubscriptionBillingService - SaaS Tier Management', () => {
   });
 
   it('allows seamless plan upgrade and creates ZATCA invoice', () => {
-    const updated = SubscriptionBillingService.changePlan('espresso-lab', 'multi_location', 'annually');
+    const updated = SubscriptionBillingService.changePlan('memories', 'multi_location', 'annually');
     expect(updated.planId).toBe('multi_location');
     expect(updated.billingInterval).toBe('annually');
     expect(updated.status).toBe('active');
 
-    const invoices = SubscriptionBillingService.getInvoices('espresso-lab');
+    const invoices = SubscriptionBillingService.getInvoices('memories');
     expect(invoices.length).toBeGreaterThan(0);
     const latest = invoices[0];
     expect(latest.planId).toBe('multi_location');
@@ -50,10 +50,10 @@ describe('SubscriptionBillingService - SaaS Tier Management', () => {
   });
 
   it('handles cancellation and reactivation lifecycle correctly', () => {
-    const cancelled = SubscriptionBillingService.cancelSubscription('espresso-lab');
+    const cancelled = SubscriptionBillingService.cancelSubscription('memories');
     expect(cancelled.cancelAtPeriodEnd).toBe(true);
 
-    const reactivated = SubscriptionBillingService.reactivateSubscription('espresso-lab');
+    const reactivated = SubscriptionBillingService.reactivateSubscription('memories');
     expect(reactivated.cancelAtPeriodEnd).toBe(false);
     expect(reactivated.status).toBe('active');
   });

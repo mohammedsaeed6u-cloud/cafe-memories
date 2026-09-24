@@ -630,7 +630,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
             {/* Instagram Mention Prompt */}
             <InstagramMentionPrompt
-              instagramHandle={settings.branding.instagramHandle || '@espressolab_eg'}
+              instagramHandle={settings.branding.instagramHandle || '@memories_studio'}
               businessName={settings.branding.name}
             />
 

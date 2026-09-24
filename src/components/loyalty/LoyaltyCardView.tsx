@@ -63,7 +63,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
   const [internalState, setInternalState] = useState<LoyaltyCardState>(() =>
     externalState ||
     LoyaltyCardService.createInitialCardState(
-      'espresso-lab',
+      'memories',
       customerPhone,
       template,
       customerName
@@ -96,7 +96,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
     const payload =
       activeState.qrPayload ||
       LoyaltyCardService.generateBaristaQrPayload(
-        activeState.cafeSlug || 'espresso-lab',
+        activeState.cafeSlug || 'memories',
         customerPhone,
         activeState.activeStamps,
         template.id
@@ -191,7 +191,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
 
   const handleResetCard = () => {
     const resetState = LoyaltyCardService.createInitialCardState(
-      activeState.cafeSlug || 'espresso-lab',
+      activeState.cafeSlug || 'memories',
       customerPhone,
       template,
       customerName
@@ -729,7 +729,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
         <div className="pt-2 w-full flex items-center justify-center">
           <AddToWalletButtons
             passData={{
-              cafeSlug: activeState.cafeSlug || template.id.split('-')[0] || 'espresso-lab',
+              cafeSlug: activeState.cafeSlug || template.id.split('-')[0] || 'memories',
               cafeName: brandName,
               customerPhone: customerPhone,
               customerName: customerName,

@@ -513,7 +513,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   value={(branding.instagramHandle || '').replace('@', '')}
                   onChange={(e) => setBranding({ ...branding, instagramHandle: `@${e.target.value.replace('@', '')}` })}
                   className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-stone-50/50 font-mono"
-                  placeholder="مثلاً: espressolab.eg"
+                  placeholder="مثلاً: roastery.official"
                 />
               </div>
               <p className="text-[10px] text-stone-500 mt-1">يظهر للعميل في نهاية التجربة لعمل منشن للمكان في ستوري إنستغرام</p>

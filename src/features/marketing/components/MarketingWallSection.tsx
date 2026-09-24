@@ -59,7 +59,7 @@ export function MarketingWallSection() {
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-amber-400 font-bold">LIVE BROADCAST • 4K OLED</span>
               </div>
-              <span className="text-stone-300 font-bold">ESPRESSO LAB ROASTERY</span>
+              <span className="text-stone-300 font-bold">MEMORIES STUDIO</span>
             </div>
 
             <div className="aspect-[16/10] bg-[#1A1614] rounded-2xl border border-stone-800 overflow-hidden relative flex flex-col sm:flex-row items-center p-3 sm:p-4 gap-4">
@@ -88,7 +88,7 @@ export function MarketingWallSection() {
                 <div className="p-2 bg-white rounded-2xl shadow-md border border-stone-200">
                   <div className="w-20 h-20 flex items-center justify-center overflow-hidden rounded-xl bg-white">
                     <RealOutsourcedQr
-                      value="https://memories-c9w.pages.dev/c/espresso-lab"
+                      value="https://memories-c9w.pages.dev/c/memories"
                       size={80}
                       alt="رمز مسح تجربة الزائر الحية"
                     />

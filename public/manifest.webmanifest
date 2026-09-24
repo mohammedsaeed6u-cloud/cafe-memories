@@ -22,7 +22,7 @@
       "name": "استوديو الصور",
       "short_name": "الاستوديو",
       "description": "التقاط وتوثيق لقطة الزيارة",
-      "url": "/c/espresso-lab",
+      "url": "/c/memories",
       "icons": [
         {
           "src": "/icon.svg",

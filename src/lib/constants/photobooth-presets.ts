@@ -617,13 +617,14 @@ export const BUSINESS_INDUSTRY_OPTIONS = [
 ] as const;
 
 export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
-  cafeSlug: 'espresso-lab',
-  cafeName: 'Espresso Lab Specialty Roastery',
+  cafeSlug: 'memories',
+  cafeName: 'استوديو الذكريات • Memories Studio',
   businessType: 'cafe',
   branding: {
-    name: 'Espresso Lab',
+    name: 'Memories Studio',
     logoUrl: '',
-    tagline: 'SPECIALTY COFFEE & ROASTERY',
+    tagline: 'SPECIALTY PHOTOBOOTH & COFFEE',
+    instagramHandle: '@memories_studio',
   },
   defaultShotCount: 3,
   loyaltyMaxVisits: 5,

@@ -28,8 +28,8 @@ import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
 import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-auth.service';
 
 export default function BaristaTerminalPage() {
-  const [cafeSlug, setCafeSlug] = useState('espresso-lab');
-  const [settings, setSettings] = useState(() => BusinessSettingsService.getSettings('espresso-lab'));
+  const [cafeSlug, setCafeSlug] = useState('memories');
+  const [settings, setSettings] = useState(() => BusinessSettingsService.getSettings('memories'));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<RegisteredCustomer | null>(null);
   const [loyaltyData, setLoyaltyData] = useState<CustomerLoyaltyData | null>(null);

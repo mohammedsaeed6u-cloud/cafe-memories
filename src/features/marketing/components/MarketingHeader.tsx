@@ -73,7 +73,7 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
           </Link>
 
           <Link
-            href="/c/espresso-lab"
+            href="/c/memories"
             className="text-xs font-bold px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white shadow-xs transition flex items-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
           >
             <span>تجربة الزائر الحية</span>

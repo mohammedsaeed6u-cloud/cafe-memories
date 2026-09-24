@@ -37,8 +37,8 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
   onSettingsSaved,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [cafeName, setCafeName] = useState(currentSettings.branding?.name || 'Espresso Lab Roastery');
-  const [cafeSlug, setCafeSlug] = useState(currentSettings.cafeSlug || 'espresso-lab');
+  const [cafeName, setCafeName] = useState(currentSettings.branding?.name || 'Memories Studio');
+  const [cafeSlug, setCafeSlug] = useState(currentSettings.cafeSlug || 'memories');
   const [orientation, setOrientation] = useState<StripOrientation>(currentSettings.defaultOrientation || 'vertical');
   const [shotCount, setShotCount] = useState<number>(currentSettings.defaultShotCount || 3);
   const [giftTitle, setGiftTitle] = useState(currentSettings.freeGiftOffer?.title || 'كوب قهوة مختصة مجاني');
@@ -206,7 +206,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     type="text"
                     value={cafeName}
                     onChange={(e) => handleCafeNameChange(e.target.value)}
-                    placeholder="مثال: Espresso Lab Roastery"
+                    placeholder="مثال: Artisan Roastery • محمصة ومقهى"
                     className="w-full pr-11 pl-4 py-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
                   />
                 </div>
@@ -224,7 +224,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     type="text"
                     value={cafeSlug}
                     onChange={(e) => setCafeSlug(e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, ''))}
-                    placeholder="espresso-lab"
+                    placeholder="my-cafe"
                     className="w-full bg-transparent text-stone-900 font-mono font-bold text-sm focus:outline-none"
                   />
                 </div>

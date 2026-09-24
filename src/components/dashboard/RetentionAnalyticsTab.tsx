@@ -25,8 +25,8 @@ interface RetentionAnalyticsTabProps {
 type TimePeriod = 'today' | 'week' | 'month' | 'quarter';
 
 export function RetentionAnalyticsTab({
-  cafeSlug = 'espresso-lab',
-  cafeName = 'Espresso Lab Roastery',
+  cafeSlug = 'memories',
+  cafeName = 'Memories Studio',
 }: RetentionAnalyticsTabProps) {
   const [period, setPeriod] = useState<TimePeriod>('month');
   const [copiedNotice, setCopiedNotice] = useState(false);

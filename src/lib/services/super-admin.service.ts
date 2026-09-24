@@ -5,8 +5,8 @@ const TENANTS_STORAGE_KEY = 'memories_saas_tenants_v1';
 export const INITIAL_TENANTS: TenantSummary[] = [
   {
     id: 'ten-1',
-    name: 'Espresso Lab • إكسبرسو لاب',
-    slug: 'espresso-lab',
+    name: 'استوديو الذكريات • Memories Flagship',
+    slug: 'memories',
     tier: 'enterprise',
     status: 'active',
     features: {

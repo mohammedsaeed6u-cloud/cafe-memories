@@ -74,7 +74,7 @@ export default function NotFoundPage() {
           </Link>
 
           <Link
-            href="/c/espresso-lab"
+            href="/c/memories"
             prefetch={false}
             className="py-3 px-6 rounded-full bg-white dark:bg-[#142721] border border-[#E8DCC6] dark:border-[#2A4F44] text-[#1E3A32] dark:text-[#FAF6EE] text-xs font-bold shadow-xs transition flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
           >

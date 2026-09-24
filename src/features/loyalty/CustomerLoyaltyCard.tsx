@@ -25,7 +25,7 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
 }) => {
   const { stampedCount, maxSlots, customerPhone, cafeSlug } = loyaltyData;
   const cleanPhone = encodeURIComponent(customerPhone || 'guest');
-  const stampQrValue = `https://memories-c9w.pages.dev/c/${cafeSlug || 'espresso-lab'}?action=stamp&customer=${cleanPhone}`;
+  const stampQrValue = `https://memories-c9w.pages.dev/c/${cafeSlug || 'memories'}?action=stamp&customer=${cleanPhone}`;
 
   return (
     <div className={`w-full max-w-xl mx-auto p-4 sm:p-5 bg-white border border-stone-200/90 rounded-2xl shadow-xs text-stone-900 transition-all ${className}`}>
@@ -82,7 +82,7 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
           <div className="pt-1.5 border-t border-stone-100">
             <AddToWalletButtons
               passData={{
-                cafeSlug: cafeSlug || 'espresso-lab',
+                cafeSlug: cafeSlug || 'memories',
                 cafeName: brandName || 'كافيه الذكريات',
                 customerPhone: customerPhone || 'guest',
                 stampedCount,
