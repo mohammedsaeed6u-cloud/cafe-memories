@@ -23,6 +23,7 @@ export interface FreeGiftOffer {
 export type FrameShapeStyle = 'rounded' | 'sharp' | 'polaroid' | 'pill';
 
 export type PhotoboothCardMode =
+  | 'luxury_glass'
   | 'ticket_express'
   | 'spotify_player'
   | 'ios_gallery_light'

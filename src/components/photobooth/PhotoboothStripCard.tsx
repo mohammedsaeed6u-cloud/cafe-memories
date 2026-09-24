@@ -146,6 +146,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   const modeInfo = PHOTOBOOTH_CARD_MODES.find((m) => m.id === cardMode) || PHOTOBOOTH_CARD_MODES[0];
 
   // Visual Theme Identifiers
+  const isLuxuryGlass = cardMode === 'luxury_glass';
   const isTicketExpress = cardMode === 'ticket_express';
   const isSpotifyPlayer = cardMode === 'spotify_player';
   const isIosGalleryLight = cardMode === 'ios_gallery_light';
@@ -168,7 +169,9 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     frame.frameShape === 'polaroid';
 
   // Base Effective Colors
-  const effectiveBg = isTicketExpress
+  const effectiveBg = isLuxuryGlass
+    ? '#08080B'
+    : isTicketExpress
     ? '#FAF5EC'
     : isSpotifyPlayer
     ? frame.bgColor || '#1E1E22'
@@ -180,7 +183,9 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     ? '#FFFFFF'
     : frame.bgColor || template?.defaultBg || modeInfo.defaultBg;
 
-  const effectiveBorder = isTicketExpress
+  const effectiveBorder = isLuxuryGlass
+    ? 'rgba(255, 255, 255, 0.18)'
+    : isTicketExpress
     ? '#4A121A'
     : isSpotifyPlayer
     ? frame.borderColor || '#2E2E34'
@@ -192,7 +197,9 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     ? '#E5E5EA'
     : frame.borderColor || template?.defaultBorder || modeInfo.defaultBorder;
 
-  const effectiveText = isTicketExpress
+  const effectiveText = isLuxuryGlass
+    ? '#D9D9D9'
+    : isTicketExpress
     ? '#381016'
     : isSpotifyPlayer || isIosGalleryDark || isIosCamera
     ? '#FFFFFF'
@@ -200,7 +207,9 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     ? '#000000'
     : frame.textColor || template?.defaultText || modeInfo.defaultText;
 
-  const effectiveAccent = isTicketExpress
+  const effectiveAccent = isLuxuryGlass
+    ? '#DD0200'
+    : isTicketExpress
     ? '#8B2635'
     : isSpotifyPlayer
     ? '#1DB954'
@@ -233,7 +242,9 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   // Container sizing
   let cardContainerClass = 'w-[290px] sm:w-[320px] p-4 py-5';
 
-  if (isTicketExpress) {
+  if (isLuxuryGlass) {
+    cardContainerClass = 'w-[295px] sm:w-[325px] p-4.5 pt-5 pb-6';
+  } else if (isTicketExpress) {
     cardContainerClass = 'w-[295px] sm:w-[325px] p-4 pt-4 pb-6';
   } else if (isSpotifyPlayer) {
     cardContainerClass = 'w-[290px] sm:w-[320px] p-4 pt-4 pb-5';
@@ -265,7 +276,11 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     let slotInnerClass = 'inset-[3px] rounded-xs';
     let slotNumberBadge = `#${slotFormatted}`;
 
-    if (isTicketExpress) {
+    if (isLuxuryGlass) {
+      slotBorderClass = 'border border-white/20 rounded-2xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_8px_24px_rgba(0,0,0,0.55)] backdrop-blur-xl bg-black/40 overflow-hidden';
+      slotInnerClass = 'inset-[3px] rounded-xl';
+      slotNumberBadge = `✦ ${slotFormatted}`;
+    } else if (isTicketExpress) {
       slotBorderClass = 'border-2 border-[#4A121A] rounded-sm shadow-xs';
       slotInnerClass = 'inset-[2px] rounded-none';
       slotNumberBadge = `#${slotFormatted}`;
@@ -396,10 +411,17 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         id="printable-strip"
         ref={cardContainerRef}
         style={{
-          backgroundColor: effectiveBg,
-          borderColor: isArabicaGold ? '#D4AF37' : effectiveBorder,
+          backgroundColor: isLuxuryGlass ? undefined : effectiveBg,
+          background: isLuxuryGlass
+            ? 'radial-gradient(ellipse 95% 50% at 50% -10%, rgba(221, 2, 0, 0.55) 0%, transparent 70%), radial-gradient(ellipse 80% 50% at 95% 105%, rgba(217, 217, 217, 0.3) 0%, transparent 65%), linear-gradient(180deg, #120909 0%, #09080A 50%, #050507 100%)'
+            : undefined,
+          boxShadow: isLuxuryGlass
+            ? '0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 35px -5px rgba(221, 2, 0, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.35)'
+            : undefined,
+          backdropFilter: isLuxuryGlass ? 'blur(24px)' : undefined,
+          borderColor: isLuxuryGlass ? 'rgba(255, 255, 255, 0.18)' : (isArabicaGold ? '#D4AF37' : effectiveBorder),
           color: effectiveText,
-          borderRadius: borderRadiusValue,
+          borderRadius: isLuxuryGlass ? '26px' : borderRadiusValue,
         }}
         className={`relative transition-all duration-300 select-none shadow-[0_6px_24px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.06)] border overflow-hidden print:shadow-none print:border-none ${cardContainerClass}`}
       >
@@ -415,6 +437,32 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         {/* ------------------------------------------------------------- */}
         {/* HEADER RENDERING PER THEME                                    */}
         {/* ------------------------------------------------------------- */}
+
+        {/* LUXURY GLASS HEADER (Inspired by Luxury Color Palettes: Alabaster Grey, Racing Red, Black Cherry, Coffee Bean) */}
+        {isLuxuryGlass && (
+          <div className="relative z-10 mb-3.5 px-2 text-left">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-white/90">
+                <span className="text-sm text-white drop-shadow-xs font-serif">✦</span>
+                <span className="text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase font-bold">
+                  {branding.name ? branding.name.toLowerCase() : 'memories.studio'}
+                </span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-[#DD0200]/20 border border-[#DD0200]/40 text-[#DD0200] text-[8px] font-mono font-black tracking-widest uppercase">
+                COLLECTION
+              </span>
+            </div>
+
+            <div className="text-center py-1">
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-sm font-sans">
+                Luxury Color
+              </h3>
+              <p className="text-[11px] font-medium tracking-wide text-[#D9D9D9]/80 mt-0.5">
+                Palettes
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* 1. THE SNAP EXPRESS VINTAGE TICKET HEADER */}
         {isTicketExpress && (
@@ -518,7 +566,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         )}
 
         {/* 6. STANDARD ARTISANAL HEADER (Korean Noir, Kinfolk, Arabica Gold, etc.) */}
-        {!isTicketExpress && !isSpotifyPlayer && !isIosGallery && !isIosCamera && !isIosIMessage && (
+        {!isLuxuryGlass && !isTicketExpress && !isSpotifyPlayer && !isIosGallery && !isIosCamera && !isIosIMessage && (
           <div className={`relative z-10 flex flex-col items-center justify-center text-center ${isKinfolkMinimal ? 'mb-3 pt-1' : 'mb-2'}`}>
             <CoBrandingLogos
               cafeName={branding.name || 'Café Partner'}
@@ -733,6 +781,32 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
               <Camera className="w-3 h-3 text-stone-500" />
               <span className="flex-1 text-right">iMessage...</span>
               <Mic className="w-3 h-3 text-stone-500" />
+            </div>
+          </div>
+        )}
+
+        {/* LUXURY GLASS FOOTER */}
+        {isLuxuryGlass && (
+          <div className="relative z-10 mt-3.5 px-1.5 space-y-2">
+            {/* Swatches pill grid inspired directly by user palette */}
+            <div className="grid grid-cols-4 gap-1.5 p-1.5 rounded-xl bg-white/[0.04] border border-white/10 backdrop-blur-md">
+              <div className="h-6 rounded-lg bg-[#D9D9D9] flex items-center justify-center text-[7px] font-mono font-bold text-stone-900 shadow-2xs" title="Alabaster Grey #D9D9D9">
+                ALA
+              </div>
+              <div className="h-6 rounded-lg bg-[#DD0200] flex items-center justify-center text-[7px] font-mono font-black text-white shadow-2xs" title="Racing Red #DD0200">
+                RED
+              </div>
+              <div className="h-6 rounded-lg bg-[#55100D] flex items-center justify-center text-[7px] font-mono font-black text-white/90 shadow-2xs" title="Black Cherry #55100D">
+                CHR
+              </div>
+              <div className="h-6 rounded-lg bg-[#1A0706] flex items-center justify-center text-[7px] font-mono font-bold text-white/60 border border-white/10 shadow-2xs" title="Coffee Bean #1A0706">
+                COF
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[8px] font-mono text-[#D9D9D9]/70 pt-0.5">
+              <span className="uppercase tracking-widest">{dateFormatted}</span>
+              <span className="tracking-widest uppercase text-white/90 font-bold">HEX // #DD0200</span>
             </div>
           </div>
         )}

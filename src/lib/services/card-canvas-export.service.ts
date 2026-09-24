@@ -31,6 +31,17 @@ interface ThemePalette {
 }
 
 const THEME_PALETTES: Record<string, ThemePalette> = {
+  luxury_glass_cherry: {
+    background: '#08080B',
+    cardBorder: 'rgba(255, 255, 255, 0.22)',
+    titleColor: '#FFFFFF',
+    textColor: '#D9D9D9',
+    accentColor: '#DD0200',
+    slotBg: '#120909',
+    slotBorder: '#55100D',
+    slotActiveBg: '#DD0200',
+    slotActiveBorder: '#FF2A28',
+  },
   espresso_pass: {
     background: '#1C130D',
     cardBorder: '#C59A6F',

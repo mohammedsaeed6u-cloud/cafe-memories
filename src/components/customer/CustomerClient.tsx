@@ -538,6 +538,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
               </div>
               <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none touch-pan-x">
                 {[
+                  { id: 'luxury_glass', label: 'جلاسي فاخر (Luxury Glass)', icon: '💎' },
                   { id: 'polaroid_vintage', label: 'بولارويد كلاسيك', icon: '🎞️' },
                   { id: 'korean_noir', label: 'نوار كوري عاجي', icon: '☕' },
                   { id: 'ticket_express', label: 'تذكرة الزيارة', icon: '🎟️' },
@@ -564,6 +565,39 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                   );
                 })}
               </div>
+
+              {/* Sub-customizer for Luxury Glass Palette Swatches */}
+              {cardMode === 'luxury_glass' && (
+                <div className="p-4 bg-stone-900/95 border border-stone-700/80 rounded-2xl space-y-3 text-xs shadow-lg text-white animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-amber-400 font-serif">✦</span>
+                      <span className="text-xs font-bold text-stone-200">باليتة الألوان الفاخرة (Luxury Palette):</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-stone-400">SURAG.DSGN</span>
+                  </div>
+
+                  {/* The 4 Luxury Swatch Cards matching Image 1 */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <div className="p-2.5 rounded-xl bg-[#D9D9D9] text-stone-900 shadow-sm flex flex-col justify-between h-18">
+                      <span className="text-[11px] font-black">Alabaster Grey</span>
+                      <span className="text-[9px] font-mono font-bold text-stone-700">HEX: #D9D9D9</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#DD0200] text-white shadow-sm flex flex-col justify-between h-18">
+                      <span className="text-[11px] font-black">Racing Red</span>
+                      <span className="text-[9px] font-mono font-bold text-white/90">HEX: #DD0200</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#55100D] text-white shadow-sm flex flex-col justify-between h-18">
+                      <span className="text-[11px] font-black">Black Cherry</span>
+                      <span className="text-[9px] font-mono font-bold text-white/80">HEX: #55100D</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#1A0706] text-white border border-stone-700 shadow-sm flex flex-col justify-between h-18">
+                      <span className="text-[11px] font-black">Coffee Bean</span>
+                      <span className="text-[9px] font-mono font-bold text-stone-400">HEX: #1A0706</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Sub-customizer for Spotify */}
               {cardMode === 'spotify_player' && (

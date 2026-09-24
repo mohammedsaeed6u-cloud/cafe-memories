@@ -61,6 +61,7 @@ export class StripComposerService {
     if (!ctx) throw new Error('Could not get 2d context for canvas');
 
     // Theme identification
+    const isLuxuryGlass = cardMode === 'luxury_glass';
     const isTicketExpress = cardMode === 'ticket_express';
     const isSpotifyPlayer = cardMode === 'spotify_player';
     const isIosGalleryLight = cardMode === 'ios_gallery_light';
@@ -77,7 +78,9 @@ export class StripComposerService {
     const isArabicaGold = cardMode === 'arabica_luxury_gold';
 
     // Base effective colors
-    const effectiveBg = isTicketExpress
+    const effectiveBg = isLuxuryGlass
+      ? '#08080B'
+      : isTicketExpress
       ? '#FAF5EC'
       : isSpotifyPlayer
       ? frame.bgColor || '#384C5A'

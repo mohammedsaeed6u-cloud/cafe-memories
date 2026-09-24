@@ -67,6 +67,14 @@ export const PRESET_COLOR_PALETTES: {
   accentColor: string;
 }[] = [
   {
+    id: 'luxury-glass-cherry',
+    nameAr: 'جلاسي فاخر (Luxury Glass & Cherry)',
+    bgColor: '#08080B',
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+    textColor: '#D9D9D9',
+    accentColor: '#DD0200',
+  },
+  {
     id: 'ticket-express-cream',
     nameAr: 'كريمي إيديتوريال فاخر (Editorial Cream)',
     bgColor: '#FAF5EC',
@@ -221,6 +229,29 @@ export const PRESET_COLOR_PALETTES: {
 ];
 
 export const DEFAULT_PHOTOBOOTH_FRAMES: PhotoboothFrame[] = [
+  {
+    id: 'luxury-glass-cherry',
+    name: 'Luxury Glass & Black Cherry',
+    nameAr: 'جلاسي فاخر وبلاك شيري',
+    bgColor: '#08080B',
+    textColor: '#D9D9D9',
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+    accentColor: '#DD0200',
+    cornerEmojis: {
+      topRight: 'LUXE',
+      bottomLeft: 'AURA',
+      enabled: true,
+    },
+    orientation: 'vertical',
+    shotCount: 3,
+    frameShape: 'rounded',
+    borderRadius: 24,
+    cardMode: 'luxury_glass',
+    badgeText: '✦ LUXURY COLOR PALETTE',
+    templateId: 'luxury_glass_cherry_2x6',
+    layoutType: 'strip_3',
+    isCustom: false,
+  },
   {
     id: 'snap-express',
     name: 'The Snap Express',
@@ -865,6 +896,20 @@ export interface PhotoboothModeInfo {
 }
 
 export const PHOTOBOOTH_CARD_MODES: PhotoboothModeInfo[] = [
+  {
+    id: 'luxury_glass',
+    nameAr: 'جلاسي فاخر (Luxury Glass & Cherry)',
+    nameEn: 'Luxury Glass Crimson & Alabaster',
+    icon: 'sparkles',
+    description: 'واجهة جلاسيمورفيزم فاخرة مع أورا حمراء عميقة، زجاج مسنفر، وهالة ألاباستر بتدرجات #DD0200 و #55100D و #D9D9D9',
+    defaultBg: '#08080B',
+    defaultBorder: 'rgba(255, 255, 255, 0.18)',
+    defaultText: '#D9D9D9',
+    defaultAccent: '#DD0200',
+    filmBadge: '✦ LUXURY COLOR PALETTE',
+    widthCm: 5,
+    heightCm: 15.2,
+  },
   {
     id: 'ticket_express',
     nameAr: 'تذكرة قطار الذكريات (The Snap Express)',
