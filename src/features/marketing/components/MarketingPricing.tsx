@@ -76,18 +76,18 @@ export function MarketingPricing() {
   ];
 
   return (
-    <section id="pricing" className="py-20 px-6 max-w-6xl mx-auto border-t border-stone-200/80">
+    <section id="pricing" className="py-20 px-6 max-w-6xl mx-auto border-t border-white/10/80">
       <div className="text-center max-w-2xl mx-auto mb-16">
         <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
           TRANSPARENT PRICING • باقات الشراكة
         </span>
         <h2
-          className="text-3xl sm:text-5xl font-black text-stone-900 mt-2 font-serif"
+          className="text-3xl sm:text-5xl font-black text-white mt-2 font-serif"
           style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
         >
           خطط اشتراك واضحة مبنية على القيمة.
         </h2>
-        <p className="text-sm sm:text-base text-stone-600 mt-3.5">
+        <p className="text-sm sm:text-base text-stone-300 mt-3.5">
           اختر المستوى المناسب لنشاطك التجاري وعلامتك — من التجربة الرقمية الكاملة وحتى محطات الطباعة الفورية والفروع المتعددة، بدون عقود احتكارية أو كبائن تصوير خشبية باهظة.
         </p>
       </div>
@@ -99,12 +99,12 @@ export function MarketingPricing() {
             className={`p-6 sm:p-7 rounded-3xl flex flex-col justify-between transition-all duration-200 ${
               tier.isPopular
                 ? 'bg-[#241E1C] text-white shadow-xl ring-2 ring-amber-500 scale-[1.02]'
-                : 'bg-white text-stone-900 border border-stone-200/90 shadow-xs hover:shadow-md'
+                : 'bg-white/[0.04] text-white border border-white/10/90 shadow-xs hover:shadow-md'
             }`}
           >
             <div>
               {tier.isPopular && (
-                <div className="inline-block text-[10px] font-mono uppercase tracking-widest bg-amber-500 text-stone-950 px-3 py-0.5 rounded-full font-black mb-3">
+                <div className="inline-block text-[10px] font-mono uppercase tracking-widest bg-amber-500 text-white px-3 py-0.5 rounded-full font-black mb-3">
                   الأكثر طلباً
                 </div>
               )}
@@ -116,7 +116,7 @@ export function MarketingPricing() {
                 {tier.tagline}
               </p>
 
-              <div className="mt-5 pb-5 border-b border-stone-200/60 flex items-baseline gap-1">
+              <div className="mt-5 pb-5 border-b border-white/10/60 flex items-baseline gap-1">
                 <span className="text-3xl font-black font-mono">{tier.price}</span>
                 <span className={`text-[11px] font-medium mr-1 ${tier.isPopular ? 'text-stone-400' : 'text-stone-500'}`}>
                   {tier.period}
@@ -127,7 +127,7 @@ export function MarketingPricing() {
                 {tier.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-xs leading-relaxed">
                     <Check className={`w-4 h-4 shrink-0 mt-0.5 ${tier.isPopular ? 'text-amber-400' : 'text-amber-600'}`} />
-                    <span className={tier.isPopular ? 'text-stone-200' : 'text-stone-700'}>{feature}</span>
+                    <span className={tier.isPopular ? 'text-stone-200' : 'text-stone-300'}>{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -138,8 +138,8 @@ export function MarketingPricing() {
                 href={tier.ctaHref}
                 className={`w-full py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer ${
                   tier.isPopular
-                    ? 'bg-amber-500 hover:bg-amber-400 text-stone-950 font-black'
-                    : 'bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-300'
+                    ? 'bg-amber-500 hover:bg-amber-400 text-white font-black'
+                    : 'bg-stone-100 hover:bg-stone-200 text-white border border-stone-300'
                 }`}
               >
                 <span>{tier.ctaText}</span>

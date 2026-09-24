@@ -7,14 +7,14 @@ import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
 
 export function MarketingWallSection() {
   return (
-    <section id="live-wall" className="py-20 px-6 max-w-6xl mx-auto border-t border-stone-200/80">
+    <section id="live-wall" className="py-20 px-6 max-w-6xl mx-auto border-t border-white/10/80">
       <div className="p-8 sm:p-12 rounded-3xl bg-[#1E1917] text-white shadow-xl relative overflow-hidden border border-[#2E2724]">
         {/* Subtle Ambient Warm Glow */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="space-y-5 text-right">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-mono text-amber-400 font-bold">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04]/10 border border-white/15 text-[11px] font-mono text-amber-400 font-bold">
               <Tv className="w-3.5 h-3.5" />
               <span>LIVING MEMORY WALL</span>
             </div>
@@ -44,7 +44,7 @@ export function MarketingWallSection() {
             <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
               <Link
                 href="/wall/screen-1"
-                className="w-full sm:w-auto text-xs font-bold py-3.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                className="w-full sm:w-auto text-xs font-bold py-3.5 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-white transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
               >
                 <span>معاينة شاشة الصالة الحية (Live Wall)</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -64,7 +64,7 @@ export function MarketingWallSection() {
 
             <div className="aspect-[16/10] bg-[#1A1614] rounded-2xl border border-stone-800 overflow-hidden relative flex flex-col sm:flex-row items-center p-3 sm:p-4 gap-4">
               {/* Featured Polaroid Memory */}
-              <div className="relative w-full sm:w-3/5 h-full rounded-xl overflow-hidden shadow-lg border-2 border-white/90 bg-white">
+              <div className="relative w-full sm:w-3/5 h-full rounded-xl overflow-hidden shadow-lg border-2 border-white/90 bg-white/[0.04]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80"
@@ -73,7 +73,7 @@ export function MarketingWallSection() {
                 />
                 <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-stone-950/90 via-stone-950/60 to-transparent text-white text-right">
                   <div className="flex items-center justify-between text-[9px] font-mono mb-0.5">
-                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500/80 text-stone-950 font-bold">
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500/80 text-white font-bold">
                       الزيارة #4
                     </span>
                     <span className="text-stone-300">منذ ١٠ دقائق</span>
@@ -85,8 +85,8 @@ export function MarketingWallSection() {
 
               {/* Scannable Live Wall QR & Callout */}
               <div className="w-full sm:w-2/5 flex flex-col items-center justify-center text-center space-y-2">
-                <div className="p-2 bg-white rounded-2xl shadow-md border border-stone-200">
-                  <div className="w-20 h-20 flex items-center justify-center overflow-hidden rounded-xl bg-white">
+                <div className="p-2 bg-white/[0.04] rounded-2xl shadow-md border border-white/10">
+                  <div className="w-20 h-20 flex items-center justify-center overflow-hidden rounded-xl bg-white/[0.04]">
                     <RealOutsourcedQr
                       value="https://memories-c9w.pages.dev/c/memories"
                       size={80}

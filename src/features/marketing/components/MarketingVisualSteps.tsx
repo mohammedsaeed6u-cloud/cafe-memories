@@ -48,18 +48,18 @@ export function MarketingVisualSteps() {
   ];
 
   return (
-    <section id="customer-journey" className="px-6 py-20 max-w-6xl mx-auto border-t border-stone-200/80">
+    <section id="customer-journey" className="px-6 py-20 max-w-6xl mx-auto border-t border-white/10/80">
       <div className="text-center max-w-3xl mx-auto mb-16">
         <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
           THE GUEST EXPERIENCE • رحلة العميل
         </span>
         <h2
-          className="text-3xl sm:text-5xl font-black text-stone-950 mt-2.5 font-serif"
+          className="text-3xl sm:text-5xl font-black text-white mt-2.5 font-serif"
           style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
         >
           خمس خطوات مدروسة من الطاولة إلى التذكار الدائم.
         </h2>
-        <p className="text-sm sm:text-base text-stone-600 mt-3.5 leading-relaxed">
+        <p className="text-sm sm:text-base text-stone-300 mt-3.5 leading-relaxed">
           تجربة مصممة بعناية فائقة لتكون خالية من التعقيد، تمنح رواد متجرك وصالتك بهجة التوثيق الفوري وتضمن عودتهم مرات متتالية.
         </p>
       </div>
@@ -70,13 +70,13 @@ export function MarketingVisualSteps() {
           return (
             <div
               key={s.step}
-              className={`p-7 rounded-3xl bg-white border border-stone-200/90 shadow-xs flex flex-col justify-between hover:shadow-md transition-all duration-200 ${
+              className={`p-7 rounded-[26px] bg-white/[0.04] border border-white/10/90 shadow-xs flex flex-col justify-between hover:shadow-md transition-all duration-200 ${
                 idx === 2 ? 'md:col-span-2 lg:col-span-1' : ''
               }`}
             >
               <div>
                 <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 rounded-2xl bg-stone-100 border border-stone-200 text-stone-900 flex items-center justify-center shadow-2xs">
+                  <div className="w-12 h-12 rounded-[26px] bg-stone-100 border border-white/10 text-white flex items-center justify-center shadow-2xs">
                     <Icon className="w-5 h-5 text-stone-800" />
                   </div>
                   <span className="text-[10px] font-mono tracking-widest text-amber-700 font-bold bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
@@ -88,12 +88,12 @@ export function MarketingVisualSteps() {
                   {s.badge}
                 </div>
                 <h3
-                  className="font-black text-lg text-stone-950 mb-2.5 font-serif leading-snug"
+                  className="font-black text-lg text-white mb-2.5 font-serif leading-snug"
                   style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
                 >
                   {s.title}
                 </h3>
-                <p className="text-xs text-stone-600 leading-relaxed">
+                <p className="text-xs text-stone-300 leading-relaxed">
                   {s.desc}
                 </p>
               </div>

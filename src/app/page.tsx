@@ -21,11 +21,16 @@ export default function HomePage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#FAF6EE] dark:bg-[#0E1A16] text-[#3B2F2A] dark:text-[#FAF6EE] selection:bg-[#B85C43] selection:text-white font-cairo transition-colors duration-250">
+    <div className="min-h-screen bg-[#000000] text-white selection:bg-[#DD0200] selection:text-white apple-font font-sans relative overflow-x-hidden">
+      {/* Apple Luxury Ambient Mesh Glows in Background */}
+      <div className="fixed top-0 left-0 w-[650px] h-[550px] bg-gradient-to-br from-[#DD0200]/22 via-[#55100D]/15 to-transparent rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="fixed top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-tl from-[#D9D9D9]/12 via-[#8E8E93]/6 to-transparent rounded-full blur-[160px] pointer-events-none z-0" />
+      <div className="fixed bottom-0 left-1/4 w-[700px] h-[500px] bg-gradient-to-tr from-[#1A0706]/40 via-[#55100D]/12 to-transparent rounded-full blur-[150px] pointer-events-none z-0" />
+
       {/* Accessibility: Skip to Content */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#1E3A32] focus:text-[#FAF6EE] focus:rounded-xl focus:shadow-lg focus:outline-none"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#DD0200] focus:text-white focus:rounded-xl focus:shadow-lg focus:outline-none"
       >
         تخطي إلى المحتوى الرئيسي
       </a>
@@ -43,7 +48,7 @@ export default function HomePage() {
       <MarketingHeader onOpenSearch={() => setIsSearchOpen(true)} />
 
       {/* Main Landmark */}
-      <main id="main-content" tabIndex={-1} className="outline-none">
+      <main id="main-content" tabIndex={-1} className="relative z-10 outline-none">
         {/* Hero Section */}
         <MarketingHero />
 

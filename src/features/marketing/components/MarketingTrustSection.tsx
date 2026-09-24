@@ -38,18 +38,18 @@ export function MarketingTrustSection() {
   ];
 
   return (
-    <section id="trust" className="py-20 px-6 max-w-6xl mx-auto border-t border-stone-200/80">
+    <section id="trust" className="py-20 px-6 max-w-6xl mx-auto border-t border-white/10/80">
       <div className="text-center max-w-2xl mx-auto mb-16">
         <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
           SECURITY & PRIVACY • الأمان والخصوصية
         </span>
         <h2
-          className="text-3xl sm:text-4xl font-black text-stone-900 mt-2 font-serif"
+          className="text-3xl sm:text-4xl font-black text-white mt-2 font-serif"
           style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
         >
           أمان وخصوصية مبنية على ثقة روادك.
         </h2>
-        <p className="text-sm sm:text-base text-stone-600 mt-3.5">
+        <p className="text-sm sm:text-base text-stone-300 mt-3.5">
           صُممت Memories لتكون منصة ضيافة محترمة ترعى خصوصية العميل ولا تكشف بياناته الشخصية، مع التزام تام بالمعايير التشغيلية المعتمدة.
         </p>
       </div>
@@ -60,15 +60,15 @@ export function MarketingTrustSection() {
           return (
             <div
               key={item.title}
-              className="p-6 rounded-2xl bg-white border border-stone-200/90 shadow-2xs hover:shadow-xs transition"
+              className="p-6 rounded-2xl bg-white/[0.04] border border-white/10/90 shadow-2xs hover:shadow-xs transition"
             >
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center mb-4">
                 <Icon className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-sm text-stone-900 mb-2">
+              <h3 className="font-bold text-sm text-white mb-2">
                 {item.title}
               </h3>
-              <p className="text-xs text-stone-600 leading-relaxed">
+              <p className="text-xs text-stone-300 leading-relaxed">
                 {item.desc}
               </p>
             </div>

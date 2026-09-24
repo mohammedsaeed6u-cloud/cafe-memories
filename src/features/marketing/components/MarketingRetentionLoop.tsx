@@ -50,18 +50,18 @@ export function MarketingRetentionLoop() {
   ];
 
   return (
-    <section id="business-operation" className="py-20 px-6 max-w-6xl mx-auto border-t border-stone-200/80">
+    <section id="business-operation" className="py-20 px-6 max-w-6xl mx-auto border-t border-white/10/80">
       <div className="text-center max-w-3xl mx-auto mb-16">
         <span className="text-xs font-mono uppercase tracking-widest text-amber-700 font-bold">
           OPERATIONAL EXCELLENCE • تشغيل واستثمار البيزنس
         </span>
         <h2
-          className="text-3xl sm:text-5xl font-black text-stone-950 mt-2.5 font-serif"
+          className="text-3xl sm:text-5xl font-black text-white mt-2.5 font-serif"
           style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
         >
           كيف يعمل النظام في نشاطك التجاري لتحقيق أعلى عائد؟
         </h2>
-        <p className="text-sm sm:text-base text-stone-600 mt-3.5 leading-relaxed">
+        <p className="text-sm sm:text-base text-stone-300 mt-3.5 leading-relaxed">
           هندسة تشغيلية مصممة خصيصاً لتفادي تعقيدات العتاد والبرمجيات المزعجة، ولتمنح علامتك التجارية سلاحاً تسويقياً فريداً يميزك عن المنافسين.
         </p>
       </div>
@@ -72,7 +72,7 @@ export function MarketingRetentionLoop() {
           return (
             <div
               key={p.num}
-              className="p-7 rounded-3xl bg-white border border-stone-200/90 shadow-xs flex flex-col justify-between hover:shadow-md transition-all duration-200"
+              className="p-7 rounded-3xl bg-white/[0.04] border border-white/10/90 shadow-xs flex flex-col justify-between hover:shadow-md transition-all duration-200"
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -85,12 +85,12 @@ export function MarketingRetentionLoop() {
                 </div>
 
                 <h3
-                  className="font-black text-base text-stone-950 mb-2.5 font-serif leading-snug"
+                  className="font-black text-base text-white mb-2.5 font-serif leading-snug"
                   style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
                 >
                   {p.title}
                 </h3>
-                <p className="text-xs text-stone-600 leading-relaxed">
+                <p className="text-xs text-stone-300 leading-relaxed">
                   {p.desc}
                 </p>
               </div>
