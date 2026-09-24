@@ -31,6 +31,8 @@ import {
 import { LoyaltyCardService } from '@/lib/services/loyalty-card.service';
 import { CardCanvasExportService } from '@/lib/services/card-canvas-export.service';
 import { AddToWalletButtons } from '@/components/wallet/AddToWalletButtons';
+import { ImageSaveService } from '@/lib/services/image-save.service';
+import { IosSaveImageModal } from '@/components/photobooth/IosSaveImageModal';
 
 export interface LoyaltyCardViewProps {
   template: LoyaltyCardTemplate;
@@ -152,6 +154,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
     }
   };
   const [isExporting, setIsExporting] = useState(false);
+  const [iosModalImage, setIosModalImage] = useState<string | null>(null);
 
   const handleExportCard = async () => {
     setIsExporting(true);
@@ -163,7 +166,14 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
         totalSlots: template.slotCount,
         theme: template.id,
       });
-      CardCanvasExportService.downloadCardImage(dataUrl, `loyalty-card-${customerName}.png`);
+      const result = await ImageSaveService.saveImage({
+        dataUrl,
+        filename: `loyalty-card-${customerName || 'card'}.png`,
+        title: `كارت ولاء ${customerName || brandName}`,
+      });
+      if (result.method === 'fallback') {
+        setIosModalImage(result.blobUrl || dataUrl);
+      }
     } catch (err) {
       console.error('Failed to export card image', err);
     } finally {
@@ -406,7 +416,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                   type="button"
                   onClick={() => setIsFlipped(true)}
                   className="p-1 rounded-lg bg-black/10 hover:bg-black/20 text-current transition cursor-pointer"
-                  title="عرض رمز الـ QR للباريستا"
+                  title="عرض رمز الـ QR لموظف الكاونتر"
                   aria-label="عرض رمز الـ QR"
                 >
                   <QrIcon className="w-4 h-4" />
@@ -575,7 +585,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-amber-300">
-                    كود التحقق للباريستا • Barista Pass
+                    كود التحقق لموظف الكاونتر • Staff Pass
                   </h4>
                   <p className="text-[9px] text-stone-400 font-mono">
                     ID: {activeState.cardId.slice(0, 14)}...
@@ -741,6 +751,14 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
           />
         </div>
       )}
+
+      {/* Safari / iOS Save Image Sheet Modal */}
+      <IosSaveImageModal
+        open={!!iosModalImage}
+        imageUrl={iosModalImage}
+        filename="loyalty-card.png"
+        onClose={() => setIosModalImage(null)}
+      />
     </div>
   );
 };

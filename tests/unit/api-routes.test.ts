@@ -100,7 +100,7 @@ describe('API Routes: Capture Schema Zod Validation', () => {
     const result = captureSchema.safeParse({});
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.role).toBe('زائر ومحب للقهوة');
+      expect(result.data.role).toBe('ضيف مميز');
       expect(result.data.frameId).toBe('ivory');
       expect(result.data.liveWallConsent).toBe(true);
     }

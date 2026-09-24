@@ -161,7 +161,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h3 className="text-base font-black text-stone-900 flex items-center gap-2">
             <Clock className="w-4 h-4 text-amber-600" />
-            <span>طابور الأشرطة الجاهزة للطباعة والتسليم للباريستا</span>
+            <span>طابور الأشرطة الجاهزة للطباعة والتسليم لطاقم الكاونتر</span>
           </h3>
 
           <button
@@ -177,7 +177,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                 ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 shadow-xs'
                 : 'bg-stone-100 text-stone-500 border-stone-200 hover:bg-stone-200'
             }`}
-            title="تفعيل أو كتم جرس تنبيه الطلبات الجديدة للباريستا"
+            title="تفعيل أو كتم جرس تنبيه الطلبات الجديدة لطاقم العمل"
           >
             {soundAlertEnabled ? (
               <Bell className="w-3.5 h-3.5 text-amber-600 animate-pulse" />

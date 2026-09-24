@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { Share2, Download, Camera, Sparkles, Check, Copy, Lock } from 'lucide-react';
+import { ImageSaveService } from '@/lib/services/image-save.service';
+import { IosSaveImageModal } from './IosSaveImageModal';
 
 interface ShareStoryWidgetProps {
   stripDataUrl?: string;
@@ -23,23 +25,28 @@ export const ShareStoryWidget: React.FC<ShareStoryWidgetProps> = ({
   const [copiedNotice, setCopiedNotice] = useState(false);
   const [lockedNotice, setLockedNotice] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [iosModalOpen, setIosModalOpen] = useState(false);
 
   const remaining = Math.max(totalShots - completedShots, 1);
 
   // 1. Download HD Image (Only allowed if card is 100% complete)
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!isCardComplete) {
       setLockedNotice(true);
       setTimeout(() => setLockedNotice(false), 4000);
       return;
     }
     if (!stripDataUrl) return;
-    const a = document.createElement('a');
-    a.href = stripDataUrl;
-    a.download = `memories-strip-${Date.now()}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+
+    const result = await ImageSaveService.saveImage({
+      dataUrl: stripDataUrl,
+      filename: `memories-strip-${Date.now()}.png`,
+      title: `ذكرياتي في ${brandName}`,
+    });
+
+    if (result.method === 'fallback') {
+      setIosModalOpen(true);
+    }
   };
 
   // 2. Share to Story via Web Share API
@@ -123,6 +130,14 @@ export const ShareStoryWidget: React.FC<ShareStoryWidgetProps> = ({
           <span>تم نسخ الهاشتاج والمنشن لنشرها على ستوري إنستجرام!</span>
         </div>
       )}
+
+      {/* Safari / iOS Save Image Sheet Modal */}
+      <IosSaveImageModal
+        open={iosModalOpen}
+        imageUrl={stripDataUrl || null}
+        filename="memories-strip.png"
+        onClose={() => setIosModalOpen(false)}
+      />
     </div>
   );
 };

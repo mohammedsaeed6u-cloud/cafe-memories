@@ -25,14 +25,14 @@ const SEARCH_ITEMS: SearchItem[] = [
   {
     id: 'wall',
     title: 'شاشة الصالة الحية (Live TV Wall)',
-    description: 'شاشة العرض المباشر التفاعلية للبث الحي في كافيهات القهوة المختصة',
+    description: 'شاشة العرض المباشر التفاعلية للبث الحي في الصالات والمتاجر والمقاهي',
     category: 'التطبيقات',
     href: '/wall/screen-1',
     icon: Tv,
   },
   {
     id: 'dashboard',
-    title: 'لوحة تحكم التاجر والكافيه',
+    title: 'لوحة تحكم التاجر وإدارة المنشأة',
     description: 'إدارة الفروع، إعدادات الولاء، رموز PIN الطاقم، واعتماد الصور',
     category: 'الإدارة',
     href: '/dashboard',
@@ -49,7 +49,7 @@ const SEARCH_ITEMS: SearchItem[] = [
   {
     id: 'pricing',
     title: 'الباقات والاشتراكات',
-    description: 'باقة الكافيهات المستقلة، الباقة الاحترافية مع الشاشة الحية، والمؤسسات',
+    description: 'باقة الفروع المستقلة، الباقة الاحترافية مع الشاشة الحية، والمؤسسات والشركات',
     category: 'الأسعار',
     href: '#pricing',
     icon: Gift,

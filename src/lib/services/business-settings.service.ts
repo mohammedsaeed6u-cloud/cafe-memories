@@ -73,9 +73,9 @@ export class BusinessSettingsService {
 
         const rawBranding = parsed.branding || {};
         const sanitizedBrandingName =
-          !rawBranding.name || rawBranding.name.toLowerCase() === 'espresso lab'
-            ? 'Memories Studio'
-            : rawBranding.name;
+          rawBranding.name && rawBranding.name.trim()
+            ? rawBranding.name.trim()
+            : 'Memories Studio';
         const sanitizedBranding = {
           ...DEFAULT_BUSINESS_SETTINGS.branding,
           ...rawBranding,

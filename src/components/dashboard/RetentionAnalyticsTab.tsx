@@ -240,7 +240,7 @@ export function RetentionAnalyticsTab({
             {[
               { name: 'طاولة #4 — جلسات النافذة الرئيسية', scans: 342, captures: 298, share: '24%' },
               { name: 'طاولة #12 — منطقة العمل والدراسة', scans: 285, captures: 240, share: '20%' },
-              { name: 'كاونتر الباريستا — نقطة استلام الطلبات', scans: 210, captures: 182, share: '15%' },
+              { name: 'كاونتر الخدمة والاستقبال — نقطة التفاعل', scans: 210, captures: 182, share: '15%' },
               { name: 'طاولة التراس الخارجي #2', scans: 198, captures: 165, share: '14%' },
             ].map((tbl, i) => (
               <div key={i} className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 flex items-center justify-between text-xs">
@@ -263,7 +263,7 @@ export function RetentionAnalyticsTab({
           <div>
             <h4 className="font-bold text-sm text-stone-950 flex items-center gap-2">
               <Clock className="w-4 h-4 text-amber-600" />
-              <span>أوقات الذروة والتفاعل في الكافيه (Peak Engagement Hours)</span>
+              <span>أوقات الذروة والتفاعل المباشر (Peak Engagement Hours)</span>
             </h4>
             <p className="text-xs text-stone-500 mt-0.5">مقارنة تفاعل الزوار بين فترات اليوم المختلفة</p>
           </div>
@@ -272,9 +272,9 @@ export function RetentionAnalyticsTab({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-1">
             <span className="text-xs font-bold text-stone-500 block">فترة الصباح (7:00 ص - 11:00 ص)</span>
-            <strong className="text-lg font-black text-stone-900 block">قهوة الصباح السريعة</strong>
+            <strong className="text-lg font-black text-stone-900 block">فترة الطلبات والزيارات السريعة</strong>
             <p className="text-xs text-stone-500 leading-relaxed">
-              الزيارات سريعة (Takeaway) بنسبة 65%، تفاعل مع الكروت بنسبة 25%.
+              الزيارات سريعة بنسبة 65%، وتفاعل مع بطاقات الولاء بنسبة 25%.
             </p>
           </div>
 

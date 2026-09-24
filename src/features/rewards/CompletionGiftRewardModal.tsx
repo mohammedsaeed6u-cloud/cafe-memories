@@ -14,8 +14,8 @@ interface CompletionGiftRewardModalProps {
 
 export const CompletionGiftRewardModal: React.FC<CompletionGiftRewardModalProps> = ({
   isOpen,
-  giftTitle = 'مشروب سبيشالتي مجاني',
-  giftSubtitle = 'أظهر هذا الكود للباريستا لاستلام هديتك مع الصورة المطبوعة',
+  giftTitle = 'هدية ترحيبية مميزة',
+  giftSubtitle = 'أظهر هذا الكود لموظف الكاونتر أو الكاشير لاستلام هديتك مع الصورة المطبوعة',
   giftCode = 'GIFT-2026',
   onClose,
   onPrintStrip,

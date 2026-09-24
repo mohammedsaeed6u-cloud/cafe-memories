@@ -6,6 +6,8 @@
  * or native device sharing via navigator.share.
  */
 
+import { ImageSaveService } from './image-save.service';
+
 export interface CardExportOptions {
   customerName: string;
   cafeName: string;
@@ -224,7 +226,7 @@ export class CardCanvasExportService {
     ctx.fillStyle = `${palette.textColor}66`;
     ctx.font = '18px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('Powered by Café Memories • Photobooth & Loyalty', width - 60, height - 40);
+    ctx.fillText('Powered by Memories Studio • Experience & Loyalty', width - 60, height - 40);
     ctx.restore();
 
     return canvas.toDataURL('image/png');
@@ -233,7 +235,7 @@ export class CardCanvasExportService {
   /**
    * Trigger native browser image download.
    */
-  static downloadCardImage(dataUrl: string, filename: string = 'cafe-loyalty-card.png'): void {
+  static downloadCardImage(dataUrl: string, filename: string = 'memories-loyalty-card.png'): void {
     if (typeof document === 'undefined') return;
 
     const link = document.createElement('a');
@@ -245,26 +247,22 @@ export class CardCanvasExportService {
   }
 
   /**
-   * Native device share sheet or download fallback.
+   * Native device share sheet or download fallback with Safari iOS support.
    */
-  static async shareCardImage(dataUrl: string, title: string = 'كارت ولاء كافيه ميموريز'): Promise<boolean> {
-    if (typeof navigator !== 'undefined' && navigator.share) {
+  static async shareCardImage(dataUrl: string, title: string = 'كارت ولاء الذكريات'): Promise<boolean> {
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
-        // Convert data URL to Blob for sharing
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        const file = new File([blob], 'cafe-loyalty-card.png', { type: 'image/png' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title,
-            text: 'كارت الولاء الرقمي الخاص بي في الكافيه ',
-            files: [file],
-          });
+        const res = await ImageSaveService.saveImage({
+          dataUrl,
+          filename: 'memories-loyalty-card.png',
+          title,
+          text: 'كارت الولاء الرقمي الخاص بي ✨',
+        });
+        if (res.success && res.method === 'share') {
           return true;
         }
       } catch {
-        // Fall back to download
+        // Fall back to direct download
       }
     }
 

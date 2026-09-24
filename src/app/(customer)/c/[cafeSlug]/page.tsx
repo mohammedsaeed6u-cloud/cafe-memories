@@ -4,12 +4,18 @@ export function generateStaticParams() {
   return [
     { cafeSlug: 'memories' },
     { cafeSlug: 'studio' },
-    { cafeSlug: 'espresso-lab' },
-    { cafeSlug: 'artisan-roastery' },
-    { cafeSlug: 'roastery-house' },
-    { cafeSlug: 'cova-milano' },
-    { cafeSlug: 'memories-flagship' },
-    { cafeSlug: 'specialty-coffee' },
+    { cafeSlug: 'flagship' },
+    { cafeSlug: 'cafe' },
+    { cafeSlug: 'specialty' },
+    { cafeSlug: 'coffee' },
+    { cafeSlug: 'roastery' },
+    { cafeSlug: 'soil-roastery' },
+    { cafeSlug: 'elan-cafe' },
+    { cafeSlug: 'barns' },
+    { cafeSlug: 'half-million' },
+    { cafeSlug: 'arabica' },
+    { cafeSlug: 'brew' },
+    { cafeSlug: 'espresso' },
   ];
 }
 

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import {
-  Coffee,
   Sparkles,
   QrCode,
   Copy,
@@ -18,10 +17,20 @@ import {
   Gift,
   CheckCircle2,
   Download,
+  Store,
+  Scissors,
+  Utensils,
+  Ticket,
+  Gamepad2,
+  Coffee,
+  ShoppingBag,
+  Award,
 } from 'lucide-react';
-import { BusinessSettings, StripOrientation } from '@/types/photobooth';
+import { BusinessSettings, StripOrientation, BusinessType } from '@/types/photobooth';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { PrintService } from '@/lib/services/print.service';
+import { BUSINESS_INDUSTRY_OPTIONS, getIndustryProfile } from '@/lib/constants/photobooth-presets';
+import { ImageSaveService } from '@/lib/services/image-save.service';
 
 interface MerchantQuickSetupModalProps {
   isOpen: boolean;
@@ -30,6 +39,16 @@ interface MerchantQuickSetupModalProps {
   onSettingsSaved: (updatedSettings: BusinessSettings) => void;
 }
 
+const INDUSTRY_ICONS: Record<string, any> = {
+  cafe: Coffee,
+  restaurant: Utensils,
+  retail: ShoppingBag,
+  salon: Scissors,
+  entertainment: Gamepad2,
+  events: Ticket,
+  general: Store,
+};
+
 export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = ({
   isOpen,
   onClose,
@@ -37,20 +56,42 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
   onSettingsSaved,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  const [businessType, setBusinessType] = useState<BusinessType>(
+    currentSettings.businessType || 'general'
+  );
+
   const [cafeName, setCafeName] = useState(
     currentSettings.cafeSlug === 'memories' ? '' : (currentSettings.branding?.name || '')
   );
   const [cafeSlug, setCafeSlug] = useState(
     currentSettings.cafeSlug === 'memories' ? '' : (currentSettings.cafeSlug || '')
   );
-  const [orientation, setOrientation] = useState<StripOrientation>(currentSettings.defaultOrientation || 'vertical');
+  const [orientation, setOrientation] = useState<StripOrientation>(
+    currentSettings.defaultOrientation || 'vertical'
+  );
   const [shotCount, setShotCount] = useState<number>(currentSettings.defaultShotCount || 3);
-  const [giftTitle, setGiftTitle] = useState(currentSettings.freeGiftOffer?.title || 'كوب قهوة مختصة مجاني');
+
+  const currentProfile = getIndustryProfile(businessType);
+  const [giftTitle, setGiftTitle] = useState(
+    currentSettings.freeGiftOffer?.title || currentProfile.defaultGiftTitle
+  );
+  const [giftSubtitle, setGiftSubtitle] = useState(
+    currentSettings.freeGiftOffer?.subtitle || currentProfile.defaultGiftSubtitle
+  );
+
   const [copiedLink, setCopiedLink] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
-  const printStandRef = useRef<HTMLDivElement>(null);
 
-  // Auto-slug generator when user types cafe name
+  // When industry changes, adapt defaults
+  const handleSelectIndustry = (type: BusinessType) => {
+    setBusinessType(type);
+    const prof = getIndustryProfile(type);
+    setGiftTitle(prof.defaultGiftTitle);
+    setGiftSubtitle(prof.defaultGiftSubtitle);
+  };
+
+  // Auto-slug generator when user types business name
   const handleCafeNameChange = (val: string) => {
     setCafeName(val);
     const generated = val
@@ -69,6 +110,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
   // Generate QR code whenever cafeSlug changes or when reaching step 3
   useEffect(() => {
+    if (!cafeSlug) return;
     QRCode.toDataURL(customerUrl, {
       width: 400,
       margin: 2,
@@ -79,26 +121,31 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
     })
       .then((url) => setQrDataUrl(url))
       .catch((err) => console.error('QR generation error:', err));
-  }, [customerUrl]);
+  }, [customerUrl, cafeSlug]);
 
   if (!isOpen) return null;
 
   const handleSaveAndLaunch = () => {
+    const prof = getIndustryProfile(businessType);
+    const resolvedName = cafeName.trim() || 'متجر ومساحة الذكريات';
+    const resolvedSlug = cafeSlug.trim() || 'my-store';
+
     const updated: BusinessSettings = {
       ...currentSettings,
-      cafeSlug: cafeSlug.trim() || 'my-cafe',
-      cafeName: cafeName.trim() || 'كافيه الذكريات',
+      businessType,
+      cafeSlug: resolvedSlug,
+      cafeName: resolvedName,
       branding: {
         ...currentSettings.branding,
-        name: cafeName.trim() || 'كافيه الذكريات',
+        name: resolvedName,
       },
       defaultOrientation: orientation,
       defaultShotCount: shotCount,
       loyaltyMaxVisits: shotCount,
       freeGiftOffer: {
         ...currentSettings.freeGiftOffer,
-        title: giftTitle.trim() || 'كوب قهوة مجاني',
-        subtitle: `عند إكمال ${shotCount} زيارات للكافيه`,
+        title: giftTitle.trim() || prof.defaultGiftTitle,
+        subtitle: giftSubtitle.trim() || prof.defaultGiftSubtitle,
       },
       frames: currentSettings.frames.map((f) => ({
         ...f,
@@ -122,12 +169,13 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
   const handleDownloadQr = () => {
     if (!qrDataUrl) return;
-    const a = document.createElement('a');
-    a.href = qrDataUrl;
-    a.download = `qr-${cafeSlug}-table-stand.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    ImageSaveService.saveImage({
+      dataUrl: qrDataUrl,
+      filename: `qr-${cafeSlug}-table-stand.png`,
+      title: `رمز QR ستاند - ${cafeName}`,
+    }).catch((err) => {
+      console.warn('QR download failed:', err);
+    });
   };
 
   const handlePrintStand = () => {
@@ -149,7 +197,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
         <div className="bg-stone-900 text-white p-6 relative">
           <button
             onClick={onClose}
-            className="absolute top-5 left-5 p-2 rounded-full text-stone-400 hover:text-white hover:bg-stone-800 transition"
+            className="absolute top-5 left-5 p-2 rounded-full text-stone-400 hover:text-white hover:bg-stone-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -159,13 +207,13 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-white">إعداد كافيهك في 60 ثانية</h2>
+                <h2 className="text-lg font-black text-white">إعداد نشاطك التجاري في 60 ثانية</h2>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
                   إطلاق فوري
                 </span>
               </div>
               <p className="text-xs text-stone-400 mt-0.5">
-                اضبط اسم مكانك، عدد الزيارات، وشكل الكارت، واستلم رابط الطاولات والـ QR فوراً
+                حدد نوع نشاطك التجاري، اسم علامتك، وشكل الكارت، واستلم الـ QR فوراً
               </p>
             </div>
           </div>
@@ -176,13 +224,13 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 1 ? 'bg-amber-500 text-stone-950 font-black' : 'bg-stone-800 text-stone-400'}`}>
                 1
               </span>
-              <span>هوية الكافيه</span>
+              <span>نوع النشاط والهوية</span>
             </div>
             <div className={`flex items-center gap-1.5 ${step >= 2 ? 'text-amber-400' : 'text-stone-500'}`}>
               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 2 ? 'bg-amber-500 text-stone-950 font-black' : 'bg-stone-800 text-stone-400'}`}>
                 2
               </span>
-              <span>نظام الكارت والزيارات</span>
+              <span>نظام الكارت والمكافأة</span>
             </div>
             <div className={`flex items-center gap-1.5 ${step >= 3 ? 'text-amber-400' : 'text-stone-500'}`}>
               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 3 ? 'bg-amber-500 text-stone-950 font-black' : 'bg-stone-800 text-stone-400'}`}>
@@ -195,22 +243,67 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
         {/* Modal Body */}
         <div className="p-6 sm:p-8 space-y-6">
-          {/* STEP 1: Cafe Identity */}
+          {/* STEP 1: Industry & Business Identity */}
           {step === 1 && (
             <div className="space-y-5 animate-in fade-in duration-200">
+              {/* Industry Grid Selection */}
               <div>
                 <label className="block text-xs font-bold text-stone-800 mb-2">
-                  اسم الكافيه أو العلامة التجارية <span className="text-amber-600">*</span>
+                  اختر نوع النشاط التجاري (Industry Type) <span className="text-amber-600">*</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {BUSINESS_INDUSTRY_OPTIONS.map((opt) => {
+                    const IconComponent = INDUSTRY_ICONS[opt.id] || Store;
+                    const isSelected = businessType === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => handleSelectIndustry(opt.id as BusinessType)}
+                        className={`p-3 rounded-xl border text-right transition cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-amber-500/10 border-amber-500 text-stone-950 ring-2 ring-amber-500/30 font-bold'
+                            : 'bg-stone-50/70 hover:bg-stone-100 border-stone-200 text-stone-700'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full mb-1">
+                          <IconComponent className={`w-4 h-4 ${isSelected ? 'text-amber-600' : 'text-stone-500'}`} />
+                          {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 stroke-[3]" />}
+                        </div>
+                        <span className="text-xs font-bold block">{opt.nameAr}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-800 mb-2">
+                  اسم المنشأة أو العلامة التجارية <span className="text-amber-600">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-stone-400">
-                    <Coffee className="w-5 h-5" />
+                    <Store className="w-5 h-5" />
                   </div>
                   <input
                     type="text"
                     value={cafeName}
                     onChange={(e) => handleCafeNameChange(e.target.value)}
-                    placeholder="مثال: Artisan Roastery • محمصة ومقهى"
+                    placeholder={
+                      businessType === 'retail'
+                        ? 'مثال: بوتيك ڤيلفيت للأزياء'
+                        : businessType === 'salon'
+                        ? 'مثال: صالون لورين للتجميل والعناية'
+                        : businessType === 'restaurant'
+                        ? 'مثال: مطعم السرايا للمأكولات'
+                        : businessType === 'events'
+                        ? 'مثال: معرض الرياض للإبداع'
+                        : businessType === 'entertainment'
+                        ? 'مثال: صالة أدفنتشر للألعاب'
+                        : businessType === 'cafe'
+                        ? 'مثال: محمصة صويل المختصة'
+                        : 'مثال: استوديو الذكريات'
+                    }
                     className="w-full pr-11 pl-4 py-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
                   />
                 </div>
@@ -218,7 +311,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
               <div>
                 <label className="block text-xs font-bold text-stone-800 mb-2">
-                  رابط الكافيه المخصص للعملاء (Custom Slug) <span className="text-amber-600">*</span>
+                  معرف الرابط المخصص للعملاء (Custom Slug) <span className="text-amber-600">*</span>
                 </label>
                 <div className="flex items-center gap-2 rounded-2xl bg-stone-50 border border-stone-200 px-3.5 py-3 focus-within:ring-2 focus-within:ring-amber-500 focus-within:bg-white transition">
                   <span className="text-xs font-mono font-bold text-stone-400 select-none ltr">
@@ -228,19 +321,19 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     type="text"
                     value={cafeSlug}
                     onChange={(e) => setCafeSlug(e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, ''))}
-                    placeholder="my-cafe"
+                    placeholder="my-business"
                     className="w-full bg-transparent text-stone-900 font-mono font-bold text-sm focus:outline-none"
                   />
                 </div>
                 <p className="text-[11px] text-stone-500 mt-1.5">
-                  هذا هو الرابط الفريد الذي سيفتحه عملاؤك عند مسح الـ QR على الطاولة
+                  هذا هو الرابط الفريد الذي سيفتحه عملاؤك عند مسح الـ QR على الطاولة أو الكاونتر
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
                 <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-900 leading-relaxed font-medium">
-                  <strong>فكرة بسيطة، تأثير هائل:</strong> العميل يمسح الكود على الطاولة، يوثق لقطة الزيارة برقم هاتفه بدون أي كلمة مرور، ويعود لملء بقية الخانات للحصول على هديته.
+                  <strong>ملاءمة تامة لنشاطك:</strong> سيتعرف النظام تلقائياً على أنك ({currentProfile.nameAr})، ويخصص مسميات طاقم الخدمة ({currentProfile.staffLabel}) ونوع الهدايا والبطاقات بما يتناسق مع زوارك.
                 </p>
               </div>
 
@@ -251,19 +344,19 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                   disabled={!cafeName.trim() || !cafeSlug.trim()}
                   className="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-sm flex items-center gap-2 transition active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
                 >
-                  <span>التالي: نظام الكارت والزيارات</span>
+                  <span>التالي: نظام الكارت والمكافأة</span>
                   <ArrowLeft className="w-4 h-4" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 2: Card Type & Visits */}
+          {/* STEP 2: Card Type & Rewards */}
           {step === 2 && (
             <div className="space-y-6 animate-in fade-in duration-200">
               <div>
                 <label className="block text-xs font-bold text-stone-800 mb-2.5">
-                  نوع الكارت المعتمد لجميع الزوار (Authoritative Card Style)
+                  نوع الكارت المعتمد للزوار (Authoritative Card Style)
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div
@@ -325,45 +418,53 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
               {/* Number of Visits */}
               <div>
                 <label className="block text-xs font-bold text-stone-800 mb-2">
-                  عدد الزيارات المطلوبة لملء الكارت <span className="text-amber-600">*</span>
+                  عدد الزيارات المطلوبة لفتح الهدية (Shot / Visits Goal)
                 </label>
                 <div className="grid grid-cols-4 gap-2.5">
-                  {[3, 4, 5, 6].map((count) => (
+                  {[2, 3, 4, 5].map((count) => (
                     <button
                       key={count}
                       type="button"
                       onClick={() => setShotCount(count)}
-                      className={`py-3 px-2 rounded-2xl border-2 font-black text-sm flex flex-col items-center justify-center gap-1 transition cursor-pointer ${
+                      className={`py-3 rounded-2xl border font-bold text-sm transition cursor-pointer flex flex-col items-center justify-center ${
                         shotCount === count
-                          ? 'border-amber-500 bg-amber-500 text-stone-950 shadow-md'
-                          : 'border-stone-200 hover:border-stone-300 bg-white text-stone-800'
+                          ? 'border-amber-600 bg-amber-600 text-white shadow-xs'
+                          : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100'
                       }`}
                     >
-                      <span className="text-base font-mono">{count}</span>
-                      <span className="text-[10px] font-medium">زيارات</span>
+                      <span className="text-base font-black">{count}</span>
+                      <span className="text-[10px] opacity-80">زيارات</span>
                     </button>
                   ))}
                 </div>
-                <p className="text-[11px] text-stone-500 mt-1.5">
-                  الكافيه يحدد عدد الزيارات بحرية كاملة، والـ 5 زيارات هي الأكثر استخداماً وتشجيعاً في الكافيهات.
-                </p>
               </div>
 
-              {/* Reward Offer */}
-              <div>
-                <label className="block text-xs font-bold text-stone-800 mb-2">
-                  هدية إكمال الكارت (التي تظهر للعميل) <span className="text-amber-600">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-stone-400">
-                    <Gift className="w-5 h-5" />
-                  </div>
+              {/* Free Gift Offer Input */}
+              <div className="space-y-3 p-4 rounded-2xl bg-stone-50 border border-stone-200">
+                <div>
+                  <label className="block text-xs font-bold text-stone-800 mb-1.5 flex items-center gap-1.5">
+                    <Gift className="w-4 h-4 text-amber-700" />
+                    <span>عنوان الهدية أو المكافأة عند إكمال الأختام</span>
+                  </label>
                   <input
                     type="text"
                     value={giftTitle}
                     onChange={(e) => setGiftTitle(e.target.value)}
-                    placeholder="مثال: كوب قهوة مختصة مجاني أو خصم 50%"
-                    className="w-full pr-11 pl-4 py-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+                    placeholder={currentProfile.defaultGiftTitle}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-900 font-bold text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-800 mb-1.5">
+                    وصف وشروط استلام الهدية
+                  </label>
+                  <input
+                    type="text"
+                    value={giftSubtitle}
+                    onChange={(e) => setGiftSubtitle(e.target.value)}
+                    placeholder={currentProfile.defaultGiftSubtitle}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-700 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
               </div>
@@ -372,138 +473,107 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="px-4 py-3 rounded-2xl border border-stone-200 text-stone-600 hover:text-stone-900 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-5 py-3 rounded-2xl border border-stone-200 text-stone-700 font-bold text-xs hover:bg-stone-50 transition cursor-pointer"
                 >
-                  <ArrowRight className="w-4 h-4" />
-                  <span>السابق</span>
+                  السابق
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveAndLaunch}
-                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-400 hover:to-amber-600 text-stone-950 font-black text-sm flex items-center gap-2 shadow-lg hover:shadow-amber-500/20 transition active:scale-[0.98] cursor-pointer"
+                  className="px-7 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-sm flex items-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-md"
                 >
-                  <span>تفعيل واستلام الرابط والـ QR</span>
-                  <Sparkles className="w-4 h-4" />
+                  <Check className="w-4 h-4" />
+                  <span>حفظ وتوليد QR الطاولات فوراً</span>
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 3: Instant Launch & QR Kit */}
+          {/* STEP 3: Complete & Ready to Print */}
           {step === 3 && (
-            <div className="space-y-6 animate-in zoom-in-95 duration-200">
-              <div className="text-center space-y-1">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black mx-auto shadow-sm">
-                  <Check className="w-6 h-6 stroke-[3]" />
-                </div>
-                <h3 className="text-lg font-black text-stone-950 pt-1">
-                  تم إعداد وتفعيل كافيه {cafeName} بنجاح!
+            <div className="space-y-6 text-center animate-in zoom-in-95 duration-200">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center shadow-inner">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+
+              <div>
+                <h3 className="text-xl font-black text-stone-950">
+                  تم إعداد وتفعيل {cafeName} بنجاح!
                 </h3>
-                <p className="text-xs text-stone-500 max-w-md mx-auto">
-                  منظومة الذكريات والولاء جاهزة فوراً. اطبع كود الطاولات أو شارك الرابط المباشر مع أول عميل يدخل الكافيه.
+                <p className="text-xs text-stone-600 mt-1 max-w-md mx-auto">
+                  منظومة الذكريات والولاء جاهزة فوراً لنشاطك التجاري. اطبع كود الطاولات أو الكاونتر، أو شارك الرابط المباشر مع أول عميل يدخل المكان.
                 </p>
               </div>
 
-              {/* Direct Link Box */}
-              <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-2">
-                <span className="text-xs font-bold text-stone-700">رابط كرت الذكريات المباشر لعملائك:</span>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={customerUrl}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-200 font-mono text-xs font-bold text-stone-900 ltr select-all focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleCopy}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer ${
-                      copiedLink
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-stone-800 hover:bg-stone-700 text-white'
-                    }`}
-                  >
-                    {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    <span>{copiedLink ? 'تم النسخ!' : 'نسخ الرابط'}</span>
-                  </button>
+              {/* Acrylic Stand Preview Card */}
+              <div className="max-w-xs mx-auto p-5 rounded-3xl bg-white border border-stone-300 shadow-xl space-y-4">
+                <div className="text-center space-y-1">
+                  <span className="text-[10px] font-mono tracking-widest text-amber-700 font-bold uppercase block">
+                    TABLE SCAN STAND • {currentProfile.nameAr}
+                  </span>
+                  <h4 className="font-serif font-black text-base text-stone-900">
+                    {cafeName}
+                  </h4>
+                </div>
+
+                {qrDataUrl && (
+                  <div className="w-44 h-44 mx-auto p-2 bg-white rounded-2xl border border-stone-200 shadow-inner flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={qrDataUrl} alt="QR Code" className="w-full h-full object-contain" />
+                  </div>
+                )}
+
+                <div className="text-center space-y-0.5">
+                  <span className="text-xs font-bold text-stone-900 block">امسح الكود بكاميرا هاتفك</span>
+                  <span className="text-[10px] text-stone-500 block">وثّق زيارتك واستلم {giftTitle}</span>
                 </div>
               </div>
 
-              {/* Printable Table Tent Preview Card */}
-              <div className="bg-gradient-to-b from-stone-50 to-stone-100 p-6 rounded-3xl border border-stone-200/90 text-center space-y-4">
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/15 text-amber-800 text-[10px] font-bold border border-amber-500/20">
-                  <span>ستاند الطاولات الجاهز للطباعة</span>
-                  
-                </div>
-
-                <div
-                  ref={printStandRef}
-                  id="table-stand-print"
-                  className="max-w-[260px] mx-auto bg-white p-5 rounded-2xl border-2 border-stone-800 shadow-md flex flex-col items-center space-y-3"
+              {/* Copy URL */}
+              <div className="flex items-center gap-2 max-w-md mx-auto bg-stone-50 border border-stone-200 p-2 rounded-2xl">
+                <input
+                  type="text"
+                  readOnly
+                  value={customerUrl}
+                  className="w-full bg-transparent text-xs font-mono text-stone-700 px-2 outline-none ltr"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="px-3.5 py-1.5 rounded-xl bg-white border border-stone-200 hover:bg-stone-100 text-xs font-bold text-stone-800 transition flex items-center gap-1.5 shrink-0 shadow-2xs cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-stone-800 text-white flex items-center justify-center text-[10px] font-mono font-bold">
-                    M
-                  </div>
-                  <div>
-                    <h4 className="font-black text-sm text-stone-950 leading-tight">{cafeName}</h4>
-                    <p className="text-[9px] text-stone-500 font-mono mt-0.5">Memories &amp; Loyalty Pass</p>
-                  </div>
-
-                  {qrDataUrl && (
-                    <div className="p-2 bg-white rounded-xl border border-stone-200 shadow-2xs">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={qrDataUrl} alt="Table QR Code" className="w-40 h-40 object-contain" />
-                    </div>
-                  )}
-
-                  <div className="space-y-0.5">
-                    <p className="text-[10px] font-black text-stone-900">
-                      امسح بكاميرا هاتفك لتوثيق ذكرى اليوم
-                    </p>
-                    <p className="text-[9px] text-amber-800 font-bold">
-                      أكمل {shotCount} زيارات واحصل على {giftTitle}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
-                  <button
-                    type="button"
-                    onClick={handleDownloadQr}
-                    className="px-4 py-2.5 rounded-xl bg-white hover:bg-stone-50 border border-stone-300 text-stone-800 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5 text-stone-600" />
-                    <span>تحميل الـ QR (صورة PNG)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handlePrintStand}
-                    className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 text-xs font-black transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                  >
-                    <Printer className="w-3.5 h-3.5" />
-                    <span>طباعة ستاند الأكريليك</span>
-                  </button>
-                </div>
+                  {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedLink ? 'تم النسخ' : 'نسخ'}</span>
+                </button>
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 flex items-center justify-between border-t border-stone-200">
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleDownloadQr}
+                  className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>تحميل كود QR عالي الدقة</span>
+                </button>
+
                 <a
-                  href={`/c/${cafeSlug}`}
+                  href={customerUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm"
                 >
-                  <span>فتح كارت العميل في نافذة جديدة</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <ExternalLink className="w-4 h-4" />
+                  <span>فتح تجربة العميل الحية</span>
                 </a>
 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black transition cursor-pointer shadow-sm"
+                  className="px-5 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 font-bold text-xs transition cursor-pointer"
                 >
-                  الدخول للوحة التحكم
+                  إغلاق والعودة للوحة التحكم
                 </button>
               </div>
             </div>

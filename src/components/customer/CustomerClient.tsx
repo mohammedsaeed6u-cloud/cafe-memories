@@ -23,6 +23,8 @@ import { PhotoCaptureOrUpload } from '@/features/photobooth/PhotoCaptureOrUpload
 import { InstagramMentionPrompt } from '@/features/social/InstagramMentionPrompt';
 import { WallConsentModal } from '@/features/wall-consent/WallConsentModal';
 import { CompletionGiftRewardModal } from '@/features/rewards/CompletionGiftRewardModal';
+import { ImageSaveService } from '@/lib/services/image-save.service';
+import { IosSaveImageModal } from '@/components/photobooth/IosSaveImageModal';
 
 import {
   Sparkles,
@@ -41,13 +43,50 @@ import {
   Download,
   Camera,
   Share2,
+  Award,
 } from 'lucide-react';
 
 const createGiftCode = () => `GIFT-${Math.floor(1000 + Math.random() * 9000)}`;
 const createTrackedId = (prefix: string) =>
   `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
+export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string }) {
+  // Resolve authoritative cafe slug from query params, pathname, or prop
+  const [cafeSlug, setCafeSlug] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryCafe = urlParams.get('cafe') || urlParams.get('slug');
+      if (queryCafe) return decodeURIComponent(queryCafe);
+
+      const match = window.location.pathname.match(/\/c\/([^/?#]+)/);
+      if (match && match[1]) {
+        return decodeURIComponent(match[1]);
+      }
+    }
+    return propCafeSlug || 'memories';
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryCafe = urlParams.get('cafe') || urlParams.get('slug');
+      if (queryCafe) {
+        const resolved = decodeURIComponent(queryCafe);
+        if (resolved !== cafeSlug) {
+          setCafeSlug(resolved);
+          return;
+        }
+      }
+      const match = window.location.pathname.match(/\/c\/([^/?#]+)/);
+      if (match && match[1]) {
+        const resolved = decodeURIComponent(match[1]);
+        if (resolved !== cafeSlug) {
+          setCafeSlug(resolved);
+        }
+      }
+    }
+  }, [propCafeSlug, cafeSlug]);
+
   // Business settings state
   const [settings, setSettings] = useState<BusinessSettings>(() =>
     BusinessSettingsService.getSettings(cafeSlug)
@@ -59,12 +98,14 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
   const staffLabel =
     settings.businessType === 'restaurant'
-      ? 'الكاشير أو الجرسون'
+      ? 'الكاشير أو طاقم الخدمة'
       : settings.businessType === 'retail'
-      ? 'الكاشير'
+      ? 'الكاشير وفريق المبيعات'
       : settings.businessType === 'salon'
-      ? 'الاستقبال'
-      : 'الباريستا';
+      ? 'فريق الاستقبال'
+      : settings.businessType === 'events'
+      ? 'منظم الفعالية'
+      : 'موظف الكاونتر / الخدمة';
 
   // Frame selection
   const [selectedFrame, setSelectedFrame] = useState<PhotoboothFrame>(() => {
@@ -112,6 +153,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
   const [isWallConsentModalOpen, setIsWallConsentModalOpen] = useState(false);
   const [isCompletionRewardOpen, setIsCompletionRewardOpen] = useState(false);
   const [hasAnsweredWallConsent, setHasAnsweredWallConsent] = useState(false);
+  const [iosSaveModalImage, setIosSaveModalImage] = useState<string | null>(null);
 
   // Card photos state
   const [accumulatedPhotos, setAccumulatedPhotos] = useState<string[]>([]);
@@ -332,9 +374,9 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         const existingQueue = JSON.parse(localStorage.getItem(queueKey) || '[]');
         const newPrintJob = {
           id: createTrackedId('print'),
-          name: customerName || 'ضيف الكافيه',
+          name: customerName || 'عميل مميز',
           phone: customerPhone || 'guest',
-          role: 'coffee_lover',
+          role: 'loyal_customer',
           totalVisits: loyaltyData.stampedCount,
           lastVisit: new Date().toISOString(),
           photoStripUrl: highRes,
@@ -343,15 +385,25 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         };
         localStorage.setItem(queueKey, JSON.stringify([newPrintJob, ...existingQueue].slice(0, 30)));
         window.dispatchEvent(new CustomEvent('memories-print-queue-updated'));
+
+        try {
+          const printChannel = new BroadcastChannel('memories_print_channel');
+          printChannel.postMessage({ type: 'NEW_PRINT_JOB', job: newPrintJob, cafeSlug });
+          printChannel.close();
+        } catch {}
       } catch {}
 
-      // Trigger download
-      const link = document.createElement('a');
-      link.href = highRes;
-      link.download = `${settings.branding.name}-photostrip-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Cross-platform & Safari-compliant Image Save / Share
+      const saveResult = await ImageSaveService.saveImage({
+        dataUrl: highRes,
+        filename: `${settings.branding.name}-photostrip-${Date.now()}.png`,
+        title: `شريط صور ${customerName || settings.branding.name}`,
+      });
+
+      if (saveResult.method === 'fallback') {
+        // Open iOS Save Modal for iPhone / Safari
+        setIosSaveModalImage(saveResult.blobUrl || highRes);
+      }
     } catch {
       window.print();
     }
@@ -397,7 +449,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
-            <Coffee className="w-4 h-4 text-amber-600" />
+            <Award className="w-4 h-4 text-amber-600" />
             <span>كارت الولاء ({loyaltyData.stampedCount}/{loyaltyMaxVisits})</span>
           </button>
         </div>
@@ -568,13 +620,13 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                 </div>
               )}
 
-              {/* Sub-customizer for Cafe Table / Spot */}
+              {/* Sub-customizer for Location / Seat */}
               {cardMode === 'ticket_express' && (
                 <div className="p-3.5 bg-white border border-stone-200/90 rounded-2xl space-y-2 text-xs shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-stone-700">موقع الجلسة بالكافيه:</span>
+                    <span className="text-[11px] font-bold text-stone-700">موقع الجلسة أو الركن:</span>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {['طاولة 04 • صالة', 'طاولة 08 • تراس', 'جلسة بار • كاونتر'].map((seat) => (
+                      {['طاولة 04 • صالة', 'جلسة VIP', 'ركن الاستقبال', 'الفرع الرئيسي'].map((seat) => (
                         <button
                           key={seat}
                           type="button"
@@ -592,7 +644,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
                     type="text"
                     value={ticketSeat}
                     onChange={(e) => setTicketSeat(e.target.value)}
-                    placeholder="أو اكتب رقم طاولتك (مثال: طاولة VIP 12)..."
+                    placeholder="رقم الطاولة أو الموقع (مثال: طاولة VIP 12 أو الركن 03)..."
                     className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:border-amber-500 font-bold"
                   />
                 </div>
@@ -646,7 +698,7 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
             <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 flex items-center justify-between gap-3 text-right shadow-2xs mt-2">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center shrink-0 font-bold shadow-xs">
-                  <Coffee className="w-5 h-5" />
+                  <Award className="w-5 h-5 text-stone-950" />
                 </div>
                 <div>
                   <p className="text-xs font-black text-stone-950">هل أنت من رواد {settings.branding.name}؟</p>
@@ -839,6 +891,14 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
         giftCode={giftCode || 'GIFT-2026'}
         onClose={() => setIsCompletionRewardOpen(false)}
         onPrintStrip={handlePrintOrDownload}
+      />
+
+      {/* Safari / iOS Save Image Sheet Modal */}
+      <IosSaveImageModal
+        open={!!iosSaveModalImage}
+        imageUrl={iosSaveModalImage}
+        filename={`${settings.branding.name}-photostrip.png`}
+        onClose={() => setIosSaveModalImage(null)}
       />
     </div>
   );

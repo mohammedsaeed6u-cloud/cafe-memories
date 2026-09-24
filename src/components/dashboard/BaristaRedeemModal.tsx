@@ -118,7 +118,7 @@ export function BaristaRedeemModal({
         phone: selectedCustomer.phone,
         name: selectedCustomer.name,
         giftTitle,
-        baristaName: activeStaff?.name || 'الباريستا المناوب',
+        baristaName: activeStaff?.name || 'طاقم العمل المعتمد',
         timestamp: new Date().toISOString(),
       });
       localStorage.setItem(logKey, JSON.stringify(logs.slice(0, 50)));
@@ -143,7 +143,7 @@ export function BaristaRedeemModal({
               <Gift className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-base">صرف هدية الولاء من الكاونتر (Barista Claim)</h3>
+              <h3 className="font-black text-base">صرف هدية الولاء من الكاونتر (Staff Claim)</h3>
               <p className="text-[11px] text-stone-300">التحقق الفوري من استحقاق الزائر وصرف الهدية مع حماية ضد التكرار</p>
             </div>
           </div>
@@ -153,7 +153,7 @@ export function BaristaRedeemModal({
           <div className="flex items-center justify-between text-xs bg-amber-50/80 border border-amber-200/80 p-3 rounded-2xl">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span className="font-bold text-stone-800">الباريستا المعتمد: <strong className="text-amber-900">{activeStaff?.name || 'الباريستا المناوب'}</strong></span>
+              <span className="font-bold text-stone-800">طاقم العمل المعتمد: <strong className="text-amber-900">{activeStaff?.name || 'طاقم العمل المناوب'}</strong></span>
             </div>
             <span className="text-[11px] font-mono text-stone-500">{cafeSlug}</span>
           </div>

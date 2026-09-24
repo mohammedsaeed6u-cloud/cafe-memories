@@ -45,7 +45,7 @@ describe('Business-Authoritative Digital Purse & Gated Retention Suite', () => {
       const retailOpt = BUSINESS_INDUSTRY_OPTIONS.find((o) => o.id === 'retail');
       const cafeOpt = BUSINESS_INDUSTRY_OPTIONS.find((o) => o.id === 'cafe');
 
-      expect(cafeOpt?.staffLabel).toBe('الباريستا');
+      expect(cafeOpt?.staffLabel).toBe('موظف الكاونتر');
       expect(retailOpt?.staffLabel).toBe('الكاشير');
       expect(salonOpt?.staffLabel).toBe('الاستقبال');
       expect(restaurantOpt?.staffLabel).toBe('مقدم الخدمة');

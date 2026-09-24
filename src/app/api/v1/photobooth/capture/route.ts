@@ -6,7 +6,7 @@ import { z } from 'zod';
 export const captureSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   phone: z.string().min(4).max(30).optional(),
-  role: z.string().max(100).optional().default('زائر ومحب للقهوة'),
+  role: z.string().max(100).optional().default('ضيف مميز'),
   customer: z.object({
     name: z.string().min(1).optional(),
     phone: z.string().min(4).optional(),
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     const finalName = (name || customerPayload?.name || 'زائر مميز').trim();
     const rawPhone = phone || customerPayload?.phone || '01000000000';
-    const finalRole = role || customerPayload?.role || 'زائر ومحب للقهوة';
+    const finalRole = role || customerPayload?.role || 'ضيف مميز';
     const finalPhoto = originalUrl || (photos && photos.length > 0 ? photos[0] : '') || '';
 
     const cleanPhone = normalizePhoneNumber(rawPhone);

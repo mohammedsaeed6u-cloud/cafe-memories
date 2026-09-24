@@ -427,7 +427,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
                 MEMORIES STUDIO
               </div>
               <div className="text-[8px] font-mono uppercase tracking-[0.25em] text-[#8B2635] font-bold mt-0.5">
-                SPECIALTY COFFEE • PHOTO EXPERIENCE
+                SPECIALTY STUDIO • PHOTO EXPERIENCE
               </div>
 
               {/* Specialty Coffee Emblem & Arch */}
@@ -553,13 +553,13 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           {isHorizontal ? (
             <div className="grid grid-cols-3 gap-2">
               {Array.from({ length: totalSlots }).map((_, idx) =>
-                renderPhotoSlot(idx, 'aspect-[4/3]')
+                renderPhotoSlot(idx, 'aspect-[3/4]')
               )}
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               {Array.from({ length: totalSlots }).map((_, idx) =>
-                renderPhotoSlot(idx, isTicketExpress ? 'aspect-[4/3]' : 'aspect-[4/3]')
+                renderPhotoSlot(idx, 'aspect-[3/4]')
               )}
             </div>
           )}

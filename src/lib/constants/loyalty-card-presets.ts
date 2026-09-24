@@ -71,9 +71,9 @@ export const LOYALTY_CARD_PRESETS: Record<string, LoyaltyCardTemplate> = {
       'Valid at all Memories partner branches.',
     ],
     termsAndConditionsAr: [
-      'أبرز رمز الـ QR للباريستا عند كل طلب لاحتساب الختم.',
+      'أبرز رمز الـ QR لموظف الكاونتر أو الكاشير عند كل طلب لاحتساب الختم.',
       'تُصرف المكافآت المرحلية فور اكتمال عدد الأختام المطلوب.',
-      'سارية في جميع فروع ومقاهي شبكة ذكريات.',
+      'سارية في جميع فروع وشبكة المتاجر المعتمدة.',
     ],
     milestones: [
       {
@@ -276,8 +276,8 @@ export const LOYALTY_CARD_PRESETS: Record<string, LoyaltyCardTemplate> = {
     ],
     termsAndConditionsAr: [
       'ختم ورقة ماتشا مع كل مشروب أو حلوى عضوية.',
-      'أبرز الرمز للباريستا عند استلام طلبك.',
-      'سارية في جميع فروع المقهى الطبيعي.',
+      'أبرز الرمز لموظف الخدمة عند استلام طلبك.',
+      'سارية في جميع فروع الصالة الطبيعية.',
     ],
     milestones: [
       {

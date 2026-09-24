@@ -11,27 +11,44 @@ export default function NotFoundPage() {
   const [dynamicRoute, setDynamicRoute] = useState<{
     type: 'customer' | 'wall' | '404';
     param: string;
-  }>({ type: '404', param: '' });
+  }>(() => {
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/c/')) {
+        const rawSlug = pathname.replace('/c/', '').split('/')[0].split('?')[0];
+        if (rawSlug) {
+          return { type: 'customer', param: decodeURIComponent(rawSlug) };
+        }
+      }
+      if (pathname.startsWith('/wall/')) {
+        const rawScreen = pathname.replace('/wall/', '').split('/')[0].split('?')[0];
+        if (rawScreen) {
+          return { type: 'wall', param: decodeURIComponent(rawScreen) };
+        }
+      }
+    }
+    return { type: '404', param: '' };
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
       if (pathname.startsWith('/c/')) {
         const rawSlug = pathname.replace('/c/', '').split('/')[0].split('?')[0];
-        if (rawSlug) {
+        if (rawSlug && rawSlug !== dynamicRoute.param) {
           setDynamicRoute({ type: 'customer', param: decodeURIComponent(rawSlug) });
           return;
         }
       }
       if (pathname.startsWith('/wall/')) {
         const rawScreen = pathname.replace('/wall/', '').split('/')[0].split('?')[0];
-        if (rawScreen) {
+        if (rawScreen && rawScreen !== dynamicRoute.param) {
           setDynamicRoute({ type: 'wall', param: decodeURIComponent(rawScreen) });
           return;
         }
       }
     }
-  }, []);
+  }, [dynamicRoute.param]);
 
   if (dynamicRoute.type === 'customer' && dynamicRoute.param) {
     return <CustomerClient cafeSlug={dynamicRoute.param} />;

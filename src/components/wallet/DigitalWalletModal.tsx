@@ -12,6 +12,7 @@ import {
   QrCode,
   RotateCw,
   Gift,
+  ImageIcon,
 } from 'lucide-react';
 import {
   DigitalWalletService,
@@ -19,6 +20,9 @@ import {
 } from '@/lib/services/digital-wallet.service';
 import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
 import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
+import { CardCanvasExportService } from '@/lib/services/card-canvas-export.service';
+import { ImageSaveService } from '@/lib/services/image-save.service';
+import { IosSaveImageModal } from '@/components/photobooth/IosSaveImageModal';
 
 interface DigitalWalletModalProps {
   isOpen: boolean;
@@ -31,9 +35,11 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
   onClose,
   passData,
 }) => {
-  const [activeWallet, setActiveWallet] = useState<'apple' | 'google'>('apple');
+  const [activeWallet, setActiveWallet] = useState<'apple' | 'google' | 'image'>('apple');
   const [isFlipped, setIsFlipped] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [isExportingImage, setIsExportingImage] = useState(false);
+  const [iosSaveModalImage, setIosSaveModalImage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -44,7 +50,7 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
     customerName = 'ضيف مميز',
     stampedCount,
     maxSlots,
-    giftTitle = 'مشروب مجاني مميز',
+    giftTitle = 'هدية ترحيبية خاصة',
     instagramHandle,
   } = passData;
 
@@ -60,6 +66,35 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
   const handleSaveGoogleWallet = () => {
     const url = DigitalWalletService.generateGoogleWalletSaveUrl(passData);
     window.open(url, '_blank');
+  };
+
+  const handleSaveCardImage = async () => {
+    setIsExportingImage(true);
+    try {
+      const dataUrl = await CardCanvasExportService.exportCardToDataUrl({
+        customerName: customerName || 'ضيف مميز',
+        cafeName: cafeName || 'Memories Studio',
+        stampsCount: stampedCount,
+        totalSlots: maxSlots,
+        theme: 'botanical_matcha',
+      });
+      const res = await ImageSaveService.saveImage({
+        dataUrl,
+        filename: `loyalty-card-${(customerName || cafeName).replace(/\s+/g, '-')}.png`,
+        title: `كارت ولاء ${cafeName}`,
+        text: `كارت ذكرياتي في ${cafeName} • ${stampedCount}/${maxSlots} ختم • Memories`,
+      });
+      if (res.method === 'fallback') {
+        setIosSaveModalImage(res.blobUrl || dataUrl);
+      } else {
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 3500);
+      }
+    } catch (err) {
+      console.warn('Failed to save card image:', err);
+    } finally {
+      setIsExportingImage(false);
+    }
   };
 
   return (
@@ -95,31 +130,31 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               setActiveWallet('apple');
               setIsFlipped(false);
             }}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeWallet === 'apple'
                 ? 'bg-stone-900 text-white shadow-xs'
                 : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
             }`}
           >
             {/* Apple Logo SVG */}
-            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 170 170">
+            <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 170 170">
               <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.66-7.79-11.9-14.24-6.42-9.87-11.45-21.36-15.08-34.46-3.64-13.1-5.46-24.81-5.46-35.13 0-14.28 3.58-25.99 10.74-35.13 7.16-9.14 16.27-13.82 27.32-14.05 4.88 0 10.23 1.25 16.06 3.75 5.83 2.5 9.77 3.86 11.83 4.08 1.84-.22 5.92-1.63 12.24-4.24 6.33-2.61 11.66-3.79 16.01-3.53 15.03.88 26.38 6.23 34.05 16.06-13.1 7.94-19.54 18.83-19.32 32.65.22 10.77 4.3 19.68 12.24 26.74 4.03 3.6 8.54 6.26 13.53 7.99-2.61 7.73-5.77 15.46-9.47 23.19zM119.22 31.84c0-7.72 2.77-15.01 8.31-21.87 5.54-6.85 12.35-11.08 20.43-12.69.87 8.05-1.52 15.56-7.18 22.52-5.65 6.96-12.83 11.16-21.56 12.04z" />
             </svg>
-            <span>Apple Wallet</span>
+            <span className="truncate">Apple Wallet</span>
           </button>
           <button
             onClick={() => {
               setActiveWallet('google');
               setIsFlipped(false);
             }}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeWallet === 'google'
                 ? 'bg-stone-900 text-white shadow-xs'
                 : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
             }`}
           >
             {/* Google G Logo SVG */}
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
@@ -137,7 +172,21 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
                 d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
               />
             </svg>
-            <span>Google Wallet</span>
+            <span className="truncate">Google Wallet</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveWallet('image');
+              setIsFlipped(false);
+            }}
+            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeWallet === 'image'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span className="truncate">ألبوم الصور</span>
           </button>
         </div>
 
@@ -299,7 +348,7 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
                       شروط الاستخدام:
                     </span>
                     <p className="text-[10px] text-stone-400 leading-normal">
-                      صالح لجميع زيارات الكافيه. يتم ختم خانة عند كل زيارة مع طلب، وتُصرف الهدية تلقائياً عند استكمال الأختام المقررة.
+                      صالح لجميع الزيارات المعتمدة. يتم ختم خانة عند كل زيارة، وتُصرف المكافأة تلقائياً عند استكمال الأختام المقررة.
                     </p>
                   </div>
                 </div>
@@ -315,8 +364,10 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
 
           <p className="text-xs text-stone-500 text-center mt-4 max-w-xs leading-relaxed">
             {activeWallet === 'apple'
-              ? 'يتم تنزيل ملف .pkpass المعتمد ليظهر الكارت تلقائياً في تطبيق Apple Wallet وشاشة القفل عند وصولك للمقهى.'
-              : 'يتم حفظ بطاقة الولاء مباشرة في حساب Google Wallet لتصل إليها بكبسة زر بدون أي تطبيق إضافي.'}
+              ? 'يتم تنزيل ملف .pkpass المعتمد ليظهر الكارت تلقائياً في تطبيق Apple Wallet وشاشة القفل، أو يمكنك حفظه كصورة مباشرة بألبوم هاتفك.'
+              : activeWallet === 'google'
+              ? 'يتم حفظ بطاقة الولاء مباشرة في حساب Google Wallet لتصل إليها بكبسة زر بدون أي تطبيق إضافي.'
+              : 'حفظ عالي الدقة (300 DPI) للكارت مع رمز الـ QR والأختام مباشرة في ألبوم الصور بهاتفك (متوافق 100% مع Safari وiPhone).'}
           </p>
         </div>
 
@@ -326,36 +377,56 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
             {downloadSuccess ? (
               <span className="text-emerald-700 flex items-center gap-1.5 font-bold">
                 <Check className="w-4 h-4" />
-                تم التنزيل بنجاح! افتح الملف للإضافة للمحفظة.
+                تم الحفظ بنجاح في جهازك!
               </span>
             ) : (
               'حفظ فوري بدون تسجيل دخول'
             )}
           </span>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+            {/* Always provide direct photo save for Safari & desktop */}
+            <button
+              type="button"
+              onClick={handleSaveCardImage}
+              disabled={isExportingImage}
+              className="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-stone-300/80 active:scale-95 disabled:opacity-50"
+              title="حفظ الكارت كصورة عادية في ألبوم الصور"
+            >
+              <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
+              <span>{isExportingImage ? 'جاري التجهيز...' : 'حفظ كصورة في الصور'}</span>
+            </button>
+
             {activeWallet === 'apple' ? (
               <button
                 type="button"
                 onClick={handleDownloadApplePass}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
+                className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
               >
-                <Download className="w-4 h-4 text-amber-400" />
+                <Download className="w-4 h-4 text-amber-300" />
                 <span>إضافة إلى Apple Wallet (.pkpass)</span>
               </button>
-            ) : (
+            ) : activeWallet === 'google' ? (
               <button
                 type="button"
                 onClick={handleSaveGoogleWallet}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
+                className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
               >
-                <ExternalLink className="w-4 h-4 text-amber-400" />
+                <ExternalLink className="w-4 h-4 text-amber-300" />
                 <span>حفظ في Google Wallet</span>
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
+
+      {/* iOS Safari Long-Press Modal */}
+      <IosSaveImageModal
+        imageUrl={iosSaveModalImage}
+        isOpen={Boolean(iosSaveModalImage)}
+        onClose={() => setIosSaveModalImage(null)}
+        title="كارت الولاء والزيارات"
+      />
     </div>
   );
 };

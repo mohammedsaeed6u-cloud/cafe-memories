@@ -60,6 +60,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [cafeName, setCafeName] = useState('');
+  const [cafeSlug, setCafeSlug] = useState('');
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
 
   // Staff PIN state
   const [selectedStaffId, setSelectedStaffId] = useState<string>(STAFF_ROSTER[0]?.id || 'staff-1');
@@ -90,19 +92,22 @@ export default function LoginPage() {
     try {
       if (authTab === 'signup') {
         if (!cafeName.trim()) {
-          setErrorMsg('يرجى إدخال اسم الكافيه أو المتجر لإنشاء حسابك.');
+          setErrorMsg('يرجى إدخال اسم المنشأة أو النشاط التجاري لإنشاء حسابك.');
           setLoading(false);
           return;
         }
 
         // Generate clean unique slug
         const rawName = cafeName.trim();
-        const slug =
-          rawName
-            .toLowerCase()
-            .replace(/\s+/g, '-')
-            .replace(/[^a-z0-9\u0600-\u06FF-]/g, '')
-            .slice(0, 40) || `cafe-${Date.now()}`;
+        let slug = cafeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+        if (!slug) {
+          slug =
+            rawName
+              .toLowerCase()
+              .replace(/\s+/g, '-')
+              .replace(/[^a-z0-9-]/g, '')
+              .slice(0, 40) || `cafe-${Math.floor(100 + Math.random() * 900)}`;
+        }
 
         // 1. Persist real merchant identity to localStorage
         localStorage.setItem('memories_active_merchant_slug', slug);
@@ -123,17 +128,26 @@ export default function LoginPage() {
           localStorage.setItem('memories_registered_merchants', JSON.stringify(registeredList));
         } catch {}
 
-        // 2. Initialize real business settings for this cafe
+        // 2. Initialize real business settings for this cafe (0 mock data)
         const existingSettings = BusinessSettingsService.getSettings(slug);
         BusinessSettingsService.saveSettings({
           ...existingSettings,
           cafeSlug: slug,
+          cafeName: rawName,
           branding: {
             ...existingSettings.branding,
             name: rawName,
-            tagline: 'Specialty Coffee & Guest Experiences',
+            tagline: 'Specialty Coffee & Guest Memories',
+            instagramHandle: `@${slug.replace(/[^a-z0-9_]/gi, '')}`,
           },
         });
+
+        // Initialize empty real CRM, empty print queue, empty wall photos for this cafe
+        try {
+          localStorage.setItem(`memories_crm_customers_${slug}`, JSON.stringify([]));
+          localStorage.setItem(`memories_print_queue_${slug}`, JSON.stringify([]));
+          localStorage.setItem(`memories_wall_photos_${slug}`, JSON.stringify([]));
+        } catch {}
 
         // 3. Set auth session cookie
         document.cookie = 'memories_staff_session=1; path=/; max-age=604800; SameSite=Lax';
@@ -150,7 +164,7 @@ export default function LoginPage() {
 
         setSuccessMsg(`تم إنشاء حساب "${rawName}" بنجاح! جاري الانتقال للوحة التحكم...`);
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = `/dashboard?cafe=${slug}&launch=1`;
         }, 600);
       } else {
         // Sign In
@@ -195,7 +209,7 @@ export default function LoginPage() {
 
         // If not found anywhere, prompt merchant to create an account
         if (!signedInName) {
-          setErrorMsg('هذا البريد غير مسجل بعد. يمكنك إنشاء حساب كافيه جديد به الآن.');
+          setErrorMsg('هذا البريد غير مسجل بعد. يمكنك إنشاء حساب منشأة جديد به الآن.');
           setAuthTab('signup');
           setLoading(false);
           return;
@@ -239,7 +253,7 @@ export default function LoginPage() {
         return;
       }
 
-      setSuccessMsg(`أهلاً بك، ${result.staff?.name || 'الباريستا'}! جاري الدخول للوحة التحكم...`);
+      setSuccessMsg(`أهلاً بك، ${result.staff?.name || 'الموظف'}! جاري الدخول للوحة التحكم...`);
       document.cookie = 'memories_staff_session=1; path=/; max-age=86400; SameSite=Lax';
       setTimeout(() => {
         window.location.href = '/dashboard';
@@ -270,7 +284,11 @@ export default function LoginPage() {
         },
       });
       if (error) {
-        setErrorMsg(error.message);
+        if (error.message.includes('Unsupported provider') || error.message.includes('not enabled')) {
+          setErrorMsg('تسجيل الدخول عبر Google يتطلب التفعيل من لوحة Supabase. يمكنك إنشاء الحساب فوراً عبر البريد الإلكتروني أدناه.');
+        } else {
+          setErrorMsg(error.message);
+        }
         setLoading(false);
       }
     } catch (err: any) {
@@ -327,7 +345,7 @@ export default function LoginPage() {
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span>تسجيل كافيه جديد</span>
+            <span>تسجيل منشأة جديدة</span>
           </button>
 
           <button
@@ -359,7 +377,7 @@ export default function LoginPage() {
             }`}
           >
             <KeyRound className="w-3.5 h-3.5" />
-            <span>رمز الباريستا</span>
+            <span>رمز الموظف (Staff PIN)</span>
           </button>
         </div>
 
@@ -406,22 +424,65 @@ export default function LoginPage() {
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
               {authTab === 'signup' && (
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                    اسم الكافيه أو العلامة التجارية:
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      placeholder="مثال: مقهى الأندلس، Roastery 101..."
-                      value={cafeName}
-                      onChange={(e) => setCafeName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition"
-                    />
-                    <Store className="w-4 h-4 text-stone-400 absolute left-3 top-3 pointer-events-none" />
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                      اسم المنشأة أو العلامة التجارية:
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        placeholder="مثال: استوديو ومحمصة صويل، بوتيك لوسيل، صالون ڤيڤا..."
+                        value={cafeName}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCafeName(val);
+                          if (!isSlugManuallyEdited) {
+                            const clean = val
+                              .toLowerCase()
+                              .trim()
+                              .replace(/[^a-z0-9\s-]/g, '')
+                              .replace(/\s+/g, '-')
+                              .replace(/-+/g, '-');
+                            setCafeSlug(clean || '');
+                          }
+                        }}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition"
+                      />
+                      <Store className="w-4 h-4 text-stone-400 absolute left-3 top-3 pointer-events-none" />
+                    </div>
                   </div>
-                </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-stone-700">
+                        معرف رابط المنشأة المخصص (Slug):
+                      </label>
+                      <span className="text-[10px] text-stone-400 font-mono">CUSTOM URL</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        placeholder="soil-roastery"
+                        value={cafeSlug}
+                        dir="ltr"
+                        onChange={(e) => {
+                          setIsSlugManuallyEdited(true);
+                          setCafeSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+                        }}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition font-mono"
+                      />
+                    </div>
+                    <p className="text-[11px] text-stone-500 mt-1.5 flex items-center gap-1 font-mono" dir="ltr">
+                      <span className="text-amber-700 font-bold">Live URL:</span>
+                      <span className="text-stone-700">
+                        memories-c9w.pages.dev/c/{cafeSlug || 'my-cafe'}
+                      </span>
+                    </p>
+                  </div>
+                </>
               )}
 
               <div>
@@ -465,7 +526,7 @@ export default function LoginPage() {
                 ) : authTab === 'signup' ? (
                   <>
                     <UserPlus className="w-4 h-4" />
-                    <span>إنشاء حساب كافيه وبدء الاستخدام فوراً</span>
+                    <span>إنشاء حساب منشأة وبدء الاستخدام فوراً</span>
                   </>
                 ) : (
                   <>
@@ -483,7 +544,7 @@ export default function LoginPage() {
           <form onSubmit={handlePinAuth} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-stone-700 mb-1.5 text-center">
-                أدخل رمز PIN الباريستا المعتمد (4 أرقام):
+                أدخل رمز PIN الموظف المعتمد (4 أرقام):
               </label>
               <input
                 type="password"
@@ -496,7 +557,7 @@ export default function LoginPage() {
                 autoFocus
               />
               <p className="text-[11px] text-stone-500 mt-2 text-center font-medium">
-                دخول سريع لطاقم الكافيه بدون الحاجة لإدخال البريد الإلكتروني
+                دخول سريع لطاقم العمل والكاونتر بدون الحاجة لإدخال البريد الإلكتروني
               </p>
             </div>
 
@@ -510,7 +571,7 @@ export default function LoginPage() {
               ) : (
                 <>
                   <KeyRound className="w-4 h-4" />
-                  <span>دخول باريستا الصالة</span>
+                  <span>دخول محطة الموظفين والكاونتر</span>
                 </>
               )}
             </button>

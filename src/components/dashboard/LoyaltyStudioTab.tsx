@@ -417,7 +417,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                   })}
                 </div>
                 <p className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-xl mt-3 font-medium">
-                  ملاحظة: 6 خانات تمنح العميل حافزاً سريعاً، بينما 10 خانات هي المعيار الذهبي لكافيهات القهوة المختصة.
+                  ملاحظة: 6 خانات تمنح العميل حافزاً سريعاً، بينما 10 خانات هي المعيار الذهبي لبرامج المكافآت الدورية.
                 </p>
               </div>
 
@@ -456,7 +456,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                         tagline: e.target.value,
                       }))
                     }
-                    placeholder="مثال: برنامج ولاء القهوة المختصة"
+                    placeholder="مثال: برنامج الولاء والمكافآت الحصرية"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
@@ -744,7 +744,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
 
             {/* Quick Tips */}
             <p className="text-[10px] text-stone-400 text-center mt-3 leading-relaxed">
-              اضغط على الأختام لتجربة نغمة الرنين (WebAudio Chime) أو اقلب البطاقة لعرض باركود الباريستا.
+              اضغط على الأختام لتجربة نغمة الرنين (WebAudio Chime) أو اقلب البطاقة لعرض باركود الكاونتر والموظفين.
             </p>
           </div>
         </div>

@@ -506,6 +506,13 @@ export class SoundEffectsService {
   }
 
   /**
+   * Terminal / POS desk bell alert alias for playBaristaDing.
+   */
+  public static playTerminalDing(volumeScale = 1): boolean {
+    return this.playBaristaDing(volumeScale);
+  }
+
+  /**
    * Helper for camera countdown beeps.
    */
   public static playCountdownBeep(freq = 880, volumeScale = 1): boolean {

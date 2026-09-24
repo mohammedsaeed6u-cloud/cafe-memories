@@ -106,6 +106,9 @@ export function WallClient({ screenId }: WallClientProps) {
   const [brandLogoUrl, setBrandLogoUrl] = useState<string | null>(null);
   const [cafeSlug, setCafeSlug] = useState(() => {
     if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryCafe = urlParams.get('cafe') || urlParams.get('slug');
+      if (queryCafe) return decodeURIComponent(queryCafe);
       return localStorage.getItem('memories_active_merchant_slug') || 'memories';
     }
     return 'memories';
@@ -233,7 +236,7 @@ export function WallClient({ screenId }: WallClientProps) {
         if (data?.type === 'WALL_NEW_PHOTO' && data.item) {
           setMemories((prev) => [data.item, ...prev.filter((m) => m.id !== data.item.id)]);
           setCurrentIndex(0);
-          setNewMemoryToast(`وصلت ذكرى جديدة للتو من ${data.item.customerName || 'أحد ضيوف الكافيه'}! ✨`);
+          setNewMemoryToast(`وصلت ذكرى جديدة للتو من ${data.item.customerName || 'أحد الزوار المميزين'}! ✨`);
           setTimeout(() => setNewMemoryToast(null), 6000);
         }
         if (data?.type === 'WALL_COMMAND') {
@@ -260,7 +263,7 @@ export function WallClient({ screenId }: WallClientProps) {
         setMemories(customEvent.detail);
         setCurrentIndex(0);
         const newest = customEvent.detail[0];
-        setNewMemoryToast(`وصلت ذكرى جديدة للتو من ${newest.customerName || 'أحد ضيوف الكافيه'}! ✨`);
+        setNewMemoryToast(`وصلت ذكرى جديدة للتو من ${newest.customerName || 'أحد الزوار المميزين'}! ✨`);
         setTimeout(() => setNewMemoryToast(null), 6000);
       }
     };
@@ -280,7 +283,7 @@ export function WallClient({ screenId }: WallClientProps) {
             setMemories(parsed);
             setCurrentIndex(0);
             const newest = parsed[0];
-            setNewMemoryToast(`وصلت ذكرى جديدة للتو من ${newest.customerName || 'أحد ضيوف الكافيه'}! ✨`);
+            setNewMemoryToast(`وصلت ذكرى جديدة للتو من ${newest.customerName || 'أحد الزوار المميزين'}! ✨`);
             setTimeout(() => setNewMemoryToast(null), 6000);
           }
         } catch {}
@@ -422,7 +425,7 @@ export function WallClient({ screenId }: WallClientProps) {
                   اقتران شاشة التلفزيون الذكية (Smart TV Wall)
                 </h1>
                 <p className="text-xs sm:text-sm text-stone-600 max-w-lg mx-auto leading-relaxed">
-                  أدخل هذا الرقم المكون من 6 أرقام في <strong className="text-amber-800">لوحة تحكم التاجر</strong> لربط هذه الشاشة مع كافيهك وبث ذكريات الصالة فوراً:
+                  أدخل هذا الرقم المكون من 6 أرقام في <strong className="text-amber-800">لوحة تحكم التاجر</strong> لربط هذه الشاشة مع فرعك ونشاطك التجاري وبث ذكريات الصالة فوراً:
                 </p>
               </div>
 
@@ -636,7 +639,7 @@ export function WallClient({ screenId }: WallClientProps) {
                   لحظات وذكريات الصالة
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-black text-stone-950 leading-tight">
-                  شارك ذكرياتك لتظهر هنا على شاشة الكافيه
+                  شارك ذكرياتك لتظهر هنا على شاشة العرض الحية
                 </h2>
                 <p className="text-sm text-stone-600 leading-relaxed font-medium">
                   امسح الرمز بكاميرا هاتفك، التقط صورك في استوديو الذكريات، واختم كارت ولائك للحصول على هديتك.

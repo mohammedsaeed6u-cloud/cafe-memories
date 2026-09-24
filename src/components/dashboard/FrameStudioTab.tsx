@@ -1293,14 +1293,14 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             </div>
             <div>
               <label className="block text-xs font-bold text-stone-700 mb-1">
-                شرح الاستلام للباريستا أو مقدم الخدمة
+                شرح الاستلام لطاقم العمل أو موظف الكاونتر
               </label>
               <input
                 type="text"
                 value={freeGift.subtitle}
                 onChange={(e) => setFreeGift({ ...freeGift, subtitle: e.target.value })}
                 className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-stone-50/50"
-                placeholder="يظهر للباريستا لتسليم المشروب وطباعة الشريط الورقي"
+                placeholder="يظهر لطاقم الخدمة لتسليم الهدية وطباعة الشريط الورقي"
               />
             </div>
           </div>

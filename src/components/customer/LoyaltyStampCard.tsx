@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import { Coffee, Gift, Printer, Share2, Sparkles } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Gift, Printer, Share2, Sparkles, Download } from 'lucide-react';
 import {
   LOYALTY_TOTAL_SLOTS,
   getStampState,
@@ -9,6 +9,8 @@ import {
   type LoyaltyStampSlot,
 } from '@/lib/services/loyalty-stamps';
 import { PrintService } from '@/lib/services/print.service';
+import { ImageSaveService } from '@/lib/services/image-save.service';
+import { IosSaveImageModal } from '@/components/photobooth/IosSaveImageModal';
 
 interface LoyaltyStampCardProps {
   /** Stamp slots from the server; falls back to local photos when empty. */
@@ -40,32 +42,24 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
   const state = useMemo(() => getStampState(effectiveSlots), [effectiveSlots]);
   const isGiftReady = giftReady ?? state.isComplete;
   const latestIndex = state.stampedCount - 1;
+  const [iosSaveModalImage, setIosSaveModalImage] = useState<string | null>(null);
 
   const handleShare = async () => {
     if (effectiveSlots.length === 0) return;
     try {
       const canvas = await composeCardImage(effectiveSlots, brandName, customerName);
       const dataUrl = canvas.toDataURL('image/png');
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], 'memories-loyalty-card.png', { type: 'image/png' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: `كارت ولائي في ${brandName}`,
-          text: `كارت ذكرياتي في ${brandName} • ${state.stampedCount}/${LOYALTY_TOTAL_SLOTS} ختم • Memories`,
-          files: [file],
-        });
-        return;
+      const saveRes = await ImageSaveService.saveImage({
+        dataUrl,
+        filename: `loyalty-card-${(customerName || brandName).replace(/\s+/g, '-')}.png`,
+        title: `كارت ولائي في ${brandName}`,
+        text: `كارت ذكرياتي في ${brandName} • ${state.stampedCount}/${LOYALTY_TOTAL_SLOTS} ختم • Memories`,
+      });
+      if (saveRes.method === 'fallback') {
+        setIosSaveModalImage(saveRes.blobUrl || dataUrl);
       }
-      // Fallback: download the composed card.
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = 'memories-loyalty-card.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     } catch (err) {
-      console.warn('Card share cancelled or failed', err);
+      console.warn('Card share/save failed', err);
     }
   };
 
@@ -91,7 +85,7 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
       <div className="flex items-start justify-between mb-4 pb-3 border-b border-[#C9A227]/25 relative">
         <div className="flex items-center gap-2.5">
           <div className="lux-hero-badge w-9 h-9 rounded-2xl text-[#F3E18C] flex items-center justify-center">
-            <Coffee className="w-4 h-4" />
+            <Sparkles className="w-4 h-4" />
           </div>
           <div>
             <h4 className="font-extrabold text-sm text-[#1C130D] tracking-tight">
@@ -156,7 +150,7 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
               ) : isGiftSlot ? (
                 <Gift className={`w-5 h-5 transition-all ${isGiftReady ? 'text-amber-500 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] scale-110' : 'text-[#B49B77]'}`} />
               ) : (
-                <Coffee className="w-4 h-4 text-[#C9B896] opacity-60" />
+                <Sparkles className="w-3.5 h-3.5 text-[#C9B896] opacity-50" />
               )}
               <span
                 className={`absolute top-1 right-1.5 text-[8px] font-black font-mono ${
@@ -201,21 +195,29 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
           <button
             type="button"
             onClick={handleShare}
-            className="lux-cta flex items-center justify-center gap-1.5 py-2 rounded-xl text-[#F3E18C] text-xs font-bold transition"
+            className="lux-cta flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[#F3E18C] text-xs font-bold transition shadow-xs cursor-pointer active:scale-95"
           >
-            <Share2 className="w-3.5 h-3.5" />
-            شارك الكارت
+            <Download className="w-3.5 h-3.5" />
+            <span>حفظ ومشاركة الكارت</span>
           </button>
           <button
             type="button"
             onClick={handlePrint}
-            className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/90 text-[#1C130D] border border-[#C9A227]/35 text-xs font-bold hover:bg-[#FAF6EE] hover:border-[#C9A227]/60 transition shadow-sm"
+            className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/90 text-[#1C130D] border border-[#C9A227]/35 text-xs font-bold hover:bg-[#FAF6EE] hover:border-[#C9A227]/60 transition shadow-sm cursor-pointer active:scale-95"
           >
             <Printer className="w-3.5 h-3.5" />
-            اطبع الكارت
+            <span>اطبع الكارت</span>
           </button>
         </div>
       )}
+
+      {/* iOS Safari Long-Press Save Image Modal */}
+      <IosSaveImageModal
+        imageUrl={iosSaveModalImage}
+        isOpen={Boolean(iosSaveModalImage)}
+        onClose={() => setIosSaveModalImage(null)}
+        title="كارت الولاء والأختام"
+      />
     </div>
   );
 };

@@ -16,7 +16,7 @@ export const StaffQuickStampModal: React.FC<StaffQuickStampModalProps> = ({
   isOpen,
   onClose,
   onStampSuccess,
-  staffLabel = 'الباريستا / الكاشير',
+  staffLabel = 'موظف الكاونتر / الكاشير',
 }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export const StaffQuickStampModal: React.FC<StaffQuickStampModalProps> = ({
 
     const isValid = Object.values(STAFF_PIN_CREDENTIALS).includes(cleanPin) || cleanPin === '9999';
     if (!isValid) {
-      setError('رمز PIN غير صحيح. يرجى التأكد من الرمز المعتمد للباريستا.');
+      setError('رمز PIN غير صحيح. يرجى التأكد من الرمز المعتمد لطاقم العمل.');
       return;
     }
 
@@ -80,7 +80,7 @@ export const StaffQuickStampModal: React.FC<StaffQuickStampModalProps> = ({
         ) : (
           <div className="space-y-4">
             <p className="text-xs text-stone-600 leading-relaxed">
-              يقوم موظف الصالة أو الباريستا بإدخال رمز PIN المعتمد للفرع لمنح العميل ختماً وتوثيق لقطة جديدة.
+              يقوم موظف الصالة أو الكاونتر بإدخال رمز PIN المعتمد للفرع لمنح العميل ختماً وتوثيق لقطة جديدة.
             </p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <div>

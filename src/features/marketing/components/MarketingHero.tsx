@@ -10,9 +10,9 @@ type HeroTheme = 'korean_noir' | 'polaroid_vintage' | 'cafe_latte' | 'film_35mm'
 const HERO_THEMES: { id: HeroTheme; label: string; icon: string; bg: string; border: string; text: string; accent: string }[] = [
   { id: 'korean_noir', label: 'نوار كوري عاجي', icon: '📸', bg: '#FBF9F5', border: '#D6D3CD', text: '#1C1917', accent: '#3B2F2A' },
   { id: 'polaroid_vintage', label: 'بولارويد كلاسيك', icon: '🎞️', bg: '#FFFFFC', border: '#E7E5E4', text: '#292524', accent: '#D97706' },
-  { id: 'cafe_latte', label: 'لاتيه كافيه دافئ', icon: '☕', bg: '#F7F2EB', border: '#E2D7C7', text: '#3E2F28', accent: '#B85C43' },
+  { id: 'cafe_latte', label: 'بورسلين دافئ', icon: '✨', bg: '#F7F2EB', border: '#E2D7C7', text: '#3E2F28', accent: '#B85C43' },
   { id: 'film_35mm', label: 'فيلم 35 ملم', icon: '📽️', bg: '#1C1917', border: '#44403C', text: '#FAFAF9', accent: '#F59E0B' },
-  { id: 'ticket_express', label: 'تذكرة الكافيه', icon: '🎟️', bg: '#FAF5EC', border: '#8B2635', text: '#4A121A', accent: '#8B2635' },
+  { id: 'ticket_express', label: 'تذكرة استوديو (Photo Pass)', icon: '🎟️', bg: '#FAF5EC', border: '#8B2635', text: '#4A121A', accent: '#8B2635' },
 ];
 
 const HERO_PORTRAITS = [
@@ -34,10 +34,10 @@ export function MarketingHero() {
       <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-stone-300/80 bg-white text-stone-800 text-xs font-mono font-bold mb-6 shadow-2xs">
         <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
         <span className="tracking-widest uppercase text-stone-500">
-          MEMORIES HOSPITALITY ARCHITECTURE
+          UNIVERSAL GUEST EXPERIENCE & LOYALTY
         </span>
         <span className="text-stone-300">•</span>
-        <span className="text-stone-900 font-bold">منظومة تجربة زوار المقاهي المختصة 2026</span>
+        <span className="text-stone-900 font-bold">منظومة تجربة العملاء والولاء لجميع الأنشطة التجارية 2026</span>
       </div>
 
       {/* Hero Headline */}
@@ -46,15 +46,25 @@ export function MarketingHero() {
           className="text-4xl sm:text-6xl md:text-7xl font-black text-stone-950 tracking-tight leading-[1.14]"
           style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
         >
-          تحويل كل زيارة في مقهاك إلى ذكرى تدوم.<br />
+          تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم.<br />
           <span className="italic font-normal text-amber-700">
             وكل ذكرى إلى دافع حقيقي للعودة.
           </span>
         </h1>
 
         <p className="mt-4 text-sm sm:text-base md:text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed font-medium">
-          منصة متكاملة لتجربة زوار المقاهي المختصة والولاء التفاعلي: يوثق العميل لحظته بهاتفه مباشرة بدون أي تطبيق، شاشة الصالة الحية تصنع تفاعلاً مجتمعياً دافئاً، وكارت الولاء الرقمي في محفظة Apple و Google Wallet يمنحه سبباً دائماً لاختيار مقهاك وتكرار زياراته.
+          منصة متكاملة لتجربة العملاء والولاء الفوتوغرافي التفاعلي: يوثق الزائر لحظته بهاتفه مباشرة بدون أي تطبيق، شاشات الصالة والمتاجر الحية تصنع تفاعلاً مجتمعياً أنيقاً، وكارت الولاء الرقمي في محفظة Apple و Google Wallet يمنحه سبباً دائماً لتكرار الزيارات والشراء.
         </p>
+      </div>
+
+      {/* Multi-Industry Badges Pill */}
+      <div className="mt-5 flex items-center justify-center flex-wrap gap-2 text-[11px] font-bold text-stone-600">
+        <span className="px-3 py-1 rounded-full bg-stone-100/90 border border-stone-200">متاجر وبوتيكات أزياء</span>
+        <span className="px-3 py-1 rounded-full bg-stone-100/90 border border-stone-200">صالونات تجميل وعناية</span>
+        <span className="px-3 py-1 rounded-full bg-stone-100/90 border border-stone-200">مطاعم ومفاهيم طعام</span>
+        <span className="px-3 py-1 rounded-full bg-stone-100/90 border border-stone-200">معارض وفعاليات ومؤتمرات</span>
+        <span className="px-3 py-1 rounded-full bg-stone-100/90 border border-stone-200">مساحات ترفيه ومغامرة</span>
+        <span className="px-3 py-1 rounded-full bg-stone-100/90 border border-stone-200">مقاهي ومحامص مختصة</span>
       </div>
 
       {/* Platform Real Independence Badge */}
@@ -67,9 +77,9 @@ export function MarketingHero() {
             <span>memories</span>
           </div>
           <span className="text-amber-500 font-black">•</span>
-          <span className="text-stone-800 font-bold">منظومة مخصصة لهوية وعلامة مقهاك المستقلة</span>
+          <span className="text-stone-800 font-bold">منظومة مخصصة لهوية وعلامتك التجارية المستقلة</span>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
-            White-Label Ready
+            100% White-Label Ready
           </span>
         </div>
       </div>
@@ -80,7 +90,7 @@ export function MarketingHero() {
           href="/login"
           className="w-full sm:w-auto text-sm py-4 px-8 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-500 hover:to-amber-700 text-white font-black shadow-lg shadow-amber-900/15 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
-          <span>ابدأ تجربة مقهاك مجاناً</span>
+          <span>ابدأ تجربة نشاطك التجاري مجاناً</span>
           <ArrowRight className="w-4 h-4 text-white rotate-180" />
         </Link>
 

@@ -70,7 +70,7 @@ export function NewsletterSignup() {
       <div className="max-w-xl mx-auto space-y-4">
         <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#B85C43] font-bold">
           <Sparkles className="w-4 h-4" />
-          <span>نشرة صناع وتجار القهوة المختصة</span>
+          <span>نشرة رواد الأعمال وصناع تجارب الزوار</span>
         </div>
         <h3
           className="text-xl sm:text-2xl font-black text-[#1E3A32] dark:text-[#FAF6EE] font-serif"
@@ -79,7 +79,7 @@ export function NewsletterSignup() {
           اشترك ليصلك جديد تحليلات وتجارب ولاء الزوار
         </h3>
         <p className="text-xs text-[#3B2F2A]/75 dark:text-[#FAF6EE]/75 leading-relaxed">
-          نشاركك نصائح عملية لرفع معدل عودة رواد مقهاك، تحسين تجربة الطاولات، وبناء مجتمع وفي لعلامتك. بدون رسائل إعلانية مزعجة.
+          نشاركك نصائح عملية لرفع معدل عودة رواد نشاطك التجاري، تحسين تجربة الزوار، وبناء مجتمع وفي لعلامتك. بدون رسائل إعلانية مزعجة.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-2 pt-2">

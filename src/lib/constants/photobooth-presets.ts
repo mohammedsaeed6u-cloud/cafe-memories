@@ -9,6 +9,18 @@ import {
 
 export const CUSTOMER_PERSONAS: CustomerPersonaInfo[] = [
   {
+    key: 'loyal_customer',
+    label: 'عميل وفي / زائر دائم',
+    icon: 'heart',
+    badgeColor: 'bg-amber-50 text-amber-900 border-amber-200',
+  },
+  {
+    key: 'vip_guest',
+    label: 'ضيف VIP / زائر مميز',
+    icon: 'crown',
+    badgeColor: 'bg-purple-50 text-purple-900 border-purple-200',
+  },
+  {
     key: 'tech_freelancer',
     label: 'تقني / فريلانسر',
     icon: 'tech',
@@ -34,7 +46,7 @@ export const CUSTOMER_PERSONAS: CustomerPersonaInfo[] = [
   },
   {
     key: 'coffee_lover',
-    label: 'زائر ومحب للقهوة',
+    label: 'متذوق القهوة والضيافة',
     icon: 'coffee',
     badgeColor: 'bg-stone-100 text-stone-800 border-stone-300',
   },
@@ -557,8 +569,8 @@ export const BUSINESS_INDUSTRY_OPTIONS = [
     nameEn: 'Cafe & Specialty Roastery',
     icon: 'coffee',
     defaultGiftTitle: 'مشروب سبيشالتي مجاني',
-    defaultGiftSubtitle: 'أظهر الكارت للباريستا لاستلام مشروبك المجاني',
-    staffLabel: 'الباريستا',
+    defaultGiftSubtitle: 'أظهر الكارت لموظف الكاونتر لاستلام مشروبك المجاني',
+    staffLabel: 'موظف الكاونتر',
   },
   {
     id: 'restaurant',
@@ -616,14 +628,19 @@ export const BUSINESS_INDUSTRY_OPTIONS = [
   },
 ] as const;
 
+export function getIndustryProfile(businessType?: string) {
+  const found = BUSINESS_INDUSTRY_OPTIONS.find((opt) => opt.id === businessType);
+  return found || BUSINESS_INDUSTRY_OPTIONS[6]; // defaults to 'general'
+}
+
 export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   cafeSlug: 'memories',
   cafeName: 'استوديو الذكريات • Memories Studio',
-  businessType: 'cafe',
+  businessType: 'general',
   branding: {
     name: 'Memories Studio',
     logoUrl: '',
-    tagline: 'SPECIALTY PHOTOBOOTH & COFFEE',
+    tagline: 'SHARED MOMENTS & GUEST ENGAGEMENT STUDIO',
     instagramHandle: '@memories_studio',
   },
   defaultShotCount: 3,
@@ -638,8 +655,8 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   defaultTemplateId: 'polaroid_vintage_chin',
   lockFrameForCustomers: true,
   freeGiftOffer: {
-    title: 'مشروب مجاني أو هدية فورية',
-    subtitle: 'أظهر هذا الشريط لفريق المكان لاستلام هديتك مع الصورة المطبوعة',
+    title: 'هدية الزيارة أو خصم ترحيبي',
+    subtitle: 'أظهر هذا الشريط لطاقم الخدمة لاستلام مكافأتك التقديرية مع الصورة المطبوعة',
     icon: 'reward',
   },
   activeFrameId: 'polaroid-cream',

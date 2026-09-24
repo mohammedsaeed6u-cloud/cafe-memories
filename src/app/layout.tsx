@@ -34,9 +34,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://memories-c9w.pages.dev'),
-  title: 'memories • منصة تجربة عملاء وولاء المقاهي المختصة',
-  description: 'تحويل كل زيارة في مقهاك إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير عبر الهاتف بدون تطبيق، شاشات صالة حية، وكروت ولاء في محفظة Apple و Google Wallet.',
-  keywords: ['كافيهات', 'ولاء العملاء', 'فوتوبوث كافيه', 'شاشات الصالة الحية', 'قهوة مختصة', 'بطاقات ولاء رقمية'],
+  title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
+  description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوري عبر الهاتف بدون تطبيق، شاشات عرض تفاعلية للصالة، وكروت ولاء رقمية في محفظة Apple و Google Wallet للمطاعم، الكافيهات، المتاجر، الصالونات، والفعاليات.',
+  keywords: ['فوتوبوث رقمي', 'ولاء العملاء', 'استوديو تصوير للأنشطة التجارية', 'شاشات الصالة الذكية', 'بطاقات ولاء رقمية', 'تجربة العميل', 'Apple Wallet', 'Google Wallet'],
   manifest: '/manifest.webmanifest',
   icons: {
     icon: '/icon.svg',
@@ -48,8 +48,8 @@ export const metadata: Metadata = {
     title: 'Memories',
   },
   openGraph: {
-    title: 'memories • منصة تجربة عملاء وولاء المقاهي المختصة',
-    description: 'تحويل كل زيارة في مقهاك إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
+    title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
+    description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
     url: 'https://memories-c9w.pages.dev',
     siteName: 'memories',
     locale: 'ar_SA',
@@ -57,8 +57,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'memories • منصة تجربة عملاء وولاء المقاهي المختصة',
-    description: 'تحويل كل زيارة في مقهاك إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
+    title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
+    description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
   },
   verification: {
     google: 'fjoLJpquhynVk0PmXH6VssgvRRrhiuynBz8G4PDHiME',

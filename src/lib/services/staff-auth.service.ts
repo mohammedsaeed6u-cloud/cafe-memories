@@ -285,5 +285,5 @@ export async function verifyPinOnly(pin: string): Promise<StaffAuthResult> {
   if (clean === '9999') {
     return verifyStaffPin('staff-4', '4567');
   }
-  return { success: false, error: 'الرمز السري للباريستا غير صحيح.' };
+  return { success: false, error: 'الرمز السري للموظف غير صحيح.' };
 }

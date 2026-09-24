@@ -191,7 +191,7 @@ export class DigitalWalletService {
           {
             key: 'rewardStatus',
             label: isCompleted ? 'المكافأة جاهزة للاستلام' : 'المكافأة القادمة',
-            value: data.giftTitle || 'قهوة مختصة مجانية',
+            value: data.giftTitle || 'هدية خاصة مجانية',
           },
         ],
         secondaryFields: [
@@ -221,7 +221,7 @@ export class DigitalWalletService {
             key: 'terms',
             label: 'شروط استخدام كارت الذكريات',
             value:
-              'كل زيارة وتوثيق للذكرى يمنحك ختماً في الكارت. عند إكمال جميع الخانات يحق لك استلام الهدية المقررة من المقهى وطباعة ذكرياتك بجودة عالية.',
+              'كل زيارة وتوثيق للذكرى يمنحك ختماً في الكارت. عند إكمال جميع الخانات يحق لك استلام الهدية المقررة من المنشأة وطباعة ذكرياتك بجودة عالية.',
           },
         ],
       },
@@ -247,7 +247,7 @@ export class DigitalWalletService {
             classId: `memories.${data.cafeSlug}.loyalty_class`,
             state: 'ACTIVE',
             accountId: cleanPhone,
-            accountName: data.customerName || data.customerPhone || 'ضيف الكافيه',
+            accountName: data.customerName || data.customerPhone || 'ضيف مميز',
             barcode: {
               type: 'QR_CODE',
               value: stampUrl,
@@ -262,14 +262,14 @@ export class DigitalWalletService {
             secondaryLoyaltyPoints: {
               label: 'الهدية',
               balance: {
-                string: data.giftTitle || 'مشروب مجاني مميز',
+                string: data.giftTitle || 'هدية ترحيبية خاصة',
               },
             },
             infoModuleData: {
               labelValueRows: [
                 {
                   columns: [
-                    { label: 'الكافيه', value: data.cafeName },
+                    { label: 'المنشأة', value: data.cafeName },
                     { label: 'انستجرام', value: data.instagramHandle || `@${data.cafeSlug}` },
                   ],
                 },

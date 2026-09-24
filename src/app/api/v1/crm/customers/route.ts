@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       const phone = c.anonymous_id || '';
       
       // Extract persona role from email if present, or fallback
-      let role = 'زائر ومحب للقهوة';
+      let role = 'عميل مميز ووفِي';
       if (c.email && c.email.includes('@persona.memories')) {
         role = decodeURIComponent(c.email.replace('@persona.memories', ''));
       } else if (c.email && !c.email.includes('@')) {
