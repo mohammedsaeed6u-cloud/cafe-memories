@@ -149,6 +149,14 @@ export function CustomerClient({ cafeSlug }: { cafeSlug: string }) {
 
   // Hydrate persisted session from storage
   useEffect(() => {
+    const handleSettingsUpdate = () => {
+      setSettings(BusinessSettingsService.getSettings(cafeSlug));
+    };
+    window.addEventListener('memories-settings-updated', handleSettingsUpdate);
+    return () => window.removeEventListener('memories-settings-updated', handleSettingsUpdate);
+  }, [cafeSlug]);
+
+  useEffect(() => {
     const hydrateSession = () => {
       const storedName = localStorage.getItem('memories_customer_name') || '';
       const storedPhone = localStorage.getItem('memories_customer_phone') || '';

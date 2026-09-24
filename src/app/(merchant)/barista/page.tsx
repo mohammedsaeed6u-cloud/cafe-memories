@@ -28,8 +28,28 @@ import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
 import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-auth.service';
 
 export default function BaristaTerminalPage() {
-  const [cafeSlug, setCafeSlug] = useState('memories');
-  const [settings, setSettings] = useState(() => BusinessSettingsService.getSettings('memories'));
+  const [cafeSlug, setCafeSlug] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCafe = urlParams.get('cafe');
+        if (urlCafe) return urlCafe;
+        const stored = localStorage.getItem('memories_active_merchant_slug');
+        if (stored) return stored;
+      } catch {}
+    }
+    return 'memories';
+  });
+  const [settings, setSettings] = useState(() => {
+    let slug = 'memories';
+    if (typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        slug = urlParams.get('cafe') || localStorage.getItem('memories_active_merchant_slug') || 'memories';
+      } catch {}
+    }
+    return BusinessSettingsService.getSettings(slug);
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<RegisteredCustomer | null>(null);
   const [loyaltyData, setLoyaltyData] = useState<CustomerLoyaltyData | null>(null);

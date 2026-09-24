@@ -112,9 +112,35 @@ export class BusinessSettingsService {
       }
     }
 
+    // Intelligently infer cafe name from slug or query param if not stored
+    let dynamicCafeName = 'Memories Studio';
+    if (cafeSlug && cafeSlug !== 'memories' && cafeSlug !== 'studio') {
+      if (typeof window !== 'undefined') {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const nameParam = urlParams.get('name');
+          if (nameParam) {
+            dynamicCafeName = decodeURIComponent(nameParam);
+          }
+        } catch {}
+      }
+      if (dynamicCafeName === 'Memories Studio') {
+        dynamicCafeName = cafeSlug
+          .split('-')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
+    }
+
     return {
       ...DEFAULT_BUSINESS_SETTINGS,
       cafeSlug,
+      cafeName: dynamicCafeName,
+      branding: {
+        ...DEFAULT_BUSINESS_SETTINGS.branding,
+        name: dynamicCafeName,
+        instagramHandle: cafeSlug === 'memories' ? '@memories_studio' : `@${cafeSlug.replace(/[^a-z0-9_]/gi, '')}`,
+      },
       frames: (DEFAULT_BUSINESS_SETTINGS.frames || []).map((f) => ({
         ...f,
         shotCount: defaultShotCount,

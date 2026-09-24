@@ -37,8 +37,12 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
   onSettingsSaved,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [cafeName, setCafeName] = useState(currentSettings.branding?.name || 'Memories Studio');
-  const [cafeSlug, setCafeSlug] = useState(currentSettings.cafeSlug || 'memories');
+  const [cafeName, setCafeName] = useState(
+    currentSettings.cafeSlug === 'memories' ? '' : (currentSettings.branding?.name || '')
+  );
+  const [cafeSlug, setCafeSlug] = useState(
+    currentSettings.cafeSlug === 'memories' ? '' : (currentSettings.cafeSlug || '')
+  );
   const [orientation, setOrientation] = useState<StripOrientation>(currentSettings.defaultOrientation || 'vertical');
   const [shotCount, setShotCount] = useState<number>(currentSettings.defaultShotCount || 3);
   const [giftTitle, setGiftTitle] = useState(currentSettings.freeGiftOffer?.title || 'كوب قهوة مختصة مجاني');

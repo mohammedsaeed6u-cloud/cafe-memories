@@ -1,11 +1,46 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Home, Camera, Tv, Sparkles, Search } from 'lucide-react';
 import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
+import { CustomerClient } from '@/components/customer/CustomerClient';
+import { WallClient } from '@/components/wall/WallClient';
 
 export default function NotFoundPage() {
+  const [dynamicRoute, setDynamicRoute] = useState<{
+    type: 'customer' | 'wall' | '404';
+    param: string;
+  }>({ type: '404', param: '' });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/c/')) {
+        const rawSlug = pathname.replace('/c/', '').split('/')[0].split('?')[0];
+        if (rawSlug) {
+          setDynamicRoute({ type: 'customer', param: decodeURIComponent(rawSlug) });
+          return;
+        }
+      }
+      if (pathname.startsWith('/wall/')) {
+        const rawScreen = pathname.replace('/wall/', '').split('/')[0].split('?')[0];
+        if (rawScreen) {
+          setDynamicRoute({ type: 'wall', param: decodeURIComponent(rawScreen) });
+          return;
+        }
+      }
+    }
+  }, []);
+
+  if (dynamicRoute.type === 'customer' && dynamicRoute.param) {
+    return <CustomerClient cafeSlug={dynamicRoute.param} />;
+  }
+
+  if (dynamicRoute.type === 'wall' && dynamicRoute.param) {
+    return <WallClient screenId={dynamicRoute.param} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF6EE] dark:bg-[#0E1A16] text-[#3B2F2A] dark:text-[#FAF6EE] font-cairo flex flex-col justify-between p-6 antialiased selection:bg-[#B85C43]/20 selection:text-[#1E3A32]">
       {/* Background paper noise */}

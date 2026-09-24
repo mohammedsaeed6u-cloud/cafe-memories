@@ -35,6 +35,47 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
     lg: { box: 'w-11 h-11 rounded-2xl', icon: 26, text: 'text-base sm:text-lg', cross: 'text-2xl' },
   }[size];
 
+  const isFlagshipSolo =
+    !cafeName ||
+    cafeName.trim().toLowerCase() === 'memories' ||
+    cafeName.trim().toLowerCase() === 'memories studio' ||
+    cafeName.trim().toLowerCase() === 'استوديو الذكريات' ||
+    cafeName.trim().toLowerCase() === 'استوديو الذكريات • memories studio';
+
+  if (isFlagshipSolo) {
+    return (
+      <div
+        className={`inline-flex items-center justify-center gap-2.5 select-none ${className}`}
+        dir="ltr"
+      >
+        <div
+          className={`${iconSizes.box} bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shadow-xs border border-amber-600/30 shrink-0`}
+        >
+          <MemoriesArchIcon size={iconSizes.icon} color="#FFFFFF" />
+        </div>
+        <div className="text-left">
+          <span
+            style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+            className={`font-black tracking-tight block leading-tight lowercase ${
+              isDark ? 'text-white' : 'text-stone-950'
+            } ${iconSizes.text}`}
+          >
+            memories
+          </span>
+          {showTagline && (
+            <span
+              className={`text-[8px] font-mono tracking-widest font-bold uppercase block leading-none ${
+                isDark ? 'text-amber-400/80' : 'text-amber-700'
+              }`}
+            >
+              HOSPITALITY PHOTOBOOTH STUDIO
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`inline-flex items-center justify-center gap-3 sm:gap-4 select-none ${className}`}
