@@ -99,7 +99,7 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
         <span
           className={`text-[11px] font-black tracking-wider px-3 py-1 rounded-full border font-mono ${
             isGiftReady
-              ? 'bg-gradient-to-l from-amber-200 to-amber-100 text-amber-900 border-amber-400 shadow-[0_0_10px_rgba(201,162,39,0.35)]'
+              ? 'bg-[#55100D]/80 text-[#FBF9F5] border-[#DD0200]/50 shadow-[0_0_10px_rgba(221,2,0,0.35)]'
               : 'lux-gold-text bg-[#1C130D]/90 border-[#C9A227]/50'
           }`}
         >
@@ -148,7 +148,7 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
                   </span>
                 </div>
               ) : isGiftSlot ? (
-                <Gift className={`w-5 h-5 transition-all ${isGiftReady ? 'text-amber-500 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] scale-110' : 'text-[#B49B77]'}`} />
+                <Gift className={`w-5 h-5 transition-all ${isGiftReady ? 'text-[#DD0200] drop-shadow-[0_0_6px_rgba(221,2,0,0.6)] scale-110' : 'text-[#B49B77]'}`} />
               ) : (
                 <Sparkles className="w-3.5 h-3.5 text-[#C9B896] opacity-50" />
               )}
@@ -167,13 +167,13 @@ export const LoyaltyStampCard: React.FC<LoyaltyStampCardProps> = ({
       {/* Footer / progress */}
       <div className="mt-1 pt-3 border-t border-[#C9A227]/25">
         {isGiftReady ? (
-          <div className="lux-sheen relative overflow-hidden bg-gradient-to-l from-amber-400 via-amber-300 to-amber-400 rounded-2xl p-3 text-center text-stone-950 shadow-[0_10px_26px_-10px_rgba(245,158,11,0.6)] border border-amber-500/60">
-            <p className="font-black text-sm">كارتك اكتملت — هديتك جاهزة!</p>
+          <div className="lux-sheen relative overflow-hidden bg-gradient-to-l from-[#DD0200] via-[#55100D] to-[#141212] rounded-2xl p-3 text-center text-[#FBF9F5] shadow-xl border border-[#DD0200]/40">
+            <p className="font-bold text-sm">كارتك اكتملت — هديتك جاهزة!</p>
             {onClaimGift && (
               <button
                 type="button"
                 onClick={onClaimGift}
-                className="lux-cta mt-2 w-full py-2 rounded-xl text-amber-300 text-xs font-black transition"
+                className="lux-cta mt-2 w-full py-2 rounded-lg text-[#FBF9F5] bg-[#DD0200] hover:bg-[#B50200] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] text-xs font-bold transition cursor-pointer"
               >
                 اطلب هديتك الآن
               </button>

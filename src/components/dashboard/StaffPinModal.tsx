@@ -166,20 +166,20 @@ const StaffPinModalBody: React.FC<{
   }));
 
   const numpadButtonClass = cn(
-    'h-14 rounded-2xl bg-stone-100 text-xl font-black text-stone-800',
-    'active:scale-95 active:bg-stone-200 transition',
-    'disabled:opacity-40 disabled:active:scale-100',
-    'focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-600'
+    'h-14 rounded-xl bg-[#1C1B1B] border border-white/10 text-xl font-bold text-[#FBF9F5]',
+    'active:scale-95 active:bg-[#211F1F] hover:bg-[#211F1F] transition',
+    'disabled:opacity-40 disabled:active:scale-100 cursor-pointer',
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DD0200]'
   );
   const utilityButtonClass = cn(
-    'h-14 rounded-2xl bg-stone-100 text-stone-600 flex items-center justify-center',
-    'active:scale-95 transition disabled:opacity-40',
-    'focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-600'
+    'h-14 rounded-xl bg-[#0B0A0A] border border-white/10 text-[#A19E9B] flex items-center justify-center',
+    'active:scale-95 hover:bg-[#1C1B1B] hover:text-[#FBF9F5] transition disabled:opacity-40 cursor-pointer',
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DD0200]'
   );
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in"
       role="dialog"
       aria-modal="true"
       aria-label="Staff quick PIN switcher"
@@ -187,18 +187,18 @@ const StaffPinModalBody: React.FC<{
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative apple-glass bg-white/90 dark:bg-[#1C1C1E]/95 rounded-[28px] p-6 sm:p-8 max-w-sm w-full text-stone-900 dark:text-white shadow-2xl border border-white/60 dark:border-white/10 apple-font">
+      <div className="relative bg-[#141212] rounded-2xl p-6 sm:p-8 max-w-sm w-full text-[#FBF9F5] shadow-2xl border border-white/10">
         <button
           type="button"
           onClick={onClose}
           aria-label="Close staff switcher"
-          className="absolute top-4 right-4 p-2 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-600"
+          className="absolute top-4 right-4 p-2 rounded-lg text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-[#1C1B1B] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DD0200] cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-lg font-black tracking-tight">Quick PIN Switcher</h2>
-        <p className="text-xs text-stone-500 mt-1">
+        <h2 className="text-lg font-bold tracking-tight font-serif text-[#FBF9F5]">Quick PIN Switcher</h2>
+        <p className="text-xs text-[#A19E9B] mt-1 font-sans">
           {selectedStaff
             ? `Enter PIN for ${selectedStaff.name}`
             : 'Select a staff member to continue'}
@@ -223,11 +223,11 @@ const StaffPinModalBody: React.FC<{
                   setErrorMessage(null);
                 }}
                 className={cn(
-                  'flex items-center gap-2.5 p-2.5 rounded-2xl border text-left transition',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-600',
+                  'flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition cursor-pointer',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DD0200]',
                   isSelected
-                    ? 'border-amber-600 bg-amber-50 shadow-sm'
-                    : 'border-stone-200 hover:bg-stone-50',
+                    ? 'border-[#DD0200] bg-[#55100D]/50 text-[#FBF9F5] shadow-[0_0_15px_-3px_rgba(221,2,0,0.25)]'
+                    : 'border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5]',
                   isMemberLocked && 'opacity-50'
                 )}
               >
@@ -236,22 +236,22 @@ const StaffPinModalBody: React.FC<{
                   <img
                     src={member.avatarUrl}
                     alt=""
-                    className="w-9 h-9 rounded-full object-cover border border-stone-200"
+                    className="w-9 h-9 rounded-full object-cover border border-white/10"
                   />
                 ) : (
-                  <span className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center">
-                    <UserRound className="w-5 h-5 text-stone-400" />
+                  <span className="w-9 h-9 rounded-full bg-[#0B0A0A] border border-white/10 flex items-center justify-center">
+                    <UserRound className="w-5 h-5 text-[#A19E9B]" />
                   </span>
                 )}
                 <span className="min-w-0">
-                  <span className="block text-xs font-bold truncate">{member.name}</span>
-                  <span className="block text-[10px] text-stone-500">
+                  <span className="block text-xs font-bold truncate text-[#FBF9F5]">{member.name}</span>
+                  <span className="block text-[10px] text-[#A19E9B] font-mono">
                     {isMemberLocked
                       ? `Locked ${member.lockedOutSeconds}s`
                       : STAFF_ROLE_LABELS[member.role]}
                   </span>
                 </span>
-                {isSelected && <Check className="w-4 h-4 text-amber-600 ml-auto shrink-0" />}
+                {isSelected && <Check className="w-4 h-4 text-[#DD0200] ml-auto shrink-0" />}
               </button>
             );
           })}
@@ -274,9 +274,9 @@ const StaffPinModalBody: React.FC<{
                 'w-3.5 h-3.5 rounded-full border-2 transition-colors',
                 i < pin.length
                   ? status === 'error'
-                    ? 'bg-red-500 border-red-500'
-                    : 'bg-amber-600 border-amber-600'
-                  : 'border-stone-300 bg-transparent'
+                    ? 'bg-rose-500 border-rose-500'
+                    : 'bg-[#DD0200] border-[#DD0200] shadow-[0_0_10px_rgba(221,2,0,0.5)]'
+                  : 'border-white/20 bg-transparent'
               )}
             />
           ))}
@@ -288,16 +288,16 @@ const StaffPinModalBody: React.FC<{
         {/* Status / error message */}
         <div className="mt-3 min-h-[1.5rem] text-center text-xs font-bold" aria-live="assertive">
           {isLocked ? (
-            <span className="inline-flex items-center gap-1.5 text-red-600">
+            <span className="inline-flex items-center gap-1.5 text-rose-400">
               <Lock className="w-3.5 h-3.5" />
               Locked — retry in {lockoutRemaining}s
             </span>
           ) : status === 'verifying' ? (
-            <span className="inline-flex items-center gap-1.5 text-stone-500">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Verifying…
+            <span className="inline-flex items-center gap-1.5 text-[#A19E9B]">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#DD0200]" /> Verifying…
             </span>
           ) : status === 'error' && errorMessage ? (
-            <span className="text-red-600">{errorMessage}</span>
+            <span className="text-rose-400">{errorMessage}</span>
           ) : null}
         </div>
 

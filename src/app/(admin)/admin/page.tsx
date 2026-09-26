@@ -97,37 +97,37 @@ export default function SuperAdminPortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col selection:bg-amber-100">
+    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col selection:bg-[#DD0200] selection:text-white font-sans">
       {/* Super Admin Navigation */}
-      <header className="bg-stone-900 text-white border-b border-stone-800 sticky top-0 z-40 px-6 py-4 shadow-md">
+      <header className="bg-[#0E0D0D] text-[#FBF9F5] border-b border-white/10 sticky top-0 z-40 px-6 py-4 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-stone-950 flex items-center justify-center font-black text-lg shadow-lg">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-[#FBF9F5] flex items-center justify-center font-black text-lg shadow-lg border border-white/10">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-black text-base tracking-tight text-white">
+                <h1 className="font-bold text-base tracking-tight text-[#FBF9F5] font-serif">
                   Memories SaaS • Super Admin Portal
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold border border-amber-500/30">
+                <span className="px-2 py-0.5 rounded-full bg-[#55100D]/50 text-[#FBF9F5] text-[10px] font-mono font-bold border border-[#DD0200]/40">
                   ENTERPRISE CONTROL
                 </span>
               </div>
-              <p className="text-[11px] text-stone-400">
+              <p className="text-[11px] text-[#A19E9B]">
                 بوابة الإدارة المركزية، إدارة باقات الـ SaaS، ومتابعة الإيرادات المتكررة MRR
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3 text-xs">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-800 border border-stone-700 text-emerald-400 font-mono">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-emerald-400 font-mono">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>MRR: {saasMetrics.totalMrr.toLocaleString()} ر.س</span>
             </div>
             <a
               href="/dashboard"
-              className="px-3.5 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white font-bold transition flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-xl bg-[#1C1B1B] hover:bg-[#252424] text-[#FBF9F5] font-bold transition flex items-center gap-1.5 border border-white/10"
             >
               <span>لوحة التاجر والاشتراك</span>
               <ExternalLink className="w-3 h-3" />
@@ -140,8 +140,8 @@ export default function SuperAdminPortalPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
         {/* Notice Bar */}
         {notice && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold rounded-2xl flex items-center gap-2 shadow-sm animate-in fade-in">
-            <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          <div className="p-4 bg-[#55100D]/40 border border-[#DD0200]/40 text-[#FBF9F5] text-xs font-bold rounded-2xl flex items-center gap-2 shadow-sm animate-in fade-in">
+            <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <span>{notice}</span>
           </div>
         )}
@@ -150,11 +150,11 @@ export default function SuperAdminPortalPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-black text-stone-900 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-amber-600" />
+              <h2 className="text-lg font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
+                <TrendingUp className="w-5 h-5 text-[#DD0200]" />
                 <span>مؤشرات إيرادات الـ SaaS الشهرية والسنوية (MRR & ARR Telemetry)</span>
               </h2>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className="text-xs text-[#A19E9B] mt-0.5">
                 متابعة الاشتراكات المتكررة، تدفقات السداد، وتوزيع الباقات عبر الفروع
               </p>
             </div>
@@ -162,75 +162,75 @@ export default function SuperAdminPortalPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Metric 1: MRR */}
-            <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm space-y-1">
-              <div className="flex items-center justify-between text-stone-400 mb-1">
-                <span className="text-xs font-bold text-stone-600">الإيراد الشهري المتكرر (MRR)</span>
-                <DollarSign className="w-4 h-4 text-emerald-600" />
+            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
+              <div className="flex items-center justify-between text-[#A19E9B] mb-1">
+                <span className="text-xs font-bold text-[#A19E9B]">الإيراد الشهري المتكرر (MRR)</span>
+                <DollarSign className="w-4 h-4 text-emerald-400" />
               </div>
-              <p className="text-2xl font-black text-emerald-600">
+              <p className="text-2xl font-black text-emerald-400">
                 {saasMetrics.totalMrr.toLocaleString()}{' '}
-                <span className="text-xs font-bold text-stone-500">ر.س</span>
+                <span className="text-xs font-bold text-[#A19E9B]">ر.س</span>
               </p>
-              <p className="text-[10px] text-stone-400 font-bold">Monthly Recurring Revenue</p>
+              <p className="text-[10px] text-[#A19E9B]/60 font-bold">Monthly Recurring Revenue</p>
             </div>
 
             {/* Metric 2: ARR */}
-            <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm space-y-1">
-              <div className="flex items-center justify-between text-stone-400 mb-1">
-                <span className="text-xs font-bold text-stone-600">الإيراد السنوي المتوقع (ARR)</span>
-                <TrendingUp className="w-4 h-4 text-blue-600" />
+            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
+              <div className="flex items-center justify-between text-[#A19E9B] mb-1">
+                <span className="text-xs font-bold text-[#A19E9B]">الإيراد السنوي المتوقع (ARR)</span>
+                <TrendingUp className="w-4 h-4 text-sky-400" />
               </div>
-              <p className="text-2xl font-black text-stone-900">
+              <p className="text-2xl font-black text-[#FBF9F5]">
                 {saasMetrics.totalArr.toLocaleString()}{' '}
-                <span className="text-xs font-bold text-stone-500">ر.س</span>
+                <span className="text-xs font-bold text-[#A19E9B]">ر.س</span>
               </p>
-              <p className="text-[10px] text-emerald-600 font-bold">Annual Run Rate Projection</p>
+              <p className="text-[10px] text-emerald-400 font-bold">Annual Run Rate Projection</p>
             </div>
 
             {/* Metric 3: Active Subscriptions */}
-            <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm space-y-1">
-              <div className="flex items-center justify-between text-stone-400 mb-1">
-                <span className="text-xs font-bold text-stone-600">المشتركون النشطون</span>
-                <Users className="w-4 h-4 text-amber-500" />
+            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
+              <div className="flex items-center justify-between text-[#A19E9B] mb-1">
+                <span className="text-xs font-bold text-[#A19E9B]">المشتركون النشطون</span>
+                <Users className="w-4 h-4 text-[#DD0200]" />
               </div>
-              <p className="text-2xl font-black text-stone-900">
+              <p className="text-2xl font-black text-[#FBF9F5]">
                 {saasMetrics.activeSubscriptionsCount}{' '}
-                <span className="text-xs font-bold text-stone-500">منشآت ومتاجر نشطة</span>
+                <span className="text-xs font-bold text-[#A19E9B]">منشآت ومتاجر نشطة</span>
               </p>
-              <p className="text-[10px] text-stone-400 font-bold">
+              <p className="text-[10px] text-[#A19E9B]/60 font-bold">
                 {saasMetrics.trialingCount} فروع في التجربة المجانية
               </p>
             </div>
 
             {/* Metric 4: ARPU */}
-            <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm space-y-1">
-              <div className="flex items-center justify-between text-stone-400 mb-1">
-                <span className="text-xs font-bold text-stone-600">متوسط العائد لكل مقهى (ARPU)</span>
-                <CreditCard className="w-4 h-4 text-purple-600" />
+            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
+              <div className="flex items-center justify-between text-[#A19E9B] mb-1">
+                <span className="text-xs font-bold text-[#A19E9B]">متوسط العائد لكل مقهى (ARPU)</span>
+                <CreditCard className="w-4 h-4 text-purple-400" />
               </div>
-              <p className="text-2xl font-black text-stone-900">
+              <p className="text-2xl font-black text-[#FBF9F5]">
                 {saasMetrics.averageRevenuePerUser.toLocaleString()}{' '}
-                <span className="text-xs font-bold text-stone-500">ر.س</span>
+                <span className="text-xs font-bold text-[#A19E9B]">ر.س</span>
               </p>
-              <p className="text-[10px] text-emerald-600 font-bold">معدل الإلغاء Churn: 1.2%</p>
+              <p className="text-[10px] text-emerald-400 font-bold">معدل الإلغاء Churn: 1.2%</p>
             </div>
           </div>
         </div>
 
         {/* SECTION 2: Central SaaS Subscriptions & Tier Control */}
-        <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-stone-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="bg-[#141212] rounded-2xl border border-white/10 shadow-xl overflow-hidden">
+          <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h3 className="text-base font-black text-stone-900 flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-amber-600" />
+              <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
+                <CreditCard className="w-4 h-4 text-[#DD0200]" />
                 <span>إدارة اشتراكات وباقات الفروع المركزية (Tenant Subscriptions)</span>
               </h3>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className="text-xs text-[#A19E9B] mt-0.5">
                 يمكن لمالك المنصة تعديل باقة أي فرع فورياً، تفعيل الاشتراك، ومطالعة الفواتير
               </p>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-bold text-stone-600 bg-stone-100 px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#FBF9F5] bg-[#1C1B1B] border border-white/10 px-3 py-1.5 rounded-xl">
               <span>الفروع المربوطة: {tenants.length}</span>
             </div>
           </div>
@@ -238,7 +238,7 @@ export default function SuperAdminPortalPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="border-b border-stone-200 bg-stone-50 text-[11px] font-black uppercase text-stone-500 tracking-wider">
+                <tr className="border-b border-white/10 bg-[#1C1B1B] text-[11px] font-bold uppercase text-[#A19E9B] tracking-wider">
                   <th className="py-4 px-5">المنشأة / المشترك</th>
                   <th className="py-4 px-5">باقة الـ SaaS الحالية</th>
                   <th className="py-4 px-5">دورة الفوترة</th>
@@ -248,7 +248,7 @@ export default function SuperAdminPortalPage() {
                   <th className="py-4 px-5">إدارة التاجر</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100 text-sm">
+              <tbody className="divide-y divide-white/5 text-sm">
                 {tenants.map((t) => {
                   const sub = subscriptions[t.slug] || SubscriptionBillingService.getSubscription(t.slug);
                   const currentPlan = SubscriptionBillingService.getPlan(sub.planId);
@@ -258,12 +258,12 @@ export default function SuperAdminPortalPage() {
                       : currentPlan.monthlyPrice;
 
                   return (
-                    <tr key={t.id} className="hover:bg-stone-50/80 transition">
+                    <tr key={t.id} className="hover:bg-white/[0.03] transition">
                       {/* Name & Slug */}
-                      <td className="py-4 px-5 font-bold text-stone-900">
+                      <td className="py-4 px-5 font-bold text-[#FBF9F5]">
                         <div>
                           <p className="leading-tight">{t.name}</p>
-                          <p className="text-[11px] text-stone-400 font-mono mt-0.5">
+                          <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">
                             /{t.slug}
                           </p>
                         </div>
@@ -272,14 +272,14 @@ export default function SuperAdminPortalPage() {
                       {/* Current Plan Badge */}
                       <td className="py-4 px-5">
                         <span
-                          className={`text-[11px] font-black px-2.5 py-1 rounded-xl border ${
+                          className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border ${
                             sub.planId === 'enterprise'
-                              ? 'bg-purple-50 text-purple-700 border-purple-200'
+                              ? 'bg-[#55100D]/60 text-[#FBF9F5] border-[#DD0200]/40'
                               : sub.planId === 'multi_location'
-                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              ? 'bg-[#1C1B1B] text-[#FBF9F5] border-white/20'
                               : sub.planId === 'print'
-                              ? 'bg-amber-50 text-amber-800 border-amber-200'
-                              : 'bg-stone-100 text-stone-700 border-stone-200'
+                              ? 'bg-[#55100D]/30 text-[#FBF9F5] border-[#DD0200]/30'
+                              : 'bg-[#141212] text-[#A19E9B] border-white/10'
                           }`}
                         >
                           {currentPlan.name}
@@ -287,29 +287,29 @@ export default function SuperAdminPortalPage() {
                       </td>
 
                       {/* Billing Cycle */}
-                      <td className="py-4 px-5 text-xs text-stone-600 font-medium">
+                      <td className="py-4 px-5 text-xs text-[#A19E9B] font-medium">
                         {sub.billingInterval === 'annually' ? 'سنوي (مخصوم 20%)' : 'شهري'}
                       </td>
 
                       {/* MRR Value */}
-                      <td className="py-4 px-5 text-xs font-black text-stone-900">
+                      <td className="py-4 px-5 text-xs font-bold text-[#FBF9F5]">
                         {mrrValue} ر.س / شهر
                       </td>
 
                       {/* Status */}
                       <td className="py-4 px-5">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                             sub.status === 'active'
-                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/60'
                               : sub.status === 'trialing'
-                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                              : 'bg-red-50 text-red-800 border border-red-200'
+                              ? 'bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/40'
+                              : 'bg-red-950/40 text-red-400 border border-red-800/60'
                           }`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              sub.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                              sub.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-[#DD0200]'
                             }`}
                           />
                           <span>{sub.status === 'active' ? 'نشط' : sub.status === 'trialing' ? 'فترة تجربة' : 'متوقف'}</span>
@@ -323,7 +323,7 @@ export default function SuperAdminPortalPage() {
                           onChange={(e) =>
                             handleAdminChangePlan(t.slug, e.target.value as SubscriptionPlanId)
                           }
-                          className="px-2.5 py-1.5 rounded-xl border border-stone-200 bg-white text-xs font-bold text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                          className="px-2.5 py-1.5 rounded-xl border border-white/10 bg-[#0B0A0A] text-xs font-bold text-[#FBF9F5] focus:outline-none focus:ring-1 focus:ring-[#DD0200]"
                         >
                           {SAAS_PLANS.map((p) => (
                             <option key={p.id} value={p.id}>
@@ -337,7 +337,7 @@ export default function SuperAdminPortalPage() {
                       <td className="py-4 px-5">
                         <a
                           href="/dashboard"
-                          className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1 transition w-fit"
+                          className="px-2.5 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#252424] text-[#FBF9F5] text-xs font-bold flex items-center gap-1 transition w-fit border border-white/10"
                           title="عرض في لوحة التاجر"
                         >
                           <span>لوحة التاجر</span>
@@ -356,11 +356,11 @@ export default function SuperAdminPortalPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-black text-stone-900 flex items-center gap-2">
-                <Server className="w-5 h-5 text-amber-600" />
+              <h2 className="text-lg font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
+                <Server className="w-5 h-5 text-[#DD0200]" />
                 <span>حالة السيرفرات السحابية ومقاييس الأداء لمليون مستخدم (1M Scale)</span>
               </h2>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className="text-xs text-[#A19E9B] mt-0.5">
                 توزيع الحمل عبر Cloudflare Global Network + Supabase RLS Multi-Tenancy + R2 Storage
               </p>
             </div>
@@ -368,56 +368,56 @@ export default function SuperAdminPortalPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Metric 1 */}
-            <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm">
-              <div className="flex items-center justify-between text-stone-400 mb-2">
-                <span className="text-xs font-bold text-stone-600">طاقة الاستيعاب التزامنية</span>
-                <Zap className="w-4 h-4 text-amber-500" />
+            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
+              <div className="flex items-center justify-between text-[#A19E9B] mb-2">
+                <span className="text-xs font-bold text-[#A19E9B]">طاقة الاستيعاب التزامنية</span>
+                <Zap className="w-4 h-4 text-[#DD0200]" />
               </div>
-              <p className="text-2xl font-black text-stone-900">{telemetry.totalUsersCapacity}</p>
-              <p className="text-[10px] text-emerald-600 font-bold mt-1">Distributed Workers</p>
+              <p className="text-2xl font-black text-[#FBF9F5]">{telemetry.totalUsersCapacity}</p>
+              <p className="text-[10px] text-emerald-400 font-bold mt-1">Distributed Workers</p>
             </div>
 
             {/* Metric 2 */}
-            <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm">
-              <div className="flex items-center justify-between text-stone-400 mb-2">
-                <span className="text-xs font-bold text-stone-600">معدل كاش الحافة (Edge Cache)</span>
-                <Globe className="w-4 h-4 text-blue-500" />
+            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
+              <div className="flex items-center justify-between text-[#A19E9B] mb-2">
+                <span className="text-xs font-bold text-[#A19E9B]">معدل كاش الحافة (Edge Cache)</span>
+                <Globe className="w-4 h-4 text-sky-400" />
               </div>
-              <p className="text-2xl font-black text-emerald-600">{telemetry.edgeCacheHitRatio}</p>
-              <p className="text-[10px] text-stone-400 font-mono mt-1">330+ Global PoPs</p>
+              <p className="text-2xl font-black text-emerald-400">{telemetry.edgeCacheHitRatio}</p>
+              <p className="text-[10px] text-[#A19E9B]/70 font-mono mt-1">330+ Global PoPs</p>
             </div>
 
             {/* Metric 3 */}
-            <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm">
-              <div className="flex items-center justify-between text-stone-400 mb-2">
-                <span className="text-xs font-bold text-stone-600">مساحة تخزين الصور (R2 / S3)</span>
-                <HardDrive className="w-4 h-4 text-purple-500" />
+            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
+              <div className="flex items-center justify-between text-[#A19E9B] mb-2">
+                <span className="text-xs font-bold text-[#A19E9B]">مساحة تخزين الصور (R2 / S3)</span>
+                <HardDrive className="w-4 h-4 text-purple-400" />
               </div>
-              <p className="text-2xl font-black text-stone-900">{telemetry.storageUsedGb} GB</p>
-              <p className="text-[10px] text-stone-400 mt-1">WebP Compressed Buckets</p>
+              <p className="text-2xl font-black text-[#FBF9F5]">{telemetry.storageUsedGb} GB</p>
+              <p className="text-[10px] text-[#A19E9B]/70 mt-1">WebP Compressed Buckets</p>
             </div>
 
             {/* Metric 4 */}
-            <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm">
-              <div className="flex items-center justify-between text-stone-400 mb-2">
-                <span className="text-xs font-bold text-stone-600">زمن الاستجابة العالمي</span>
+            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
+              <div className="flex items-center justify-between text-[#A19E9B] mb-2">
+                <span className="text-xs font-bold text-[#A19E9B]">زمن الاستجابة العالمي</span>
                 <Activity className="w-4 h-4 text-rose-500" />
               </div>
-              <p className="text-2xl font-black text-stone-900">{telemetry.globalLatencyMs} ms</p>
-              <p className="text-[10px] text-emerald-600 font-bold mt-1">Zero Origin Bottleneck</p>
+              <p className="text-2xl font-black text-[#FBF9F5]">{telemetry.globalLatencyMs} ms</p>
+              <p className="text-[10px] text-emerald-400 font-bold mt-1">Zero Origin Bottleneck</p>
             </div>
           </div>
         </div>
 
         {/* SECTION 4: Tenants Feature Flagging (Printing / TV Wall) */}
-        <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-stone-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="bg-[#141212] rounded-2xl border border-white/10 shadow-xl overflow-hidden">
+          <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h3 className="text-base font-black text-stone-900 flex items-center gap-2">
-                <Layers className="w-4 h-4 text-amber-600" />
+              <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
+                <Layers className="w-4 h-4 text-[#DD0200]" />
                 <span>التحكم في الميزات التشغيلية (Feature Flags)</span>
               </h3>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className="text-xs text-[#A19E9B] mt-0.5">
                 تفعيل أو إيقاف محطة الطباعة وشاشات العرض لكل فرع بنقرة واحدة
               </p>
             </div>
@@ -426,20 +426,20 @@ export default function SuperAdminPortalPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="border-b border-stone-200 bg-stone-50 text-[11px] font-black uppercase text-stone-500 tracking-wider">
+                <tr className="border-b border-white/10 bg-[#1C1B1B] text-[11px] font-bold uppercase text-[#A19E9B] tracking-wider">
                   <th className="py-4 px-5">المنشأة / المشترك</th>
                   <th className="py-4 px-5 text-center">ميزة الطباعة 2x6</th>
                   <th className="py-4 px-5 text-center">ميزة شاشة العرض (TV Wall)</th>
                   <th className="py-4 px-5">المعاينة المباشرة</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100 text-sm">
+              <tbody className="divide-y divide-white/5 text-sm">
                 {tenants.map((t) => (
-                  <tr key={t.id} className="hover:bg-stone-50/80 transition">
-                    <td className="py-4 px-5 font-bold text-stone-900">
+                  <tr key={t.id} className="hover:bg-white/[0.03] transition">
+                    <td className="py-4 px-5 font-bold text-[#FBF9F5]">
                       <div>
                         <p className="leading-tight">{t.name}</p>
-                        <p className="text-[11px] text-stone-400 font-mono mt-0.5">/{t.slug}</p>
+                        <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">/{t.slug}</p>
                       </div>
                     </td>
 
@@ -451,8 +451,8 @@ export default function SuperAdminPortalPage() {
                         }
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs ${
                           t.features.printing
-                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300'
-                            : 'bg-stone-100 hover:bg-stone-200 text-stone-500 border border-stone-200'
+                            ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/60'
+                            : 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:bg-[#252424]'
                         }`}
                       >
                         <Printer className="w-3.5 h-3.5" />
@@ -468,8 +468,8 @@ export default function SuperAdminPortalPage() {
                         }
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs ${
                           t.features.tvWall
-                            ? 'bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300'
-                            : 'bg-stone-100 hover:bg-stone-200 text-stone-500 border border-stone-200'
+                            ? 'bg-sky-950/40 text-sky-400 border border-sky-800/60'
+                            : 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:bg-[#252424]'
                         }`}
                       >
                         <Monitor className="w-3.5 h-3.5" />
@@ -484,7 +484,7 @@ export default function SuperAdminPortalPage() {
                           href={`/c/${t.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold flex items-center gap-1 transition"
+                          className="px-2.5 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#252424] text-[#FBF9F5] text-xs font-bold flex items-center gap-1 transition border border-white/10"
                         >
                           <span>الفوتوبوث</span>
                           <ExternalLink className="w-3 h-3" />
@@ -494,7 +494,7 @@ export default function SuperAdminPortalPage() {
                           href={`/wall/${t.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center gap-1 transition"
+                          className="px-2.5 py-1 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold flex items-center gap-1 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                         >
                           <span>الشاشة</span>
                           <ExternalLink className="w-3 h-3" />

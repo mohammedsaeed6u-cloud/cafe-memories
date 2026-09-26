@@ -508,8 +508,8 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                         <div className="flex flex-col items-center justify-center text-center p-1">
                           {isMilestone ? (
                             <div className="relative">
-                              {renderMilestoneIcon(milestone?.icon, 'w-5 h-5 text-amber-500 animate-bounce')}
-                              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400" />
+                              {renderMilestoneIcon(milestone?.icon, 'w-5 h-5 text-[#DD0200] animate-bounce')}
+                              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#DD0200]" />
                             </div>
                           ) : (
                             <Coffee className="w-4 h-4 opacity-50" />
@@ -523,7 +523,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                       {/* Milestone Ribbon on Slot Corner */}
                       {isMilestone && !isStamped && (
                         <div
-                          className="absolute top-0 right-0 w-3.5 h-3.5 bg-amber-500 text-stone-950 flex items-center justify-center rounded-bl-lg text-[7px] font-black"
+                          className="absolute top-0 right-0 w-3.5 h-3.5 bg-[#DD0200] text-[#FBF9F5] flex items-center justify-center rounded-bl-lg text-[7px] font-black"
                           title={milestone?.rewardTitle}
                         >
                           #
@@ -539,7 +539,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
             <div className="relative z-10 border-t border-current/15 pt-2">
               <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-bold mb-1">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                  <Sparkles className="w-3 h-3 text-[#DD0200] flex-shrink-0" />
                   <span>
                     {milestoneProgress.isComplete
                       ? 'اكتملت البطاقة — استلم هديتك الكبرى!'
@@ -570,7 +570,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
           {/* BACK FACE (Barista Scanner QR Code & Rewards Voucher)                     */}
           {/* ========================================================================= */}
           <div
-            className="absolute inset-0 w-full h-full rounded-3xl p-4 sm:p-5 flex flex-col justify-between overflow-hidden bg-[#0F172A] text-white border-2 border-amber-400/40 shadow-2xl"
+            className="absolute inset-0 w-full h-full rounded-2xl p-4 sm:p-5 flex flex-col justify-between overflow-hidden bg-[#141212] text-[#FBF9F5] border border-white/10 shadow-2xl"
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
@@ -580,14 +580,17 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
             {/* Header: Barista Terminal Mode */}
             <div className="flex items-center justify-between border-b border-white/10 pb-2">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center text-xs">
+                <div className="w-6 h-6 rounded-lg bg-[#55100D]/60 text-[#DD0200] border border-[#DD0200]/30 flex items-center justify-center text-xs">
                   <ShieldCheck className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-amber-300">
+                  <h4
+                    style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+                    className="text-xs font-bold text-[#FBF9F5]"
+                  >
                     كود التحقق لموظف الكاونتر • Staff Pass
                   </h4>
-                  <p className="text-[9px] text-stone-400 font-mono">
+                  <p className="text-[9px] text-[#A19E9B] font-mono">
                     ID: {activeState.cardId.slice(0, 14)}...
                   </p>
                 </div>
@@ -596,9 +599,9 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsFlipped(false)}
-                className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] text-[10px] font-bold flex items-center gap-1 transition cursor-pointer border border-white/10"
               >
-                <RotateCw className="w-3 h-3" />
+                <RotateCw className="w-3 h-3 text-[#DD0200]" />
                 <span>الواجهة</span>
               </button>
             </div>
@@ -622,16 +625,16 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
 
               {/* Status Details */}
               <div className="flex flex-col justify-center space-y-1.5 text-[10px]">
-                <div className="bg-white/5 p-2 rounded-xl border border-white/10">
-                  <p className="text-stone-400 text-[9px]">رقم هاتف العميل</p>
-                  <p className="font-mono font-bold text-amber-200 text-xs">
+                <div className="bg-[#1C1B1B] p-2 rounded-xl border border-white/10">
+                  <p className="text-[#A19E9B] text-[9px]">رقم هاتف العميل</p>
+                  <p className="font-mono font-bold text-[#FBF9F5] text-xs">
                     {customerPhone}
                   </p>
                 </div>
 
-                <div className="bg-white/5 p-2 rounded-xl border border-white/10">
-                  <p className="text-stone-400 text-[9px]">الأختام المعتمدة</p>
-                  <p className="font-bold text-white text-xs">
+                <div className="bg-[#1C1B1B] p-2 rounded-xl border border-white/10">
+                  <p className="text-[#A19E9B] text-[9px]">الأختام المعتمدة</p>
+                  <p className="font-bold text-[#FBF9F5] text-xs">
                     {activeState.activeStamps} من إجمالي {template.slotCount} أختام
                   </p>
                 </div>
@@ -641,11 +644,11 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
             {/* Bottom: Unlocked Rewards Summary */}
             <div className="border-t border-white/10 pt-2">
               <div className="flex items-center justify-between text-[10px] mb-1">
-                <span className="font-bold text-stone-300 flex items-center gap-1">
-                  <Award className="w-3 h-3 text-amber-400" />
+                <span className="font-bold text-[#A19E9B] flex items-center gap-1">
+                  <Award className="w-3 h-3 text-[#DD0200]" />
                   <span>المكافآت المفتوحة:</span>
                 </span>
-                <span className="text-[9px] text-amber-300 font-mono font-bold">
+                <span className="text-[9px] text-[#DD0200] font-mono font-bold">
                   {milestoneProgress.unlockedRewards.length} جاهزة للاستلام
                 </span>
               </div>
@@ -655,18 +658,18 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                   milestoneProgress.unlockedRewards.map((reward, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between bg-amber-500/15 border border-amber-400/30 px-2 py-1 rounded-lg text-[9px]"
+                      className="flex items-center justify-between bg-[#55100D]/40 border border-[#DD0200]/30 px-2 py-1 rounded-lg text-[9px]"
                     >
-                      <span className="font-bold text-amber-200 truncate">
+                      <span className="font-bold text-[#FBF9F5] truncate">
                         {reward.rewardTitle}
                       </span>
-                      <span className="font-mono font-black text-amber-300 bg-black/40 px-1.5 py-0.5 rounded">
+                      <span className="font-mono font-black text-[#FBF9F5] bg-[#0B0A0A] border border-white/10 px-1.5 py-0.5 rounded">
                         {reward.code}
                       </span>
                     </div>
                   ))
                 ) : (
-                  <p className="text-[9px] text-stone-400 text-center py-1">
+                  <p className="text-[9px] text-[#A19E9B] text-center py-1">
                     أكمل الأختام المطلوبة لفتح قسائم الهدايا التلقائية
                   </p>
                 )}

@@ -48,25 +48,14 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAFAF9;
+  background: #141313;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D6D3D1;
+  background: #2b2a29;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #A8A29E;
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: #142721;
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: #2A4F44;
-  border-radius: 9999px;
-}
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #B85C43;
+  background: #55100D;
 }
 
 /* Universal Shimmer & Loading Animation */

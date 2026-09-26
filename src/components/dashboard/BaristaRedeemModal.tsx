@@ -136,85 +136,85 @@ export function BaristaRedeemModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 font-cairo">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl border border-stone-200 shadow-2xl overflow-hidden flex flex-col text-right">
-        <div className="p-5 px-6 bg-gradient-to-r from-stone-900 to-stone-850 text-white flex items-center justify-between">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-[#141212] rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col text-right text-[#e6e1e1]">
+        <div className="p-5 px-6 bg-[#1C1B1B] border-b border-white/10 text-[#FBF9F5] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+            <div className="w-10 h-10 rounded-xl bg-[#55100D] text-[#DD0200] flex items-center justify-center border border-[#DD0200]/40">
               <Gift className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-base">صرف هدية الولاء من الكاونتر (Staff Claim)</h3>
-              <p className="text-[11px] text-stone-300">التحقق الفوري من استحقاق الزائر وصرف الهدية مع حماية ضد التكرار</p>
+              <h3 className="font-bold text-base font-serif text-[#FBF9F5]">صرف هدية الولاء من الكاونتر (Staff Claim)</h3>
+              <p className="text-[11px] text-[#A19E9B]">التحقق الفوري من استحقاق الزائر وصرف الهدية مع حماية ضد التكرار</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-stone-800 hover:bg-stone-700 flex items-center justify-center text-stone-400 hover:text-white transition cursor-pointer">✕</button>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg bg-[#141212] hover:bg-[#211F1F] border border-white/10 flex items-center justify-center text-[#A19E9B] hover:text-[#FBF9F5] transition cursor-pointer">✕</button>
         </div>
         <div className="p-6 space-y-5">
-          <div className="flex items-center justify-between text-xs bg-amber-50/80 border border-amber-200/80 p-3 rounded-2xl">
+          <div className="flex items-center justify-between text-xs bg-[#1C1B1B] border border-white/10 p-3 rounded-xl">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span className="font-bold text-stone-800">طاقم العمل المعتمد: <strong className="text-amber-900">{activeStaff?.name || 'طاقم العمل المناوب'}</strong></span>
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span className="font-bold text-[#FBF9F5]">طاقم العمل المعتمد: <strong className="text-[#DD0200]">{activeStaff?.name || 'طاقم العمل المناوب'}</strong></span>
             </div>
-            <span className="text-[11px] font-mono text-stone-500">{cafeSlug}</span>
+            <span className="text-[11px] font-mono text-[#A19E9B]">{cafeSlug}</span>
           </div>
           <form onSubmit={handleSearchSubmit} className="space-y-2">
-            <label className="block text-xs font-bold text-stone-700">أدخل رقم هاتف العميل أو رمز الهدية (Phone / Code):</label>
+            <label className="block text-xs font-bold text-[#A19E9B]">أدخل رقم هاتف العميل أو رمز الهدية (Phone / Code):</label>
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <Search className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
-                <input type="text" placeholder="05XXXXXXXX" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); if (e.target.value.length >= 8) lookupCustomerData(e.target.value); }} className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-stone-300 text-xs font-bold font-mono focus:border-amber-500 focus:outline-none bg-stone-50" dir="ltr" />
+                <Search className="w-4 h-4 text-[#A19E9B]/60 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                <input type="text" placeholder="05XXXXXXXX" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); if (e.target.value.length >= 8) lookupCustomerData(e.target.value); }} className="w-full pr-10 pl-4 py-2.5 rounded-lg border border-white/10 text-xs font-bold font-mono focus:border-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5] placeholder:text-[#A19E9B]/40" dir="ltr" />
               </div>
-              <button type="submit" className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-2xs transition cursor-pointer">فحص الاستحقاق</button>
+              <button type="submit" className="px-4 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer">فحص الاستحقاق</button>
             </div>
           </form>
           {errorNotice && (
-            <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-xs font-bold flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-[#1A0706] border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{errorNotice}</span>
             </div>
           )}
           {successNotice && (
-            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-bold flex items-center gap-3 animate-in zoom-in-95 duration-200">
-              <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
-              <div><span className="block font-black text-sm">{successNotice}</span><span className="text-[11px] text-emerald-700 block font-normal">تم تسجيل صرف الهدية رسمياً في سجلات الكافيه وتحديث بطاقة العميل.</span></div>
+            <div className="p-4 rounded-xl bg-[#141212] border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-3 animate-in zoom-in-95 duration-200">
+              <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
+              <div><span className="block font-bold text-sm text-[#FBF9F5] font-serif">{successNotice}</span><span className="text-[11px] text-emerald-400 block font-normal">تم تسجيل صرف الهدية رسمياً في سجلات الكافيه وتحديث بطاقة العميل.</span></div>
             </div>
           )}
           {selectedCustomer && (
-            <div className="p-5 rounded-2xl bg-stone-50 border border-stone-200 space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+            <div className="p-5 rounded-xl bg-[#1C1B1B] border border-white/10 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 font-bold flex items-center justify-center text-sm shadow-2xs">{selectedCustomer.name.slice(0, 2)}</div>
-                  <div><h4 className="font-black text-sm text-stone-900">{selectedCustomer.name}</h4><p className="text-[10px] font-mono text-stone-500">{selectedCustomer.phone}</p></div>
+                  <div className="w-10 h-10 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] font-bold flex items-center justify-center text-sm shadow-md">{selectedCustomer.name.slice(0, 2)}</div>
+                  <div><h4 className="font-bold text-sm text-[#FBF9F5] font-serif">{selectedCustomer.name}</h4><p className="text-[10px] font-mono text-[#A19E9B]">{selectedCustomer.phone}</p></div>
                 </div>
-                <span className={'px-3 py-1 rounded-full text-xs font-bold ' + (isEligible ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-stone-200 text-stone-700')}>{isEligible ? 'مؤهل للصرف فوراً 🎁' : 'غير مؤهل حالياً'}</span>
+                <span className={'px-3 py-1 rounded-md text-xs font-bold font-mono ' + (isEligible ? 'bg-[#55100D]/70 text-emerald-400 border border-emerald-500/30' : 'bg-[#0B0A0A] text-[#A19E9B] border border-white/10')}>{isEligible ? 'مؤهل للصرف فوراً 🎁' : 'غير مؤهل حالياً'}</span>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="p-2.5 rounded-xl bg-white border border-stone-200/80"><span className="text-[10px] text-stone-500 block font-bold">الزيارات الموثقة</span><strong className="text-base font-black font-mono text-stone-900">{totalVisits}</strong></div>
-                <div className="p-2.5 rounded-xl bg-white border border-stone-200/80"><span className="text-[10px] text-stone-500 block font-bold">المطلوب للهدية</span><strong className="text-base font-black font-mono text-amber-700">{requiredVisits}</strong></div>
-                <div className="p-2.5 rounded-xl bg-white border border-stone-200/80"><span className="text-[10px] text-stone-500 block font-bold">هدايا جاهزة للصرف</span><strong className="text-base font-black font-mono text-purple-700">{availableToClaim}</strong></div>
+                <div className="p-2.5 rounded-lg bg-[#0B0A0A] border border-white/10"><span className="text-[10px] text-[#A19E9B] block font-bold">الزيارات الموثقة</span><strong className="text-base font-bold font-mono text-[#FBF9F5]">{totalVisits}</strong></div>
+                <div className="p-2.5 rounded-lg bg-[#0B0A0A] border border-white/10"><span className="text-[10px] text-[#A19E9B] block font-bold">المطلوب للهدية</span><strong className="text-base font-bold font-mono text-[#DD0200]">{requiredVisits}</strong></div>
+                <div className="p-2.5 rounded-lg bg-[#0B0A0A] border border-white/10"><span className="text-[10px] text-[#A19E9B] block font-bold">هدايا جاهزة للصرف</span><strong className="text-base font-bold font-mono text-[#FBF9F5]">{availableToClaim}</strong></div>
               </div>
-              <div className="p-3.5 rounded-xl bg-white border border-amber-200 flex items-center justify-between text-xs">
+              <div className="p-3.5 rounded-lg bg-[#0B0A0A] border border-white/10 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <Gift className="w-4 h-4 text-amber-600" />
-                  <span className="font-bold text-stone-900">الهدية المستحقة:</span>
+                  <Gift className="w-4 h-4 text-[#DD0200]" />
+                  <span className="font-bold text-[#A19E9B]">الهدية المستحقة:</span>
                 </div>
-                <strong className="text-amber-800 font-black">{giftTitle}</strong>
+                <strong className="text-[#FBF9F5] font-bold font-serif">{giftTitle}</strong>
               </div>
               {isEligible ? (
-                <button type="button" onClick={handleConfirmRedemption} disabled={isRedeeming} className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-xs flex items-center justify-center gap-2 cursor-pointer">
+                <button type="button" onClick={handleConfirmRedemption} disabled={isRedeeming} className="w-full py-3 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center justify-center gap-2 cursor-pointer">
                   <Check className="w-4 h-4" />
                   <span>{isRedeeming ? 'جاري تسجيل الصرف...' : 'تأكيد صرف الهدية للعميل الآن'}</span>
                 </button>
               ) : (
-                <p className="text-[11px] text-stone-500 text-center font-bold">يحتاج العميل إلى ({requiredVisits - (totalVisits % requiredVisits)}) زيارة إضافية لفتح الهدية التالية.</p>
+                <p className="text-[11px] text-[#A19E9B] text-center font-bold">يحتاج العميل إلى ({requiredVisits - (totalVisits % requiredVisits)}) زيارة إضافية لفتح الهدية التالية.</p>
               )}
             </div>
           )}
         </div>
-        <div className="p-4 px-6 bg-stone-50 border-t border-stone-100 flex items-center justify-between text-xs text-stone-400">
+        <div className="p-4 px-6 bg-[#141212] border-t border-white/10 flex items-center justify-between text-xs text-[#A19E9B]">
           <span>Memories Counter Security • Anti-Fraud Protection</span>
-          <button onClick={onClose} className="text-stone-600 hover:text-stone-900 font-bold">إغلاق</button>
+          <button onClick={onClose} className="text-[#A19E9B] hover:text-[#FBF9F5] font-bold cursor-pointer">إغلاق</button>
         </div>
       </div>
     </div>

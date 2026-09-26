@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export function MarketingFooter() {
   return (
-    <footer className="bg-[#000000] border-t border-white/10 py-14 px-6 text-xs text-[#D9D9D9]/70 apple-font select-none relative z-10">
+    <footer className="bg-[#0E0D0D] border-t border-white/10 py-14 px-6 text-xs text-[#D9D9D9]/70 apple-font select-none relative z-10">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 border border-white/20">

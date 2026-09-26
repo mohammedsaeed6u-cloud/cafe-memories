@@ -59,46 +59,46 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
     <div className="space-y-6">
       {/* Top Header & Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+        <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#1C1B1B] border border-white/10 text-[#DD0200] flex items-center justify-center">
             <Printer className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-stone-500 font-bold">أشرطة بانتظار الطباعة</p>
-            <p className="text-2xl font-black text-stone-900">{queue.length}</p>
+            <p className="text-xs text-[#A19E9B] font-bold">أشرطة بانتظار الطباعة</p>
+            <p className="text-2xl font-bold text-[#FBF9F5] font-mono">{queue.length}</p>
           </div>
         </div>
 
-        <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+        <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#DD0200] flex items-center justify-center">
             <Gift className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-stone-500 font-bold">هدايا تم تسليمها اليوم</p>
-            <p className="text-2xl font-black text-emerald-600">{completedPrintsCount}</p>
+            <p className="text-xs text-[#A19E9B] font-bold">هدايا تم تسليمها اليوم</p>
+            <p className="text-2xl font-bold text-emerald-400 font-mono">{completedPrintsCount}</p>
           </div>
         </div>
 
-        <div className="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-stone-100 text-stone-700 flex items-center justify-center">
-            <Sparkles className="w-6 h-6" />
+        <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#1C1B1B] border border-white/10 text-[#FBF9F5] flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-[#DD0200]" />
           </div>
           <div>
-            <p className="text-xs text-stone-500 font-bold">البروفايل النشط حالياً</p>
-            <p className="text-sm font-black text-stone-800">{activeDims.nameAr}</p>
+            <p className="text-xs text-[#A19E9B] font-bold">البروفايل النشط حالياً</p>
+            <p className="text-sm font-bold text-[#FBF9F5] font-serif">{activeDims.nameAr}</p>
           </div>
         </div>
       </div>
 
       {/* Format Selector & Precision Calibration Panel */}
-      <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-stone-100 pb-4 mb-4">
+      <div className="bg-[#141212] p-6 rounded-2xl border border-white/10 shadow-xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4 mb-4">
           <div>
-            <h4 className="text-sm font-black text-stone-900 flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-amber-600" />
+            <h4 className="text-sm font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
+              <Sliders className="w-4 h-4 text-[#DD0200]" />
               <span>محرك المعايرة والطباعة عالي الدقة (Hardware Print Calibration)</span>
             </h4>
-            <p className="text-xs text-stone-500 mt-0.5">
+            <p className="text-xs text-[#A19E9B] mt-0.5">
               معاير فيزيائياً بأبعاد دقيقة 100% مع إلغاء هوامش المتصفح ورؤوس الصفحات تلقائياً
             </p>
           </div>
@@ -113,10 +113,10 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
               <button
                 key={fmt.id}
                 onClick={() => setActiveFormat(fmt.id as PrintFormat)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   activeFormat === fmt.id
-                    ? 'bg-amber-600 text-white shadow-sm'
-                    : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                    ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
+                    : 'bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] border border-white/10'
                 }`}
               >
                 <span>{fmt.icon}</span>
@@ -127,28 +127,28 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
         </div>
 
         {/* Live Calibration Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-200 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#0B0A0A] p-4 rounded-xl border border-white/10 text-xs">
           <div>
-            <span className="text-stone-400 block font-medium">الأبعاد بالميليمتر:</span>
-            <span className="font-bold text-stone-800 font-mono">
+            <span className="text-[#A19E9B] block font-medium">الأبعاد بالميليمتر:</span>
+            <span className="font-bold text-[#FBF9F5] font-mono">
               {activeDims.widthMm} × {activeDims.heightMm} مم
             </span>
           </div>
           <div>
-            <span className="text-stone-400 block font-medium">الأبعاد بالبوصة:</span>
-            <span className="font-bold text-stone-800 font-mono">
+            <span className="text-[#A19E9B] block font-medium">الأبعاد بالبوصة:</span>
+            <span className="font-bold text-[#FBF9F5] font-mono">
               {activeDims.widthInches.toFixed(1)} × {activeDims.heightInches.toFixed(1)} in
             </span>
           </div>
           <div>
-            <span className="text-stone-400 block font-medium">الدقة (300 DPI):</span>
-            <span className="font-bold text-stone-800 font-mono">
+            <span className="text-[#A19E9B] block font-medium">الدقة (300 DPI):</span>
+            <span className="font-bold text-[#FBF9F5] font-mono">
               {activeDims.widthPx300Dpi} × {activeDims.heightPx300Dpi} px
             </span>
           </div>
           <div>
-            <span className="text-stone-400 block font-medium">معايرة الهوامش:</span>
-            <span className="font-bold text-emerald-600 flex items-center gap-1">
+            <span className="text-[#A19E9B] block font-medium">معايرة الهوامش:</span>
+            <span className="font-bold text-emerald-400 flex items-center gap-1">
               <span>0mm (بدون هوامش)</span>
               <CheckCircle2 className="w-3.5 h-3.5" />
             </span>
@@ -157,10 +157,10 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
       </div>
 
       {/* Print Queue List */}
-      <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm">
+      <div className="bg-[#141212] p-6 rounded-2xl border border-white/10 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <h3 className="text-base font-black text-stone-900 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-amber-600" />
+          <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
+            <Clock className="w-4 h-4 text-[#DD0200]" />
             <span>طابور الأشرطة الجاهزة للطباعة والتسليم لطاقم الكاونتر</span>
           </h3>
 
@@ -172,22 +172,22 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                 SoundEffectsService.playBaristaDing();
               }
             }}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 border ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 border cursor-pointer ${
               soundAlertEnabled
-                ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 shadow-xs'
-                : 'bg-stone-100 text-stone-500 border-stone-200 hover:bg-stone-200'
+                ? 'bg-[#55100D]/70 text-[#FBF9F5] border-[#DD0200]/40 shadow-xs'
+                : 'bg-[#1C1B1B] text-[#A19E9B] border-white/10 hover:bg-[#211F1F]'
             }`}
             title="تفعيل أو كتم جرس تنبيه الطلبات الجديدة لطاقم العمل"
           >
             {soundAlertEnabled ? (
-              <Bell className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+              <Bell className="w-3.5 h-3.5 text-[#DD0200] animate-pulse" />
             ) : (
-              <BellOff className="w-3.5 h-3.5 text-stone-400" />
+              <BellOff className="w-3.5 h-3.5 text-[#A19E9B]/60" />
             )}
             <span>تنبيه صوتي للطلبات</span>
             <span
-              className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
-                soundAlertEnabled ? 'bg-amber-200 text-amber-900' : 'bg-stone-200 text-stone-600'
+              className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${
+                soundAlertEnabled ? 'bg-[#DD0200] text-[#FBF9F5]' : 'bg-[#141212] text-[#A19E9B]'
               }`}
             >
               {soundAlertEnabled ? 'مفعل' : 'مكتوم'}
@@ -196,10 +196,10 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
         </div>
 
         {queue.length === 0 ? (
-          <div className="py-16 text-center text-stone-400">
-            <Printer className="w-12 h-12 mx-auto mb-2 opacity-40" />
-            <p className="font-bold text-stone-500">لا توجد طلبات طباعة جديدة في الطابور حالياً</p>
-            <p className="text-xs text-stone-400 mt-1">
+          <div className="py-16 text-center text-[#A19E9B]/40">
+            <Printer className="w-12 h-12 mx-auto mb-2 opacity-30" />
+            <p className="font-bold text-[#FBF9F5]">لا توجد طلبات طباعة جديدة في الطابور حالياً</p>
+            <p className="text-xs text-[#A19E9B] mt-1">
               ستظهر هنا أشرطة الصور فور اكتمال تصويرها من قبل العملاء
             </p>
           </div>
@@ -210,14 +210,14 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
               return (
                 <div
                   key={item.id}
-                  className={`p-5 rounded-2xl border-2 transition flex items-center justify-between gap-4 ${
+                  className={`p-5 rounded-xl border transition flex items-center justify-between gap-4 ${
                     isHandedOver
-                      ? 'bg-stone-50 border-stone-200 opacity-70'
-                      : 'bg-white border-amber-200 shadow-sm hover:border-amber-400'
+                      ? 'bg-[#141212] border-white/5 opacity-60'
+                      : 'bg-[#1C1B1B] border-white/10 shadow-lg hover:border-[#DD0200]/40'
                   }`}
                 >
                   {/* Strip Thumbnail */}
-                  <div className="w-16 h-24 rounded-xl overflow-hidden border border-stone-300 bg-stone-100 flex-shrink-0 shadow-inner">
+                  <div className="w-16 h-24 rounded-lg overflow-hidden border border-white/10 bg-[#0B0A0A] flex-shrink-0 shadow-inner">
                     {item.photoStripUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -226,7 +226,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-stone-400 text-[10px]">
+                      <div className="w-full h-full flex items-center justify-center text-[#A19E9B]/40 text-[10px] font-mono">
                         2x6
                       </div>
                     )}
@@ -235,29 +235,29 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                   {/* Customer & Gift Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-stone-900 text-sm truncate">
+                      <h4 className="font-bold text-[#FBF9F5] text-sm truncate font-serif">
                         {item.name}
                       </h4>
                       {item.totalVisits && item.totalVisits >= 5 ? (
-                        <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-400 to-amber-600 text-stone-950 font-black text-[9px] shadow-xs flex items-center gap-1 shrink-0">
-                          <span className="text-[10px] font-mono">VIP</span>
+                        <span className="px-2 py-0.5 rounded-md bg-[#55100D]/80 border border-[#DD0200]/50 text-[#FBF9F5] font-bold text-[9px] shadow-xs flex items-center gap-1 shrink-0 font-mono">
+                          <span>VIP</span>
                           <span>VIP ذهبي (#{item.totalVisits})</span>
                         </span>
                       ) : item.totalVisits && item.totalVisits >= 3 ? (
-                        <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 font-bold text-[9px] border border-amber-300 flex items-center gap-1 shrink-0">
+                        <span className="px-2 py-0.5 rounded-md bg-[#1C1B1B] text-[#FBF9F5] font-bold text-[9px] border border-white/10 flex items-center gap-1 shrink-0 font-mono">
                           <span>⭐</span>
                           <span>مميز (#{item.totalVisits})</span>
                         </span>
                       ) : null}
                     </div>
 
-                    <p className="text-[11px] text-stone-500 font-mono mt-0.5">
+                    <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">
                       {item.phone}
                     </p>
 
                     {/* Gift Code */}
-                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-mono font-bold">
-                      <Gift className="w-3.5 h-3.5 text-amber-600" />
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#0B0A0A] border border-white/10 text-[#DD0200] text-xs font-mono font-bold">
+                      <Gift className="w-3.5 h-3.5 text-[#DD0200]" />
                       <span>{item.giftCode || '#GIFT-FREE'}</span>
                     </div>
                   </div>
@@ -267,10 +267,10 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handlePrint(item, activeFormat)}
-                        className="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-black text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+                        className="px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold flex items-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
                         title={`طباعة بنمط: ${activeDims.nameAr}`}
                       >
-                        <Printer className="w-3.5 h-3.5 text-amber-400" />
+                        <Printer className="w-3.5 h-3.5 text-[#FBF9F5]" />
                         <span>
                           {activeFormat === 'dual-4x6'
                             ? 'طباعة 4x6 مزدوج'
@@ -283,20 +283,20 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                       {activeFormat !== 'dual-4x6' && (
                         <button
                           onClick={() => handlePrint(item, 'dual-4x6')}
-                          className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition"
+                          className="p-2 rounded-lg bg-[#141212] hover:bg-[#211F1F] text-[#FBF9F5] border border-white/10 text-xs font-bold transition cursor-pointer"
                           title="طباعة سريعة كشريطين مزدوجين 4×6 مع خط قص"
                         >
-                          <Scissors className="w-3.5 h-3.5 text-stone-600" />
+                          <Scissors className="w-3.5 h-3.5 text-[#A19E9B]" />
                         </button>
                       )}
                     </div>
 
                     <button
                       onClick={() => toggleGiftHandover(item.id)}
-                      className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition flex items-center gap-1 ${
+                      className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition flex items-center gap-1 cursor-pointer ${
                         isHandedOver
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                          : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
+                          ? 'bg-[#141212] text-emerald-400 border-emerald-500/40'
+                          : 'bg-[#0B0A0A] text-[#A19E9B] hover:text-[#FBF9F5] border-white/10'
                       }`}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />

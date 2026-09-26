@@ -98,26 +98,29 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs font-cairo animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-[#FAF9F6] border border-stone-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md font-sans animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-[#141212] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-stone-200/80 bg-white flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-white/10 bg-[#141212] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-stone-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-              <Smartphone className="w-4 h-4 text-amber-400" />
+            <div className="w-8 h-8 rounded-lg bg-[#55100D]/60 text-[#DD0200] flex items-center justify-center font-bold text-xs border border-[#DD0200]/30 shadow-xs">
+              <Smartphone className="w-4 h-4 text-[#DD0200]" />
             </div>
             <div>
-              <h3 className="font-black text-sm text-stone-950">
+              <h3
+                style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+                className="font-bold text-sm text-[#FBF9F5]"
+              >
                 حفظ كارت الذكريات في المحفظة
               </h3>
-              <p className="text-[11px] text-stone-500">
+              <p className="text-[11px] text-[#A19E9B]">
                 ليبقى الكارت ذكرى دائمة في هاتفك برمز الـ QR الخاص بك
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FBF9F5] transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -130,10 +133,10 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               setActiveWallet('apple');
               setIsFlipped(false);
             }}
-            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeWallet === 'apple'
-                ? 'bg-stone-900 text-white shadow-xs'
-                : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:text-[#FBF9F5] hover:bg-[#211F1F]'
             }`}
           >
             {/* Apple Logo SVG */}
@@ -147,10 +150,10 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               setActiveWallet('google');
               setIsFlipped(false);
             }}
-            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeWallet === 'google'
-                ? 'bg-stone-900 text-white shadow-xs'
-                : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:text-[#FBF9F5] hover:bg-[#211F1F]'
             }`}
           >
             {/* Google G Logo SVG */}
@@ -179,13 +182,13 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               setActiveWallet('image');
               setIsFlipped(false);
             }}
-            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex-1 py-2 px-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeWallet === 'image'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-100'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:text-[#FBF9F5] hover:bg-[#211F1F]'
             }`}
           >
-            <ImageIcon className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <ImageIcon className="w-3.5 h-3.5 text-[#DD0200] shrink-0" />
             <span className="truncate">ألبوم الصور</span>
           </button>
         </div>
@@ -196,9 +199,9 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
           <div className="w-full max-w-[320px] relative transition-transform duration-300">
             {/* FRONT OF PASS */}
             {!isFlipped ? (
-              <div className="w-full rounded-2xl bg-stone-900 text-white p-5 border border-stone-800 shadow-xl flex flex-col justify-between space-y-4">
+              <div className="w-full rounded-2xl bg-[#1C1B1B] text-[#FBF9F5] p-5 border border-white/10 shadow-xl flex flex-col justify-between space-y-4">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-stone-800/80 pb-3 gap-2">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3 gap-2">
                   <CoBrandingLogos
                     cafeName={cafeName}
                     size="sm"
@@ -206,41 +209,41 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
                     showTagline={false}
                   />
                   <div className="text-left shrink-0">
-                    <span className="text-[9px] text-amber-400 font-bold block">
+                    <span className="text-[9px] text-[#A19E9B] font-mono uppercase tracking-wider block font-bold">
                       الأختام
                     </span>
-                    <span className="text-sm font-black font-mono text-white" dir="ltr">
+                    <span className="text-sm font-black font-mono text-[#DD0200]" dir="ltr">
                       {stampedCount} / {maxSlots}
                     </span>
                   </div>
                 </div>
 
                 {/* Reward Callout */}
-                <div className="p-2.5 rounded-xl bg-stone-800/60 border border-stone-700/60 flex items-center justify-between">
+                <div className="p-2.5 rounded-xl bg-[#55100D]/40 border border-[#DD0200]/30 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Gift className="w-4 h-4 text-amber-400" />
+                    <Gift className="w-4 h-4 text-[#DD0200]" />
                     <div>
-                      <span className="text-[9px] text-stone-400 block font-bold">
+                      <span className="text-[9px] text-[#A19E9B] block font-bold">
                         المكافأة المقررة
                       </span>
-                      <span className="text-xs font-bold text-amber-200">
+                      <span className="text-xs font-bold text-[#FBF9F5]">
                         {giftTitle}
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-stone-900 text-stone-300">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#0B0A0A] text-[#D9D9D9] border border-white/10">
                     {stampedCount >= maxSlots ? 'جاهز' : `متبقي ${maxSlots - stampedCount}`}
                   </span>
                 </div>
 
                 {/* Stamp Slots Visual (خانات الكارت والأختام) */}
-                <div className="p-3 rounded-xl bg-stone-800/80 border border-stone-700/80 space-y-2">
+                <div className="p-3 rounded-xl bg-[#141212] border border-white/10 space-y-2">
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-stone-300 font-bold flex items-center gap-1.5">
-                      <Award className="w-3 h-3 text-amber-400" />
+                    <span className="text-[#A19E9B] font-bold flex items-center gap-1.5">
+                      <Award className="w-3 h-3 text-[#DD0200]" />
                       <span>خانات كارت الزيارات:</span>
                     </span>
-                    <span className="text-amber-400 font-mono font-bold" dir="ltr">
+                    <span className="text-[#DD0200] font-mono font-bold" dir="ltr">
                       {stampedCount} / {maxSlots}
                     </span>
                   </div>
@@ -256,20 +259,20 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
                           key={idx}
                           className={`aspect-square rounded-xl border flex flex-col items-center justify-center relative transition-all ${
                             isStamped
-                              ? 'bg-amber-500 border-amber-400 text-stone-950 shadow-sm'
+                              ? 'bg-gradient-to-br from-[#DD0200] to-[#55100D] border-[#DD0200] text-[#FBF9F5] shadow-md'
                               : isGiftSlot
-                              ? 'bg-stone-900/90 border-dashed border-amber-500/70 text-amber-400'
-                              : 'bg-stone-900/70 border-dashed border-stone-700 text-stone-500'
+                              ? 'bg-[#55100D]/30 border-dashed border-[#DD0200]/60 text-[#DD0200]'
+                              : 'bg-[#0B0A0A] border-dashed border-white/10 text-[#A19E9B]/50'
                           }`}
                         >
                           {isStamped ? (
-                            <Check className="w-4 h-4 text-stone-950 stroke-[3]" />
+                            <Check className="w-4 h-4 text-[#FBF9F5] stroke-[3]" />
                           ) : isGiftSlot ? (
-                            <Gift className="w-4 h-4 text-amber-400" />
+                            <Gift className="w-4 h-4 text-[#DD0200]" />
                           ) : (
-                            <span className="font-mono text-[11px] font-bold text-stone-400">{idx + 1}</span>
+                            <span className="font-mono text-[11px] font-bold text-[#A19E9B]">{idx + 1}</span>
                           )}
-                          <span className={`text-[7px] font-mono mt-0.5 ${isStamped ? 'text-stone-900 font-bold' : 'text-stone-500'}`}>
+                          <span className={`text-[7px] font-mono mt-0.5 ${isStamped ? 'text-[#FBF9F5] font-bold' : 'text-[#A19E9B]/60'}`}>
                             {isGiftSlot ? 'هدية' : `#0${idx + 1}`}
                           </span>
                         </div>
@@ -294,15 +297,15 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
                 </div>
 
                 {/* Footer / Customer Name & Flip */}
-                <div className="flex items-center justify-between pt-1 text-[11px] text-stone-400">
+                <div className="flex items-center justify-between pt-1 text-[11px] text-[#A19E9B]">
                   <div>
-                    <span className="text-[9px] block text-stone-500">حامل البطاقة:</span>
-                    <span className="font-bold text-stone-200">{customerName}</span>
+                    <span className="text-[9px] block text-[#A19E9B]/60">حامل البطاقة:</span>
+                    <span className="font-bold text-[#FBF9F5]">{customerName}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsFlipped(true)}
-                    className="inline-flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 font-bold cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[10px] text-[#DD0200] hover:text-[#ff4d4b] font-bold cursor-pointer transition"
                   >
                     <RotateCw className="w-3 h-3" />
                     <span>خلفية الكارت</span>
@@ -311,50 +314,53 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               </div>
             ) : (
               /* BACK OF PASS */
-              <div className="w-full rounded-2xl bg-stone-900 text-white p-5 border border-stone-800 shadow-xl flex flex-col justify-between space-y-4">
-                <div className="flex items-center justify-between border-b border-stone-800/80 pb-2">
-                  <span className="text-xs font-bold text-amber-400">
+              <div className="w-full rounded-2xl bg-[#1C1B1B] text-[#FBF9F5] p-5 border border-white/10 shadow-xl flex flex-col justify-between space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                  <span
+                    style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+                    className="text-xs font-bold text-[#DD0200]"
+                  >
                     تفاصيل الكارت والشروط
                   </span>
                   <button
                     type="button"
                     onClick={() => setIsFlipped(false)}
-                    className="inline-flex items-center gap-1 text-[10px] text-stone-300 hover:text-white cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[10px] text-[#A19E9B] hover:text-[#FBF9F5] cursor-pointer transition"
                   >
                     <RotateCw className="w-3 h-3" />
                     <span>الواجهة</span>
                   </button>
                 </div>
 
-                <div className="space-y-2.5 text-xs text-stone-300 leading-relaxed">
+                <div className="space-y-2.5 text-xs text-[#D9D9D9] leading-relaxed">
                   <div>
-                    <span className="text-[10px] text-stone-500 block font-bold">
+                    <span className="text-[10px] text-[#A19E9B] block font-bold">
                       حساب الإنستجرام للمنشن:
                     </span>
-                    <span className="font-mono text-amber-400 font-bold">
+                    <span className="font-mono text-[#DD0200] font-bold">
                       {instagramHandle || `@${cafeSlug}`}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-stone-500 block font-bold">
+                    <span className="text-[10px] text-[#A19E9B] block font-bold">
                       الرابط الدائم:
                     </span>
-                    <span className="font-mono text-[10px] text-stone-400 block truncate">
+                    <span className="font-mono text-[10px] text-[#A19E9B] block truncate">
                       memories-c9w.pages.dev/c/{cafeSlug}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-stone-500 block font-bold">
+                    <span className="text-[10px] text-[#A19E9B] block font-bold">
                       شروط الاستخدام:
                     </span>
-                    <p className="text-[10px] text-stone-400 leading-normal">
+                    <p className="text-[10px] text-[#A19E9B] leading-normal">
                       صالح لجميع الزيارات المعتمدة. يتم ختم خانة عند كل زيارة، وتُصرف المكافأة تلقائياً عند استكمال الأختام المقررة.
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-stone-800 text-center">
-                  <span className="text-[9px] font-mono text-stone-500">
+                <div className="pt-2 border-t border-white/10 text-center">
+                  <span className="text-[9px] font-mono text-[#A19E9B]/60 tracking-wider">
                     POWERED BY MEMORIES WALLET ENGINE v2.0
                   </span>
                 </div>
@@ -362,7 +368,7 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
             )}
           </div>
 
-          <p className="text-xs text-stone-500 text-center mt-4 max-w-xs leading-relaxed">
+          <p className="text-xs text-[#A19E9B] text-center mt-4 max-w-xs leading-relaxed">
             {activeWallet === 'apple'
               ? 'يتم تنزيل ملف .pkpass المعتمد ليظهر الكارت تلقائياً في تطبيق Apple Wallet وشاشة القفل، أو يمكنك حفظه كصورة مباشرة بألبوم هاتفك.'
               : activeWallet === 'google'
@@ -372,10 +378,10 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
         </div>
 
         {/* Modal Actions */}
-        <div className="p-4 bg-white border-t border-stone-200/90 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="text-xs text-stone-600 font-bold">
+        <div className="p-4 bg-[#141212] border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span className="text-xs text-[#A19E9B] font-bold">
             {downloadSuccess ? (
-              <span className="text-emerald-700 flex items-center gap-1.5 font-bold">
+              <span className="text-emerald-400 flex items-center gap-1.5 font-bold">
                 <Check className="w-4 h-4" />
                 تم الحفظ بنجاح في جهازك!
               </span>
@@ -390,10 +396,10 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               type="button"
               onClick={handleSaveCardImage}
               disabled={isExportingImage}
-              className="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-stone-300/80 active:scale-95 disabled:opacity-50"
+              className="px-4 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-white/10 active:scale-95 disabled:opacity-50"
               title="حفظ الكارت كصورة عادية في ألبوم الصور"
             >
-              <ImageIcon className="w-3.5 h-3.5 text-amber-600" />
+              <ImageIcon className="w-3.5 h-3.5 text-[#DD0200]" />
               <span>{isExportingImage ? 'جاري التجهيز...' : 'حفظ كصورة في الصور'}</span>
             </button>
 
@@ -401,18 +407,18 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               <button
                 type="button"
                 onClick={handleDownloadApplePass}
-                className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
+                className="px-5 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-95"
               >
-                <Download className="w-4 h-4 text-amber-300" />
+                <Download className="w-4 h-4 text-[#FBF9F5]" />
                 <span>إضافة إلى Apple Wallet (.pkpass)</span>
               </button>
             ) : activeWallet === 'google' ? (
               <button
                 type="button"
                 onClick={handleSaveGoogleWallet}
-                className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
+                className="px-5 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-95"
               >
-                <ExternalLink className="w-4 h-4 text-amber-300" />
+                <ExternalLink className="w-4 h-4 text-[#FBF9F5]" />
                 <span>حفظ في Google Wallet</span>
               </button>
             ) : null}

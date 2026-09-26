@@ -93,7 +93,7 @@ export function MarketingPricing() {
           <Layers className="w-3.5 h-3.5 text-[#DD0200]" />
           <span>TRANSPARENT PRICING • باقات الشراكة</span>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
+        <h2 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
           خطط اشتراك واضحة مبنية على القيمة.
         </h2>
         <p className="text-sm sm:text-base text-[#D9D9D9]/80 mt-3.5 leading-relaxed">

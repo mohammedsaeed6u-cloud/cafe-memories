@@ -191,49 +191,49 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/60 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl bg-white rounded-3xl border border-stone-200 shadow-2xl overflow-hidden my-6 font-cairo text-right">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="w-full max-w-2xl bg-[#141212] rounded-2xl border border-white/10 shadow-2xl overflow-hidden my-6 text-right text-[#e6e1e1]">
         {/* Header */}
-        <div className="bg-stone-900 text-white p-6 relative">
+        <div className="bg-[#1C1B1B] text-[#FBF9F5] p-6 relative border-b border-white/10">
           <button
             onClick={onClose}
-            className="absolute top-5 left-5 p-2 rounded-full text-stone-400 hover:text-white hover:bg-stone-800 transition cursor-pointer"
+            className="absolute top-5 left-5 p-2 rounded-lg text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-[#141212] transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 text-stone-950 flex items-center justify-center font-black shadow-md">
+            <div className="w-11 h-11 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#DD0200] flex items-center justify-center font-black shadow-md">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-white">إعداد نشاطك التجاري في 60 ثانية</h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                <h2 className="text-lg font-bold text-[#FBF9F5] font-serif">إعداد نشاطك التجاري في 60 ثانية</h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#55100D]/70 text-[#FBF9F5] font-bold border border-[#DD0200]/40 font-mono">
                   إطلاق فوري
                 </span>
               </div>
-              <p className="text-xs text-stone-400 mt-0.5">
+              <p className="text-xs text-[#A19E9B] mt-0.5 font-sans">
                 حدد نوع نشاطك التجاري، اسم علامتك، وشكل الكارت، واستلم الـ QR فوراً
               </p>
             </div>
           </div>
 
           {/* Stepper Progress */}
-          <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-stone-800/80 text-[11px] font-bold">
-            <div className={`flex items-center gap-1.5 ${step >= 1 ? 'text-amber-400' : 'text-stone-500'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 1 ? 'bg-amber-500 text-stone-950 font-black' : 'bg-stone-800 text-stone-400'}`}>
+          <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-white/10 text-[11px] font-bold">
+            <div className={`flex items-center gap-1.5 ${step >= 1 ? 'text-[#DD0200]' : 'text-[#A19E9B]'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 1 ? 'bg-[#DD0200] text-[#FBF9F5] font-bold' : 'bg-[#0B0A0A] border border-white/10 text-[#A19E9B]'}`}>
                 1
               </span>
               <span>نوع النشاط والهوية</span>
             </div>
-            <div className={`flex items-center gap-1.5 ${step >= 2 ? 'text-amber-400' : 'text-stone-500'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 2 ? 'bg-amber-500 text-stone-950 font-black' : 'bg-stone-800 text-stone-400'}`}>
+            <div className={`flex items-center gap-1.5 ${step >= 2 ? 'text-[#DD0200]' : 'text-[#A19E9B]'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 2 ? 'bg-[#DD0200] text-[#FBF9F5] font-bold' : 'bg-[#0B0A0A] border border-white/10 text-[#A19E9B]'}`}>
                 2
               </span>
               <span>نظام الكارت والمكافأة</span>
             </div>
-            <div className={`flex items-center gap-1.5 ${step >= 3 ? 'text-amber-400' : 'text-stone-500'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 3 ? 'bg-amber-500 text-stone-950 font-black' : 'bg-stone-800 text-stone-400'}`}>
+            <div className={`flex items-center gap-1.5 ${step >= 3 ? 'text-[#DD0200]' : 'text-[#A19E9B]'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 3 ? 'bg-[#DD0200] text-[#FBF9F5] font-bold' : 'bg-[#0B0A0A] border border-white/10 text-[#A19E9B]'}`}>
                 3
               </span>
               <span>الرابط و QR الطاولة</span>
@@ -248,8 +248,8 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
             <div className="space-y-5 animate-in fade-in duration-200">
               {/* Industry Grid Selection */}
               <div>
-                <label className="block text-xs font-bold text-stone-800 mb-2">
-                  اختر نوع النشاط التجاري (Industry Type) <span className="text-amber-600">*</span>
+                <label className="block text-xs font-bold text-[#A19E9B] mb-2">
+                  اختر نوع النشاط التجاري (Industry Type) <span className="text-[#DD0200]">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {BUSINESS_INDUSTRY_OPTIONS.map((opt) => {
@@ -262,15 +262,15 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                         onClick={() => handleSelectIndustry(opt.id as BusinessType)}
                         className={`p-3 rounded-xl border text-right transition cursor-pointer flex flex-col justify-between ${
                           isSelected
-                            ? 'bg-amber-500/10 border-amber-500 text-stone-950 ring-2 ring-amber-500/30 font-bold'
-                            : 'bg-stone-50/70 hover:bg-stone-100 border-stone-200 text-stone-700'
+                            ? 'bg-[#55100D]/40 border-[#DD0200] text-[#FBF9F5] shadow-[0_0_15px_-3px_rgba(221,2,0,0.25)] font-bold'
+                            : 'bg-[#1C1B1B] hover:bg-[#211F1F] border-white/10 text-[#A19E9B] hover:text-[#FBF9F5]'
                         }`}
                       >
                         <div className="flex items-center justify-between w-full mb-1">
-                          <IconComponent className={`w-4 h-4 ${isSelected ? 'text-amber-600' : 'text-stone-500'}`} />
-                          {isSelected && <Check className="w-3.5 h-3.5 text-amber-600 stroke-[3]" />}
+                          <IconComponent className={`w-4 h-4 ${isSelected ? 'text-[#DD0200]' : 'text-[#A19E9B]'}`} />
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#DD0200] stroke-[3]" />}
                         </div>
-                        <span className="text-xs font-bold block">{opt.nameAr}</span>
+                        <span className="text-xs font-bold block text-[#FBF9F5]">{opt.nameAr}</span>
                       </button>
                     );
                   })}
@@ -278,11 +278,11 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-800 mb-2">
-                  اسم المنشأة أو العلامة التجارية <span className="text-amber-600">*</span>
+                <label className="block text-xs font-bold text-[#A19E9B] mb-2">
+                  اسم المنشأة أو العلامة التجارية <span className="text-[#DD0200]">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-stone-400">
+                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-[#A19E9B]/50">
                     <Store className="w-5 h-5" />
                   </div>
                   <input
@@ -304,17 +304,17 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                         ? 'مثال: محمصة صويل المختصة'
                         : 'مثال: استوديو الذكريات'
                     }
-                    className="w-full pr-11 pl-4 py-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+                    className="w-full pr-11 pl-4 py-3 rounded-lg bg-[#0B0A0A] border border-white/10 text-[#FBF9F5] font-bold text-sm focus:outline-none focus:border-[#DD0200] transition placeholder:text-[#A19E9B]/40"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-800 mb-2">
-                  معرف الرابط المخصص للعملاء (Custom Slug) <span className="text-amber-600">*</span>
+                <label className="block text-xs font-bold text-[#A19E9B] mb-2">
+                  معرف الرابط المخصص للعملاء (Custom Slug) <span className="text-[#DD0200]">*</span>
                 </label>
-                <div className="flex items-center gap-2 rounded-2xl bg-stone-50 border border-stone-200 px-3.5 py-3 focus-within:ring-2 focus-within:ring-amber-500 focus-within:bg-white transition">
-                  <span className="text-xs font-mono font-bold text-stone-400 select-none ltr">
+                <div className="flex items-center gap-2 rounded-lg bg-[#0B0A0A] border border-white/10 px-3.5 py-2.5 focus-within:border-[#DD0200] transition">
+                  <span className="text-xs font-mono font-bold text-[#A19E9B] select-none ltr">
                     memories.dev/c/
                   </span>
                   <input
@@ -322,18 +322,18 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     value={cafeSlug}
                     onChange={(e) => setCafeSlug(e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, ''))}
                     placeholder="my-business"
-                    className="w-full bg-transparent text-stone-900 font-mono font-bold text-sm focus:outline-none"
+                    className="w-full bg-transparent text-[#FBF9F5] font-mono font-bold text-sm focus:outline-none"
                   />
                 </div>
-                <p className="text-[11px] text-stone-500 mt-1.5">
+                <p className="text-[11px] text-[#A19E9B] mt-1.5">
                   هذا هو الرابط الفريد الذي سيفتحه عملاؤك عند مسح الـ QR على الطاولة أو الكاونتر
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-900 leading-relaxed font-medium">
-                  <strong>ملاءمة تامة لنشاطك:</strong> سيتعرف النظام تلقائياً على أنك ({currentProfile.nameAr})، ويخصص مسميات طاقم الخدمة ({currentProfile.staffLabel}) ونوع الهدايا والبطاقات بما يتناسق مع زوارك.
+              <div className="p-4 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-start gap-3">
+                <Sparkles className="w-4 h-4 text-[#DD0200] shrink-0 mt-0.5" />
+                <p className="text-xs text-[#e6e1e1] leading-relaxed font-medium">
+                  <strong className="text-[#FBF9F5]">ملاءمة تامة لنشاطك:</strong> سيتعرف النظام تلقائياً على أنك ({currentProfile.nameAr})، ويخصص مسميات طاقم الخدمة ({currentProfile.staffLabel}) ونوع الهدايا والبطاقات بما يتناسق مع زوارك.
                 </p>
               </div>
 
@@ -342,7 +342,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={!cafeName.trim() || !cafeSlug.trim()}
-                  className="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-sm flex items-center gap-2 transition active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-sm"
+                  className="px-6 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm flex items-center gap-2 transition active:scale-[0.98] disabled:opacity-40 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                 >
                   <span>التالي: نظام الكارت والمكافأة</span>
                   <ArrowLeft className="w-4 h-4" />
@@ -355,60 +355,60 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
           {step === 2 && (
             <div className="space-y-6 animate-in fade-in duration-200">
               <div>
-                <label className="block text-xs font-bold text-stone-800 mb-2.5">
+                <label className="block text-xs font-bold text-[#A19E9B] mb-2.5">
                   نوع الكارت المعتمد للزوار (Authoritative Card Style)
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div
                     onClick={() => setOrientation('vertical')}
-                    className={`p-4 rounded-2xl border-2 cursor-pointer transition relative flex flex-col justify-between ${
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition relative flex flex-col justify-between ${
                       orientation === 'vertical'
-                        ? 'border-amber-500 bg-amber-50/40 shadow-sm'
-                        : 'border-stone-200 hover:border-stone-300 bg-white'
+                        ? 'border-[#DD0200] bg-[#55100D]/30 shadow-md text-[#FBF9F5]'
+                        : 'border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B]'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold">
+                        <div className="w-8 h-8 rounded-lg bg-[#55100D] border border-[#DD0200]/40 text-[#DD0200] flex items-center justify-center font-bold">
                           <Smartphone className="w-4 h-4" />
                         </div>
                         <div>
-                          <h4 className="font-extrabold text-sm text-stone-900">كارت طولي (Photo Strip)</h4>
-                          <span className="text-[10px] text-amber-700 font-bold">النمط الكوري الكلاسيكي</span>
+                          <h4 className="font-bold text-sm text-[#FBF9F5]">كارت طولي (Photo Strip)</h4>
+                          <span className="text-[10px] text-[#DD0200] font-bold font-mono">النمط الكوري الكلاسيكي</span>
                         </div>
                       </div>
                       {orientation === 'vertical' && (
-                        <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-[#DD0200] shrink-0" />
                       )}
                     </div>
-                    <p className="text-xs text-stone-600 mt-2.5 leading-relaxed">
+                    <p className="text-xs text-[#A19E9B] mt-2.5 leading-relaxed">
                       شريط صور عمودي (Photo Booth) مثالي للمشاركة على ستوري إنستغرام وتيك توك وللطباعة الورقية الفورية.
                     </p>
                   </div>
 
                   <div
                     onClick={() => setOrientation('horizontal')}
-                    className={`p-4 rounded-2xl border-2 cursor-pointer transition relative flex flex-col justify-between ${
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition relative flex flex-col justify-between ${
                       orientation === 'horizontal'
-                        ? 'border-amber-500 bg-amber-50/40 shadow-sm'
-                        : 'border-stone-200 hover:border-stone-300 bg-white'
+                        ? 'border-[#DD0200] bg-[#55100D]/30 shadow-md text-[#FBF9F5]'
+                        : 'border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B]'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-stone-100 text-stone-900 flex items-center justify-center font-bold">
-                          <CreditCard className="w-4 h-4" />
+                        <div className="w-8 h-8 rounded-lg bg-[#1C1B1B] border border-white/10 text-[#FBF9F5] flex items-center justify-center font-bold">
+                          <CreditCard className="w-4 h-4 text-[#DD0200]" />
                         </div>
                         <div>
-                          <h4 className="font-extrabold text-sm text-stone-900">كارت أفقي (Digital Wallet Pass)</h4>
-                          <span className="text-[10px] text-stone-600 font-bold">نمط بطاقة محفظة آبل</span>
+                          <h4 className="font-bold text-sm text-[#FBF9F5]">كارت أفقي (Digital Wallet Pass)</h4>
+                          <span className="text-[10px] text-[#A19E9B] font-bold font-mono">نمط بطاقة محفظة آبل</span>
                         </div>
                       </div>
                       {orientation === 'horizontal' && (
-                        <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-[#DD0200] shrink-0" />
                       )}
                     </div>
-                    <p className="text-xs text-stone-600 mt-2.5 leading-relaxed">
+                    <p className="text-xs text-[#A19E9B] mt-2.5 leading-relaxed">
                       بطاقة رقمية فخمة بنمط المحفظة الرقمية، مريحة للنظر وتظهر جميع أختام الزيارات في صف أفقي واحد.
                     </p>
                   </div>
@@ -417,7 +417,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
               {/* Number of Visits */}
               <div>
-                <label className="block text-xs font-bold text-stone-800 mb-2">
+                <label className="block text-xs font-bold text-[#A19E9B] mb-2">
                   عدد الزيارات المطلوبة لفتح الهدية (Shot / Visits Goal)
                 </label>
                 <div className="grid grid-cols-4 gap-2.5">
@@ -426,13 +426,13 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                       key={count}
                       type="button"
                       onClick={() => setShotCount(count)}
-                      className={`py-3 rounded-2xl border font-bold text-sm transition cursor-pointer flex flex-col items-center justify-center ${
+                      className={`py-3 rounded-lg border font-bold text-sm transition cursor-pointer flex flex-col items-center justify-center ${
                         shotCount === count
-                          ? 'border-amber-600 bg-amber-600 text-white shadow-xs'
-                          : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100'
+                          ? 'border-[#DD0200] bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                          : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:bg-[#211F1F] hover:text-[#FBF9F5]'
                       }`}
                     >
-                      <span className="text-base font-black">{count}</span>
+                      <span className="text-base font-bold font-mono">{count}</span>
                       <span className="text-[10px] opacity-80">زيارات</span>
                     </button>
                   ))}
@@ -440,10 +440,10 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
               </div>
 
               {/* Free Gift Offer Input */}
-              <div className="space-y-3 p-4 rounded-2xl bg-stone-50 border border-stone-200">
+              <div className="space-y-3 p-4 rounded-xl bg-[#1C1B1B] border border-white/10">
                 <div>
-                  <label className="block text-xs font-bold text-stone-800 mb-1.5 flex items-center gap-1.5">
-                    <Gift className="w-4 h-4 text-amber-700" />
+                  <label className="block text-xs font-bold text-[#A19E9B] mb-1.5 flex items-center gap-1.5">
+                    <Gift className="w-4 h-4 text-[#DD0200]" />
                     <span>عنوان الهدية أو المكافأة عند إكمال الأختام</span>
                   </label>
                   <input
@@ -451,12 +451,12 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     value={giftTitle}
                     onChange={(e) => setGiftTitle(e.target.value)}
                     placeholder={currentProfile.defaultGiftTitle}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-900 font-bold text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-4 py-2.5 rounded-lg bg-[#0B0A0A] border border-white/10 text-[#FBF9F5] font-bold text-xs focus:outline-none focus:border-[#DD0200] placeholder:text-[#A19E9B]/40"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-stone-800 mb-1.5">
+                  <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
                     وصف وشروط استلام الهدية
                   </label>
                   <input
@@ -464,7 +464,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     value={giftSubtitle}
                     onChange={(e) => setGiftSubtitle(e.target.value)}
                     placeholder={currentProfile.defaultGiftSubtitle}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white border border-stone-200 text-stone-700 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-4 py-2.5 rounded-lg bg-[#0B0A0A] border border-white/10 text-[#FBF9F5] text-xs focus:outline-none focus:border-[#DD0200] placeholder:text-[#A19E9B]/40"
                   />
                 </div>
               </div>
@@ -473,14 +473,14 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="px-5 py-3 rounded-2xl border border-stone-200 text-stone-700 font-bold text-xs hover:bg-stone-50 transition cursor-pointer"
+                  className="px-5 py-2.5 rounded-lg border border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FBF9F5] font-bold text-xs hover:bg-[#211F1F] transition cursor-pointer"
                 >
                   السابق
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveAndLaunch}
-                  className="px-7 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-sm flex items-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-md"
+                  className="px-6 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm flex items-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                 >
                   <Check className="w-4 h-4" />
                   <span>حفظ وتوليد QR الطاولات فوراً</span>
@@ -492,57 +492,57 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
           {/* STEP 3: Complete & Ready to Print */}
           {step === 3 && (
             <div className="space-y-6 text-center animate-in zoom-in-95 duration-200">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center shadow-inner">
+              <div className="w-16 h-16 rounded-full bg-[#55100D] border border-[#DD0200]/40 text-[#DD0200] mx-auto flex items-center justify-center shadow-md">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
 
               <div>
-                <h3 className="text-xl font-black text-stone-950">
+                <h3 className="text-xl font-bold font-serif text-[#FBF9F5]">
                   تم إعداد وتفعيل {cafeName} بنجاح!
                 </h3>
-                <p className="text-xs text-stone-600 mt-1 max-w-md mx-auto">
+                <p className="text-xs text-[#A19E9B] mt-1 max-w-md mx-auto leading-relaxed">
                   منظومة الذكريات والولاء جاهزة فوراً لنشاطك التجاري. اطبع كود الطاولات أو الكاونتر، أو شارك الرابط المباشر مع أول عميل يدخل المكان.
                 </p>
               </div>
 
               {/* Acrylic Stand Preview Card */}
-              <div className="max-w-xs mx-auto p-5 rounded-3xl bg-white border border-stone-300 shadow-xl space-y-4">
+              <div className="max-w-xs mx-auto p-5 rounded-2xl bg-[#1C1B1B] border border-white/10 shadow-2xl space-y-4">
                 <div className="text-center space-y-1">
-                  <span className="text-[10px] font-mono tracking-widest text-amber-700 font-bold uppercase block">
+                  <span className="text-[10px] font-mono tracking-widest text-[#DD0200] font-bold uppercase block">
                     TABLE SCAN STAND • {currentProfile.nameAr}
                   </span>
-                  <h4 className="font-serif font-black text-base text-stone-900">
+                  <h4 className="font-serif font-bold text-base text-[#FBF9F5]">
                     {cafeName}
                   </h4>
                 </div>
 
                 {qrDataUrl && (
-                  <div className="w-44 h-44 mx-auto p-2 bg-white rounded-2xl border border-stone-200 shadow-inner flex items-center justify-center">
+                  <div className="w-44 h-44 mx-auto p-2 bg-white rounded-xl border border-white/20 shadow-md flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={qrDataUrl} alt="QR Code" className="w-full h-full object-contain" />
                   </div>
                 )}
 
                 <div className="text-center space-y-0.5">
-                  <span className="text-xs font-bold text-stone-900 block">امسح الكود بكاميرا هاتفك</span>
-                  <span className="text-[10px] text-stone-500 block">وثّق زيارتك واستلم {giftTitle}</span>
+                  <span className="text-xs font-bold text-[#FBF9F5] block">امسح الكود بكاميرا هاتفك</span>
+                  <span className="text-[10px] text-[#A19E9B] block">وثّق زيارتك واستلم {giftTitle}</span>
                 </div>
               </div>
 
               {/* Copy URL */}
-              <div className="flex items-center gap-2 max-w-md mx-auto bg-stone-50 border border-stone-200 p-2 rounded-2xl">
+              <div className="flex items-center gap-2 max-w-md mx-auto bg-[#0B0A0A] border border-white/10 p-2 rounded-xl">
                 <input
                   type="text"
                   readOnly
                   value={customerUrl}
-                  className="w-full bg-transparent text-xs font-mono text-stone-700 px-2 outline-none ltr"
+                  className="w-full bg-transparent text-xs font-mono text-[#FBF9F5] px-2 outline-none ltr"
                 />
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="px-3.5 py-1.5 rounded-xl bg-white border border-stone-200 hover:bg-stone-100 text-xs font-bold text-stone-800 transition flex items-center gap-1.5 shrink-0 shadow-2xs cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-lg bg-[#1C1B1B] border border-white/10 hover:bg-[#211F1F] text-xs font-bold text-[#FBF9F5] transition flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
                 >
-                  {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedLink ? 'تم النسخ' : 'نسخ'}</span>
                 </button>
               </div>
@@ -552,9 +552,9 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                 <button
                   type="button"
                   onClick={handleDownloadQr}
-                  className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm"
+                  className="px-5 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-4 h-4 text-[#A19E9B]" />
                   <span>تحميل كود QR عالي الدقة</span>
                 </button>
 
@@ -562,7 +562,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                   href={customerUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm"
+                  className="px-5 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>فتح تجربة العميل الحية</span>
@@ -571,7 +571,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 font-bold text-xs transition cursor-pointer"
+                  className="px-5 py-2.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] font-bold text-xs transition cursor-pointer"
                 >
                   إغلاق والعودة للوحة التحكم
                 </button>

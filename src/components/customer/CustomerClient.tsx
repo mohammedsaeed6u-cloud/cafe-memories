@@ -26,7 +26,6 @@ import { WallConsentModal } from '@/features/wall-consent/WallConsentModal';
 import { CompletionGiftRewardModal } from '@/features/rewards/CompletionGiftRewardModal';
 import { ImageSaveService } from '@/lib/services/image-save.service';
 import { IosSaveImageModal } from '@/components/photobooth/IosSaveImageModal';
-import { AppleLuxuryShowcase } from '@/components/photobooth/AppleLuxuryShowcase';
 
 import {
   Sparkles,

@@ -244,22 +244,22 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
 
         {/* Loading / Error */}
         {!isCameraReady && !cameraError && !capturedPhoto && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-900 text-white p-6 text-center">
-            <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mb-3" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141212] text-[#FBF9F5] p-6 text-center">
+            <RefreshCw className="w-8 h-8 text-[#DD0200] animate-spin mb-3" />
             <p className="font-semibold text-base">جاري تشغيل كاميرا الاستوديو...</p>
-            <p className="text-stone-400 text-xs mt-1">تأكد من إعطاء إذن الكاميرا</p>
+            <p className="text-[#A19E9B] text-xs mt-1">تأكد من إعطاء إذن الكاميرا</p>
           </div>
         )}
 
         {cameraError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-900 text-white p-6 text-center">
-            <Camera className="w-10 h-10 text-rose-500 mb-3" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141212] text-[#FBF9F5] p-6 text-center">
+            <Camera className="w-10 h-10 text-[#DD0200] mb-3" />
             <p className="font-bold text-rose-400 text-sm leading-relaxed">{cameraError}</p>
             <button
               onClick={startCamera}
-              className="mt-4 px-5 py-2 bg-stone-800 hover:bg-stone-700 text-amber-400 rounded-full text-xs font-bold transition flex items-center gap-2"
+              className="mt-4 px-5 py-2.5 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] rounded-lg border border-white/10 text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> إعادة المحاولة
+              <RefreshCw className="w-3.5 h-3.5 text-[#DD0200]" /> إعادة المحاولة
             </button>
           </div>
         )}

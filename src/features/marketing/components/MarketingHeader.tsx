@@ -38,7 +38,7 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-black/65 backdrop-blur-2xl border-b border-white/10 transition-all duration-200 apple-font">
+    <header className="sticky top-0 z-40 bg-[#141313]/85 backdrop-blur-2xl border-b border-white/10 transition-all duration-200 apple-font">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
         {/* Brand Logo & Monogram */}
         <Link href="/" className="flex items-center gap-3 group">
