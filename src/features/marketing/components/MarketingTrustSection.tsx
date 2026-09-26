@@ -44,10 +44,10 @@ export function MarketingTrustSection() {
           <Lock className="w-3.5 h-3.5 text-[#DD0200]" />
           <span>SECURITY & PRIVACY • الأمان والخصوصية</span>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
+        <h2 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
           أمان وخصوصية مبنية على ثقة روادك.
         </h2>
-        <p className="text-sm sm:text-base text-[#D9D9D9]/80 mt-3.5 leading-relaxed">
+        <p className="text-sm sm:text-base text-[#A19E9B] mt-3.5 leading-relaxed">
           صُممت المنظومة لتكون منصة ضيافة محترمة ترعى خصوصية العميل ولا تكشف بياناته الشخصية، مع التزام تام بالمعايير التشغيلية المعتمدة.
         </p>
       </div>
@@ -58,22 +58,22 @@ export function MarketingTrustSection() {
           return (
             <div
               key={item.title}
-              className="p-7 rounded-[30px] bg-white/[0.03] hover:bg-white/[0.05] border border-white/10 shadow-lg flex flex-col justify-between hover:border-white/20 transition-all duration-300 backdrop-blur-xl group"
+              className="p-7 rounded-2xl bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 hover:border-[#DD0200]/30 shadow-xl flex flex-col justify-between hover:scale-[1.01] transition-all duration-300 backdrop-blur-xl group"
             >
               <div>
-                <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 text-white flex items-center justify-center mb-5 shadow-sm group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center mb-5 shadow-sm group-hover:scale-105 transition-transform">
                   <Icon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="font-bold text-base sm:text-lg text-white mb-2 leading-snug">
+                <h3 className="font-semibold text-base sm:text-lg text-white mb-2 leading-snug" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
                   {item.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-[#D9D9D9]/80 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#A19E9B] leading-relaxed">
                   {item.desc}
                 </p>
               </div>
 
               <div className="mt-6 pt-4 border-t border-white/10">
-                <span className="text-[10px] font-mono text-[#DD0200] font-bold">
+                <span className="text-[10px] font-mono text-[#DD0200] font-bold uppercase tracking-[0.15em]">
                   VERIFIED PROTOCOL
                 </span>
               </div>

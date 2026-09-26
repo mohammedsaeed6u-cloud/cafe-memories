@@ -298,54 +298,58 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col justify-center items-center p-4 selection:bg-amber-100 font-cairo">
+    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col justify-center items-center p-4 selection:bg-[#DD0200] selection:text-white font-sans relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#55100D]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
+
       {/* Brand Back Link */}
-      <div className="w-full max-w-md mb-4 flex items-center justify-between">
+      <div className="w-full max-w-md mb-4 flex items-center justify-between relative z-10">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-stone-950 transition"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A19E9B] hover:text-[#FBF9F5] transition"
         >
           <ChevronLeft className="w-4 h-4 rotate-180" />
           <span>العودة للموقع الرئيسي</span>
         </Link>
-        <span className="text-[10px] font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+        <span className="text-[10px] font-mono font-bold text-[#FBF9F5] bg-[#55100D]/50 px-2.5 py-0.5 rounded-md border border-[#DD0200]/40 tracking-wider uppercase">
           SECURE PORTAL
         </span>
       </div>
 
-      <div className="w-full max-w-md bg-white border border-stone-200/90 rounded-3xl p-6 sm:p-8 shadow-sm">
+      <div className="w-full max-w-md bg-[#141212] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center mx-auto mb-3 shadow-xs">
-            <MemoriesArchIcon size={24} color="#FFFFFF" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-red-950/50 border border-white/20">
+            <span className="text-base font-serif">✦</span>
           </div>
           <h1
             style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-            className="text-2xl font-black text-stone-950 tracking-tight"
+            className="text-2xl font-semibold text-white tracking-tight"
           >
-            memories
+            memories studio
           </h1>
-          <p className="text-xs text-stone-500 mt-1">
-            بوابة أصحاب المقاهي وإدارة تجارب الزوار والولاء التفاعلي
+          <p className="text-xs text-[#A19E9B] mt-1 leading-relaxed">
+            بوابة أصحاب الأنشطة التجارية وإدارة تجارب الزوار والولاء التفاعلي
           </p>
         </div>
 
         {/* Mode Switcher Tabs */}
-        <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-stone-100 border border-stone-200/80 mb-6">
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-[#1C1B1B] border border-white/10 mb-6">
           <button
             type="button"
             onClick={() => {
               setAuthTab('signup');
               setErrorMsg(null);
             }}
-            className={`py-2 px-1.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
+            className={`py-2 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
               authTab === 'signup'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-stone-600 hover:text-stone-950'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'text-[#A19E9B] hover:text-white'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span>تسجيل منشأة جديدة</span>
+            <span>تسجيل منشأة</span>
           </button>
 
           <button
@@ -354,10 +358,10 @@ export default function LoginPage() {
               setAuthTab('signin');
               setErrorMsg(null);
             }}
-            className={`py-2 px-1.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
+            className={`py-2 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
               authTab === 'signin'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-stone-600 hover:text-stone-950'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'text-[#A19E9B] hover:text-white'
             }`}
           >
             <LogIn className="w-3.5 h-3.5" />
@@ -370,28 +374,28 @@ export default function LoginPage() {
               setAuthTab('pin');
               setErrorMsg(null);
             }}
-            className={`py-2 px-1.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
+            className={`py-2 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
               authTab === 'pin'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-stone-600 hover:text-stone-950'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'text-[#A19E9B] hover:text-white'
             }`}
           >
             <KeyRound className="w-3.5 h-3.5" />
-            <span>رمز الموظف (Staff PIN)</span>
+            <span>رمز الموظف</span>
           </button>
         </div>
 
         {/* Error / Success Feedback */}
         {errorMsg && (
-          <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2 mb-4 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-3.5 rounded-lg bg-red-950/60 border border-red-500/40 text-red-200 text-xs font-bold flex items-center gap-2 mb-4 animate-in fade-in backdrop-blur-md">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 mb-4 animate-in fade-in">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+          <div className="p-3.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-bold flex items-center gap-2 mb-4 animate-in fade-in backdrop-blur-md">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
             <span>{successMsg}</span>
           </div>
         )}
@@ -404,7 +408,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleGoogleAuth}
               disabled={loading}
-              className="w-full py-3 px-4 rounded-xl bg-white hover:bg-stone-50 border border-stone-200/90 text-stone-800 font-bold text-xs transition-all shadow-2xs hover:shadow-xs flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#DD0200]/30 text-[#FBF9F5] font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 backdrop-blur-md"
             >
               <GoogleIcon className="w-4 h-4 shrink-0" />
               <span>
@@ -416,8 +420,8 @@ export default function LoginPage() {
 
             {/* Modern Subtle Divider */}
             <div className="relative flex items-center justify-center my-1">
-              <div className="w-full border-t border-stone-200/80" />
-              <span className="absolute bg-white px-3 text-[10px] font-bold text-stone-400 select-none">
+              <div className="w-full border-t border-white/10" />
+              <span className="absolute bg-[#141212] px-3 text-[10px] font-bold text-[#A19E9B] select-none uppercase tracking-wider">
                 أو عبر البريد الإلكتروني
               </span>
             </div>
@@ -426,7 +430,7 @@ export default function LoginPage() {
               {authTab === 'signup' && (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                    <label className="block text-xs font-semibold text-[#e6e1e1] mb-1.5">
                       اسم المنشأة أو العلامة التجارية:
                     </label>
                     <div className="relative">
@@ -448,18 +452,18 @@ export default function LoginPage() {
                             setCafeSlug(clean || '');
                           }
                         }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-[#A19E9B]/50 focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none transition"
                       />
-                      <Store className="w-4 h-4 text-stone-400 absolute left-3 top-3 pointer-events-none" />
+                      <Store className="w-4 h-4 text-[#A19E9B] absolute left-3 top-3 pointer-events-none" />
                     </div>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-bold text-stone-700">
+                      <label className="text-xs font-semibold text-[#e6e1e1]">
                         معرف رابط المنشأة المخصص (Slug):
                       </label>
-                      <span className="text-[10px] text-stone-400 font-mono">CUSTOM URL</span>
+                      <span className="text-[10px] text-[#A19E9B] font-mono">CUSTOM URL</span>
                     </div>
                     <div className="relative">
                       <input
@@ -472,12 +476,12 @@ export default function LoginPage() {
                           setIsSlugManuallyEdited(true);
                           setCafeSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
                         }}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition font-mono"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-[#A19E9B]/50 focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none transition font-mono"
                       />
                     </div>
-                    <p className="text-[11px] text-stone-500 mt-1.5 flex items-center gap-1 font-mono" dir="ltr">
-                      <span className="text-amber-700 font-bold">Live URL:</span>
-                      <span className="text-stone-700">
+                    <p className="text-[11px] text-[#A19E9B] mt-1.5 flex items-center gap-1 font-mono" dir="ltr">
+                      <span className="text-[#DD0200] font-bold">Live URL:</span>
+                      <span className="text-stone-300">
                         memories-c9w.pages.dev/c/{cafeSlug || 'my-cafe'}
                       </span>
                     </p>
@@ -486,7 +490,7 @@ export default function LoginPage() {
               )}
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                <label className="block text-xs font-semibold text-[#e6e1e1] mb-1.5">
                   البريد الإلكتروني للتاجر:
                 </label>
                 <div className="relative">
@@ -496,15 +500,15 @@ export default function LoginPage() {
                     placeholder="owner@yourcafe.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-[#A19E9B]/50 focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none transition font-mono"
                     dir="ltr"
                   />
-                  <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-3 pointer-events-none" />
+                  <Mail className="w-4 h-4 text-[#A19E9B] absolute left-3 top-3 pointer-events-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                <label className="block text-xs font-semibold text-[#e6e1e1] mb-1.5">
                   كلمة المرور:
                 </label>
                 <PasswordInput
@@ -512,14 +516,14 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="bg-stone-50/70 text-xs"
+                  className="bg-[#0B0A0A] border-white/10 text-xs text-white"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition-all shadow-sm hover:shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
               >
                 {loading ? (
                   <span>جاري المعالجة...</span>
@@ -543,7 +547,7 @@ export default function LoginPage() {
         {authTab === 'pin' && (
           <form onSubmit={handlePinAuth} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1.5 text-center">
+              <label className="block text-xs font-semibold text-[#e6e1e1] mb-1.5 text-center">
                 أدخل رمز PIN الموظف المعتمد (4 أرقام):
               </label>
               <input
@@ -553,10 +557,10 @@ export default function LoginPage() {
                 placeholder="••••"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-full px-3.5 py-3.5 rounded-xl border border-stone-200 bg-stone-50/70 text-center text-2xl font-mono font-black tracking-[0.4em] text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none transition shadow-2xs"
+                className="w-full px-3.5 py-3.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-center text-2xl font-mono font-black tracking-[0.4em] text-white focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none transition shadow-inner"
                 autoFocus
               />
-              <p className="text-[11px] text-stone-500 mt-2 text-center font-medium">
+              <p className="text-[11px] text-[#A19E9B] mt-2 text-center font-medium">
                 دخول سريع لطاقم العمل والكاونتر بدون الحاجة لإدخال البريد الإلكتروني
               </p>
             </div>
@@ -564,7 +568,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition-all shadow-sm hover:shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
             >
               {loading ? (
                 <span>جاري التحقق...</span>
@@ -579,9 +583,9 @@ export default function LoginPage() {
         )}
 
         {/* Footer info */}
-        <div className="mt-6 pt-5 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-400">
+        <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between text-[11px] text-[#A19E9B]">
           <span>حماية وتشفير البيانات 256-bit</span>
-          <span className="font-mono">v2.6 PRODUCTION</span>
+          <span className="font-mono text-[#DD0200]">ATELIER • NOSTALGIA</span>
         </div>
       </div>
     </div>

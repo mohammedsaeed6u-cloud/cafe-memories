@@ -77,7 +77,7 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
             <button
               type="button"
               onClick={onOpenSearch}
-              className="hidden lg:flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-stone-300 text-xs font-mono transition cursor-pointer backdrop-blur-md"
+              className="hidden lg:flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-stone-300 text-xs font-mono transition cursor-pointer backdrop-blur-md"
               aria-label="البحث السريع في الموقع (Cmd+K)"
             >
               <Search className="w-3.5 h-3.5 text-stone-400" />
@@ -88,14 +88,14 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
 
           <Link
             href="/login"
-            className="hidden sm:inline-flex text-xs py-2 px-4 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-stone-200 font-semibold transition active:scale-95 cursor-pointer backdrop-blur-md"
+            className="hidden sm:inline-flex text-xs py-2 px-4 rounded-lg bg-transparent hover:bg-white/5 border border-white/10 text-[#FBF9F5] font-semibold transition active:scale-95 cursor-pointer backdrop-blur-md"
           >
             لوحة التاجر
           </Link>
 
           <Link
             href="/c/memories"
-            className="text-xs py-2 px-4 sm:px-5 rounded-full bg-[#DD0200] hover:bg-[#B50200] text-white font-bold shadow-lg shadow-red-950/60 transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
+            className="text-xs py-2 px-4 sm:px-5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-6px_rgba(221,2,0,0.4)] transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
           >
             <span>تجربة الزائر</span>
             <ArrowRight className="w-3.5 h-3.5 rotate-180" />

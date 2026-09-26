@@ -58,10 +58,10 @@ export function MarketingVisualSteps() {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase mb-3 backdrop-blur-xl">
           <span>THE GUEST EXPERIENCE • رحلة العميل</span>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
+        <h2 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
           خمس خطوات مدروسة من الطاولة إلى التذكار الدائم.
         </h2>
-        <p className="text-sm sm:text-base text-[#D9D9D9]/80 mt-3.5 leading-relaxed">
+        <p className="text-sm sm:text-base text-[#A19E9B] mt-3.5 leading-relaxed">
           تجربة مصممة بعناية فائقة لتكون خالية من التعقيد، تمنح رواد متجرك وصالتك بهجة التوثيق الفوري وتضمن عودتهم مرات متتالية.
         </p>
       </div>
@@ -73,38 +73,36 @@ export function MarketingVisualSteps() {
             <div
               key={s.step}
               className={
-                'p-7 rounded-[30px] bg-white/[0.03] hover:bg-white/[0.06] border ' +
-                s.accent +
-                ' shadow-xl flex flex-col justify-between hover:shadow-2xl transition-all duration-300 backdrop-blur-xl group relative overflow-hidden ' +
+                'p-7 rounded-2xl bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 hover:border-[#DD0200]/30 shadow-xl flex flex-col justify-between hover:scale-[1.01] transition-all duration-300 backdrop-blur-xl group relative overflow-hidden ' +
                 (idx === 2 ? 'md:col-span-2 lg:col-span-1' : '')
               }
             >
               <div>
                 <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
                     <Icon className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-xs font-mono font-bold text-[#DD0200] px-2.5 py-1 rounded-full bg-[#DD0200]/10 border border-[#DD0200]/20">
+                  <span className="text-xs font-mono font-bold text-[#FBF9F5] px-2.5 py-1 rounded-md bg-[#55100D] border border-[#DD0200]/40">
                     STEP {s.step}
                   </span>
                 </div>
 
                 <div className="mb-2">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#D9D9D9]/70">
+                  <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-[#A19E9B]">
                     {s.badge}
                   </span>
-                  <h3 className="text-lg font-bold text-white mt-1 leading-snug">
+                  <h3 className="text-lg font-semibold text-white mt-1 leading-snug" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
                     {s.title}
                   </h3>
                 </div>
 
-                <p className="text-xs sm:text-sm text-[#D9D9D9]/80 leading-relaxed mt-2.5">
+                <p className="text-xs sm:text-sm text-[#A19E9B] leading-relaxed mt-2.5">
                   {s.desc}
                 </p>
               </div>
 
               <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-                <span className="text-[11px] font-mono text-[#D9D9D9]/70">
+                <span className="text-[11px] font-mono text-[#A19E9B]">
                   {s.tag}
                 </span>
                 <span className="text-xs text-[#DD0200] font-mono font-bold opacity-0 group-hover:opacity-100 transition-opacity">

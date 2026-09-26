@@ -125,45 +125,45 @@ export function MarketingPricing() {
             <div
               key={tier.id}
               className={
-                'p-6 sm:p-7 rounded-[30px] flex flex-col justify-between transition-all duration-300 relative overflow-hidden backdrop-blur-xl ' +
+                'p-6 sm:p-7 rounded-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden backdrop-blur-xl ' +
                 (tier.isPopular
-                  ? 'bg-gradient-to-b from-[#240807] via-[#1A0706] to-[#0D0303] border-2 border-[#DD0200]/50 shadow-[0_0_60px_-15px_rgba(221,2,0,0.35)] scale-[1.02]'
-                  : 'bg-white/[0.03] hover:bg-white/[0.05] border border-white/10 shadow-lg')
+                  ? 'bg-gradient-to-b from-[#240807] via-[#141212] to-[#0E0D0D] border border-[#DD0200]/40 shadow-[0_0_50px_-10px_rgba(221,2,0,0.3)] scale-[1.01]'
+                  : 'bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 shadow-lg')
               }
             >
               {/* Featured Aura Glow for Popular Card */}
               {tier.isPopular && (
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#DD0200]/20 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#DD0200]/15 rounded-full blur-2xl pointer-events-none" />
               )}
 
               <div>
                 {tier.isPopular && (
-                  <div className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest bg-[#DD0200] text-white px-3 py-1 rounded-full font-bold mb-4 shadow-md">
-                    <Sparkles className="w-3 h-3" />
+                  <div className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.15em] bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] px-2.5 py-1 rounded-md font-bold mb-4 shadow-sm">
+                    <Sparkles className="w-3 h-3 text-[#DD0200]" />
                     <span>الأكثر طلباً للعلامات</span>
                   </div>
                 )}
 
-                <h3 className="text-lg font-bold text-white tracking-tight">
+                <h3 className="text-lg font-semibold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
                   {tier.name}
                 </h3>
-                <p className="text-xs text-[#D9D9D9]/70 mt-1 leading-relaxed">
+                <p className="text-xs text-[#A19E9B] mt-1 leading-relaxed">
                   {tier.tagline}
                 </p>
 
                 <div className="mt-5 pb-5 border-b border-white/10 flex items-baseline gap-1.5">
-                  <span className="text-3xl sm:text-4xl font-black font-mono text-white">
+                  <span className="text-3xl sm:text-4xl font-bold font-mono text-white">
                     {displayPrice}
                   </span>
-                  <span className="text-[11px] font-medium text-[#D9D9D9]/70">
+                  <span className="text-[11px] font-medium text-[#A19E9B]">
                     {tier.period}
                   </span>
                 </div>
 
                 <ul className="mt-5 space-y-2.5">
                   {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5 text-xs leading-relaxed text-[#D9D9D9]/90">
-                      <Check className={'w-4 h-4 shrink-0 mt-0.5 ' + (tier.isPopular ? 'text-[#DD0200]' : 'text-[#34C759]')} />
+                    <li key={feature} className="flex items-start gap-2.5 text-xs leading-relaxed text-[#e6e1e1]">
+                      <Check className={'w-4 h-4 shrink-0 mt-0.5 ' + (tier.isPopular ? 'text-[#DD0200]' : 'text-emerald-400')} />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -174,10 +174,10 @@ export function MarketingPricing() {
                 <Link
                   href={tier.ctaHref}
                   className={
-                    'w-full py-3.5 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md ' +
+                    'w-full py-3 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ' +
                     (tier.isPopular
-                      ? 'bg-[#DD0200] hover:bg-[#B50200] text-white shadow-red-950/60 hover:scale-[1.02] active:scale-[0.98]'
-                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/15 backdrop-blur-md hover:scale-[1.02] active:scale-[0.98]')
+                      ? 'bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] hover:scale-[1.01] active:scale-[0.98]'
+                      : 'bg-white/10 hover:bg-white/15 text-[#FBF9F5] border border-white/10 hover:border-[#DD0200]/30 backdrop-blur-md hover:scale-[1.01] active:scale-[0.98]')
                   }
                 >
                   <span>{tier.ctaText}</span>

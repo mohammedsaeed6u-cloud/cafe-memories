@@ -15,8 +15,8 @@ export function MarketingFooter() {
             <span className="text-base font-bold tracking-tight text-white block leading-tight">
               memories studio
             </span>
-            <span className="text-[9px] font-mono tracking-widest text-[#D9D9D9]/60 font-semibold uppercase block leading-none">
-              APPLE HIG EDITION • 2026
+            <span className="text-[9px] font-mono tracking-[0.18em] text-[#A19E9B] font-semibold uppercase block leading-none">
+              ATELIER NOSTALGIA EDITION • 2026
             </span>
           </div>
         </div>

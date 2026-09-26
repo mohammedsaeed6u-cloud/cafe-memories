@@ -55,10 +55,10 @@ export function MarketingRetentionLoop() {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase mb-3 backdrop-blur-xl">
           <span>OPERATIONAL EXCELLENCE • تشغيل واستثمار البيزنس</span>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
+        <h2 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
           هندسة تشغيلية تضاعف عودة الزوار.
         </h2>
-        <p className="text-sm sm:text-base text-[#D9D9D9]/80 mt-3.5 leading-relaxed">
+        <p className="text-sm sm:text-base text-[#A19E9B] mt-3.5 leading-relaxed">
           حلول برمجية سلسة مصممة خصيصاً لتفادي تعقيدات العتاد والبرمجيات المزعجة، ولتمنح علامتك التجارية سلاحاً تسويقياً فريداً يميزك عن المنافسين.
         </p>
       </div>
@@ -69,22 +69,22 @@ export function MarketingRetentionLoop() {
           return (
             <div
               key={p.num}
-              className="p-7 rounded-[30px] bg-gradient-to-b from-white/[0.04] to-white/[0.02] border border-white/10 shadow-lg flex flex-col justify-between hover:border-white/20 transition-all duration-300 backdrop-blur-xl group"
+              className="p-7 rounded-2xl bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 hover:border-[#DD0200]/30 shadow-xl flex flex-col justify-between hover:scale-[1.01] transition-all duration-300 backdrop-blur-xl group"
             >
               <div>
                 <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 border border-white/20 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 border border-white/20 group-hover:scale-105 transition-transform">
                     <Icon className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-xs font-mono font-bold text-[#D9D9D9]/60">
+                  <span className="text-xs font-mono font-bold text-[#A19E9B]">
                     PILLAR {p.num}
                   </span>
                 </div>
 
-                <h3 className="font-bold text-lg text-white mb-2 leading-snug">
+                <h3 className="font-semibold text-lg text-white mb-2 leading-snug" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
                   {p.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-[#D9D9D9]/80 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#A19E9B] leading-relaxed">
                   {p.desc}
                 </p>
               </div>
