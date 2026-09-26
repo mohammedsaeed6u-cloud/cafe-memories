@@ -80,18 +80,18 @@ export function DashboardSettingsTab({
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-200">
       {/* Top Banner */}
-      <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-amber-600" />
-            <h3 className="font-black text-base text-stone-900">
+            <Sliders className="w-5 h-5 text-[#DD0200]" />
+            <h3 className="font-bold text-base text-[#FBF9F5] font-serif">
               إعدادات النشاط التجاري والهوية
             </h3>
-            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-mono font-bold">
+            <span className="px-2.5 py-0.5 rounded-md bg-[#55100D]/70 text-[#FBF9F5] border border-[#DD0200]/40 text-[10px] font-mono font-bold">
               MULTI-INDUSTRY
             </span>
           </div>
-          <p className="text-xs text-stone-500 mt-1">
+          <p className="text-xs text-[#A19E9B] mt-1 font-sans">
             خصص قطاع عملك، اسم علامتك التجارية، نمط المكافآت، ومسميات طاقم الخدمة.
           </p>
         </div>
@@ -99,28 +99,28 @@ export function DashboardSettingsTab({
         <button
           type="button"
           onClick={onOpenQuickSetup}
-          className="px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+          className="px-4 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer shrink-0"
         >
-          <ExternalLink className="w-3.5 h-3.5 text-stone-500" />
+          <ExternalLink className="w-3.5 h-3.5 text-[#DD0200]" />
           <span>معالج الإعداد السريع</span>
         </button>
       </div>
 
       {saveSuccess && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs flex items-center gap-2.5 shadow-sm animate-in fade-in">
-          <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+        <div className="p-4 rounded-xl bg-[#141212] border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center gap-2.5 shadow-lg animate-in fade-in">
+          <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
           <span>تم حفظ الإعدادات وتطبيقها بنجاح عبر المنظومة ونقاط الخدمة!</span>
         </div>
       )}
 
       {/* 1. Industry Type Selector */}
-      <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+      <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <div>
-            <h4 className="font-bold text-sm text-stone-900">1. قطاع النشاط التجاري (Business Industry)</h4>
-            <p className="text-xs text-stone-500">اختر القطاع ليتم ضبط مسميات طاقم الخدمة، ونوع الهدايا والبطاقات تلقائياً.</p>
+            <h4 className="font-bold text-sm text-[#FBF9F5] font-serif">1. قطاع النشاط التجاري (Business Industry)</h4>
+            <p className="text-xs text-[#A19E9B]">اختر القطاع ليتم ضبط مسميات طاقم الخدمة، ونوع الهدايا والبطاقات تلقائياً.</p>
           </div>
-          <span className="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-xl border border-amber-200">
+          <span className="text-xs font-bold text-[#FBF9F5] bg-[#55100D]/60 px-3 py-1 rounded-lg border border-[#DD0200]/40 font-mono">
             القطاع الحالي: {activeIndustry.nameAr}
           </span>
         </div>
@@ -133,10 +133,10 @@ export function DashboardSettingsTab({
                 key={ind.id}
                 type="button"
                 onClick={() => handleSelectIndustry(ind.id as BusinessType)}
-                className={`p-3.5 rounded-2xl border text-right transition flex flex-col justify-between cursor-pointer ${
+                className={`p-3.5 rounded-xl border text-right transition flex flex-col justify-between cursor-pointer ${
                   isSelected
-                    ? 'border-amber-600 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20 shadow-xs'
-                    : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50/60 text-stone-700'
+                    ? 'border-[#DD0200] bg-[#55100D]/40 text-[#FBF9F5] shadow-[0_0_15px_-3px_rgba(221,2,0,0.25)]'
+                    : 'border-white/10 bg-[#1C1B1B] hover:border-white/20 text-[#A19E9B] hover:text-[#FBF9F5]'
                 }`}
               >
                 <div className="flex items-center justify-between w-full mb-2">
@@ -149,11 +149,11 @@ export function DashboardSettingsTab({
                     {ind.id === 'cafe' && '☕'}
                     {ind.id === 'general' && '🏢'}
                   </span>
-                  {isSelected && <Check className="w-4 h-4 text-amber-600 stroke-[3]" />}
+                  {isSelected && <Check className="w-4 h-4 text-[#DD0200] stroke-[3]" />}
                 </div>
                 <div>
-                  <strong className="text-xs font-black block">{ind.nameAr}</strong>
-                  <span className="text-[10px] text-stone-500 font-mono block mt-0.5">{ind.staffLabel}</span>
+                  <strong className="text-xs font-bold block text-[#FBF9F5]">{ind.nameAr}</strong>
+                  <span className="text-[10px] text-[#A19E9B] font-mono block mt-0.5">{ind.staffLabel}</span>
                 </div>
               </button>
             );
@@ -162,14 +162,14 @@ export function DashboardSettingsTab({
       </div>
 
       {/* 2. Brand Identity */}
-      <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
-        <h4 className="font-bold text-sm text-stone-900 pb-3 border-b border-stone-100">
+      <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
+        <h4 className="font-bold text-sm text-[#FBF9F5] pb-3 border-b border-white/10 font-serif">
           2. بيانات العلامة التجارية (Brand Information)
         </h4>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-stone-700 mb-1.5">
+            <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
               اسم النشاط التجاري / الفرع:
             </label>
             <input
@@ -177,12 +177,12 @@ export function DashboardSettingsTab({
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               placeholder="مثال: بوتيك الأناقة / استوديو الذكريات"
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-stone-900"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-stone-700 mb-1.5">
+            <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
               الشعار الإعلاني (Tagline):
             </label>
             <input
@@ -190,12 +190,12 @@ export function DashboardSettingsTab({
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               placeholder="مثال: ذكريات مميزة مع كل زيارة"
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-stone-900"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-xs font-bold text-stone-700 mb-1.5">
+            <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
               رابط الشعار المباشر (Logo Image URL):
             </label>
             <input
@@ -204,9 +204,9 @@ export function DashboardSettingsTab({
               value={logoUrl}
               onChange={(e) => setLogoUrl(e.target.value)}
               placeholder="https://example.com/logo.png"
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-stone-900 font-mono"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] font-mono placeholder:text-[#A19E9B]/40"
             />
-            <span className="text-[10px] text-stone-400 mt-1 block">
+            <span className="text-[10px] text-[#A19E9B] mt-1 block">
               اختياري: يظهر الشعار أعلى كروت الفوتوبوث، شاشة الصالة الحية، وستاندات الـ QR.
             </span>
           </div>
@@ -214,14 +214,14 @@ export function DashboardSettingsTab({
       </div>
 
       {/* 3. Loyalty Gift & Visits */}
-      <div className="p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
-        <h4 className="font-bold text-sm text-stone-900 pb-3 border-b border-stone-100">
+      <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
+        <h4 className="font-bold text-sm text-[#FBF9F5] pb-3 border-b border-white/10 font-serif">
           3. برنامج مكافآت الزيارات والولاء (Loyalty Offer)
         </h4>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-stone-700 mb-1.5">
+            <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
               عنوان الهدية المجانية:
             </label>
             <input
@@ -229,12 +229,12 @@ export function DashboardSettingsTab({
               value={giftTitle}
               onChange={(e) => setGiftTitle(e.target.value)}
               placeholder="مثال: خصم 20% / جلسة عناية مجانية / مشروب فاخر"
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-stone-900"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-stone-700 mb-1.5">
+            <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
               عدد الزيارات المطلوبة لفتح الهدية:
             </label>
             <div className="flex gap-2">
@@ -243,10 +243,10 @@ export function DashboardSettingsTab({
                   key={cnt}
                   type="button"
                   onClick={() => setShotCount(cnt)}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold font-mono transition cursor-pointer ${
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold font-mono transition cursor-pointer ${
                     shotCount === cnt
-                      ? 'bg-amber-600 text-white shadow-xs'
-                      : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                      ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                      : 'bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] border border-white/10'
                   }`}
                 >
                   {cnt} زيارات
@@ -256,7 +256,7 @@ export function DashboardSettingsTab({
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-xs font-bold text-stone-700 mb-1.5">
+            <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
               تفاصيل وشروط الهدية:
             </label>
             <input
@@ -264,7 +264,7 @@ export function DashboardSettingsTab({
               value={giftSubtitle}
               onChange={(e) => setGiftSubtitle(e.target.value)}
               placeholder="مثال: يستحق العميل هذه المكافأة فور إكمال الخانات في نقطة الكاشير"
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-stone-900"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
             />
           </div>
         </div>
@@ -275,7 +275,7 @@ export function DashboardSettingsTab({
         <button
           type="button"
           onClick={handleSave}
-          className="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-sm shadow-md transition flex items-center gap-2 cursor-pointer active:scale-95"
+          className="px-6 py-3 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center gap-2 cursor-pointer active:scale-95"
         >
           <Save className="w-4 h-4" />
           <span>حفظ وتطبيق الإعدادات</span>

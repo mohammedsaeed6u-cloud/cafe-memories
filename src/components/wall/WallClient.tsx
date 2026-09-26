@@ -383,49 +383,56 @@ export function WallClient({ screenId }: WallClientProps) {
   const currentMemory = memories[currentIndex] || memories[0];
 
   // -------------------------------------------------------------
-  // 1. UNPAIRED STATE: Warm Ivory High-Contrast TV Screen Display
+  // 1. UNPAIRED STATE: Atelier Nostalgia Studio Vitrine TV Display
   // -------------------------------------------------------------
   if (!isPaired) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col items-center justify-between p-6 sm:p-12 select-none font-cairo relative overflow-hidden">
-        {/* Subtle Warm Spotlight */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col items-center justify-between p-6 sm:p-12 select-none font-sans relative overflow-hidden">
+        {/* Subtle Archival Glows */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#55100D]/20 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
 
         {/* Top Header Bar */}
-        <div className="w-full max-w-5xl flex items-center justify-between z-10 border-b border-stone-200/90 pb-5">
+        <div className="w-full max-w-5xl flex items-center justify-between z-10 border-b border-white/10 pb-5">
           <CoBrandingLogos
             cafeName={brandName}
             cafeLogoUrl={brandLogoUrl}
             size="lg"
-            theme="light"
+            theme="dark"
             showTagline={true}
           />
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-stone-300 text-xs font-mono font-bold text-amber-700 shadow-2xs">
-            <Radio className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
-            <span>بث الشاشة الذكية جاهز للإقران</span>
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#55100D]/50 border border-[#DD0200]/40 text-xs font-mono font-bold text-[#FBF9F5] shadow-sm">
+            <Radio className="w-3.5 h-3.5 text-[#DD0200] animate-pulse" />
+            <span className="uppercase tracking-wider">بث الشاشة الذكية • جاهز للإقران</span>
           </div>
         </div>
 
         {/* Main Pairing Card */}
-        <div className="max-w-2xl w-full p-8 sm:p-12 rounded-3xl bg-white border border-stone-200 shadow-xl text-center space-y-6 z-10">
+        <div className="max-w-2xl w-full p-8 sm:p-12 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl text-center space-y-6 z-10 backdrop-blur-xl">
           {pairedSuccessMsg ? (
-            <div className="p-8 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-3 animate-in zoom-in-95 duration-300">
-              <CheckCircle2 className="w-16 h-16 text-emerald-600 mx-auto animate-bounce" />
-              <h3 className="text-2xl font-black">{pairedSuccessMsg}</h3>
-              <p className="text-xs text-emerald-700 font-bold">جاري فتح شاشة العرض الحية وبث الذكريات فوراً...</p>
+            <div className="p-8 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 space-y-3 animate-in zoom-in-95 duration-300">
+              <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto animate-bounce" />
+              <h3 className="text-2xl font-bold font-serif">{pairedSuccessMsg}</h3>
+              <p className="text-xs text-emerald-300 font-bold">جاري فتح شاشة العرض الحية وبث الذكريات فوراً...</p>
             </div>
           ) : (
             <>
-              <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-700 flex items-center justify-center mx-auto border border-amber-200 shadow-sm">
+              <div className="w-16 h-16 rounded-xl bg-[#55100D]/40 text-[#DD0200] flex items-center justify-center mx-auto border border-[#DD0200]/30 shadow-lg shadow-red-950/30">
                 <Tv className="w-8 h-8" />
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-black text-stone-950 tracking-tight">
-                  اقتران شاشة التلفزيون الذكية (Smart TV Wall)
+                <span className="text-[11px] font-mono uppercase tracking-[0.08em] text-[#DD0200] font-bold block">
+                  SMART TV LIVE SIGNAGE
+                </span>
+                <h1
+                  style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+                  className="text-2xl sm:text-3xl font-bold text-[#FBF9F5] tracking-tight"
+                >
+                  اقتران شاشة التلفزيون الذكية
                 </h1>
-                <p className="text-xs sm:text-sm text-stone-600 max-w-lg mx-auto leading-relaxed">
-                  أدخل هذا الرقم المكون من 6 أرقام في <strong className="text-amber-800">لوحة تحكم التاجر</strong> لربط هذه الشاشة مع فرعك ونشاطك التجاري وبث ذكريات الصالة فوراً:
+                <p className="text-xs sm:text-sm text-[#A19E9B] max-w-lg mx-auto leading-relaxed">
+                  أدخل هذا الرقم المكون من 6 أرقام في <strong className="text-[#FBF9F5] font-bold underline decoration-[#DD0200]">لوحة تحكم التاجر</strong> لربط هذه الشاشة مع فرعك ونشاطك التجاري وبث ذكريات الصالة فوراً:
                 </p>
               </div>
 
@@ -435,7 +442,7 @@ export function WallClient({ screenId }: WallClientProps) {
                   {screenPairingCode.split('').map((digit, idx) => (
                     <div
                       key={idx}
-                      className="w-12 h-16 sm:w-20 sm:h-26 rounded-2xl bg-amber-50 border-2 border-amber-400 text-amber-900 flex items-center justify-center shadow-md font-mono"
+                      className="w-12 h-16 sm:w-20 sm:h-26 rounded-xl bg-[#0B0A0A] border-2 border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] font-mono"
                     >
                       {digit}
                     </div>
@@ -443,42 +450,42 @@ export function WallClient({ screenId }: WallClientProps) {
                 </div>
               </div>
 
-              {/* Simple Step-by-Step Guide */}
+              {/* Step-by-Step Guide */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right pt-2">
-                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-700">
-                  <span className="font-mono font-black text-amber-700 block mb-1">الخطوة 1:</span>
+                <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-xs text-[#A19E9B]">
+                  <span className="font-mono font-black text-[#DD0200] block mb-1">الخطوة 1:</span>
                   افتح لوحة تحكم التاجر على هاتفك أو حاسوبك.
                 </div>
-                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-700">
-                  <span className="font-mono font-black text-amber-700 block mb-1">الخطوة 2:</span>
+                <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-xs text-[#A19E9B]">
+                  <span className="font-mono font-black text-[#DD0200] block mb-1">الخطوة 2:</span>
                   انتقل إلى تبويب «شاشات الصالة».
                 </div>
-                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-700">
-                  <span className="font-mono font-black text-amber-700 block mb-1">الخطوة 3:</span>
+                <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-xs text-[#A19E9B]">
+                  <span className="font-mono font-black text-[#DD0200] block mb-1">الخطوة 3:</span>
                   اكتب الرمز ({screenPairingCode}) واضغط «تأكيد وربط الشاشة».
                 </div>
               </div>
 
               {/* Listening Status & Actions */}
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-stone-100 text-xs">
-                <div className="flex items-center gap-2 text-stone-500 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+              <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-white/10 text-xs">
+                <div className="flex items-center gap-2 text-[#A19E9B] font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#DD0200] animate-ping" />
                   <span>بانتظار إدخال الكود من التاجر...</span>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleRegenerateCode}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 transition font-bold text-xs cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] border border-white/10 transition font-bold text-xs cursor-pointer"
                 >
-                  <RotateCw className="w-3.5 h-3.5" />
+                  <RotateCw className="w-3.5 h-3.5 text-[#A19E9B]" />
                   <span>توليد كود جديد</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setIsPaired(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold transition text-xs shadow-sm cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold transition text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
                 >
                   <span>معاينة الشاشة مباشرة ←</span>
                 </button>
@@ -488,7 +495,7 @@ export function WallClient({ screenId }: WallClientProps) {
         </div>
 
         {/* Footer */}
-        <div className="text-center text-xs text-stone-400 font-mono z-10">
+        <div className="text-center text-xs text-[#A19E9B]/60 font-mono z-10">
           Screen ID: {screenId} • Memories Smart TV Live Signage
         </div>
       </div>
@@ -500,31 +507,36 @@ export function WallClient({ screenId }: WallClientProps) {
   // -------------------------------------------------------------
   if (isPaired && isBlackout) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col items-center justify-between p-8 select-none font-cairo relative overflow-hidden">
-        {/* Subtle Ambient Spotlight */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col items-center justify-between p-8 select-none font-sans relative overflow-hidden">
+        {/* Archival Ambient Glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#55100D]/20 rounded-full blur-[140px] pointer-events-none" />
 
-        <div className="w-full max-w-5xl flex items-center justify-between z-10 border-b border-stone-200/90 pb-5">
+        <div className="w-full max-w-5xl flex items-center justify-between z-10 border-b border-white/10 pb-5">
           <CoBrandingLogos
             cafeName={brandName}
             cafeLogoUrl={brandLogoUrl}
             size="lg"
-            theme="light"
+            theme="dark"
             showTagline={true}
           />
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100/70 border border-amber-300 text-amber-900 text-xs font-bold font-mono">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-            <span>شاشة الصالة في استراحة مؤقتة</span>
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#55100D]/60 border border-[#DD0200]/40 text-[#FBF9F5] text-xs font-bold font-mono">
+            <span className="w-2 h-2 rounded-full bg-[#DD0200] animate-ping" />
+            <span className="uppercase tracking-wider">استراحة مؤقتة • STANDBY</span>
           </div>
         </div>
 
         <div className="text-center space-y-5 max-w-md z-10">
-          <div className="w-24 h-24 rounded-3xl bg-amber-50 border-2 border-amber-200 text-amber-700 flex items-center justify-center mx-auto shadow-md animate-pulse">
-            <Sparkles className="w-12 h-12 text-amber-600" />
+          <div className="w-24 h-24 rounded-2xl bg-[#141212] border border-white/10 text-[#DD0200] flex items-center justify-center mx-auto shadow-2xl animate-pulse">
+            <Sparkles className="w-12 h-12 text-[#DD0200]" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-black text-stone-950 tracking-tight">{brandName}</h2>
-            <p className="text-sm text-stone-600 font-bold leading-relaxed">
+            <h2
+              style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+              className="text-3xl font-bold text-[#FBF9F5] tracking-tight"
+            >
+              {brandName}
+            </h2>
+            <p className="text-sm text-[#A19E9B] leading-relaxed">
               شاشة العرض في وضع الاستراحة المؤقتة.
               <br />
               التقط لقطتك اليوم واطبع شريط ذكرياتك عبر مسح كود الطاولة بالهاتف!
@@ -532,7 +544,7 @@ export function WallClient({ screenId }: WallClientProps) {
           </div>
         </div>
 
-        <div className="text-center text-xs text-stone-400 font-mono z-10">
+        <div className="text-center text-xs text-[#A19E9B]/60 font-mono z-10">
           Screen ID: {screenId} • Standby Mode
         </div>
       </div>
@@ -540,49 +552,50 @@ export function WallClient({ screenId }: WallClientProps) {
   }
 
   // -------------------------------------------------------------
-  // 2. PAIRED STATE: Warm Luxury Live Wall Broadcast Display
+  // 2. PAIRED STATE: Atelier Nostalgia Live Wall Broadcast Display
   // -------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col justify-between p-6 sm:p-10 select-none overflow-hidden font-cairo relative">
+    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col justify-between p-6 sm:p-10 select-none overflow-hidden font-sans relative">
       {/* Real-time Celebration Toast Banner */}
       {newMemoryToast && (
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 to-amber-700 text-white font-bold shadow-2xl border-2 border-amber-300/40 backdrop-blur-md">
-            <Sparkles className="w-5 h-5 text-amber-200 animate-spin" />
+          <div className="flex items-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#DD0200] to-[#55100D] text-[#FBF9F5] font-bold shadow-2xl border border-white/20 backdrop-blur-md">
+            <Sparkles className="w-5 h-5 text-[#FBF9F5] animate-spin" />
             <span className="text-sm sm:text-base tracking-wide drop-shadow-sm">{newMemoryToast}</span>
           </div>
         </div>
       )}
 
-      {/* Background Ambient Warm Spotlight */}
-      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
+      {/* Background Ambient Archival Glows */}
+      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#55100D]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Top Header Bar: MEMORIES × BRAND Side-by-Side */}
-      <header className="relative z-20 flex items-center justify-between border-b border-stone-200/90 pb-5 max-w-6xl mx-auto w-full">
+      <header className="relative z-20 flex items-center justify-between border-b border-white/10 pb-5 max-w-6xl mx-auto w-full">
         <CoBrandingLogos
           cafeName={brandName}
           cafeLogoUrl={brandLogoUrl}
           size="lg"
-          theme="light"
+          theme="dark"
           showTagline={true}
         />
 
         {/* Status indicators & subtle controls */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-xs font-mono shadow-2xs">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141212] border border-white/10 text-xs font-mono shadow-xs">
             {isOnline ? (
-              <Wifi className="w-3.5 h-3.5 text-emerald-600" />
+              <Wifi className="w-3.5 h-3.5 text-emerald-400" />
             ) : (
-              <WifiOff className="w-3.5 h-3.5 text-amber-600" />
+              <WifiOff className="w-3.5 h-3.5 text-[#DD0200]" />
             )}
-            <span className="text-stone-700 font-bold">
+            <span className="text-[#FBF9F5] font-bold">
               {isOnline ? 'LIVE 4K' : 'OFFLINE CACHE'}
             </span>
           </div>
 
           <button
             onClick={() => setIsPaired(false)}
-            className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 text-xs transition cursor-pointer font-bold shadow-2xs"
+            className="px-3 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] text-xs transition cursor-pointer font-bold shadow-xs"
             title="إعادة اقتران الشاشة"
           >
             كود الشاشة
@@ -590,7 +603,7 @@ export function WallClient({ screenId }: WallClientProps) {
 
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 transition cursor-pointer shadow-2xs"
+            className="p-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] transition cursor-pointer shadow-xs"
             title="ملء الشاشة"
           >
             <Maximize2 className="w-4 h-4" />
@@ -602,8 +615,8 @@ export function WallClient({ screenId }: WallClientProps) {
       <main className="relative z-10 flex-1 my-6 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-14 max-w-6xl mx-auto w-full">
         {currentMemory ? (
           <>
-            {/* The Photo Strip / Polaroid Frame */}
-            <div className="relative group max-w-md w-full aspect-[3/4] max-h-[70vh] rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-white flex items-center justify-center ring-1 ring-stone-200">
+            {/* The Photo Vitrine Frame */}
+            <div className="relative group max-w-md w-full aspect-[3/4] max-h-[70vh] rounded-2xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] border border-white/15 bg-[#141212] flex items-center justify-center ring-1 ring-white/10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={currentMemory.photoUrl}
@@ -612,20 +625,23 @@ export function WallClient({ screenId }: WallClientProps) {
               />
 
               {/* Bottom Memory Caption Overlay */}
-              <div className="absolute bottom-0 inset-x-0 p-6 text-right space-y-1 z-10 bg-gradient-to-t from-stone-950/80 via-stone-950/40 to-transparent text-white">
+              <div className="absolute bottom-0 inset-x-0 p-6 text-right space-y-1 z-10 bg-gradient-to-t from-[#0E0D0D] via-[#0E0D0D]/75 to-transparent text-[#FBF9F5]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-amber-300 font-bold px-2.5 py-0.5 rounded-full bg-stone-900/60 backdrop-blur-sm border border-amber-300/30">
+                  <span className="text-xs font-mono text-[#FBF9F5] font-bold px-2.5 py-0.5 rounded-md bg-[#55100D]/70 backdrop-blur-sm border border-[#DD0200]/40">
                     الزيارة رقم #{currentMemory.visitNumber}
                   </span>
-                  <span className="text-xs font-mono text-stone-300">
+                  <span className="text-xs font-mono text-[#A19E9B]">
                     {currentMemory.timeFormatted}
                   </span>
                 </div>
-                <h3 className="text-xl font-black text-white drop-shadow-md">
+                <h3
+                  style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+                  className="text-xl font-bold text-[#FBF9F5] drop-shadow-md"
+                >
                   {currentMemory.customerName}
                 </h3>
                 {currentMemory.caption && (
-                  <p className="text-sm text-stone-200 drop-shadow-sm font-medium">
+                  <p className="text-sm text-[#D9D9D9] drop-shadow-sm font-medium">
                     "{currentMemory.caption}"
                   </p>
                 )}
@@ -635,39 +651,49 @@ export function WallClient({ screenId }: WallClientProps) {
             {/* Side Call-to-Action & Community QR */}
             <div className="flex flex-col items-center lg:items-start text-center lg:text-right space-y-6 max-w-sm">
               <div className="space-y-2">
-                <span className="px-3.5 py-1 rounded-full bg-amber-50 text-amber-800 font-mono text-xs font-bold border border-amber-200 inline-block">
+                <span className="px-3.5 py-1 rounded-md bg-[#55100D]/50 text-[#FBF9F5] font-mono text-xs font-bold border border-[#DD0200]/40 inline-block uppercase tracking-wider">
                   لحظات وذكريات الصالة
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-stone-950 leading-tight">
+                <h2
+                  style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+                  className="text-2xl sm:text-3xl font-bold text-[#FBF9F5] leading-tight"
+                >
                   شارك ذكرياتك لتظهر هنا على شاشة العرض الحية
                 </h2>
-                <p className="text-sm text-stone-600 leading-relaxed font-medium">
+                <p className="text-sm text-[#A19E9B] leading-relaxed font-medium">
                   امسح الرمز بكاميرا هاتفك، التقط صورك في استوديو الذكريات، واختم كارت ولائك للحصول على هديتك.
                 </p>
               </div>
 
-              {/* Real Scannable High-Contrast QR Code */}
-              <div className="p-5 rounded-3xl bg-white shadow-xl flex flex-col items-center gap-2 border border-stone-200">
-                <RealOutsourcedQr
-                  value={`https://memories-c9w.pages.dev/c/${cafeSlug}?source=live_wall`}
-                  size={144}
-                  alt="Live Wall QR"
-                  className="w-36 h-36 object-contain"
-                />
-                <span className="text-[10px] font-mono font-black text-stone-900 tracking-wider">
+              {/* Real Scannable QR Code Vitrine */}
+              <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl flex flex-col items-center gap-2.5">
+                <div className="p-3 bg-white rounded-xl">
+                  <RealOutsourcedQr
+                    value={`https://memories-c9w.pages.dev/c/${cafeSlug}?source=live_wall`}
+                    size={144}
+                    alt="Live Wall QR"
+                    className="w-36 h-36 object-contain"
+                  />
+                </div>
+                <span className="text-[10px] font-mono font-bold text-[#A19E9B] tracking-widest uppercase">
                   SCAN TO JOIN THE WALL
                 </span>
               </div>
             </div>
           </>
         ) : (
-          <div className="text-center space-y-4 max-w-md p-8 rounded-3xl bg-white border border-stone-200 shadow-lg">
-            <Sparkles className="w-12 h-12 text-amber-600 mx-auto animate-pulse" />
-            <h3 className="text-xl font-bold text-stone-950">بانتظار اللقطة الأولى اليوم</h3>
-            <p className="text-xs text-stone-500 leading-relaxed">
+          <div className="text-center space-y-4 max-w-md p-8 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl">
+            <Sparkles className="w-12 h-12 text-[#DD0200] mx-auto animate-pulse" />
+            <h3
+              style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+              className="text-xl font-bold text-[#FBF9F5]"
+            >
+              بانتظار اللقطة الأولى اليوم
+            </h3>
+            <p className="text-xs text-[#A19E9B] leading-relaxed">
               امسح الرمز عند طاولتك أو الكاونتر لتكون صورتك أول ذكرى تضيء شاشة الصالة اليوم!
             </p>
-            <div className="p-3 bg-stone-50 rounded-2xl w-32 h-32 mx-auto flex items-center justify-center border border-stone-200">
+            <div className="p-3 bg-white rounded-xl w-32 h-32 mx-auto flex items-center justify-center">
               <RealOutsourcedQr
                 value={`https://memories-c9w.pages.dev/c/${cafeSlug}?source=live_wall`}
                 size={112}
@@ -679,22 +705,22 @@ export function WallClient({ screenId }: WallClientProps) {
       </main>
 
       {/* Bottom Footer Ticker */}
-      <footer className="relative z-20 flex items-center justify-between border-t border-stone-200/90 pt-4 text-xs text-stone-500 font-mono max-w-6xl mx-auto w-full">
+      <footer className="relative z-20 flex items-center justify-between border-t border-white/10 pt-4 text-xs text-[#A19E9B] font-mono max-w-6xl mx-auto w-full">
         <div className="flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5 text-stone-400" />
+          <Clock className="w-3.5 h-3.5 text-[#A19E9B]" />
           <span>آخر تحديث: {lastSyncTime}</span>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 transition text-[11px] cursor-pointer font-bold shadow-2xs"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] transition text-[11px] cursor-pointer font-bold shadow-xs"
           >
             {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
             <span>{isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}</span>
           </button>
 
-          <span className="hidden sm:inline">
+          <span className="hidden sm:inline text-[#A19E9B]/60">
             Memories Digital Signage • {cafeSlug}
           </span>
         </div>

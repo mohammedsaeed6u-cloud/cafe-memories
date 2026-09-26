@@ -67,22 +67,22 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
     <div className="space-y-6">
       {/* Sync / Pairing Notices */}
       {tvSyncNotice && (
-        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-xs">
-          <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+        <div className="p-4 rounded-xl bg-[#1A0706] border border-[#DD0200]/40 text-[#FBF9F5] text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-lg">
+          <Sparkles className="w-4 h-4 text-[#DD0200] shrink-0" />
           <span>{tvSyncNotice}</span>
         </div>
       )}
 
       {pairScreenSuccess && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-xs">
-          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="p-4 rounded-xl bg-[#141212] border border-emerald-500/40 text-emerald-300 text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-lg">
+          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{pairScreenSuccess}</span>
         </div>
       )}
 
       {pairScreenError && (
-        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-xs">
-          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+        <div className="p-4 rounded-xl bg-[#1A0706] border border-rose-500/40 text-rose-300 text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-lg">
+          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
           <span>{pairScreenError}</span>
         </div>
       )}
@@ -90,14 +90,14 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
       {/* Main Grid: Screen Pairing + Remote Console */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* LEFT: Smart TV Pairing Card */}
-        <div className="lg:col-span-6 p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+        <div className="lg:col-span-6 p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <div>
-              <h3 className="font-black text-sm text-stone-950 flex items-center gap-2">
-                <Tv className="w-4 h-4 text-amber-600" />
+              <h3 className="font-bold text-sm text-[#FBF9F5] flex items-center gap-2 font-serif">
+                <Tv className="w-4 h-4 text-[#DD0200]" />
                 <span>ربط واقتران شاشة ذكية (Smart TV Pairing)</span>
               </h3>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className="text-xs text-[#A19E9B] mt-0.5">
                 افتح الرابط على تلفزيون الصالة وأدخل كود الـ 6 أرقام الظاهر على الشاشة.
               </p>
             </div>
@@ -106,7 +106,7 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
               href={`/wall/screen-1?cafe=${cafeSlug}`}
               target="_blank"
               rel="noreferrer"
-              className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition flex items-center gap-1.5"
+              className="p-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] text-xs font-bold transition flex items-center gap-1.5"
               title="فتح الشاشة في نافذة جديدة"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -115,7 +115,7 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
 
           <form onSubmit={handleFormSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">
+              <label className="block text-xs font-bold text-[#A19E9B] mb-1">
                 رمز الاقتران الظاهر على شاشة التلفزيون (6 أرقام):
               </label>
               <input
@@ -125,12 +125,12 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
                 placeholder="123456"
                 value={screenCode}
                 onChange={(e) => setScreenCode(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-full text-center text-2xl font-mono font-black py-2.5 px-4 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:border-amber-500 focus:outline-none tracking-[0.3em] text-stone-900"
+                className="w-full text-center text-2xl font-mono font-black py-2.5 px-4 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DD0200] focus:outline-none tracking-[0.3em] text-[#DD0200] placeholder:text-[#A19E9B]/30"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">
+              <label className="block text-xs font-bold text-[#A19E9B] mb-1">
                 تسمية موقع شاشة العرض بالصالة:
               </label>
               <input
@@ -139,14 +139,14 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
                 placeholder="شاشة الصالة الرئيسية، شاشة الطابق الثاني..."
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:border-amber-500 focus:outline-none text-xs text-stone-900 font-bold"
+                className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DD0200] focus:outline-none text-xs text-[#FBF9F5] font-bold placeholder:text-[#A19E9B]/40"
               />
             </div>
 
             <button
               type="submit"
               disabled={isPairingScreen || screenCode.length !== 6}
-              className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
             >
               <Radio className="w-4 h-4" />
               <span>{isPairingScreen ? 'جاري الربط...' : 'إتمام ربط الشاشة وبدء البث'}</span>
@@ -155,33 +155,33 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
         </div>
 
         {/* RIGHT: Remote Controls Console */}
-        <div className="lg:col-span-6 p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
-          <div className="pb-3 border-b border-stone-100">
-            <h3 className="font-black text-sm text-stone-950 flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-amber-600" />
+        <div className="lg:col-span-6 p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
+          <div className="pb-3 border-b border-white/10">
+            <h3 className="font-bold text-sm text-[#FBF9F5] flex items-center gap-2 font-serif">
+              <SlidersHorizontal className="w-4 h-4 text-[#DD0200]" />
               <span>لوحة التحكم عن بعد بشاشات الصالة (TV Remote)</span>
             </h3>
-            <p className="text-xs text-stone-500 mt-0.5">
+            <p className="text-xs text-[#A19E9B] mt-0.5">
               أوامر فورية متزامنة تصل لكافة شاشات التلفزيون المتصلة بدون إعادة تحميل الصفحة.
             </p>
           </div>
 
           <div className="space-y-3">
             {/* Blackout Toggle */}
-            <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center justify-between">
+            <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-center justify-between">
               <div>
-                <span className="font-bold text-xs text-stone-900 block">وضع التعتيم (شاشة التوقف):</span>
-                <span className="text-[11px] text-stone-500">
+                <span className="font-bold text-xs text-[#FBF9F5] block">وضع التعتيم (شاشة التوقف):</span>
+                <span className="text-[11px] text-[#A19E9B]">
                   {isTvBlackout ? 'الشاشات معتمة حالياً (شاشة سوداء هادئة)' : 'البث المباشر للصور نشط حالياً'}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={onToggleBlackout}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   isTvBlackout
-                    ? 'bg-stone-900 text-white shadow-xs'
-                    : 'bg-white hover:bg-stone-100 text-stone-700 border border-stone-300'
+                    ? 'bg-[#55100D] border border-[#DD0200]/50 text-[#FBF9F5] shadow-xs'
+                    : 'bg-[#141212] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] border border-white/10'
                 }`}
               >
                 <Power className="w-3.5 h-3.5" />
@@ -190,13 +190,13 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
             </div>
 
             {/* Slide Duration Selector */}
-            <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-2">
+            <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-xs text-stone-900 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                <span className="font-bold text-xs text-[#FBF9F5] flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#DD0200]" />
                   <span>سرعة تقليب الصور على الشاشة:</span>
                 </span>
-                <span className="text-[10px] font-mono text-stone-500 font-bold">
+                <span className="text-[10px] font-mono text-[#A19E9B] font-bold">
                   {tvSlideDuration / 1000} ثوانٍ
                 </span>
               </div>
@@ -211,10 +211,10 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
                     key={speed.ms}
                     type="button"
                     onClick={() => onChangeSlideDuration(speed.ms)}
-                    className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
                       tvSlideDuration === speed.ms
-                        ? 'bg-amber-600 text-white shadow-xs font-black'
-                        : 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-100'
+                        ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
+                        : 'bg-[#141212] text-[#A19E9B] border border-white/10 hover:bg-[#211F1F] hover:text-[#FBF9F5]'
                     }`}
                   >
                     {speed.label}
@@ -228,9 +228,9 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
               <button
                 type="button"
                 onClick={onForceRefresh}
-                className="w-full py-2.5 px-4 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-800 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                className="w-full py-2.5 px-4 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                <RefreshCw className="w-3.5 h-3.5 text-[#DD0200]" />
                 <span>إرسال أمر تحديث فوري لكافة الشاشات (Force Sync)</span>
               </button>
             </div>
@@ -239,45 +239,45 @@ export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
       </div>
 
       {/* Connected Screens Table */}
-      <div className="bg-white rounded-3xl border border-stone-200/90 shadow-sm p-6 space-y-4">
-        <h4 className="font-black text-sm text-stone-950 flex items-center gap-2">
-          <Tv className="w-4 h-4 text-emerald-600" />
+      <div className="bg-[#141212] rounded-2xl border border-white/10 shadow-xl p-6 space-y-4">
+        <h4 className="font-bold text-sm text-[#FBF9F5] flex items-center gap-2 font-serif">
+          <Tv className="w-4 h-4 text-emerald-400" />
           <span>الشاشات المقترنة والنشطة حالياً ({screens.length})</span>
         </h4>
 
         {screens.length === 0 ? (
-          <div className="py-8 text-center text-stone-400 text-xs">
+          <div className="py-8 text-center text-[#A19E9B]/50 text-xs">
             لا توجد شاشات مقترنة حالياً. استخدم نموذج الاقتران أعلاه لربط أول شاشة.
           </div>
         ) : (
-          <div className="divide-y divide-stone-100 border border-stone-200 rounded-2xl overflow-hidden">
+          <div className="divide-y divide-white/5 border border-white/10 rounded-xl overflow-hidden">
             {screens.map((screen) => (
               <div
                 key={screen.id}
-                className="p-4 flex items-center justify-between gap-4 hover:bg-stone-50/50 transition text-xs"
+                className="p-4 flex items-center justify-between gap-4 hover:bg-[#1C1B1B]/50 transition text-xs"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  <div className="w-9 h-9 rounded-lg bg-[#55100D] border border-[#DD0200]/30 text-[#DD0200] flex items-center justify-center font-bold">
                     <Tv className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="font-bold text-stone-950 block">{screen.name}</span>
-                    <span className="text-[10px] text-stone-400 font-mono block">
+                    <span className="font-bold text-[#FBF9F5] block">{screen.name}</span>
+                    <span className="text-[10px] text-[#A19E9B] font-mono block">
                       ID: {screen.id} • {screen.orientation === 'landscape' ? 'عرضي 16:9' : 'طولي 9:16'}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="px-2.5 py-0.5 rounded-md bg-[#55100D]/70 border border-[#DD0200]/40 text-[#FBF9F5] text-[10px] font-bold flex items-center gap-1 font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span>متصلة وتبث الآن</span>
                   </span>
 
                   <button
                     type="button"
                     onClick={() => onUnpairScreen(screen.id)}
-                    className="p-1.5 rounded-lg hover:bg-rose-50 text-stone-400 hover:text-rose-600 transition cursor-pointer"
+                    className="p-1.5 rounded-lg hover:bg-rose-950/40 text-[#A19E9B]/60 hover:text-rose-400 transition cursor-pointer"
                     title="فصل وإلغاء اقتران الشاشة"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

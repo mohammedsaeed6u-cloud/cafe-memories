@@ -71,14 +71,17 @@ export function MarketingFaq() {
   return (
     <section id="faq" className="py-24 px-6 max-w-4xl mx-auto border-t border-white/10 apple-font">
       <div className="text-center mb-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase mb-3 backdrop-blur-xl">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-md border border-white/10 bg-[#55100D]/50 text-[10px] font-mono tracking-widest text-[#FBF9F5] uppercase mb-3 backdrop-blur-xl">
           <HelpCircle className="w-3.5 h-3.5 text-[#DD0200]" />
           <span>FREQUENTLY ASKED • إجابات واضحة</span>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
+        <h2
+          className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight"
+          style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+        >
           كل ما تحتاج معرفته قبل الانطلاق.
         </h2>
-        <p className="text-sm sm:text-base text-[#D9D9D9]/80 mt-3.5 max-w-xl mx-auto leading-relaxed">
+        <p className="text-sm sm:text-base text-[#A19E9B] mt-3.5 max-w-xl mx-auto leading-relaxed">
           إجابات دقيقة ومباشرة على أكثر الأسئلة شيوعاً حول تقنية الأستوديو وتشغيل البيزنس.
         </p>
       </div>

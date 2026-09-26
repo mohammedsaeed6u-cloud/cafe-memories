@@ -21,11 +21,11 @@ export default function HomePage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white selection:bg-[#DD0200] selection:text-white apple-font font-sans relative overflow-x-hidden">
-      {/* Apple Luxury Ambient Mesh Glows in Background */}
-      <div className="fixed top-0 left-0 w-[650px] h-[550px] bg-gradient-to-br from-[#DD0200]/22 via-[#55100D]/15 to-transparent rounded-full blur-[140px] pointer-events-none z-0" />
-      <div className="fixed top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-tl from-[#D9D9D9]/12 via-[#8E8E93]/6 to-transparent rounded-full blur-[160px] pointer-events-none z-0" />
-      <div className="fixed bottom-0 left-1/4 w-[700px] h-[500px] bg-gradient-to-tr from-[#1A0706]/40 via-[#55100D]/12 to-transparent rounded-full blur-[150px] pointer-events-none z-0" />
+    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] selection:bg-[#DD0200] selection:text-white font-sans relative overflow-x-hidden">
+      {/* Atelier Nostalgia Ambient Mesh Glows in Background */}
+      <div className="fixed top-0 left-0 w-[650px] h-[550px] bg-gradient-to-br from-[#55100D]/25 via-[#1A0706]/35 to-transparent rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="fixed top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-tl from-[#DD0200]/12 via-[#55100D]/15 to-transparent rounded-full blur-[160px] pointer-events-none z-0" />
+      <div className="fixed bottom-0 left-1/4 w-[700px] h-[500px] bg-gradient-to-tr from-[#1A0706]/50 via-[#55100D]/20 to-transparent rounded-full blur-[150px] pointer-events-none z-0" />
 
       {/* Accessibility: Skip to Content */}
       <a

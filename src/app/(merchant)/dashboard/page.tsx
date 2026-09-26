@@ -444,7 +444,7 @@ export default function MerchantDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-stone-900 flex flex-col font-cairo">
+    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col font-sans selection:bg-[#DD0200] selection:text-white">
       {/* Top Navbar Component */}
       <DashboardNavBar
         settings={settings}
@@ -559,14 +559,14 @@ export default function MerchantDashboardPage() {
         )}
 
         {activeTab === 'settings' && (
-          <div className="p-8 bg-white rounded-3xl border border-stone-200 text-center space-y-4 shadow-sm">
-            <h3 className="font-black text-base text-stone-900">إعدادات الهوية والعلامة التجارية</h3>
-            <p className="text-xs text-stone-500 max-w-md mx-auto">
+          <div className="p-8 bg-[#141212] rounded-2xl border border-white/10 text-center space-y-4 shadow-xl">
+            <h3 className="font-bold text-base text-[#FBF9F5]">إعدادات الهوية والعلامة التجارية</h3>
+            <p className="text-xs text-[#A19E9B] max-w-md mx-auto">
               اضغط على الزر أدناه لفتح لوحة تخصيص الهوية والشعار ونمط التصوير وأبعاد الكروت.
             </p>
             <button
               onClick={() => setIsQuickSetupOpen(true)}
-              className="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition"
+              className="px-6 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
             >
               فتح لوحة تخصيص الهوية والـ QR
             </button>

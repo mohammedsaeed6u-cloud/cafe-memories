@@ -379,24 +379,28 @@ export default function StaffTerminalPage() {
   const isEligibleForGift = availableToClaim > 0;
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col font-cairo selection:bg-amber-100">
+    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col font-sans selection:bg-[#DD0200] selection:text-white relative overflow-hidden">
+      {/* Ambient Archival Glows */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#55100D]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
+
       {/* Top Header */}
-      <header className="bg-stone-900 text-white border-b border-stone-800 px-4 sm:px-6 py-3.5 sticky top-0 z-40 shadow-md">
+      <header className="bg-[#141212]/95 backdrop-blur-md text-white border-b border-white/10 px-4 sm:px-6 py-3.5 sticky top-0 z-40 shadow-xl relative z-10">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-600 text-white flex items-center justify-center font-black shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-black shadow-lg shadow-red-950/40 border border-white/10">
               <Store className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-black text-sm sm:text-base text-white">
+                <h1 className="font-bold text-sm sm:text-base text-[#FBF9F5]">
                   محطة الخدمة السريعة • {industry.staffLabel}
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold border border-emerald-500/30">
+                <span className="px-2 py-0.5 rounded-md bg-[#55100D]/60 text-[#FBF9F5] text-[10px] font-mono font-bold border border-[#DD0200]/40 tracking-wider">
                   STAFF POS TERMINAL
                 </span>
               </div>
-              <p className="text-[11px] text-stone-400">
+              <p className="text-[11px] text-[#A19E9B]">
                 {settings.branding.name} • طباعة الصور الفورية وختم زيارات الولاء للعملاء
               </p>
             </div>
@@ -405,9 +409,9 @@ export default function StaffTerminalPage() {
           <div className="flex items-center gap-2">
             <a
               href={`/dashboard?cafe=${cafeSlug}`}
-              className="px-3.5 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white font-bold text-xs transition flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] font-bold text-xs transition flex items-center gap-1.5"
             >
-              <LayoutDashboard className="w-3.5 h-3.5" />
+              <LayoutDashboard className="w-3.5 h-3.5 text-[#DD0200]" />
               <span className="hidden sm:inline">لوحة الإدارة</span>
             </a>
           </div>
@@ -415,22 +419,22 @@ export default function StaffTerminalPage() {
       </header>
 
       {/* Main Body */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5 relative z-10">
         {/* Primary Segmented Tabs: Print Queue vs Loyalty Stamps */}
-        <div className="grid grid-cols-2 p-1.5 bg-stone-200/90 rounded-2xl border border-stone-300/80 shadow-inner">
+        <div className="grid grid-cols-2 p-1 bg-[#1C1B1B] rounded-xl border border-white/10 shadow-inner">
           <button
             type="button"
             onClick={() => setTerminalTab('queue')}
-            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               terminalTab === 'queue'
-                ? 'bg-white text-stone-950 shadow-sm font-black'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
+                : 'text-[#A19E9B] hover:text-[#FBF9F5]'
             }`}
           >
-            <Printer className="w-4 h-4 text-amber-600" />
+            <Printer className="w-4 h-4" />
             <span>طابور طباعة الأشرطة</span>
             {printQueue.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-mono font-black animate-pulse">
+              <span className="px-2 py-0.5 rounded-full bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] text-[10px] font-mono font-black animate-pulse">
                 {printQueue.length}
               </span>
             )}
@@ -439,60 +443,60 @@ export default function StaffTerminalPage() {
           <button
             type="button"
             onClick={() => setTerminalTab('stamps')}
-            className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               terminalTab === 'stamps'
-                ? 'bg-white text-stone-950 shadow-sm font-black'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
+                : 'text-[#A19E9B] hover:text-[#FBF9F5]'
             }`}
           >
-            <Award className="w-4 h-4 text-amber-600" />
+            <Award className="w-4 h-4" />
             <span>كاونتر الأختام والمكافآت</span>
           </button>
         </div>
 
         {/* Shift Stats Ribbon */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div className="p-4 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+          <div className="p-4 rounded-xl bg-[#141212] border border-white/10 shadow-lg flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#1C1B1B] text-[#DD0200] border border-white/10 flex items-center justify-center font-bold">
               <Printer className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] text-stone-500 font-bold block">أشرطة بانتظار الطباعة</span>
-              <span className="text-xl font-black font-mono text-stone-950">{printQueue.length}</span>
+              <span className="text-[10px] text-[#A19E9B] font-bold block uppercase tracking-wider">أشرطة بانتظار الطباعة</span>
+              <span className="text-xl font-bold font-mono text-[#FBF9F5]">{printQueue.length}</span>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+          <div className="p-4 rounded-xl bg-[#141212] border border-white/10 shadow-lg flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-950/40 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
               <Gift className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] text-stone-500 font-bold block">هدايا مستبدلة اليوم</span>
-              <span className="text-xl font-black font-mono text-emerald-700">{shiftRedeemedCount}</span>
+              <span className="text-[10px] text-[#A19E9B] font-bold block uppercase tracking-wider">هدايا مستبدلة اليوم</span>
+              <span className="text-xl font-bold font-mono text-emerald-400">{shiftRedeemedCount}</span>
             </div>
           </div>
 
-          <div className="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+          <div className="col-span-2 sm:col-span-1 p-4 rounded-xl bg-[#141212] border border-white/10 shadow-lg flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/40 flex items-center justify-center font-bold">
               <Award className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] text-stone-500 font-bold block">أختام الشفت الحالية</span>
-              <span className="text-xl font-black font-mono text-stone-900">+{shiftStampsCount}</span>
+              <span className="text-[10px] text-[#A19E9B] font-bold block uppercase tracking-wider">أختام الشفت الحالية</span>
+              <span className="text-xl font-bold font-mono text-[#FBF9F5]">+{shiftStampsCount}</span>
             </div>
           </div>
         </div>
 
         {/* Success or Error Notice */}
         {successNotice && (
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 font-bold text-xs flex items-center gap-2.5 shadow-sm animate-in fade-in">
-            <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+          <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 font-bold text-xs flex items-center gap-2.5 shadow-sm animate-in fade-in">
+            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
             <span>{successNotice}</span>
           </div>
         )}
         {errorNotice && (
-          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 font-bold text-xs flex items-center gap-2.5 shadow-sm animate-in fade-in">
-            <X className="w-5 h-5 text-rose-600 shrink-0" />
+          <div className="p-4 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 font-bold text-xs flex items-center gap-2.5 shadow-sm animate-in fade-in">
+            <X className="w-5 h-5 text-red-400 shrink-0" />
             <span>{errorNotice}</span>
           </div>
         )}
@@ -501,26 +505,26 @@ export default function StaffTerminalPage() {
         {terminalTab === 'queue' && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-stone-900 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-600" />
+              <h3 className="text-sm font-bold text-[#FBF9F5] flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#DD0200]" />
                 <span>طابور الأشرطة الجاهزة للطباعة من الزوار</span>
               </h3>
 
               <button
                 type="button"
                 onClick={() => setSoundAlertEnabled(!soundAlertEnabled)}
-                className="px-3 py-1.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-bold text-stone-700 flex items-center gap-1.5 transition cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition cursor-pointer"
               >
-                {soundAlertEnabled ? <Bell className="w-3.5 h-3.5 text-amber-600" /> : <BellOff className="w-3.5 h-3.5 text-stone-400" />}
+                {soundAlertEnabled ? <Bell className="w-3.5 h-3.5 text-[#DD0200]" /> : <BellOff className="w-3.5 h-3.5 text-[#A19E9B]" />}
                 <span>{soundAlertEnabled ? 'جرس التنبيه مفعل' : 'جرس التنبيه مكتوم'}</span>
               </button>
             </div>
 
             {printQueue.length === 0 ? (
-              <div className="p-12 rounded-3xl bg-white border border-stone-200/90 text-center shadow-xs space-y-2">
-                <Printer className="w-10 h-10 text-stone-300 mx-auto" />
-                <h4 className="font-bold text-sm text-stone-700">لا توجد طلبات طباعة معلقة حالياً</h4>
-                <p className="text-xs text-stone-500 max-w-md mx-auto leading-relaxed">
+              <div className="p-12 rounded-2xl bg-[#141212] border border-white/10 text-center shadow-lg space-y-2">
+                <Printer className="w-10 h-10 text-[#A19E9B]/40 mx-auto" />
+                <h4 className="font-bold text-sm text-[#FBF9F5]">لا توجد طلبات طباعة معلقة حالياً</h4>
+                <p className="text-xs text-[#A19E9B] max-w-md mx-auto leading-relaxed">
                   عندما يكمل الزوار التقاط شريط الصور ويطلبون طباعته من هواتفهم، سيظهر هنا فوراً مع صوت تنبيه لطاقم العمل.
                 </p>
               </div>
@@ -529,9 +533,9 @@ export default function StaffTerminalPage() {
                 {printQueue.map((item) => (
                   <div
                     key={item.id}
-                    className="p-5 rounded-2xl bg-white border-2 border-amber-300 shadow-sm flex items-center justify-between gap-4"
+                    className="p-5 rounded-2xl bg-[#141212] border border-white/10 hover:border-[#DD0200]/30 shadow-lg flex items-center justify-between gap-4 transition"
                   >
-                    <div className="w-16 h-24 rounded-xl overflow-hidden border border-stone-300 bg-stone-100 shrink-0 shadow-inner">
+                    <div className="w-16 h-24 rounded-lg overflow-hidden border border-white/10 bg-[#0B0A0A] shrink-0 shadow-inner">
                       {item.photoStripUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -540,20 +544,20 @@ export default function StaffTerminalPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-stone-400 text-[10px]">
+                        <div className="w-full h-full flex items-center justify-center text-[#A19E9B] text-[10px]">
                           2x6
                         </div>
                       )}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-black text-stone-900 text-sm truncate">
+                      <h4 className="font-bold text-[#FBF9F5] text-sm truncate">
                         {item.name || 'عميل مميز'}
                       </h4>
-                      <p className="text-[11px] text-stone-500 font-mono mt-0.5">
+                      <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">
                         {item.phone || 'طلب فوري'}
                       </p>
-                      <span className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 inline-block mt-2 font-mono">
+                      <span className="text-[10px] text-[#FBF9F5] font-bold bg-[#55100D]/50 px-2 py-0.5 rounded-md border border-[#DD0200]/40 inline-block mt-2 font-mono uppercase tracking-wider">
                         {item.format || 'standard-2x6'}
                       </span>
                     </div>
@@ -562,18 +566,18 @@ export default function StaffTerminalPage() {
                       <button
                         type="button"
                         onClick={() => handlePrintItem(item, 'standard-2x6')}
-                        className="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-black text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                        className="px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold flex items-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
                       >
-                        <Printer className="w-3.5 h-3.5 text-amber-400" />
+                        <Printer className="w-3.5 h-3.5" />
                         <span>طباعة 2×6</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleDismissPrint(item.id)}
-                        className="px-3 py-1.5 rounded-xl border border-stone-200 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 text-stone-600 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-emerald-950/40 hover:border-emerald-500/40 text-[#A19E9B] hover:text-emerald-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                       >
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
                         <span>تم التسليم</span>
                       </button>
                     </div>
@@ -590,13 +594,13 @@ export default function StaffTerminalPage() {
             {/* LEFT/MAIN: Customer Lookup & Action Center */}
             <div className="lg:col-span-7 space-y-4">
               {/* Input Form */}
-              <div className="p-5 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
+              <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-lg space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-stone-900 flex items-center gap-1.5">
-                    <Search className="w-4 h-4 text-amber-600" />
+                  <span className="text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5">
+                    <Search className="w-4 h-4 text-[#DD0200]" />
                     <span>بحث برقم الجوال أو رمز الهدية (GIFT-XXXX):</span>
                   </span>
-                  <span className="text-[10px] font-mono text-stone-400">PHONE SEARCH</span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#A19E9B]">PHONE SEARCH</span>
                 </div>
 
                 <div className="relative">
@@ -611,13 +615,13 @@ export default function StaffTerminalPage() {
                         handleLookup(e.target.value);
                       }
                     }}
-                    className="w-full text-center text-xl sm:text-2xl font-mono font-black py-3.5 px-4 rounded-2xl bg-stone-50 border border-stone-300 focus:bg-white focus:border-amber-600 focus:outline-none tracking-widest text-stone-900"
+                    className="w-full text-center text-xl sm:text-2xl font-mono font-bold py-3.5 px-4 rounded-xl bg-[#0B0A0A] border border-white/10 focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none tracking-widest text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={handleClearKeypad}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-600 flex items-center justify-center transition cursor-pointer"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] flex items-center justify-center transition cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -631,7 +635,7 @@ export default function StaffTerminalPage() {
                       key={val}
                       type="button"
                       onClick={() => handleKeyPress(val)}
-                      className="py-3 rounded-xl bg-stone-100 hover:bg-stone-200 active:scale-95 text-stone-900 font-mono font-bold text-base transition cursor-pointer"
+                      className="py-3 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] active:scale-95 text-[#FBF9F5] font-mono font-bold text-base border border-white/10 transition cursor-pointer"
                     >
                       {val}
                     </button>
@@ -641,51 +645,51 @@ export default function StaffTerminalPage() {
 
               {/* Customer Details & Actions */}
               {selectedCustomer && loyaltyData && (
-                <div className="p-6 rounded-3xl bg-white border-2 border-amber-500 shadow-md space-y-5 animate-in zoom-in-95 duration-200">
-                  <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+                <div className="p-6 rounded-2xl bg-[#141212] border border-[#DD0200]/30 shadow-xl space-y-5 animate-in zoom-in-95 duration-200">
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-500 text-stone-950 flex items-center justify-center font-black text-xl shadow-xs">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-bold text-xl shadow-lg border border-white/10">
                         {selectedCustomer.name.charAt(0) || 'ع'}
                       </div>
                       <div>
-                        <h3 className="text-base font-black text-stone-950">{selectedCustomer.name}</h3>
-                        <p className="text-xs text-stone-500 font-mono" dir="ltr">{selectedCustomer.phone}</p>
+                        <h3 className="text-base font-bold text-[#FBF9F5]">{selectedCustomer.name}</h3>
+                        <p className="text-xs text-[#A19E9B] font-mono" dir="ltr">{selectedCustomer.phone}</p>
                       </div>
                     </div>
 
-                    <span className="text-xs font-mono font-black px-3 py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300">
+                    <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/40">
                       {loyaltyData.stampedCount} من {requiredVisits} أختام
                     </span>
                   </div>
 
                   {/* Active Voucher Banner (If customer has an issued voucher or looked up by code) */}
                   {activeVoucher && (
-                    <div className={`p-4 rounded-2xl border transition-all ${
+                    <div className={`p-4 rounded-xl border transition-all ${
                       activeVoucher.status === 'ACTIVE'
-                        ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300 shadow-sm'
-                        : 'bg-stone-50 border-stone-200'
+                        ? 'bg-gradient-to-r from-emerald-950/40 to-[#141212] border-emerald-500/40 shadow-sm'
+                        : 'bg-[#1C1B1B] border-white/10'
                     }`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold ${
-                            activeVoucher.status === 'ACTIVE' ? 'bg-emerald-600 text-white' : 'bg-stone-300 text-stone-700'
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
+                            activeVoucher.status === 'ACTIVE' ? 'bg-emerald-600 text-white' : 'bg-[#211F1F] text-[#A19E9B]'
                           }`}>
                             <Gift className="w-4 h-4" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-mono font-black text-sm text-stone-900 tracking-wider">
+                              <span className="font-mono font-bold text-sm text-[#FBF9F5] tracking-wider">
                                 {activeVoucher.code}
                               </span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
                                 activeVoucher.status === 'ACTIVE'
-                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                  : 'bg-stone-200 text-stone-600'
+                                  ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/40'
+                                  : 'bg-[#211F1F] text-[#A19E9B]'
                               }`}>
                                 {activeVoucher.status === 'ACTIVE' ? 'جاهز للاستبدال 🎁' : 'تم استبداله مسبقاً'}
                               </span>
                             </div>
-                            <p className="text-xs text-stone-700 font-bold mt-0.5">{activeVoucher.giftTitle}</p>
+                            <p className="text-xs text-[#D9D9D9] font-bold mt-0.5">{activeVoucher.giftTitle}</p>
                           </div>
                         </div>
 
@@ -693,7 +697,7 @@ export default function StaffTerminalPage() {
                           <button
                             type="button"
                             onClick={() => handleRedeemVoucherDirect(activeVoucher.code)}
-                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm transition active:scale-95 cursor-pointer"
+                            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer"
                           >
                             صرف الهدية بالكود
                           </button>
@@ -704,13 +708,13 @@ export default function StaffTerminalPage() {
 
                   {/* Progress Visual */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold text-stone-600">
+                    <div className="flex items-center justify-between text-xs font-bold text-[#A19E9B]">
                       <span>تقدم بطاقة الولاء الحالية</span>
-                      <span className="font-mono">{loyaltyData.stampedCount} / {requiredVisits} زيارات</span>
+                      <span className="font-mono text-[#FBF9F5]">{loyaltyData.stampedCount} / {requiredVisits} زيارات</span>
                     </div>
-                    <div className="w-full bg-stone-100 h-3 rounded-full overflow-hidden p-0.5 border border-stone-200">
+                    <div className="w-full bg-[#0B0A0A] h-3 rounded-full overflow-hidden p-0.5 border border-white/10">
                       <div
-                        className="bg-gradient-to-r from-amber-500 to-amber-600 h-full rounded-full transition-all duration-500"
+                        className="bg-gradient-to-r from-[#55100D] to-[#DD0200] h-full rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (loyaltyData.stampedCount / requiredVisits) * 100)}%` }}
                       />
                     </div>
@@ -721,7 +725,7 @@ export default function StaffTerminalPage() {
                     <button
                       type="button"
                       onClick={handleAddStamp}
-                      className="py-3.5 px-4 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                      className="py-3.5 px-4 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                     >
                       <Award className="w-5 h-5" />
                       <span>ختم زيارة جديدة (+1)</span>
@@ -731,10 +735,10 @@ export default function StaffTerminalPage() {
                       type="button"
                       onClick={handleRedeemGift}
                       disabled={!isEligibleForGift}
-                      className={`py-3.5 px-4 rounded-2xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
+                      className={`py-3.5 px-4 rounded-lg font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
                         isEligibleForGift
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white animate-pulse'
-                          : 'bg-stone-100 text-stone-400 cursor-not-allowed border border-stone-200'
+                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white animate-pulse'
+                          : 'bg-[#1C1B1B] text-[#A19E9B]/40 cursor-not-allowed border border-white/10'
                       }`}
                     >
                       <Gift className="w-5 h-5" />
@@ -742,17 +746,17 @@ export default function StaffTerminalPage() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
+                  <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs">
                     <button
                       type="button"
                       onClick={handleUnlockCooldown}
-                      className="text-stone-500 hover:text-stone-900 font-bold flex items-center gap-1.5 transition cursor-pointer"
+                      className="text-[#A19E9B] hover:text-[#FBF9F5] font-bold flex items-center gap-1.5 transition cursor-pointer"
                     >
-                      <Unlock className="w-3.5 h-3.5 text-amber-600" />
+                      <Unlock className="w-3.5 h-3.5 text-[#DD0200]" />
                       <span>فك قفل الـ 24 ساعة للعميل</span>
                     </button>
 
-                    <span className="text-[11px] text-stone-400">
+                    <span className="text-[11px] text-[#A19E9B]/60">
                       هدايا تم استبدالها مسبقاً: {redeemedCount}
                     </span>
                   </div>
@@ -762,33 +766,33 @@ export default function StaffTerminalPage() {
 
             {/* RIGHT: Shift Activity & Guidelines */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="p-5 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-3">
-                <h4 className="font-black text-sm text-stone-950 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-600" />
+              <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-lg space-y-3">
+                <h4 className="font-bold text-sm text-[#FBF9F5] flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#DD0200]" />
                   <span>إرشادات تشغيل الكاونتر:</span>
                 </h4>
-                <ul className="text-xs text-stone-600 space-y-2 leading-relaxed">
+                <ul className="text-xs text-[#A19E9B] space-y-2 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+                    <span className="w-5 h-5 rounded-md bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
                     <span>العميل يحصل على خدمته ويذكر رقم جواله أو يمسح كود الفرع.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+                    <span className="w-5 h-5 rounded-md bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
                     <span>اضغط <strong>«ختم زيارة جديدة»</strong> لإضافة ختم فوري لكارت العميل في محفظة Apple/Google Wallet.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+                    <span className="w-5 h-5 rounded-md bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
                     <span>عند إكمال {requiredVisits} أختام، يتوهج زر <strong>«تسليم الهدية»</strong> باللون الأخضر للاستبدال الفوري.</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between text-xs font-bold text-amber-950">
+              <div className="p-4 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-center justify-between text-xs font-bold text-[#FBF9F5]">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-amber-700" />
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span>{industry.staffLabel} المسؤول:</span>
                 </div>
-                <span className="font-mono text-amber-900">{staffMember?.name || `${industry.staffLabel} المعتمد`}</span>
+                <span className="font-mono text-[#FBF9F5]">{staffMember?.name || `${industry.staffLabel} المعتمد`}</span>
               </div>
             </div>
           </div>
