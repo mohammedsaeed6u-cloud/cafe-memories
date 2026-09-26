@@ -316,18 +316,52 @@ export class DigitalWalletService {
   }
 
   /**
-   * Initiates browser download of the .pkpass file
+   * Generates a direct HTTP URL to download the .pkpass from the server
+   */
+  public static getApplePassUrl(data: DigitalWalletPassData): string {
+    const cleanPhone = (data.customerPhone || 'guest').trim().replace(/[^0-9]/g, '') || 'guest';
+    const params = new URLSearchParams({
+      cafe: data.cafeSlug,
+      name: data.cafeName,
+      phone: cleanPhone,
+      customerName: data.customerName || 'ضيف مميز',
+      stamps: String(data.stampedCount),
+      slots: String(data.maxSlots),
+      gift: data.giftTitle || 'هدية خاصة مجانية',
+      instagram: data.instagramHandle || `@${data.cafeSlug}`,
+    });
+    return `/api/v1/wallet/pass?${params.toString()}`;
+  }
+
+  /**
+   * Initiates download or navigation for Apple Wallet pass
    */
   public static downloadApplePass(data: DigitalWalletPassData): void {
     if (typeof window === 'undefined') return;
-    const blob = this.createApplePassBlob(data);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${data.cafeSlug}-loyalty-card.pkpass`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    // On iOS Safari, direct navigation to HTTP route is required for PassKit MIME handling
+    if (isIOS) {
+      window.location.href = this.getApplePassUrl(data);
+      return;
+    }
+
+    // For desktop browsers, create file download
+    try {
+      const blob = this.createApplePassBlob(data);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${data.cafeSlug}-loyalty-card.pkpass`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch {
+      window.location.href = this.getApplePassUrl(data);
+    }
   }
 }

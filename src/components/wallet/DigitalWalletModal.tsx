@@ -40,6 +40,16 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [iosSaveModalImage, setIosSaveModalImage] = useState<string | null>(null);
+  const [isIOS, setIsIOS] = useState(false);
+
+  React.useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      const isApple =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      setIsIOS(isApple);
+    }
+  }, []);
 
   if (!isOpen) return null;
 
@@ -368,9 +378,25 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
             )}
           </div>
 
+          {isIOS && activeWallet === 'apple' && (
+            <div className="w-full max-w-[340px] mt-4 p-3.5 rounded-xl bg-[#1C1B1B] border border-[#DD0200]/30 text-right space-y-2 text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-[#FBF9F5]">
+                <span className="w-2 h-2 rounded-full bg-[#DD0200] animate-pulse" />
+                <span>خيارات الحفظ على iPhone و Safari:</span>
+              </div>
+              <p className="text-[11px] text-[#A19E9B] leading-relaxed">
+                • <strong className="text-white">الأسرع والموصى به:</strong> اضغط <strong>«حفظ كصورة في الصور»</strong> لحفظ الكارت عالي الدقة فوراً بألبوم الصور مع رمز الـ QR.<br />
+                • <strong className="text-white">كتطبيق مستقل:</strong> من زر المشاركة في Safari، اختر <strong>«إضافة إلى الصفحة الرئيسية»</strong> لتثبيت كارتك كتطبيق دائم.<br />
+                • <strong className="text-white">ملف Apple Wallet:</strong> يتم تنزيله عبر السيرفر مباشرة، وإضافته لتطبيق المحفظة الأصلي يتطلب شهادة مطور معتمدة من Apple.
+              </p>
+            </div>
+          )}
+
           <p className="text-xs text-[#A19E9B] text-center mt-4 max-w-xs leading-relaxed">
             {activeWallet === 'apple'
-              ? 'يتم تنزيل ملف .pkpass المعتمد ليظهر الكارت تلقائياً في تطبيق Apple Wallet وشاشة القفل، أو يمكنك حفظه كصورة مباشرة بألبوم هاتفك.'
+              ? (isIOS
+                  ? 'اختر حفظ الكارت في الصور كأسرع طريقة للاحتفاظ برمز الـ QR والأختام في هاتفك، أو قم بتنزيل ملف .pkpass المباشر.'
+                  : 'يتم تنزيل ملف .pkpass المعتمد ليظهر الكارت تلقائياً في تطبيق Apple Wallet، أو يمكنك حفظه كصورة مباشرة بألبوم هاتفك.')
               : activeWallet === 'google'
               ? 'يتم حفظ بطاقة الولاء مباشرة في حساب Google Wallet لتصل إليها بكبسة زر بدون أي تطبيق إضافي.'
               : 'حفظ عالي الدقة (300 DPI) للكارت مع رمز الـ QR والأختام مباشرة في ألبوم الصور بهاتفك (متوافق 100% مع Safari وiPhone).'}
@@ -396,21 +422,29 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
               type="button"
               onClick={handleSaveCardImage}
               disabled={isExportingImage}
-              className="px-4 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer border border-white/10 active:scale-95 disabled:opacity-50"
+              className={`px-4 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 disabled:opacity-50 ${
+                isIOS && activeWallet === 'apple'
+                  ? 'bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] border border-white/10'
+              }`}
               title="حفظ الكارت كصورة عادية في ألبوم الصور"
             >
-              <ImageIcon className="w-3.5 h-3.5 text-[#DD0200]" />
-              <span>{isExportingImage ? 'جاري التجهيز...' : 'حفظ كصورة في الصور'}</span>
+              <ImageIcon className="w-3.5 h-3.5 text-white" />
+              <span>{isExportingImage ? 'جاري التجهيز...' : 'حفظ كصورة في الصور (Photos)'}</span>
             </button>
 
             {activeWallet === 'apple' ? (
               <button
                 type="button"
                 onClick={handleDownloadApplePass}
-                className="px-5 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-95"
+                className={`px-4 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 ${
+                  isIOS
+                    ? 'bg-[#1C1B1B] hover:bg-[#211F1F] text-[#D9D9D9] border border-white/15'
+                    : 'bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                }`}
               >
-                <Download className="w-4 h-4 text-[#FBF9F5]" />
-                <span>إضافة إلى Apple Wallet (.pkpass)</span>
+                <Download className="w-4 h-4" />
+                <span>تنزيل ملف .pkpass المباشر</span>
               </button>
             ) : activeWallet === 'google' ? (
               <button
