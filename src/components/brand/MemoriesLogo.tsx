@@ -92,59 +92,59 @@ export function MemoriesLogo({
     xl: 'text-sm tracking-[0.3em]',
   };
 
-  // Theme color palettes
+  // Theme color palettes (Atelier Nostalgia)
   const colorMap = {
     auto: {
-      icon: '#1E3A32',
-      text: '#1E3A32',
-      tagline: '#3B2F2A',
+      icon: '#DD0200',
+      text: '#FBF9F5',
+      tagline: '#A19E9B',
       bg: 'transparent',
     },
     dark: {
-      icon: '#E8DCC6',
-      text: '#F7F2E7',
-      tagline: '#E8DCC6',
+      icon: '#DD0200',
+      text: '#FBF9F5',
+      tagline: '#A19E9B',
       bg: 'transparent',
     },
     light: {
-      icon: '#1E3A32',
-      text: '#1E3A32',
-      tagline: '#3B2F2A',
+      icon: '#141313',
+      text: '#141313',
+      tagline: '#55100D',
       bg: 'transparent',
     },
     forest: {
-      icon: '#FAF6EE',
-      text: '#FAF6EE',
-      tagline: '#E8DCC6',
-      bg: '#1E3A32',
+      icon: '#FBF9F5',
+      text: '#FBF9F5',
+      tagline: '#A19E9B',
+      bg: '#141212',
     },
     terracotta: {
-      icon: '#FAF6EE',
-      text: '#FAF6EE',
-      tagline: '#F7F2E7',
-      bg: '#B85C43',
+      icon: '#FBF9F5',
+      text: '#FBF9F5',
+      tagline: '#FBF9F5',
+      bg: '#55100D',
     },
   };
 
   const colors = colorMap[theme] || colorMap.auto;
   const iconPixel = iconSizeMap[size];
 
-  // Coaster Variant (like the physical coasters on the design sheet)
+  // Coaster Variant (Atelier Nostalgia vitrine coaster)
   if (variant === 'coaster') {
-    const isDarkCoaster = theme === 'forest' || theme === 'dark';
+    const isDarkCoaster = theme === 'forest' || theme === 'dark' || theme === 'auto';
     return (
       <div
         className={cn(
-          'aspect-square rounded-3xl p-6 flex flex-col items-center justify-center shadow-lg transition-transform duration-300 hover:rotate-1',
+          'aspect-square rounded-2xl p-6 flex flex-col items-center justify-center shadow-2xl transition-transform duration-300 hover:rotate-1 border',
           isDarkCoaster
-            ? 'bg-[#1E3A32] text-[#FAF6EE] border border-[#2A4F44]'
-            : 'bg-[#E8DCC6] text-[#1E3A32] border border-[#D3C4A7]',
+            ? 'bg-[#141212] text-[#FBF9F5] border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]'
+            : 'bg-[#FBF9F5] text-[#141313] border-black/10',
           className
         )}
       >
         <MemoriesArchIcon
           size={iconPixel * 1.3}
-          color={isDarkCoaster ? '#FAF6EE' : '#1E3A32'}
+          color={isDarkCoaster ? '#DD0200' : '#141313'}
         />
       </div>
     );

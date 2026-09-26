@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { CardColorPalette } from '@/types/photobooth';
@@ -22,14 +22,14 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
   }
 
   return (
-    <div className={`w-full bg-white/90 backdrop-blur-sm p-4 rounded-2xl border border-stone-200/90 shadow-sm ${className}`}>
-      <div className="flex items-center justify-between mb-2.5 px-1">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-stone-800">
-          <Palette className="w-3.5 h-3.5 text-amber-600" />
-          <span>اختر لون الكارت المفضّل:</span>
+    <div className={`w-full bg-[#141212]/90 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-2xl ${className}`}>
+      <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#e6e1e1]">
+          <Palette className="w-3.5 h-3.5 text-[#DD0200]" />
+          <span>اختر لون الكارت المفضل:</span>
         </div>
-        <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
-          ألوان معتمدة
+        <span className="text-[10px] font-mono font-bold text-[#FBF9F5] bg-[#55100D]/60 px-2 py-0.5 rounded-md border border-[#DD0200]/40 uppercase tracking-wider">
+          ATELIER PALETTES
         </span>
       </div>
 
@@ -41,10 +41,10 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
               key={palette.id}
               type="button"
               onClick={() => onSelectPalette(palette)}
-              className={`p-2 rounded-xl border-2 text-right transition-all duration-150 flex items-center justify-between gap-2 ${
+              className={`p-2.5 rounded-lg border text-right transition-all duration-200 flex items-center justify-between gap-2 cursor-pointer ${
                 isSelected
-                  ? 'border-amber-600 bg-amber-50/50 shadow-sm ring-2 ring-amber-500/20'
-                  : 'border-stone-200 hover:border-stone-300 bg-stone-50/70 hover:bg-stone-50'
+                  ? 'border-[#DD0200] bg-[#55100D]/30 shadow-[0_0_15px_-3px_rgba(221,2,0,0.35)] ring-1 ring-[#DD0200]/40'
+                  : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#211F1F]'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -54,15 +54,15 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
                     backgroundColor: palette.bgColor,
                     borderColor: palette.borderColor,
                   }}
-                  className="w-5 h-5 rounded-full border-2 shadow-xs shrink-0"
+                  className="w-4 h-4 rounded-full border border-white/20 shadow-xs shrink-0"
                 />
-                <span className="text-xs font-bold text-stone-800 truncate">
+                <span className="text-xs font-medium text-[#FBF9F5] truncate">
                   {palette.nameAr}
                 </span>
               </div>
 
               {isSelected && (
-                <div className="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center shrink-0">
+                <div className="w-4 h-4 rounded-md bg-[#DD0200] text-white flex items-center justify-center shrink-0">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </div>
               )}

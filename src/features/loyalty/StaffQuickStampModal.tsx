@@ -49,42 +49,42 @@ export const StaffQuickStampModal: React.FC<StaffQuickStampModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-stone-200 text-stone-900 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="w-full max-w-sm bg-[#141212] rounded-2xl p-6 shadow-[0_0_50px_-10px_rgba(221,2,0,0.25)] border border-white/10 text-[#e6e1e1] space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-800 flex items-center justify-center border border-stone-200">
-              <ShieldCheck className="w-5 h-5 text-stone-800" />
+            <div className="w-9 h-9 rounded-lg bg-[#55100D] text-[#DD0200] flex items-center justify-center border border-[#DD0200]/40 shadow-xs">
+              <ShieldCheck className="w-5 h-5 text-[#FBF9F5]" />
             </div>
             <div>
-              <h3 className="font-black text-base text-stone-900 leading-tight">
+              <h3 className="font-bold text-base text-[#FBF9F5] leading-tight">
                 ختم الموظف المباشر
               </h3>
-              <p className="text-[10px] text-stone-500">{staffLabel}</p>
+              <p className="text-[10px] text-[#A19E9B] font-mono">{staffLabel}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 transition cursor-pointer"
+            className="w-8 h-8 rounded-lg bg-[#1C1B1B] hover:bg-[#DD0200] flex items-center justify-center text-[#A19E9B] hover:text-white transition cursor-pointer border border-white/10"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
         {isSuccess ? (
           <div className="py-8 text-center space-y-2 animate-in zoom-in-95 duration-200">
-            <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-            <p className="text-base font-black text-stone-900">تم الختم بنجاح</p>
-            <p className="text-xs text-stone-500">تمت إضافة لقطة جديدة لكارت العميل فوراً</p>
+            <CheckCircle2 className="w-12 h-12 text-[#34C759] mx-auto" />
+            <p className="text-base font-bold text-[#FBF9F5]">تم الختم بنجاح</p>
+            <p className="text-xs text-[#A19E9B]">تمت إضافة لقطة جديدة لكارت العميل فوراً</p>
           </div>
         ) : (
           <div className="space-y-4">
-            <p className="text-xs text-stone-600 leading-relaxed">
+            <p className="text-xs text-[#A19E9B] leading-relaxed">
               يقوم موظف الصالة أو الكاونتر بإدخال رمز PIN المعتمد للفرع لمنح العميل ختماً وتوثيق لقطة جديدة.
             </p>
             <form onSubmit={handlePinSubmit} className="space-y-3">
               <div>
-                <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                <label className="block text-[11px] font-bold text-[#e6e1e1] mb-1">
                   رمز الموظف السري (Staff PIN):
                 </label>
                 <PasswordInput
@@ -95,13 +95,13 @@ export const StaffQuickStampModal: React.FC<StaffQuickStampModalProps> = ({
                   }}
                   placeholder="••••"
                   maxLength={4}
-                  className="w-full bg-stone-50 border-stone-200 text-stone-900 rounded-xl font-mono text-center tracking-widest text-base"
+                  className="w-full bg-[#0B0A0A] border-white/10 text-white rounded-lg font-mono text-center tracking-widest text-base focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30"
                 />
-                {error && <p className="text-xs text-rose-600 mt-1 font-medium">{error}</p>} 
+                {error && <p className="text-xs text-[#FFB4AB] mt-1 font-medium">{error}</p>}
               </div>
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition cursor-pointer shadow-xs active:scale-[0.99]"
+                className="w-full py-3 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] active:scale-[0.99]"
               >
                 تأكيد الختم بالرمز
               </button>

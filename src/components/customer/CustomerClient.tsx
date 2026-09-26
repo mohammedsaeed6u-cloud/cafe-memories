@@ -446,30 +446,30 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
         )}
 
         {/* TOP LEVEL SEGMENTED NAVIGATION: Clear separation between Photobooth Studio and Loyalty Pass */}
-        <div className="w-full grid grid-cols-2 p-1.5 bg-white/[0.06] rounded-full border border-white/10 shadow-2xl backdrop-blur-xl">
+        <div className="w-full grid grid-cols-2 p-1.5 bg-[#141212] rounded-xl border border-white/10 shadow-2xl backdrop-blur-xl">
           <button
             type="button"
             onClick={() => setActiveTab('studio')}
-            className={`py-2.5 px-3 rounded-full text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'studio'
-                ? 'bg-white text-black shadow-lg font-black'
-                : 'text-stone-300 hover:text-white'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] font-black'
+                : 'text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-white/[0.04]'
             }`}
           >
-            <Camera className="w-4 h-4 text-[#DD0200]" />
+            <Camera className="w-4 h-4 text-[#FBF9F5]" />
             <span>استوديو الصور ({totalCardSlots} لقطات)</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('loyalty')}
-            className={`py-2.5 px-3 rounded-full text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'loyalty'
-                ? 'bg-white text-black shadow-lg font-black'
-                : 'text-stone-300 hover:text-white'
+                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] font-black'
+                : 'text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-white/[0.04]'
             }`}
           >
-            <Award className="w-4 h-4 text-[#DD0200]" />
+            <Award className="w-4 h-4 text-[#FBF9F5]" />
             <span>كارت الولاء ({loyaltyData.stampedCount}/{loyaltyMaxVisits})</span>
           </button>
         </div>
@@ -554,10 +554,10 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                       key={mode.id}
                       type="button"
                       onClick={() => setCardMode(mode.id as PhotoboothCardMode)}
-                      className={`px-3 py-2 rounded-full border text-xs font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
+                      className={`px-3 py-2 rounded-lg border text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
                         isActive
-                          ? 'bg-[#DD0200] text-white border-[#DD0200] shadow-md shadow-red-950/50 font-black'
-                          : 'bg-white/10 hover:bg-white/20 text-[#D9D9D9] border-white/15 backdrop-blur-md'
+                          ? 'bg-[#DD0200] text-[#FBF9F5] border-[#DD0200] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_6px_16px_-4px_rgba(221,2,0,0.5)] font-black'
+                          : 'bg-[#1C1B1B]/70 hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] border-white/10'
                       }`}
                     >
                       <span className="text-sm">{mode.icon}</span>
@@ -567,13 +567,11 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                 })}
               </div>
 
-
-
               {/* Sub-customizer for Spotify */}
               {cardMode === 'spotify_player' && (
-                <div className="p-3.5 bg-white border border-stone-200/90 rounded-2xl space-y-3 text-xs shadow-2xs">
+                <div className="p-4 bg-[#141212] border border-white/10 rounded-2xl space-y-3 text-xs shadow-2xl">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-bold text-stone-700">لون الخلفية:</span>
+                    <span className="text-[11px] font-bold text-[#e6e1e1]">لون الخلفية:</span>
                     {[
                       { id: '#384C5A', name: 'Slate Blue', hex: '#384C5A' },
                       { id: '#4E483E', name: 'Warm Taupe', hex: '#4E483E' },
@@ -584,8 +582,8 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                         key={c.id}
                         type="button"
                         onClick={() => setSpotifyBg(c.hex)}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded-xl border text-[10px] font-bold transition cursor-pointer ${
-                          spotifyBg === c.hex ? 'border-amber-500 ring-2 ring-amber-400/40' : 'border-stone-200'
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold transition cursor-pointer ${
+                          spotifyBg === c.hex ? 'border-[#DD0200] ring-1 ring-[#DD0200]/40 text-[#FBF9F5] bg-[#55100D]/30' : 'border-white/10 text-[#A19E9B] bg-[#1C1B1B]'
                         }`}
                       >
                         <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c.hex }} />
@@ -594,10 +592,10 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                     ))}
                   </div>
 
-                  <div className="space-y-2 pt-1 border-t border-stone-100">
+                  <div className="space-y-2 pt-2 border-t border-white/10">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-stone-700">الأغنية المفضلة للكارت:</span>
-                      <span className="text-[10px] text-stone-400 font-mono">SPOTIFY DOCK</span>
+                      <span className="text-[11px] font-bold text-[#e6e1e1]">الأغنية المفضلة للكارت:</span>
+                      <span className="text-[10px] text-[#DD0200] font-mono font-bold">SPOTIFY DOCK</span>
                     </div>
 
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -614,8 +612,8 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                           onClick={() => setSpotifyTrack(preset)}
                           className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
                             spotifyTrack.title === preset.title
-                              ? 'bg-amber-100 text-amber-900 border-amber-300 font-black'
-                              : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
+                              ? 'bg-[#55100D]/60 text-[#FBF9F5] border-[#DD0200]/50 font-black'
+                              : 'bg-[#1C1B1B] border-white/10 text-[#A19E9B] hover:text-[#FBF9F5]'
                           }`}
                         >
                           🎵 {preset.title}
@@ -629,14 +627,14 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                         value={spotifyTrack.title}
                         onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, title: e.target.value }))}
                         placeholder="اسم الأغنية..."
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:border-amber-500 font-bold"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] focus:bg-[#0E0D0D] focus:outline-none focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 font-bold placeholder-[#A19E9B]/50"
                       />
                       <input
                         type="text"
                         value={spotifyTrack.artist}
                         onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, artist: e.target.value }))}
                         placeholder="اسم الفنان / الألبوم..."
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:border-amber-500 font-bold"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] focus:bg-[#0E0D0D] focus:outline-none focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 font-bold placeholder-[#A19E9B]/50"
                       />
                     </div>
                   </div>
@@ -645,9 +643,9 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
 
               {/* Sub-customizer for Location / Seat */}
               {cardMode === 'ticket_express' && (
-                <div className="p-3.5 bg-white border border-stone-200/90 rounded-2xl space-y-2 text-xs shadow-2xs">
+                <div className="p-4 bg-[#141212] border border-white/10 rounded-2xl space-y-2 text-xs shadow-2xl">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-stone-700">موقع الجلسة أو الركن:</span>
+                    <span className="text-[11px] font-bold text-[#e6e1e1]">موقع الجلسة أو الركن:</span>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {['طاولة 04 • صالة', 'جلسة VIP', 'ركن الاستقبال', 'الفرع الرئيسي'].map((seat) => (
                         <button
@@ -655,7 +653,9 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                           type="button"
                           onClick={() => setTicketSeat(seat)}
                           className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
-                            ticketSeat === seat ? 'bg-amber-100 text-amber-900 border-amber-300 font-black' : 'bg-stone-50 border-stone-200 text-stone-600'
+                            ticketSeat === seat
+                              ? 'bg-[#55100D]/60 text-[#FBF9F5] border-[#DD0200]/50 font-black'
+                              : 'bg-[#1C1B1B] border-white/10 text-[#A19E9B] hover:text-[#FBF9F5]'
                           }`}
                         >
                           {seat}
@@ -668,7 +668,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                     value={ticketSeat}
                     onChange={(e) => setTicketSeat(e.target.value)}
                     placeholder="رقم الطاولة أو الموقع (مثال: طاولة VIP 12 أو الركن 03)..."
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:border-amber-500 font-bold"
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] focus:bg-[#0E0D0D] focus:outline-none focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 font-bold placeholder-[#A19E9B]/50"
                   />
                 </div>
               )}
@@ -679,13 +679,13 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
               <button
                 type="button"
                 onClick={() => setIsStickerTrayOpen(!isStickerTrayOpen)}
-                className="w-full py-2.5 px-4 rounded-2xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-700 font-bold text-xs shadow-2xs transition flex items-center justify-between cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 text-[#FBF9F5] font-bold text-xs shadow-xl transition flex items-center justify-between cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <Sparkles className="w-4 h-4 text-[#DD0200]" />
                   <span>تزيين الكارت بالملصقات والإيموجي (Stickers &amp; Doodles)</span>
                 </div>
-                <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 font-bold">
+                <span className="text-[10px] font-mono text-[#FBF9F5] bg-[#55100D]/60 px-2.5 py-0.5 rounded-md border border-[#DD0200]/40 font-bold uppercase tracking-wider">
                   {stickers.length > 0 ? `${stickers.length} ملصق بالكارت` : 'إضافة ملصقات +'}
                 </span>
               </button>
@@ -705,9 +705,9 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             <button
               type="button"
               onClick={handlePrintOrDownload}
-              className="w-full max-w-md py-3 px-4 rounded-2xl bg-white hover:bg-stone-50 border border-stone-200 text-stone-800 font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              className="w-full max-w-md py-3 px-4 rounded-lg bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 hover:border-[#DD0200]/30 text-[#FBF9F5] font-bold text-xs shadow-xl transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
-              <Download className="w-4 h-4 text-amber-600" />
+              <Download className="w-4 h-4 text-[#DD0200]" />
               <span>تحميل شريط الذكريات عالي الدقة (300 DPI)</span>
             </button>
 
@@ -718,20 +718,20 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             />
 
             {/* Contextual Link to Loyalty */}
-            <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 flex items-center justify-between gap-3 text-right shadow-2xs mt-2">
+            <div className="w-full p-4 rounded-2xl bg-[#141212] border border-white/10 flex items-center justify-between gap-3 text-right shadow-2xl mt-2">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center shrink-0 font-bold shadow-xs">
-                  <Award className="w-5 h-5 text-stone-950" />
+                <div className="w-9 h-9 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center shrink-0 font-bold shadow-xs">
+                  <Award className="w-5 h-5 text-[#DD0200]" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-stone-950">هل أنت من رواد {settings.branding.name}؟</p>
-                  <p className="text-[11px] text-stone-600">اجمع أختام زياراتك واستلم هديتك المجانية في كارت ولاء هاتفك</p>
+                  <p className="text-xs font-black text-[#FBF9F5]">هل أنت من رواد {settings.branding.name}؟</p>
+                  <p className="text-[11px] text-[#A19E9B]">اجمع أختام زياراتك واستلم هديتك المجانية في كارت ولاء هاتفك</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveTab('loyalty')}
-                className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 transition shadow-xs cursor-pointer"
+                className="px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shrink-0 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] cursor-pointer"
               >
                 عرض كارت الولاء
               </button>
@@ -745,15 +745,15 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             {/* Header: Title and Visits Status */}
             <div className="w-full flex items-center justify-between px-1 pt-1">
               <div>
-                <h2 className="text-sm sm:text-base font-black text-stone-950">
+                <h2 className="text-sm sm:text-base font-bold text-[#FBF9F5]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
                   كارت الولاء والمحفظة الرقمية
                 </h2>
-                <p className="text-[11px] text-stone-500">
+                <p className="text-[11px] text-[#A19E9B]">
                   أختام زياراتك المعتمدة وهديتك الفورية في {settings.branding.name}
                 </p>
               </div>
 
-              <span className="text-[11px] font-mono text-emerald-800 bg-emerald-100/90 border border-emerald-300/80 px-2.5 py-1 rounded-full font-bold">
+              <span className="text-[11px] font-mono text-[#FBF9F5] bg-[#55100D]/60 border border-[#DD0200]/40 px-2.5 py-1 rounded-md font-bold">
                 {loyaltyData.stampedCount} من {loyaltyMaxVisits} أختام
               </span>
             </div>
@@ -762,20 +762,20 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             <div className="w-full">
               {customerPhone ? (
                 <div className="space-y-3">
-                  <div className="w-full p-3 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex items-center justify-between text-xs">
+                  <div className="w-full p-3 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                        <CheckCircle className="w-4 h-4" />
+                      <div className="w-7 h-7 rounded-lg bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center font-bold">
+                        <CheckCircle className="w-4 h-4 text-[#DD0200]" />
                       </div>
                       <div>
-                        <span className="font-extrabold text-stone-950">{customerName || 'ضيف مميز'}</span>
-                        <span className="text-[10px] text-stone-500 font-mono block" dir="ltr">{customerPhone}</span>
+                        <span className="font-bold text-[#FBF9F5]">{customerName || 'ضيف مميز'}</span>
+                        <span className="text-[10px] text-[#A19E9B] font-mono block" dir="ltr">{customerPhone}</span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={handleClearCustomer}
-                      className="text-[10px] text-stone-400 hover:text-stone-700 underline cursor-pointer"
+                      className="text-[10px] text-[#A19E9B] hover:text-[#FBF9F5] underline cursor-pointer"
                     >
                       تغيير الحساب
                     </button>
@@ -790,16 +790,16 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                   />
                 </div>
               ) : (
-                <div className="w-full p-4 sm:p-5 rounded-2xl bg-white border border-stone-200/90 shadow-sm text-stone-900 space-y-3">
-                  <div className="flex items-center gap-2.5 border-b border-stone-100 pb-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-bold shadow-xs">
-                      <UserCheck className="w-4 h-4" />
+                <div className="w-full p-4 sm:p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl text-[#e6e1e1] space-y-3">
+                  <div className="flex items-center gap-2.5 border-b border-white/10 pb-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center font-bold shadow-xs">
+                      <UserCheck className="w-4 h-4 text-[#DD0200]" />
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-sm text-stone-950">
+                      <h3 className="font-bold text-sm text-[#FBF9F5]">
                         احفظ أختامك وصورك في محفظة هاتفك
                       </h3>
-                      <p className="text-[11px] text-stone-500">
+                      <p className="text-[11px] text-[#A19E9B]">
                         سجّل رقمك لحفظ أختام كارتك واستلام هديتك الفورية عند اكتماله
                       </p>
                     </div>
@@ -807,34 +807,34 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
 
                   <form onSubmit={handleRegisterCustomer} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div>
-                      <label className="text-[11px] font-bold text-stone-700 block mb-1">الاسم أو اللقب:</label>
+                      <label className="text-[11px] font-bold text-[#e6e1e1] block mb-1">الاسم أو اللقب:</label>
                       <input
                         type="text"
                         required
                         placeholder="مثال: أحمد، سارة، ضيفنا المميز..."
                         value={regName}
                         onChange={(e) => setRegName(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none"
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FBF9F5] focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none placeholder-[#A19E9B]/50"
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold text-stone-700 block mb-1">رقم الموبايل:</label>
+                      <label className="text-[11px] font-bold text-[#e6e1e1] block mb-1">رقم الموبايل:</label>
                       <input
                         type="tel"
                         required
                         placeholder="01xxxxxxxxx"
                         value={regPhone}
                         onChange={(e) => setRegPhone(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/70 text-xs text-stone-900 focus:bg-white focus:border-amber-500 focus:outline-none font-mono"
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FBF9F5] focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none font-mono placeholder-[#A19E9B]/50"
                         dir="ltr"
                       />
                     </div>
                     <div className="sm:col-span-2 pt-1">
                       <button
                         type="submit"
-                        className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
+                        className="w-full py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] cursor-pointer"
                       >
-                        <CheckCircle2 className="w-4 h-4 text-white" />
+                        <CheckCircle2 className="w-4 h-4 text-[#FBF9F5]" />
                         <span>حفظ كارت الولاء والأختام</span>
                       </button>
                     </div>
@@ -844,20 +844,20 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             </div>
 
             {/* Contextual Link to Studio */}
-            <div className="w-full p-4 rounded-2xl bg-white border border-stone-200/90 shadow-2xs flex items-center justify-between gap-3 text-right mt-2">
+            <div className="w-full p-4 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl flex items-center justify-between gap-3 text-right mt-2">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-900 flex items-center justify-center shrink-0">
-                  <Camera className="w-5 h-5 text-amber-600" />
+                <div className="w-9 h-9 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center shrink-0">
+                  <Camera className="w-5 h-5 text-[#DD0200]" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-stone-950">وثّق زيارتك الحالية بصورة في الاستوديو</p>
-                  <p className="text-[11px] text-stone-600">التقط لقطة تذكارية بالكاميرا وأضف نغمتك والملصقات المفضلة</p>
+                  <p className="text-xs font-black text-[#FBF9F5]">وثّق زيارتك الحالية بصورة في الاستوديو</p>
+                  <p className="text-[11px] text-[#A19E9B]">التقط لقطة تذكارية بالكاميرا وأضف نغمتك والملصقات المفضلة</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveTab('studio')}
-                className="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs shrink-0 transition shadow-xs cursor-pointer"
+                className="px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shrink-0 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] cursor-pointer"
               >
                 فتح استوديو الصور
               </button>
@@ -869,12 +869,12 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
       {/* 9. MODALS */}
       {/* Live Camera Viewfinder Modal */}
       {isCameraModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-stone-900/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-stone-900 rounded-3xl p-4 overflow-hidden border border-stone-700 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-md bg-[#141212] rounded-2xl p-4 overflow-hidden border border-white/10 shadow-[0_0_50px_-10px_rgba(221,2,0,0.3)] relative">
             <button
               type="button"
               onClick={() => setIsCameraModalOpen(false)}
-              className="absolute top-4 left-4 z-30 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition cursor-pointer"
+              className="absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-black/60 hover:bg-[#DD0200] text-white flex items-center justify-center transition cursor-pointer border border-white/10"
             >
               <X className="w-4 h-4" />
             </button>

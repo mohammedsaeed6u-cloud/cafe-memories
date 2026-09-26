@@ -281,10 +281,10 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
 
             {/* Top Status Pill */}
             <div className="absolute top-4 inset-x-0 flex justify-center">
-              <div className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-full flex items-center gap-2 border border-white/15">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                <span className="text-[10px] font-mono font-bold text-white tracking-widest uppercase">
-                  SHOT #{String(visitNumber).padStart(2, '0')} • LEICA FRAME
+              <div className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-md flex items-center gap-2 border border-white/15">
+                <span className="w-2 h-2 rounded-full bg-[#DD0200] animate-pulse" />
+                <span className="text-[10px] font-mono font-bold text-[#FBF9F5] tracking-widest uppercase">
+                  SHOT #{String(visitNumber).padStart(2, '0')} • ATELIER STUDIO
                 </span>
               </div>
             </div>
@@ -293,15 +293,16 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
 
         {/* Countdown Overlay */}
         {countdown !== null && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] z-40">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px] z-40">
             <span
               key={countdown}
-              className="text-8xl font-black text-amber-400 drop-shadow-[0_4px_24px_rgba(245,158,11,0.8)] scale-100 animate-in zoom-in-50 duration-200"
+              className="text-8xl font-black text-[#DD0200] drop-shadow-[0_4px_30px_rgba(221,2,0,0.8)] scale-100 animate-in zoom-in-50 duration-200"
+              style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
             >
               {countdown}
             </span>
-            <div className="mt-4 px-4 py-1.5 bg-black/80 rounded-full text-white text-xs font-bold border border-white/20">
-              استعد للقطة
+            <div className="mt-4 px-4 py-1.5 bg-[#141212]/90 rounded-md text-[#FBF9F5] text-xs font-bold border border-white/20">
+              استعد للقطة...
             </div>
           </div>
         )}
@@ -310,15 +311,15 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
         {isCameraReady && !isShooting && !capturedPhoto && (
           <div className="absolute bottom-3 inset-x-3 flex items-center justify-between z-30 pointer-events-auto">
             {/* Filter Pills */}
-            <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md p-1 rounded-full border border-white/15">
+            <div className="flex items-center gap-1 bg-[#141212]/80 backdrop-blur-md p-1 rounded-lg border border-white/15">
               {FILTER_PRESETS.map((filter) => (
                 <button
                   key={filter.id}
                   onClick={() => setActiveFilter(filter.id)}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
                     activeFilter === filter.id
-                      ? 'bg-amber-600 text-white shadow-xs'
-                      : 'text-stone-300 hover:text-white'
+                      ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                      : 'text-[#A19E9B] hover:text-[#FBF9F5]'
                   }`}
                 >
                   {filter.nameAr}
@@ -333,7 +334,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
                   const nextMuted = SoundEffectsService.toggleMute();
                   setSoundEnabled(!nextMuted);
                 }}
-                className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white/90 hover:text-white flex items-center justify-center border border-white/15 hover:scale-105 transition"
+                className="w-8 h-8 rounded-lg bg-[#141212]/80 backdrop-blur-md text-white/90 hover:text-white flex items-center justify-center border border-white/15 hover:scale-105 transition cursor-pointer"
                 title="كتم / تفعيل الصوت"
               >
                 {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
@@ -341,7 +342,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
 
               <button
                 onClick={toggleCamera}
-                className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white/90 hover:text-white flex items-center justify-center border border-white/15 hover:scale-105 transition"
+                className="w-8 h-8 rounded-lg bg-[#141212]/80 backdrop-blur-md text-white/90 hover:text-white flex items-center justify-center border border-white/15 hover:scale-105 transition cursor-pointer"
                 title="تبديل الكاميرا"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -358,13 +359,13 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
             <button
               onClick={handleSnap}
               disabled={!isCameraReady || isShooting}
-              className="group relative w-18 h-18 rounded-full bg-stone-100 hover:bg-white flex items-center justify-center shadow-xl active:scale-95 transition-all border-[5px] border-stone-300 disabled:opacity-50 disabled:pointer-events-none"
+              className="group relative w-18 h-18 rounded-full bg-[#1C1B1B] hover:bg-[#211F1F] flex items-center justify-center shadow-2xl active:scale-95 transition-all border-4 border-[#DD0200]/30 hover:border-[#DD0200] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-b from-stone-900 to-stone-800 flex items-center justify-center shadow-inner group-hover:from-black group-hover:to-stone-900 transition-colors">
-                <Camera className="w-5 h-5 text-amber-400" />
+              <div className="w-12 h-12 rounded-full bg-[#DD0200] flex items-center justify-center shadow-inner group-hover:bg-[#B50200] transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]">
+                <Camera className="w-5 h-5 text-white" />
               </div>
             </button>
-            <span className="text-[11px] font-bold text-stone-500 mt-2">
+            <span className="text-[11px] font-bold text-[#A19E9B] mt-2">
               {isShooting ? 'جاري التقاط اللقطة...' : 'اضغط لالتقاط اللقطة الحية'}
             </span>
           </div>
@@ -372,24 +373,24 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
           <div className="flex gap-2.5">
             <button
               onClick={handleRetake}
-              className="flex-1 py-3 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs border border-stone-300 transition flex items-center justify-center gap-2"
+              className="flex-1 py-3 px-4 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center justify-center gap-2 cursor-pointer"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-4 h-4 text-[#A19E9B]" />
               <span>إعادة اللقطة</span>
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-[2] py-3 px-5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold text-xs shadow-md hover:shadow-lg transition flex items-center justify-center gap-2"
+              className="flex-[2] py-3 px-5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] transition flex items-center justify-center gap-2 cursor-pointer"
             >
-              <CheckCircle2 className="w-4 h-4 text-white" />
+              <CheckCircle2 className="w-4 h-4 text-[#FBF9F5]" />
               <span>اعتماد اللقطة وإضافتها للكارت</span>
             </button>
           </div>
         )}
       </div>
 
-      <p className="text-[10px] text-stone-400 mt-3 font-mono text-center">
-        • لقطة حية موثقة لكل زيارة لاكتمال كارت ذكرياتك • {brandName}
+      <p className="text-[10px] text-[#A19E9B] mt-3 font-mono text-center">
+        • ATELIER NOSTALGIA • {brandName}
       </p>
     </div>
   );

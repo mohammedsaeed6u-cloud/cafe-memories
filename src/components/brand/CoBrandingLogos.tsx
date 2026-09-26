@@ -49,15 +49,15 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
         dir="ltr"
       >
         <div
-          className={`${iconSizes.box} bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shadow-xs border border-amber-600/30 shrink-0`}
+          className={`${iconSizes.box} bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-xs border border-[#DD0200]/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] shrink-0`}
         >
-          <MemoriesArchIcon size={iconSizes.icon} color="#FFFFFF" />
+          <MemoriesArchIcon size={iconSizes.icon} color="#FBF9F5" />
         </div>
         <div className="text-left">
           <span
             style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
             className={`font-black tracking-tight block leading-tight lowercase ${
-              isDark ? 'text-white' : 'text-stone-950'
+              isDark ? 'text-[#FBF9F5]' : 'text-[#141313]'
             } ${iconSizes.text}`}
           >
             memories
@@ -65,7 +65,7 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
           {showTagline && (
             <span
               className={`text-[8px] font-mono tracking-widest font-bold uppercase block leading-none ${
-                isDark ? 'text-amber-400/80' : 'text-amber-700'
+                isDark ? 'text-[#DD0200]' : 'text-[#55100D]'
               }`}
             >
               HOSPITALITY PHOTOBOOTH STUDIO
@@ -84,15 +84,15 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
       {/* 1. OUR BRAND: MEMORIES */}
       <div className="flex items-center gap-2">
         <div
-          className={`${iconSizes.box} bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shadow-xs border border-amber-600/30 shrink-0`}
+          className={`${iconSizes.box} bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-xs border border-[#DD0200]/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] shrink-0`}
         >
-          <MemoriesArchIcon size={iconSizes.icon} color="#FFFFFF" />
+          <MemoriesArchIcon size={iconSizes.icon} color="#FBF9F5" />
         </div>
         <div className="text-left">
           <span
             style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
             className={`font-black tracking-tight block leading-tight lowercase ${
-              isDark ? 'text-white' : 'text-stone-950'
+              isDark ? 'text-[#FBF9F5]' : 'text-[#141313]'
             } ${iconSizes.text}`}
           >
             memories
@@ -100,7 +100,7 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
           {showTagline && (
             <span
               className={`text-[8px] font-mono tracking-widest font-bold uppercase block leading-none ${
-                isDark ? 'text-stone-400' : 'text-stone-500'
+                isDark ? 'text-[#A19E9B]' : 'text-stone-500'
               }`}
             >
               STUDIO
@@ -112,7 +112,7 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
       {/* 2. THE COLLABORATION CROSS `×` */}
       <div className="flex items-center justify-center px-0.5">
         <span
-          className={`font-black text-amber-500 font-sans ${iconSizes.cross} leading-none`}
+          className={`font-black text-[#DD0200] font-sans ${iconSizes.cross} leading-none`}
           aria-hidden="true"
         >
           ×
@@ -127,24 +127,24 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
             src={cafeLogoUrl}
             alt={cafeName}
             className={`${iconSizes.box} object-contain border p-0.5 shadow-xs shrink-0 ${
-              isDark ? 'bg-stone-900 border-stone-700' : 'bg-white border-stone-200'
+              isDark ? 'bg-[#141212] border-white/10' : 'bg-white border-stone-200'
             }`}
           />
         ) : (
           <div
             className={`${iconSizes.box} flex items-center justify-center font-bold text-xs uppercase shadow-xs shrink-0 ${
               isDark
-                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                ? 'bg-[#55100D]/40 text-[#FBF9F5] border border-[#DD0200]/30'
                 : 'bg-stone-100 text-stone-800 border border-stone-200'
             }`}
           >
-            <Coffee className="w-4 h-4 text-amber-600" />
+            <Coffee className="w-4 h-4 text-[#DD0200]" />
           </div>
         )}
         <div className="text-left">
           <span
             className={`font-extrabold tracking-tight block leading-tight ${
-              isDark ? 'text-white' : 'text-stone-950'
+              isDark ? 'text-[#FBF9F5]' : 'text-[#141313]'
             } ${iconSizes.text}`}
           >
             {cafeName || 'Specialty Partner'}
@@ -152,7 +152,7 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
           {showTagline && (
             <span
               className={`text-[8px] font-mono tracking-widest font-bold uppercase block leading-none ${
-                isDark ? 'text-amber-400/80' : 'text-amber-700'
+                isDark ? 'text-[#DD0200]' : 'text-[#55100D]'
               }`}
             >
               PARTNER

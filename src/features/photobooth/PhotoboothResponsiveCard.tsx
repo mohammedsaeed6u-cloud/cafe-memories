@@ -37,7 +37,7 @@ export const PhotoboothResponsiveCard: React.FC<PhotoboothResponsiveCardProps> =
   if (is4x6) {
     return (
       <div className={`flex flex-col items-center ${className}`}>
-        <div className="w-[330px] sm:w-[370px] bg-white rounded-[26px] p-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-stone-200">
+        <div className="w-[330px] sm:w-[370px] bg-[#141212] rounded-2xl p-3.5 shadow-2xl border border-white/10">
           <PhotoboothStripCard
             photos={photos}
             frame={{
