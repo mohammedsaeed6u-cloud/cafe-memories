@@ -50,7 +50,7 @@ export function MarketingWallSection() {
           </div>
 
           {/* Wall Mockup Visual: Apple 4K OLED Screen */}
-          <div className="p-4 sm:p-5 bg-[#000000] rounded-[28px] border border-white/20 shadow-2xl space-y-3 ring-1 ring-white/10 backdrop-blur-xl">
+          <div className="p-4 sm:p-5 bg-[#0E0D0D] rounded-xl border border-white/15 shadow-2xl space-y-3 backdrop-blur-xl">
             <div className="flex items-center justify-between pb-2.5 border-b border-white/10 text-[10px] font-mono text-[#D9D9D9]/80">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
@@ -60,7 +60,7 @@ export function MarketingWallSection() {
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="aspect-[4/3] rounded-2xl bg-white/[0.05] border border-white/10 overflow-hidden relative group">
+              <div className="aspect-[4/3] rounded-lg bg-white/[0.05] border border-white/10 overflow-hidden relative group">
                 <img
                   src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80"
                   alt="Guest memory"

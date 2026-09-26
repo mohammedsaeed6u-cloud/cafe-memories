@@ -12,6 +12,7 @@ import { MarketingHero } from '@/features/marketing/components/MarketingHero';
 import { MarketingVisualSteps } from '@/features/marketing/components/MarketingVisualSteps';
 import { MarketingRetentionLoop } from '@/features/marketing/components/MarketingRetentionLoop';
 import { MarketingWallSection } from '@/features/marketing/components/MarketingWallSection';
+import { AtelierRoiCalculator } from '@/features/marketing/components/AtelierRoiCalculator';
 import { MarketingPricing } from '@/features/marketing/components/MarketingPricing';
 import { MarketingTrustSection } from '@/features/marketing/components/MarketingTrustSection';
 import { MarketingFaq } from '@/features/marketing/components/MarketingFaq';
@@ -60,6 +61,9 @@ export default function HomePage() {
 
         {/* TV Live Wall Showcase */}
         <MarketingWallSection />
+
+        {/* Business ROI & Retention Calculator */}
+        <AtelierRoiCalculator />
 
         {/* Transparent Pricing */}
         <MarketingPricing />
