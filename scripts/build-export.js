@@ -36,6 +36,7 @@ function safeMove(src, dst) {
 
 let movedApi = false;
 let movedAuthCustomer = false;
+let buildError = null;
 try {
   if (fs.existsSync(apiPath)) {
     safeMove(apiPath, backupPath);
@@ -74,14 +75,25 @@ try {
   console.log('[build-export] Export build finished successfully!');
 } catch (err) {
   console.error('[build-export] Build failed:', err.message);
-  process.exit(1);
+  buildError = err;
 } finally {
   if (movedApi && fs.existsSync(backupPath)) {
-    safeMove(backupPath, apiPath);
-    console.log('[build-export] Restored api_routes_backup -> src/app/api');
+    try {
+      safeMove(backupPath, apiPath);
+      console.log('[build-export] Restored api_routes_backup -> src/app/api');
+    } catch (restoreErr) {
+      console.error('[build-export] Failed to restore api_routes_backup:', restoreErr.message);
+    }
   }
   if (movedAuthCustomer && fs.existsSync(authCustomerBackup)) {
-    safeMove(authCustomerBackup, authCustomerPath);
-    console.log('[build-export] Restored auth_customer_backup -> src/app/auth/customer');
+    try {
+      safeMove(authCustomerBackup, authCustomerPath);
+      console.log('[build-export] Restored auth_customer_backup -> src/app/auth/customer');
+    } catch (restoreErr) {
+      console.error('[build-export] Failed to restore auth_customer_backup:', restoreErr.message);
+    }
+  }
+  if (buildError) {
+    process.exit(1);
   }
 }

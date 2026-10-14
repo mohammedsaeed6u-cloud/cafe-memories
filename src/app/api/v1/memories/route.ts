@@ -72,6 +72,10 @@ export async function GET(request: NextRequest) {
       query = query.eq('visibility', 'live_wall');
     }
 
+    if (typeof query.neq === 'function') {
+      query = query.neq('status', 'pending_consent');
+    }
+
     const { data: memories, error, count } = await query;
 
     if (error) {
@@ -155,7 +159,7 @@ export async function POST(request: NextRequest) {
       confirmedVisitId = v.id;
     }
 
-    // 2. Insert memory record
+    // 2. Insert memory record in pending_consent state (Two-Phase Verification)
     const { data: memory, error: memoryError } = await supabase
       .from('memories')
       .insert({
@@ -167,8 +171,8 @@ export async function POST(request: NextRequest) {
         optimized_url: optimizedUrl || originalUrl,
         thumbnail_url: thumbnailUrl || originalUrl,
         caption: caption || null,
-        status: 'pending',
-        visibility: consents.liveWallConsent ? 'live_wall' : 'private',
+        status: 'pending_consent',
+        visibility: 'private',
       })
       .select()
       .single();
@@ -177,7 +181,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create memory', details: memoryError.message }, { status: 500 });
     }
 
-    // 2. Link GDPR/CCPA Consent record (Fail-Closed: atomic rollback if consent fails)
+    // 3. Link GDPR/CCPA Consent record (Fail-Closed: atomic rollback if consent fails)
     const { error: consentError } = await supabase.from('memory_consents').insert({
       memory_id: memory.id,
       customer_id: customerId,
@@ -188,9 +192,33 @@ export async function POST(request: NextRequest) {
     });
 
     if (consentError) {
-      await supabase.from('memories').delete().eq('id', memory.id);
+      const { error: delErr } = await supabase.from('memories').delete().eq('id', memory.id);
+      if (delErr) {
+        console.error('Failed to rollback unconsented memory:', delErr);
+      }
       return NextResponse.json(
         { error: 'Failed to record consent for memory', details: consentError.message },
+        { status: 500 }
+      );
+    }
+
+    // 4. Activate memory only after consent is firmly persisted
+    const targetVisibility = consents.liveWallConsent ? 'live_wall' : 'private';
+    const { data: activatedMemory, error: activateError } = await supabase
+      .from('memories')
+      .update({
+        status: 'pending',
+        visibility: targetVisibility,
+      })
+      .eq('id', memory.id)
+      .select()
+      .single();
+
+    if (activateError) {
+      await supabase.from('memory_consents').delete().eq('memory_id', memory.id);
+      await supabase.from('memories').delete().eq('id', memory.id);
+      return NextResponse.json(
+        { error: 'Failed to activate memory status', details: activateError.message },
         { status: 500 }
       );
     }
@@ -198,10 +226,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       memory: {
-        id: memory.id,
-        status: memory.status,
-        visibility: memory.visibility,
-        createdAt: memory.created_at,
+        id: activatedMemory.id,
+        status: activatedMemory.status,
+        visibility: activatedMemory.visibility,
+        createdAt: activatedMemory.created_at,
       },
     });
   } catch (err: any) {

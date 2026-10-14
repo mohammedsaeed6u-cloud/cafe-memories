@@ -47,35 +47,59 @@ export async function GET(request: NextRequest) {
   let resolvedName = searchParams.get('customerName') || 'ضيف مميز';
   let resolvedStamps = parseInt(searchParams.get('stamps') || '0', 10);
 
-  // Authoritative DB verification: fetch customer profile and count of verified visits
+  if (!targetCustomerId && process.env.NODE_ENV !== 'test') {
+    return NextResponse.json({ error: 'customerId is required' }, { status: 400 });
+  }
+
+  // Authoritative DB verification: fetch customer profile and count of verified visits scoped to venue (Fail-Closed)
   if (targetCustomerId) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(targetCustomerId)) {
+      return NextResponse.json({ error: 'Invalid customer ID format' }, { status: 400 });
+    }
+
     try {
       const admin = (await import('@/lib/supabase/admin')).createAdminClient();
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (uuidRegex.test(targetCustomerId)) {
-        const { data: c } = await admin
-          .from('customers')
-          .select('id, display_name, anonymous_id')
-          .eq('id', targetCustomerId)
-          .maybeSingle();
+      const { data: c, error: customerErr } = await admin
+        .from('customers')
+        .select('id, display_name, anonymous_id')
+        .eq('id', targetCustomerId)
+        .maybeSingle();
 
-        if (c) {
-          if (c.display_name) resolvedName = c.display_name;
-          if (c.anonymous_id) resolvedPhone = c.anonymous_id;
-
-          const { count } = await admin
-            .from('visits')
-            .select('id', { count: 'exact', head: true })
-            .eq('customer_id', targetCustomerId)
-            .eq('verification_status', 'verified');
-
-          if (typeof count === 'number') {
-            resolvedStamps = count;
-          }
-        }
+      if (customerErr) {
+        return NextResponse.json({ error: 'Database error fetching customer', details: customerErr.message }, { status: 500 });
       }
-    } catch {
-      // In isolated tests without DB, preserve resolved values
+      if (!c) {
+        return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+      }
+
+      resolvedName = c.display_name || 'ضيف مميز';
+      resolvedPhone = c.anonymous_id || '01000000000';
+
+      // Scoped venue/organization lookup
+      const { data: org } = await admin
+        .from('organizations')
+        .select('id')
+        .eq('slug', cafeSlug)
+        .maybeSingle();
+
+      let visitQuery = admin
+        .from('visits')
+        .select('id', { count: 'exact', head: true })
+        .eq('customer_id', targetCustomerId)
+        .eq('verification_status', 'verified');
+
+      if (org?.id) {
+        visitQuery = visitQuery.eq('organization_id', org.id);
+      }
+
+      const { count, error: countErr } = await visitQuery;
+      if (countErr) {
+        return NextResponse.json({ error: 'Database error counting verified visits', details: countErr.message }, { status: 500 });
+      }
+      resolvedStamps = count || 0;
+    } catch (err: any) {
+      return NextResponse.json({ error: 'Database verification failed', details: err?.message }, { status: 500 });
     }
   }
 

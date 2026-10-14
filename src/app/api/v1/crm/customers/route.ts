@@ -46,10 +46,14 @@ export async function GET(request: NextRequest) {
     }
 
     const customers = (customersData || []).map(c => {
-      // Privacy Guard: Only count and return approved public memories.
+      // Privacy Guard: Only count and return approved non-private memories (public, shared, live_wall).
       // Private guest photobooth memories must NEVER be leaked to merchant CRM.
       const publicMemories = (c.memories || []).filter(
-        (m: any) => m.visibility === 'public' && m.status !== 'rejected'
+        (m: any) =>
+          m.visibility !== 'private' &&
+          ['public', 'shared', 'live_wall'].includes(m.visibility) &&
+          m.status !== 'rejected' &&
+          m.status !== 'pending_consent'
       );
       const memoryCount = publicMemories.length;
       const visitCount = c.visits ? c.visits.length : 0;

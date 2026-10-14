@@ -8,6 +8,8 @@ export interface RegisteredCustomer {
   registeredAt: string;
   lastVisit: string;
   totalVisits: number;
+  id?: string;
+  branchId?: string;
 }
 
 export class CustomerRegistryService {

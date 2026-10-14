@@ -20,6 +20,39 @@ vi.mock('@/lib/auth/auth', () => ({
   },
 }));
 
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: () => ({
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          or: () => ({
+            maybeSingle: async () => ({
+              data: {
+                id: 'a0000000-0000-0000-0000-000000000001',
+                user_id: 'staff-1',
+                role: 'staff',
+                organizations: { slug: 'memories', status: 'active' },
+              },
+              error: null,
+            }),
+          }),
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: {
+                id: 'a0000000-0000-0000-0000-000000000001',
+                user_id: 'staff-1',
+                role: 'staff',
+                organizations: { slug: 'memories', status: 'active' },
+              },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    }),
+  }),
+}));
+
 import {
   requireApiAuth,
   isAuthFailure,

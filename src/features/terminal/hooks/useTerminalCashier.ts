@@ -281,17 +281,37 @@ export function useTerminalCashier() {
     setSuccessNotice(null);
   };
 
-  const handleAddStamp = async (count: number = stampsToAdd, triggerAutoReset: boolean = false) => {
-    if (!selectedCustomer) return;
+  const handleAddStamp = async (
+    count: number = stampsToAdd,
+    triggerAutoReset: boolean = false,
+    targetCustomer?: RegisteredCustomer | null
+  ) => {
+    const customer = targetCustomer || selectedCustomer;
+    if (!customer) {
+      setErrorNotice('يجب تحديد العميل أولاً قبل إضافة الأختام.');
+      return;
+    }
     const addCount = Math.max(1, count);
 
     // Synchronize authoritative visit proof with server visits API first (Fail-Closed)
     if (typeof window !== 'undefined') {
-      const branchId = (settings as any).branchId || (selectedCustomer as any).branchId || cafeSlug;
-      const customerId = (selectedCustomer as any).id || (selectedCustomer as any).customerId;
+      const branchId =
+        (customer as any).branchId ||
+        (settings as any).branchId ||
+        localStorage.getItem('memories_active_branch_id') ||
+        (settings as any).id;
+      const customerId = (customer as any).id || (customer as any).customerId;
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (customerId && uuidRegex.test(customerId) && branchId && uuidRegex.test(branchId)) {
-        try {
+
+      // Fail-Closed: If identifiers are required and invalid in browser environment, reject immediately
+      if (!customerId || !uuidRegex.test(customerId) || !branchId || !uuidRegex.test(branchId)) {
+        setErrorNotice('تعذر اعتماد الختم: معرّف العميل أو الفرع غير صالح (يجب أن يكون UUID معتمداً).');
+        return;
+      }
+
+      try {
+        // Enforce 1 verified server visit record per stamp added
+        for (let i = 0; i < addCount; i++) {
           const res = await fetch('/api/v1/visits', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -306,29 +326,29 @@ export function useTerminalCashier() {
             setErrorNotice(err.error || `تعذر اعتماد الزيارة من الخادم (رمز ${res.status})`);
             return;
           }
-        } catch (err) {
-          reportIgnoredError('terminal/server_visit_sync', err);
-          setErrorNotice('تعذر الاتصال بالخادم لتسجيل الزيارة');
-          return;
         }
+      } catch (err) {
+        reportIgnoredError('terminal/server_visit_sync', err);
+        setErrorNotice('تعذر الاتصال بالخادم لتسجيل الزيارة');
+        return;
       }
     }
 
     // Apply local updates only after authoritative server verification
-    LoyaltyPurseService.addDirectStamp(selectedCustomer.phone, cafeSlug, requiredVisits, giftTitle, addCount);
+    LoyaltyPurseService.addDirectStamp(customer.phone, cafeSlug, requiredVisits, giftTitle, addCount);
     try {
       TappyAccountingEngine.processTap({
-        customerPhone: selectedCustomer.phone,
-        customerName: selectedCustomer.name,
+        customerPhone: customer.phone,
+        customerName: customer.name,
         branchId: cafeSlug,
         brandId: 'stampy',
         isVerified: true,
         forceBypassCooldown: true,
       });
     } catch (e) { reportIgnoredError('terminal/accounting_tap', e); }
-    const updatedLoyalty = LoyaltyPurseService.getData(selectedCustomer.phone, cafeSlug, requiredVisits);
+    const updatedLoyalty = LoyaltyPurseService.getData(customer.phone, cafeSlug, requiredVisits);
     setLoyaltyData(updatedLoyalty);
-    setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: (prev.totalVisits || 0) + addCount } : null));
+    setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: (prev.totalVisits || 0) + addCount } : customer));
 
     recordShiftStamp(addCount);
     SoundEffectsService.playStampChime();
@@ -338,8 +358,8 @@ export function useTerminalCashier() {
       const stampLabel = addCount > 1 ? `${addCount} أختام جديدة` : 'ختم زيارة جديدة';
       DigitalWalletService.updateCustomerCardComprehensive({
         cafeSlug,
-        customerPhone: selectedCustomer.phone,
-        customerName: selectedCustomer.name,
+        customerPhone: customer.phone,
+        customerName: customer.name,
         stampedCount: updatedLoyalty.stampedCount,
         maxSlots: requiredVisits,
         giftTitle,
@@ -349,7 +369,7 @@ export function useTerminalCashier() {
         stampIcon: settings.stampConfig?.customEmoji || '☕',
         colorHex: settings.walletPassConfig?.colorHex || '#1C1C1E',
         pushMessage: isComplete
-          ? `🎉 مبروك يا ${selectedCustomer.name}! اكتملت بطاقة الولاء الخاصة بك واستحققت: ${giftTitle}! 🎁`
+          ? `🎉 مبروك يا ${customer.name}! اكتملت بطاقة الولاء الخاصة بك واستحققت: ${giftTitle}! 🎁`
           : `☕ تمت إضافة ${stampLabel} لكارت الولاء في ${settings.branding?.name || 'المتجر'}! رصيدك: ${updatedLoyalty.stampedCount}/${requiredVisits}`,
       }).catch((e) => console.warn('Terminal wallet push failed:', e));
     } catch (e) {
@@ -360,8 +380,8 @@ export function useTerminalCashier() {
     EventOrchestratorService.dispatch(
       'STAMP_AWARDED',
       {
-        customerPhone: selectedCustomer.phone,
-        customerName: selectedCustomer.name,
+        customerPhone: customer.phone,
+        customerName: customer.name,
         cafeSlug,
         newStampCount: updatedLoyalty.stampedCount,
         maxSlots: requiredVisits,
@@ -375,7 +395,7 @@ export function useTerminalCashier() {
     );
 
     const stampNotice = addCount > 1 ? `تم ختم ${addCount} أختام بنجاح` : 'تم ختم زيارة جديدة بنجاح';
-    setSuccessNotice(`${stampNotice} للعميل (${selectedCustomer.name})! الرصيد: ${updatedLoyalty.stampedCount}/${requiredVisits} • تم بث الإشعار للمحفظة 📱✨`);
+    setSuccessNotice(`${stampNotice} للعميل (${customer.name})! الرصيد: ${updatedLoyalty.stampedCount}/${requiredVisits} • تم بث الإشعار للمحفظة 📱✨`);
 
     if (triggerAutoReset) {
       cancelAutoReset();
@@ -456,6 +476,7 @@ export function useTerminalCashier() {
         registeredAt: new Date().toISOString(),
         lastVisit: new Date().toISOString(),
         totalVisits: asyncResult.totalVisits || 1,
+        id: asyncResult.id,
       };
     } else {
       customerToUse = CustomerRegistryService.registerCustomer(
@@ -483,7 +504,7 @@ export function useTerminalCashier() {
     }
 
     if (autoStamp && customerToUse) {
-      await handleAddStamp(stampsToAdd, true);
+      await handleAddStamp(stampsToAdd, true, customerToUse);
     }
   };
 

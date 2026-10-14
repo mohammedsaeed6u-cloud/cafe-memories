@@ -16,6 +16,7 @@ vi.mock('@/lib/supabase/admin', () => ({
         order: vi.fn(() => b),
         range: vi.fn(() => b),
         eq: vi.fn(() => b),
+        neq: vi.fn(() => b),
         then: (resolve: any) => Promise.resolve({ data: [], error: null, count: 0 }).then(resolve),
       };
       return b;
