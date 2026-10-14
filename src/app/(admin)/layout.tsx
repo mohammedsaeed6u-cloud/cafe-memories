@@ -1,4 +1,5 @@
 import React from "react";
+import { connection } from 'next/server';
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -7,6 +8,10 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await connection(); // Never prerender a build-time configuration redirect.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    redirect('/login');
+  }
   const db = await createClient();
   const {
     data: { user },
