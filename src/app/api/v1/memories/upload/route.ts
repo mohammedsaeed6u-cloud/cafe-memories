@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
+import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { apiError, requireCustomer, resolveVenue } from '@/lib/server/context';
 import { processImageDerivatives } from '@/lib/services/images';
 
 export const runtime = 'nodejs';
 
-/** One authenticated ingestion path: private media + pending visit + memory + consent. */
+/** Private media + consent, linked to a confirmed stamp (legacy pending uploads still work). */
 export async function POST(request: NextRequest) {
   const auth = await requireCustomer();
   if (auth.error) return auth.error;
@@ -21,9 +22,11 @@ export async function POST(request: NextRequest) {
   const cafeSlug = form.get('cafeSlug');
   const branchSlug = form.get('branchSlug');
   const caption = form.get('caption');
+  const visitId = form.get('visitId');
   if (!(file instanceof File) || typeof cafeSlug !== 'string' || cafeSlug.length > 40 ||
       (branchSlug !== null && typeof branchSlug !== 'string') ||
       (caption !== null && (typeof caption !== 'string' || caption.length > 280)) ||
+      (visitId !== null && (typeof visitId !== 'string' || !z.uuid().safeParse(visitId).success)) ||
       !['true', 'false', null].includes(form.get('liveWallConsent') as string | null)) {
     return apiError('Invalid upload fields', 400);
   }
@@ -32,6 +35,16 @@ export async function POST(request: NextRequest) {
     const venue = await resolveVenue(cafeSlug, branchSlug as string | null);
     if (!venue) return apiError('Venue not found', 404);
     const admin = createAdminClient();
+    if (typeof visitId === 'string') {
+      // A caller cannot select a different tenant's visit, nor upload for a
+      // pending check-in. The transaction rechecks this after image processing.
+      const { data: visit, error: visitError } = await admin.from('visits')
+        .select('id').eq('id', visitId).eq('customer_id', auth.context.customerId)
+        .eq('organization_id', venue.organizationId)
+        .eq('verification_status', 'verified').maybeSingle();
+      if (visitError) return apiError('Could not check verified visit', 503);
+      if (!visit) return apiError('Confirmed visit not found', 404);
+    }
     const { count, error: quotaError } = await admin.from('memories')
       .select('*', { head: true, count: 'exact' }).eq('customer_id', auth.context.customerId)
       .gte('created_at', new Date(Date.now() - 24 * 60 * 60_000).toISOString());
@@ -53,19 +66,24 @@ export async function POST(request: NextRequest) {
       console.error('Private media upload failed:', storageError);
       return apiError('Could not store image', 503);
     }
-    const { data: memoryId, error: dbError } = await admin.rpc('create_customer_memory', {
-      p_customer_id: auth.context.customerId, p_branch_id: venue.branchId,
+    const keysAndConsent = {
+      p_customer_id: auth.context.customerId,
       p_original_key: keys[0], p_optimized_key: keys[1], p_thumbnail_key: keys[2],
       p_caption: caption || null, p_live_wall_consent: form.get('liveWallConsent') === 'true',
-    });
+    };
+    const { data: memoryId, error: dbError } = typeof visitId === 'string'
+      ? await admin.rpc('attach_verified_visit_memory', { ...keysAndConsent, p_visit_id: visitId })
+      : await admin.rpc('create_customer_memory', { ...keysAndConsent, p_branch_id: venue.branchId });
     if (dbError || !memoryId) {
       const cleanup = await admin.storage.from('memories').remove(keys);
       if (cleanup.error) console.error('Failed to clean up orphaned image objects:', cleanup.error);
       if (dbError?.code === '23514') return apiError('Daily photo limit reached', 429);
+      if (dbError?.code === '23505') return apiError('This stamp already has a photo', 409);
+      if (dbError?.code === '42501') return apiError('Confirmed visit not found', 404);
       console.error('Memory transaction failed:', dbError);
       return apiError('Could not save memory', 503);
     }
-    return NextResponse.json({ memoryId, status: 'pending',
+    return NextResponse.json({ memoryId, visitId: visitId ?? null, status: 'pending',
       imageUrl: `/api/v1/media/${memoryId}?variant=optimized` },
     { status: 201, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {

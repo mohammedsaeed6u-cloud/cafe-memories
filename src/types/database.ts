@@ -265,6 +265,53 @@ export type Database = {
           { foreignKeyName: 'feature_flags_organization_id_fkey'; columns: ['organization_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] },
         ];
       };
+      keepsake_cards: {
+        Row: {
+          id: string;
+          customer_id: string;
+          organization_id: string;
+          reward_rule_id: string | null;
+          reward_name: string;
+          sequence_number: number;
+          threshold: number;
+          visit_ids: string[];
+          unlocked_at: string;
+          redeemed_at: string | null;
+          redemption_event_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          organization_id: string;
+          reward_rule_id?: string | null;
+          reward_name: string;
+          sequence_number: number;
+          threshold: number;
+          visit_ids: string[];
+          unlocked_at?: string;
+          redeemed_at?: string | null;
+          redemption_event_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          customer_id?: string;
+          organization_id?: string;
+          reward_rule_id?: string | null;
+          reward_name?: string;
+          sequence_number?: number;
+          threshold?: number;
+          visit_ids?: string[];
+          unlocked_at?: string;
+          redeemed_at?: string | null;
+          redemption_event_id?: string | null;
+        };
+        Relationships: [
+          { foreignKeyName: 'keepsake_cards_customer_id_fkey'; columns: ['customer_id']; isOneToOne: false; referencedRelation: 'customers'; referencedColumns: ['id'] },
+          { foreignKeyName: 'keepsake_cards_organization_id_fkey'; columns: ['organization_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] },
+          { foreignKeyName: 'keepsake_cards_redemption_event_id_fkey'; columns: ['redemption_event_id']; isOneToOne: true; referencedRelation: 'reward_events'; referencedColumns: ['id'] },
+          { foreignKeyName: 'keepsake_cards_reward_rule_id_fkey'; columns: ['reward_rule_id']; isOneToOne: false; referencedRelation: 'reward_rules'; referencedColumns: ['id'] },
+        ];
+      };
       memories: {
         Row: {
           id: string;
@@ -1060,6 +1107,7 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      attach_verified_visit_memory: { Args: { p_customer_id: string | null; p_visit_id: string | null; p_original_key: string | null; p_optimized_key: string | null; p_thumbnail_key: string | null; p_caption: string | null; p_live_wall_consent: boolean | null }; Returns: string };
       can_access_branch: { Args: { p_org: string | null; p_branch: string | null }; Returns: boolean };
       can_moderate_branch: { Args: { p_org: string | null; p_branch: string | null }; Returns: boolean };
       can_view_customer: { Args: { p_customer: string | null; p_auth_user: string | null }; Returns: boolean };
@@ -1068,9 +1116,12 @@ export type Database = {
       consume_screen_pairing: { Args: { p_code: string | null; p_token_hash: string | null; p_ip_hash: string | null }; Returns: string };
       create_customer_memory: { Args: { p_customer_id: string | null; p_branch_id: string | null; p_original_key: string | null; p_optimized_key: string | null; p_thumbnail_key: string | null; p_caption: string | null; p_live_wall_consent: boolean | null }; Returns: string };
       customer_has_saved_data: { Args: Record<string, never>; Returns: boolean };
+      ensure_keepsake_cards: { Args: { p_customer_id: string | null; p_organization_id: string | null }; Returns: undefined };
+      get_keepsake_balance: { Args: { p_customer_id: string | null; p_organization_id: string | null }; Returns: Json };
       get_user_org_ids: { Args: { user_id: string | null }; Returns: string[] };
       get_user_org_role: { Args: { user_id: string | null; org_id: string | null }; Returns: Database['public']['Enums']['org_member_role'] };
       is_org_admin: { Args: { user_id: string | null; org_id: string | null }; Returns: boolean };
+      list_unpictured_verified_visits: { Args: { p_customer_id: string | null; p_organization_id: string | null; p_limit: number | null }; Returns: { visit_id: string; branch_id: string; verified_at: string }[] };
       merchant_overview: { Args: { p_organization_id: string | null; p_branch_id: string | null }; Returns: Json };
       provision_merchant: { Args: { p_name: string | null; p_slug: string | null }; Returns: string };
       record_qr_scan: { Args: { p_slug: string | null }; Returns: { qr_id: string; org_slug: string; branch_slug: string; qr_source: Database['public']['Enums']['qr_source'] }[] };

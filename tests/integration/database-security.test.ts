@@ -61,6 +61,7 @@ beforeAll(async () => {
     [legacyMemoryId, legacyCustomer]);
   await db.exec(readFileSync(new URL('00003_secure_core.sql', sqlDir), 'utf8'));
   await db.exec(readFileSync(new URL('00004_customer_accounts.sql', sqlDir), 'utf8'));
+  await db.exec(readFileSync(new URL('00005_visit_keepsakes.sql', sqlDir), 'utf8'));
   // Mirrors Supabase default public-schema grants; RLS must still reject unsafe operations.
   await db.exec('GRANT USAGE ON SCHEMA public, auth TO authenticated, service_role; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;');
   for (const [name, id] of Object.entries(ids)) await db.query(
@@ -335,3 +336,191 @@ describe('migration security invariants (real PostgreSQL engine)', () => {
     expect(attempts).toBe(6);
   });
 });
+
+describe('confirmed visit photobooth ledger', () => {
+  const merchant = randomUUID();
+  const guest = randomUUID();
+  const outsider = randomUUID();
+  let org: string;
+  let main: string;
+  let second: string;
+  let owner: string;
+  let otherCustomer: string;
+
+  beforeAll(async () => {
+    for (const id of [merchant, guest, outsider]) {
+      await db.query('INSERT INTO auth.users(id,email_confirmed_at) VALUES($1,now())', [id]);
+    }
+    org = await as('authenticated', merchant, async () => (await db.query<{ id: string }>(
+      "SELECT public.provision_merchant('Keepsake Cafe','keepsake-cafe') id")).rows[0].id,
+    { email: 'keepsake@example.com' });
+    main = (await db.query<{ id: string }>('SELECT id FROM public.branches WHERE organization_id=$1', [org])).rows[0].id;
+    second = (await db.query<{ id: string }>(
+      "INSERT INTO public.branches(organization_id,name,slug) VALUES($1,'Second','second') RETURNING id",
+      [org])).rows[0].id;
+    owner = (await db.query<{ id: string }>('INSERT INTO public.customers(auth_user_id) VALUES($1) RETURNING id',
+      [guest])).rows[0].id;
+    otherCustomer = (await db.query<{ id: string }>('INSERT INTO public.customers(auth_user_id) VALUES($1) RETURNING id',
+      [outsider])).rows[0].id;
+    await as('authenticated', guest, async () => db.query('SELECT public.check_in_customer($1)', [main]));
+  });
+
+  it('only saves one optional private photo per verified visit, without inventing stamps', async () => {
+    const prefix = `${org}/${owner}/${randomUUID()}`;
+    const memoryId = await as('service_role', null, async () => (await db.query<{ id: string }>(
+      'SELECT public.create_customer_memory($1,$2,$3,$4,$5,$6,$7) id',
+      [owner, main, `${prefix}/original.webp`, `${prefix}/optimized.webp`,
+        `${prefix}/thumbnail.webp`, null, false])).rows[0].id);
+    const pendingVisit = (await db.query<{ visit_id: string }>(
+      'SELECT visit_id FROM public.memories WHERE id=$1', [memoryId])).rows[0].visit_id;
+    const takePhoto = (customerId: string, visitId: string, keyPrefix: string) =>
+      db.query<{ id: string }>('SELECT public.attach_verified_visit_memory($1,$2,$3,$4,$5,$6,$7) id',
+        [customerId, visitId, `${keyPrefix}/original.webp`, `${keyPrefix}/optimized.webp`,
+          `${keyPrefix}/thumbnail.webp`, 'اللحظة دي هتفضل', false]);
+    await as('service_role', null, async () => {
+      await expect(takePhoto(owner, pendingVisit, prefix)).rejects.toThrow(/Verified visit not found/);
+    });
+    const rule = await as('authenticated', merchant, async () => (await db.query<{ id: string }>(
+      "SELECT public.configure_visit_reward($1,'Original gift',2) id", [org])).rows[0].id);
+    const first = await as('authenticated', merchant, async () => (await db.query<{
+      record_verified_visit: { visitId: string };
+    }>('SELECT public.record_verified_visit($1,$2,$3)', [owner, main, randomUUID()])).rows[0].record_verified_visit.visitId);
+    expect(first).toBe(pendingVisit); // Existing pre-stamp photo is attached, not a second stamp.
+    expect((await db.query('SELECT id FROM public.keepsake_cards WHERE customer_id=$1', [owner])).rows).toEqual([]);
+    const secondVisit = (await db.query<{ id: string }>(
+      "INSERT INTO public.visits(customer_id,organization_id,branch_id,source,verification_status,verified_at) VALUES($1,$2,$3,'staff','verified',now()) RETURNING id",
+      [owner, org, second])).rows[0].id;
+    const firstCard = (await db.query<{
+      id: string; threshold: number; reward_name: string; visit_ids: string[];
+    }>('SELECT id,threshold,reward_name,visit_ids FROM public.keepsake_cards WHERE customer_id=$1', [owner])).rows[0];
+    expect(firstCard).toMatchObject({ threshold: 2, reward_name: 'Original gift' });
+    expect(new Set(firstCard.visit_ids)).toEqual(new Set([first, secondVisit]));
+    await as('authenticated', guest, async () => {
+      expect((await db.query('SELECT * FROM public.keepsake_cards')).rows).toEqual([]);
+      await expect(takePhoto(owner, secondVisit, prefix)).rejects.toThrow(/permission denied|Server-only operation/);
+      await expect(db.query('SELECT public.get_keepsake_balance($1,$2)', [owner, org]))
+        .rejects.toThrow(/permission denied|Server-only operation/);
+    });
+    await as('authenticated', merchant, async () => {
+      expect((await db.query('SELECT * FROM public.keepsake_cards')).rows).toEqual([]);
+    });
+    await as('service_role', null, async () => {
+      await expect(takePhoto(otherCustomer, secondVisit, `${org}/${otherCustomer}/${randomUUID()}`))
+        .rejects.toThrow(/Verified visit not found/);
+      await expect(takePhoto(owner, first, prefix)).rejects.toThrow(/Visit already has a photo/);
+      await expect(takePhoto(owner, secondVisit, `${orgB}/${owner}/${randomUUID()}`))
+        .rejects.toThrow(/Invalid photo or venue/);
+      const photo = (await takePhoto(owner, secondVisit, `${org}/${owner}/${randomUUID()}`)).rows[0].id;
+      expect((await db.query<{ visit_id: string; visibility: string; live_wall_consent: boolean }>(
+        'SELECT m.visit_id,m.visibility,c.live_wall_consent FROM public.memories m JOIN public.memory_consents c ON c.memory_id=m.id WHERE m.id=$1',
+        [photo])).rows[0]).toEqual({ visit_id: secondVisit, visibility: 'private', live_wall_consent: false });
+      expect((await db.query<{ total: number }>(
+        'SELECT count(*)::int total FROM public.visits WHERE customer_id=$1 AND organization_id=$2',
+        [owner, org])).rows[0].total).toBe(2);
+      await expect(takePhoto(owner, secondVisit, `${org}/${owner}/${randomUUID()}`))
+        .rejects.toThrow(/Visit already has a photo/);
+      const balance = (await db.query<{ balance: { usedVisits: number; availableRewards: number; oldestRewardName: string } }>(
+        'SELECT public.get_keepsake_balance($1,$2) balance', [owner, org])).rows[0].balance;
+      expect(balance).toEqual({ usedVisits: 2, availableRewards: 1, oldestRewardName: 'Original gift' });
+    });
+    const earned = await as('authenticated', merchant, async () => (await db.query<{
+      redeem_customer_reward: { keepsakeCardId: string; rewardName: string; replayed: boolean };
+    }>('SELECT public.redeem_customer_reward($1,$2,$3,$4)', [owner, main, rule, randomUUID()]))
+      .rows[0].redeem_customer_reward);
+    expect(earned).toMatchObject({ keepsakeCardId: firstCard.id, rewardName: 'Original gift', replayed: false });
+    expect((await db.query<{ redeemed_at: string | null; redemption_event_id: string | null }>(
+      'SELECT redeemed_at,redemption_event_id FROM public.keepsake_cards WHERE id=$1', [firstCard.id]))
+      .rows[0]).toMatchObject({ redeemed_at: expect.any(Date), redemption_event_id: expect.any(String) });
+    await as('authenticated', merchant, async () => {
+      await expect(db.query('SELECT public.redeem_customer_reward($1,$2,$3,$4)',
+        [owner, main, rule, randomUUID()])).rejects.toThrow(/Insufficient verified visits/);
+    });
+  });
+
+  it('preserves old cards when the merchant changes the stamp threshold and reward name', async () => {
+    await as('authenticated', merchant, async () =>
+      db.query("SELECT public.configure_visit_reward($1,'New gift',3)", [org]));
+    const before = (await db.query<{ id: string; visit_ids: string[] }>(
+      'SELECT id,visit_ids FROM public.keepsake_cards WHERE customer_id=$1 ORDER BY sequence_number', [owner])).rows;
+    for (let index = 0; index < 3; index++) {
+      await db.query("INSERT INTO public.visits(customer_id,organization_id,branch_id,source,verification_status,verified_at) VALUES($1,$2,$3,'staff','verified',now())", [owner, org, index % 2 ? main : second]);
+    }
+    const cards = (await db.query<{
+      id: string; reward_name: string; threshold: number; visit_ids: string[];
+    }>('SELECT id,reward_name,threshold,visit_ids FROM public.keepsake_cards WHERE customer_id=$1 ORDER BY sequence_number',
+      [owner])).rows;
+    expect(cards).toHaveLength(2);
+    expect(cards[0]).toEqual({ id: before[0].id, reward_name: 'Original gift', threshold: 2, visit_ids: before[0].visit_ids });
+    expect(cards[1]).toMatchObject({ reward_name: 'New gift', threshold: 3 });
+    expect(cards[1].visit_ids).toHaveLength(3);
+    const unpictured = await as('service_role', null, async () => (await db.query<{ visit_id: string }>(
+      'SELECT visit_id FROM public.list_unpictured_verified_visits($1,$2,60)', [owner, org])).rows);
+    expect(new Set(unpictured.map((visit) => visit.visit_id))).toEqual(new Set(cards[1].visit_ids));
+    await as('authenticated', merchant, async () =>
+      db.query("SELECT public.configure_visit_reward($1,'Future gift',2)", [org]));
+    const unchanged = (await db.query<{ reward_name: string; threshold: number }>(
+      'SELECT reward_name,threshold FROM public.keepsake_cards WHERE id=$1', [cards[1].id])).rows[0];
+    expect(unchanged).toEqual({ reward_name: 'New gift', threshold: 3 });
+    const balance = await as('service_role', null, async () => (await db.query<{
+      balance: { usedVisits: number; availableRewards: number; oldestRewardName: string };
+    }>('SELECT public.get_keepsake_balance($1,$2) balance', [owner, org])).rows[0].balance);
+    expect(balance).toEqual({ usedVisits: 5, availableRewards: 1, oldestRewardName: 'New gift' });
+  });
+
+  it('awards the card and gift after confirmed stamps even when no photos were uploaded', async () => {
+    await as('authenticated', merchant, async () =>
+      db.query("SELECT public.configure_visit_reward($1,'Gift without photos',2)", [org]));
+    await as('authenticated', outsider, async () => db.query('SELECT public.check_in_customer($1)', [main]));
+    const first = await as('authenticated', merchant, async () => (await db.query<{
+      record_verified_visit: { visitId: string };
+    }>('SELECT public.record_verified_visit($1,$2,$3)', [otherCustomer, main, randomUUID()]))
+      .rows[0].record_verified_visit.visitId);
+    const secondVisitId = (await db.query<{ id: string }>(
+      "INSERT INTO public.visits(customer_id,organization_id,branch_id,source,verification_status,verified_at) VALUES($1,$2,$3,'staff','verified',now()) RETURNING id",
+      [otherCustomer, org, second])).rows[0].id;
+    const cards = (await db.query<{ visit_ids: string[]; threshold: number }>(
+      'SELECT visit_ids,threshold FROM public.keepsake_cards WHERE customer_id=$1', [otherCustomer])).rows;
+    expect(cards).toHaveLength(1);
+    expect(cards[0].threshold).toBe(2);
+    expect(new Set(cards[0].visit_ids)).toEqual(new Set([first, secondVisitId]));
+    expect((await db.query('SELECT id FROM public.memories WHERE customer_id=$1', [otherCustomer])).rows).toEqual([]);
+  });
+});
+
+it('backfills only audited historical visits and maps old redemptions to their saved card', async () => {
+  const historic = new PGlite();
+  try {
+    await historic.exec(bootstrap);
+    for (const migration of ['00001_initial_schema.sql', '00002_product_refactor.sql',
+      '00003_secure_core.sql', '00004_customer_accounts.sql']) {
+      await historic.exec(readFileSync(new URL(migration, sqlDir), 'utf8'));
+    }
+    const userId = randomUUID();
+    await historic.query('INSERT INTO auth.users(id) VALUES($1)', [userId]);
+    const orgId = (await historic.query<{ id: string }>(
+      "INSERT INTO public.organizations(name,slug,country) VALUES('History Cafe','history-cafe','EG') RETURNING id")).rows[0].id;
+    const branchId = (await historic.query<{ id: string }>(
+      "INSERT INTO public.branches(organization_id,name,slug) VALUES($1,'Main','main') RETURNING id", [orgId])).rows[0].id;
+    const customerId = (await historic.query<{ id: string }>(
+      'INSERT INTO public.customers(auth_user_id) VALUES($1) RETURNING id', [userId])).rows[0].id;
+    const ruleId = (await historic.query<{ id: string }>(
+      "INSERT INTO public.reward_rules(organization_id,name,threshold,trigger_type,reward_type) VALUES($1,'Old gift',2,'visit_count','free_item') RETURNING id",
+      [orgId])).rows[0].id;
+    for (let index = 0; index < 2; index++) await historic.query(
+      "INSERT INTO public.visits(customer_id,organization_id,branch_id,source,verification_status,verified_at) VALUES($1,$2,$3,'staff','verified',now()-interval '2 hours')",
+      [customerId, orgId, branchId]);
+    await historic.query('INSERT INTO public.visits(customer_id,organization_id,branch_id,verification_status) VALUES($1,$2,$3,$4)',
+      [customerId, orgId, branchId, 'suspicious']);
+    const eventId = (await historic.query<{ id: string }>(
+      "INSERT INTO public.reward_events(customer_id,organization_id,branch_id,type,value,reference_type,reference_id) VALUES($1,$2,$3,'reward_redeemed',1,'reward_rules',$4) RETURNING id",
+      [customerId, orgId, branchId, ruleId])).rows[0].id;
+    await historic.exec(readFileSync(new URL('00005_visit_keepsakes.sql', sqlDir), 'utf8'));
+    const cards = (await historic.query<{
+      threshold: number; reward_name: string; visit_ids: string[]; redemption_event_id: string;
+    }>('SELECT threshold,reward_name,visit_ids,redemption_event_id FROM public.keepsake_cards WHERE customer_id=$1',
+      [customerId])).rows;
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toMatchObject({ threshold: 2, reward_name: 'Old gift', redemption_event_id: eventId });
+    expect(cards[0].visit_ids).toHaveLength(2);
+  } finally { await historic.close(); }
+}, 15_000);

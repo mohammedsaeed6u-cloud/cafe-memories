@@ -45,6 +45,16 @@ export default function TermsPage() {
           </p>
         </section>
         <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
+          <h2 className="text-xl font-bold mb-2">كارت الذكريات</h2>
+          <p className="text-sm leading-8 text-ink/70">
+            بعد ختم يؤكده الموظف، تصوير الزيارة اختياري وخاص في الأصل ولا يمنح
+            ختمًا إضافيًا. عند اكتمال الأختام، يحفظ حساب الضيف كارتًا يضم صور
+            الزيارات التي رفعها وأماكن فارغة لما لم يصوّره، مع المكافأة الموعودة.
+            يمكن لصاحب الحساب حفظه PDF أو إرساله بنفسه للطباعة في الفرع عبر نافذة
+            المتصفح؛ لا نُرسل صور العملاء إلى طابعة تلقائيًا.
+          </p>
+        </section>
+        <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
           <h2 className="text-xl font-bold mb-2">الصور وشاشة الصالة</h2>
           <p className="text-sm leading-8 text-ink/70">
             لا ترفع صورًا دون إذن الأشخاص الظاهرين فيها، أو مواد مسيئة أو تنتهك

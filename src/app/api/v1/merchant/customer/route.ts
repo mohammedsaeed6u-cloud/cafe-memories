@@ -33,12 +33,14 @@ export async function GET(request: NextRequest) {
   if (customer.error || visits.error || rules.error) return apiError('Could not load customer', 503);
   if (!customer.data) return apiError('Customer not found', 404);
   const rule = rules.data?.[0] ?? null;
-  const { count, error } = rule ? await admin.from('reward_events').select('*', { head: true, count: 'exact' })
-    .eq('customer_id', customerId).eq('organization_id', orgId).eq('type', 'reward_redeemed')
-    .eq('reference_id', rule.id) : { count: 0, error: null };
+  const { data: cards, count, error } = await admin.from('keepsake_cards')
+    .select('reward_name', { count: 'exact' }).eq('customer_id', customerId)
+    .eq('organization_id', orgId).is('redeemed_at', null)
+    .order('sequence_number', { ascending: true }).limit(1);
   if (error) return apiError('Could not load customer rewards', 503);
   const verifiedVisits = visits.count ?? 0;
   return NextResponse.json({ customer: { id: customer.data.id, displayName: customer.data.display_name },
-    verifiedVisits, rule, availableRewards: rule ? Math.max(0, Math.floor(verifiedVisits / rule.threshold) - (count ?? 0)) : 0 },
+    verifiedVisits, rule, availableRewards: rule ? (count ?? 0) : 0,
+    nextRewardName: rule ? cards?.[0]?.reward_name ?? null : null },
     { headers: { 'Cache-Control': 'no-store' } });
 }

@@ -8,7 +8,9 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import type { KeepsakeStory } from "@/lib/keepsakes";
 import { customerGoogleAction } from "@/lib/customer-google-flow";
 import { visibleStampCount } from "@/lib/loyalty-progress";
 
@@ -47,7 +49,14 @@ type Progress = {
   stampedCount: number;
   availableRewards: number;
   rewardRule: { name: string } | null;
+  pendingRewardName: string | null;
 };
+
+function visitLabel(verifiedAt: string, branchName: string) {
+  return `${branchName} · ${new Intl.DateTimeFormat("ar-EG", {
+    day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Cairo",
+  }).format(new Date(verifiedAt))}`;
+}
 
 export function CustomerClient({
   cafeSlug,
@@ -66,6 +75,11 @@ export function CustomerClient({
   const [phone, setPhone] = useState("");
   const [progress, setProgress] = useState<Progress | null>(null);
   const [progressError, setProgressError] = useState("");
+  const [story, setStory] = useState<KeepsakeStory | null>(null);
+  const [storyError, setStoryError] = useState("");
+  const [selectedVisitId, setSelectedVisitId] = useState("");
+  const [storyPage, setStoryPage] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [tab, setTab] = useState<"card" | "memories" | "account">("card");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -82,6 +96,21 @@ export function CustomerClient({
     },
     [preview],
   );
+
+  const loadStory = useCallback(async (page = 0, append = false) => {
+    const query = new URLSearchParams({ cafeSlug, page: String(page) });
+    const response = await fetch(`/api/v1/customer/story?${query}`, { cache: "no-store" });
+    if (!response.ok) throw new Error("Could not load keepsakes");
+    const result = await response.json() as KeepsakeStory;
+    setStory((previous) => append && previous
+      ? { ...result, cards: [...previous.cards, ...result.cards] } : result);
+    if (!append) {
+      setSelectedVisitId((previous) => result.eligibleVisits.some((visit) => visit.id === previous)
+        ? previous : result.eligibleVisits[0]?.id ?? "");
+    }
+    setStoryPage(page);
+    setStoryError("");
+  }, [cafeSlug]);
 
   const refresh = useCallback(
     async (syncAccount = false): Promise<Session> => {
@@ -114,9 +143,16 @@ export function CustomerClient({
           "تعذر تحميل تفاصيل المكافأة الآن. الزيارات المؤكدة ما زالت ظاهرة، ويمكنك المحاولة مجددًا.",
         );
       }
+      try {
+        await loadStory();
+      } catch {
+        setStory(null);
+        setSelectedVisitId("");
+        setStoryError("تعذر تحميل زيارات التصوير وكروت الذكريات. حاول تاني.");
+      }
       return body;
     },
-    [cafeSlug, branchSlug],
+    [cafeSlug, branchSlug, loadStory],
   );
 
   useEffect(() => {
@@ -283,6 +319,10 @@ export function CustomerClient({
       setPreview("");
       setSession(null);
       setProgress(null);
+      setStory(null);
+      setStoryError("");
+      setSelectedVisitId("");
+      setStoryPage(0);
       setDisplayName("");
       setPhone("");
       setEntry("choose");
@@ -315,12 +355,13 @@ export function CustomerClient({
 
   async function upload(event: FormEvent) {
     event.preventDefault();
-    if (!file) return;
+    if (!file || !selectedVisitId || !story) return;
     setBusy(true);
     setNotice("");
     try {
       const form = new FormData();
       form.set("file", file);
+      form.set("visitId", selectedVisitId);
       form.set("cafeSlug", cafeSlug);
       if (branchSlug) form.set("branchSlug", branchSlug);
       form.set("caption", caption);
@@ -330,7 +371,12 @@ export function CustomerClient({
         body: form,
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? "فشل رفع الصورة");
+      if (!response.ok) {
+        if (response.status === 409) await loadStory().catch(() => {});
+        throw new Error(response.status === 409 ? "الختم ده ليه صورة بالفعل؛ اختار زيارة تانية."
+          : response.status === 404 ? "الزيارة مش مؤكدة في حسابك. حدّث البطاقة وحاول تاني."
+            : body.error ?? "فشل رفع الصورة");
+      }
       setFile(null);
       setCaption("");
       setConsent(false);
@@ -339,7 +385,7 @@ export function CustomerClient({
       await refresh();
       setTab("memories");
       setNotice(
-        "حُفظت ذكراك بشكل خاص. ستظهر على الشاشة فقط إذا وافقتَ عليها واعتمدها الفريق.",
+        "اتربطت صورتك بالختم المؤكد، وهتظهر في كارت الذكريات لما تكمل المكافأة. تفضل خاصة إلا لو وافقت على عرضها واعتمدها الفريق.",
       );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "تعذر رفع الصورة");
@@ -551,6 +597,7 @@ export function CustomerClient({
               ))}
             </nav>
             {tab === "card" && (
+              <>
               <div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
                 <section className="relative overflow-hidden rounded-[2rem] bg-forest p-6 text-white shadow-[0_24px_60px_-32px_#183a32] sm:p-9">
                   <span
@@ -590,7 +637,8 @@ export function CustomerClient({
                             مكافأتك القادمة
                           </p>
                           <p className="mt-1 text-lg font-bold">
-                            {progress.rewardRule.name}
+                            {progress.availableRewards > 0 ? progress.pendingRewardName ?? progress.rewardRule.name
+                              : progress.rewardRule.name}
                           </p>
                         </div>
                         <p className="text-xs font-bold text-[#efc68e]">
@@ -646,8 +694,8 @@ export function CustomerClient({
                     </button>
                   )}
                   <p className="relative mt-8 border-t border-white/15 pt-5 text-xs leading-6 text-white/55">
-                    الختم يظهر بعد تأكيد الموظف لعملية شراء. مسح رابط الفرع أو
-                    رفع صورة مش دليل شراء.
+                    الختم يظهر بعد تأكيد الموظف لعملية شراء. الصورة اختيارية بعده،
+                    ومش بتمنح ختم جديد؛ لما تكمل الأختام، مكافأتك وكارت صورك يستنوك.
                   </p>
                 </section>
                 <div className="space-y-5">
@@ -686,8 +734,8 @@ export function CustomerClient({
                       ذكرياتك مكانها هنا.
                     </h2>
                     <p className="mt-2 text-sm leading-7 text-ink/60">
-                      خلي صورة زيارتك خاصة بيك، أو اختار عرضها بعد مراجعة
-                      الفريق.
+                      بعد تأكيد الزيارة، صورتها هتفضل خاصة وتدخل في كارت المكافأة.
+                      وعرضها على الشاشة اختيار منفصل بإذنك.
                     </p>
                     <button
                       type="button"
@@ -699,6 +747,60 @@ export function CustomerClient({
                   </section>
                 </div>
               </div>
+              <section className="paper-card rounded-[2rem] p-6 sm:p-9">
+                <div className="flex flex-wrap items-end justify-between gap-5">
+                  <div>
+                    <p className="eyebrow text-rust">المكافأة تخلص · الذكرى تفضل</p>
+                    <h2 className="display-heading mt-2 text-2xl sm:text-3xl">كروت ذكرياتك.</h2>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-ink/60">
+                      لما تكمل أختام المكافأة، الكارت يجمع صور الزيارات المؤكدة. يفضل
+                      في حسابك حتى لو اتغيرت شروط المكافأة، وتقدر تحفظه PDF أو تطبعه في الفرع.
+                    </p>
+                  </div>
+                  <Link href={`/c/${cafeSlug}/keepsakes`}
+                    className="action-secondary text-sm">افتح أرشيف الكروت ↖</Link>
+                </div>
+                {storyError && <p role="status" className="mt-5 rounded-xl bg-[#fff2e9] p-4 text-sm text-rust">
+                  {storyError}{" "}
+                  <button type="button" onClick={() => refresh().catch(() => {})}
+                    className="font-bold underline underline-offset-4">إعادة المحاولة</button>
+                </p>}
+                {story && (story.cards.length > 0 ? (
+                  <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {story.cards.map((card) => (
+                      <article key={card.id} className="relative overflow-hidden rounded-[1.5rem] bg-forest p-5 text-white">
+                        <span aria-hidden="true" className="absolute -left-4 -top-10 text-[7rem] leading-none text-white/5">✳</span>
+                        <div className="relative flex items-center justify-between">
+                          <span className="eyebrow text-[#efc68e]">كارت صور · {card.threshold} زيارات</span>
+                          <span aria-hidden="true" className="text-[#efc68e]">✳</span>
+                        </div>
+                        <h3 className="relative mt-5 text-lg font-bold">{card.rewardName}</h3>
+                        <p className="relative mt-1 text-xs text-white/60">
+                          {card.redeemedAt ? "المكافأة اتسلّمت" : "المكافأة جاهزة للاستلام"}
+                        </p>
+                        <Link href={`/c/${cafeSlug}/keepsake/${card.id}`}
+                          className="relative mt-6 inline-flex text-sm font-bold text-[#efc68e] underline underline-offset-4">
+                          افتح الكارت واطبعه ←
+                        </Link>
+                      </article>
+                    ))}
+                  </div>
+                ) : !storyError ? <p className="mt-6 rounded-2xl bg-sand/55 p-5 text-sm leading-7 text-ink/60">
+                  لسه ما اكتملتش دورة أختام. صور الزيارات اللي تضيفها هتتجمع في أول كارت مع المكافأة.
+                </p> : null)}
+                {story && story.cards.length < story.cardsTotal && <button type="button"
+                  disabled={loadingMore} className="action-secondary mt-6 text-sm"
+                  onClick={async () => {
+                    setLoadingMore(true);
+                    try { await loadStory(storyPage + 1, true); }
+                    catch { setStoryError("تعذر تحميل الكروت الأقدم. حاول تاني."); }
+                    finally { setLoadingMore(false); }
+                  }}>
+                  {loadingMore ? "جارٍ التحميل…" : "عرض كروت أقدم"}
+                </button>}
+                {!story && !storyError && <p role="status" className="mt-5 text-sm text-ink/55">بنجهز كروتك…</p>}
+              </section>
+              </>
             )}
             {tab === "memories" && (
               <div className="grid gap-6 lg:grid-cols-[.85fr_1.15fr]">
@@ -706,11 +808,34 @@ export function CustomerClient({
                   onSubmit={upload}
                   className="paper-card h-fit rounded-[1.75rem] p-6 sm:p-7"
                 >
-                  <p className="eyebrow text-rust">من اللحظة للمكان</p>
-                  <h2 className="mt-2 text-2xl font-bold">احفظ ذكرى جديدة.</h2>
+                  <p className="eyebrow text-rust">صورة لكل ختم · بإيدك</p>
+                  <h2 className="mt-2 text-2xl font-bold">خلّي للزيارة صورة.</h2>
                   <p className="mt-2 text-sm leading-7 text-ink/55">
-                    صورتك خاصة في الأصل؛ أنت صاحب قرار عرضها على شاشة الفرع.
+                    بعد ما الموظف يؤكد الشراء، اختار الزيارة وصوّر بموبايلك أو ارفع
+                    صورة من جهازك. الصورة اختيارية، والختم محفوظ حتى من غيرها.
                   </p>
+                  {storyError && <div role="status" className="mt-5 rounded-xl bg-[#fff2e9] p-4 text-sm text-rust">
+                    {storyError}{" "}<button type="button" className="font-bold underline"
+                      onClick={() => refresh().catch(() => {})}>تحديث</button>
+                  </div>}
+                  {story && story.eligibleVisits.length > 0 && (
+                    <label className="mt-5 block text-sm font-bold">
+                      الختم اللي هتربط بيه الصورة
+                      <select className="field mt-2" value={selectedVisitId}
+                        onChange={(event) => setSelectedVisitId(event.target.value)}>
+                        {story.eligibleVisits.map((visit) => <option key={visit.id} value={visit.id}>
+                          {visitLabel(visit.verifiedAt, visit.branchName)}
+                        </option>)}
+                      </select>
+                    </label>
+                  )}
+                  {story && story.eligibleVisits.length === 0 && !storyError && (
+                    <div className="mt-5 rounded-xl bg-sage/45 p-4 text-xs leading-7 text-forest">
+                      مفيش زيارة مؤكدة بدون صورة حاليًا. خلي الموظف يؤكد شراءك، وبعدها{" "}
+                      <button type="button" className="font-bold underline underline-offset-4"
+                        onClick={() => refresh().catch(() => {})}>حدّث البطاقة</button>.
+                    </div>
+                  )}
                   <label className="mt-6 flex min-h-48 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-forest/25 bg-sand/30 p-5 text-center transition hover:border-rust/60 hover:bg-sand/60">
                     {preview ? (
                       <>
@@ -729,16 +854,17 @@ export function CustomerClient({
                           التقط صورة أو اختارها من جهازك
                         </span>
                         <span className="mt-1 text-xs text-ink/45">
-                          حد أقصى 10 ميجابايت
+                          JPG أو PNG أو WebP · حد أقصى 10 ميجابايت
                         </span>
                       </>
                     )}
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp"
+                      disabled={!selectedVisitId || busy}
                       onChange={selectImage}
                       className="sr-only"
-                      aria-label="اختيار صورة الذكرى"
+                      aria-label="التقط أو اختر صورة للزيارة المؤكدة"
                     />
                   </label>
                   <label className="mt-5 block text-sm font-bold">
@@ -762,7 +888,7 @@ export function CustomerClient({
                     أقدر أسحب موافقتي بعدين.
                   </label>
                   <button
-                    disabled={busy || !file}
+                    disabled={busy || !file || !selectedVisitId}
                     className="action-primary mt-6 w-full"
                   >
                     {busy ? "جارٍ الحفظ…" : "حفظ الذكرى"}{" "}

@@ -5,23 +5,23 @@ const steps = [
   {
     number: "01",
     symbol: "⌁",
-    title: "الضيف يفتح رابط الفرع",
+    title: "زيارة تتوثّق، مش مجرد مسح",
     detail:
-      "رمز QR يفتح صفحة المكان مباشرةً على أي موبايل. لا تحميل تطبيق، ولا كارت ورقي ممكن يضيع.",
+      "الضيف يفتح QR الفرع، والموظف يؤكد الشراء الحقيقي. ساعتها بس يتضاف الختم لبطاقته.",
   },
   {
     number: "02",
     symbol: "✳",
-    title: "الزيارة تتأكد فعلًا",
+    title: "الضيف يسيب صورة للزيارة",
     detail:
-      "الموظف يؤكد الشراء في الفرع؛ فتح الرابط أو رفع صورة وحدهما لا يمنحان ختمًا.",
+      "بعد التأكيد، يصوّر من موبايله أو يرفع صورة للختم. اختياري تمامًا؛ الصورة تفضل خاصة إلا بإذنه.",
   },
   {
     number: "03",
     symbol: "✦",
-    title: "الرجوع له معنى",
+    title: "مكافأة ومعاها ذكرياتهم",
     detail:
-      "الضيف يرى تقدّمه ومكافأته في بطاقة واحدة، ويحتفظ بذكرياته وصوره بإذنه.",
+      "عند اكتمال الأختام يستلم المكافأة وكارت صور زياراته: رقمي في حسابه وجاهز للحفظ PDF أو الطباعة بالفرع.",
   },
 ];
 
@@ -54,6 +54,9 @@ export default function HomePage() {
             </a>
             <a href="#experience" className="hover:text-rust">
               التجربة
+            </a>
+            <a href="#keepsake" className="hover:text-rust">
+              كارت الذكريات
             </a>
             <Link href="/privacy" className="hover:text-rust">
               الخصوصية
@@ -88,9 +91,9 @@ export default function HomePage() {
             يخلّيهم يرجعوا.
           </h1>
           <p className="mt-8 max-w-lg text-base leading-9 text-ink/65 md:text-lg">
-            برنامج ولاء بسيط للمقاهي: بطاقة تتقدّم مع كل زيارة يؤكدها فريقك،
-            ومساحة يحفظ فيها ضيفك اللحظات اللي يحب يفتكرها. شغل حقيقي، مش أختام
-            من مجرد مسح رابط.
+            كل شراء مؤكد يضيف ختمًا. والضيف يقدر يحفظ صورة خاصة من الزيارة
+            بموبايله. عند المكافأة، يستلم معاها كارت ذكريات يجمع صوره؛ علاقة
+            ترجعهم للمكان، مش بس لخصم جديد.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Link href="/login?mode=signup" className="action-primary">
@@ -183,8 +186,8 @@ export default function HomePage() {
             </h2>
           </div>
           <p className="max-w-md text-sm leading-8 text-ink/60">
-            أخذنا بساطة بطاقة الختم الورقية، وحطّينا وراها تحققًا حقيقيًا يحفظ
-            حق الضيف والمنشأة.
+            بطاقة الختم سهلة، لكن اللي يفضل مع الضيف هو الصورة اللي اختارها.
+            كله يبدأ بزيارة فعلًا أكدها الموظف.
           </p>
         </div>
         <div className="mt-11 grid gap-4 md:grid-cols-3">
@@ -280,6 +283,56 @@ export default function HomePage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section id="keepsake" className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 md:px-10 md:py-28 lg:grid-cols-[.9fr_1.1fr] lg:gap-20">
+        <div>
+          <p className="eyebrow text-rust">الفرق الحقيقي في اللي بيفضل</p>
+          <h2 className="display-heading mt-4 text-4xl sm:text-5xl">
+            الهدية ليها لحظة.
+            <br />
+            <span className="text-rust">والذكرى ليها عمر.</span>
+          </h2>
+          <p className="mt-6 max-w-lg text-base leading-9 text-ink/65">
+            مع كل ختم مؤكد، ضيفك يقدر يضيف صورة من موبايله. لما تكتمل الأختام،
+            يلاقي مكافأته وكارت فوتوبوث يجمع صور زيارات الدورة دي — حتى لو
+            اختار ما يصوّرش بعض الزيارات، الأختام ما بتضيعش.
+          </p>
+          <div className="mt-8 space-y-4 text-sm font-bold">
+            <p className="flex gap-3"><span className="text-rust">01</span> صورة اختيارية ومربوطة بزيارة مؤكدة، مش ختم إضافي.</p>
+            <p className="flex gap-3"><span className="text-rust">02</span> كارت خاص بيه في حسابه، حتى لو اتغيرت المكافأة بعدين.</p>
+            <p className="flex gap-3"><span className="text-rust">03</span> يفتح الكارت ويختار طباعة الفرع أو حفظ PDF بنفسه.</p>
+          </div>
+          <p className="mt-8 max-w-md border-r-2 border-rust/35 pr-4 text-xs leading-7 text-ink/50">
+            ما فيش قارئ NFC أو طابعة متصلة تلقائيًا. التحقق عند الموظف، والطباعة من نافذة المتصفح.
+          </p>
+        </div>
+        <div className="relative flex min-h-[500px] items-center justify-center overflow-hidden rounded-[2.5rem] bg-[#e4e9df] px-8 py-12 sm:min-h-[610px]">
+          <div aria-hidden="true" className="absolute -right-8 -top-22 text-[20rem] leading-none text-forest/5">✳</div>
+          <div className="absolute left-[12%] top-[12%] h-[70%] w-[52%] rotate-[-11deg] rounded-3xl border border-white/80 bg-[#f2cfa5]/60 shadow-xl" aria-hidden="true" />
+          <div className="relative w-[min(84%,310px)] rotate-[5deg] rounded-[1.7rem] bg-forest p-5 text-white shadow-[0_32px_65px_-25px_#183a3280] sm:p-6" aria-label="تصور توضيحي لكارت الذكريات، بدون صور ضيوف حقيقية">
+            <div className="flex items-start justify-between border-b border-white/20 pb-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#f2c77f]">PHOTO DAYS / café memories</p>
+                <p className="mt-2 text-lg font-bold">كارت ذكرياتك</p>
+              </div>
+              <span aria-hidden="true" className="text-3xl text-[#f2c77f]">✳</span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {Array.from({ length: 6 }, (_, index) => (
+                <div key={index} className="grid aspect-[1.25] place-items-center rounded-xl border border-dashed border-forest/25 bg-[#f5ecd8] text-center text-forest">
+                  <div>
+                    <span aria-hidden="true" className="text-2xl text-rust/60">✳</span>
+                    <p className="text-[10px] font-bold">صورة الزيارة</p>
+                    <p className="text-[9px] text-forest/55">#{index + 1} · بعد الختم</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-5 border-t border-white/20 pt-4 text-sm font-bold text-[#f2c77f]">مكافأتك + حكايتك مع المكان ↖</p>
+          </div>
+          <p className="absolute bottom-4 text-[11px] text-ink/50">شكل توضيحي فقط · لا توجد صور أو أختام تجريبية</p>
         </div>
       </section>
 

@@ -11,6 +11,7 @@ type Customer = {
   verifiedVisits: number;
   rule: { id: string; name: string; threshold: number } | null;
   availableRewards: number;
+  nextRewardName: string | null;
 };
 
 export default function StaffTerminalPage() {
@@ -328,7 +329,7 @@ export default function StaffTerminalPage() {
                               "/api/v1/visits",
                               {},
                               visitKey,
-                              "تم توثيق الزيارة في قاعدة البيانات",
+                              "تم توثيق الزيارة. الضيف يقدر يضيف صورتها الاختيارية من موبايله لكارت الذكريات",
                             )
                           }
                           className="action-primary w-full text-sm"
@@ -340,7 +341,7 @@ export default function StaffTerminalPage() {
                         <h3 className="text-lg font-bold">صرف مكافأة</h3>
                         <p className="text-xs leading-6 text-ink/60">
                           {customer.rule
-                            ? `${customer.rule.name} · كل ${customer.rule.threshold} زيارات`
+                            ? `${customer.nextRewardName ?? customer.rule.name} · مكافأة لزيارات موثّقة`
                             : "المنشأة لم تحدد مكافأة نشطة."}
                         </p>
                         <label className="flex items-start gap-2 text-xs leading-6 text-ink/70">
@@ -352,7 +353,7 @@ export default function StaffTerminalPage() {
                             }
                             className="mt-1.5 h-4 w-4 accent-forest"
                           />
-                          تأكدت من استحقاق المكافأة وجاهزية تسليمها.
+                          تأكدت من استحقاق المكافأة وسلّمتها، وأخبرت الضيف إن كارت صوره جاهز للطباعة من حسابه.
                         </label>
                         <button
                           type="button"
@@ -368,12 +369,12 @@ export default function StaffTerminalPage() {
                               "/api/v1/rewards/redeem",
                               { rewardRuleId: customer.rule.id },
                               rewardKey,
-                              "تم صرف المكافأة",
+                              "تم صرف المكافأة. افتح كارت الذكريات من حساب الضيف لطباعة نسخة في الفرع",
                             )
                           }
                           className="action-secondary w-full text-sm"
                         >
-                          صرف {customer.rule?.name ?? "المكافأة"}
+                          صرف {customer.nextRewardName ?? customer.rule?.name ?? "المكافأة"}
                         </button>
                       </div>
                     </div>
