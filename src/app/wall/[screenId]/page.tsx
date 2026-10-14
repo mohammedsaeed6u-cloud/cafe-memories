@@ -1,21 +1,9 @@
+import { notFound } from 'next/navigation';
+import { z } from 'zod';
 import { WallClient } from '@/components/wall/WallClient';
 
-export function generateStaticParams() {
-  return [
-    { screenId: 'screen-1' },
-    { screenId: 'screen-101' }
-  ];
-}
-
-interface WallPageProps {
-  params: Promise<{
-    screenId: string;
-  }>;
-}
-
-export default async function WallPage({ params }: WallPageProps) {
-  const resolved = await params;
-  const screenId = resolved?.screenId || 'screen-1';
-
+export default async function WallPage({ params }: { params: Promise<{ screenId: string }> }) {
+  const { screenId } = await params;
+  if (!z.uuid().safeParse(screenId).success) notFound();
   return <WallClient screenId={screenId} />;
 }

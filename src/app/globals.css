@@ -1,480 +1,187 @@
 @import "tailwindcss";
 
 @theme {
-  --color-surface: #141313;
-  --color-surface-charcoal: #141212;
-  --color-surface-stone: #1F1D1D;
-  --color-surface-dim: #141313;
-  --color-surface-bright: #3b3939;
+  --font-sans: "Cairo", "Plus Jakarta Sans", system-ui, sans-serif;
+  /* Official stampy. v1.1.0 palette. Legacy semantic aliases keep the secure
+     screens readable while their layouts are progressively brought across. */
+  --color-paper: #FAF5EB;
+  --color-ink: #3D2314;
+  --color-forest: #682025;
+  --color-rust: #AC3E25;
+  --color-sand: #EADDC4;
+  --color-sage: #F3E4CC;
+  --color-stampy-ochre: #DFAB56;
+  --color-stampy-burgundy: #682025;
+  --color-stampy-forest: #2D5240;
+  --color-stampy-navy: #20304E;
+  --color-stampy-denim: #4A6B82;
+  --color-stampy-parchment: #FAF5EB;
+  --color-stampy-charcoal: #1B1B1E;
+  --color-stampy-bevel: #451215;
+}
 
-  --color-primary: #DD0200;
-  --color-primary-container: #DD0200;
-  --color-secondary: #55100D;
-  --color-secondary-container: #7C2D26;
-
-  --color-alabaster: #FBF9F5;
-  --color-alabaster-muted: #D9D9D9;
-  --color-coffee-bean: #1A0706;
-
-  --color-border-hairline: rgba(255, 255, 255, 0.08);
-  --color-border-accent: rgba(221, 2, 0, 0.35);
-
-  --font-playfair: var(--font-playfair), 'Playfair Display', Georgia, serif;
-  --font-jakarta: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
-  --font-cairo: var(--font-cairo), 'Cairo', sans-serif;
+:root {
+  --stampy-ochre: #DFAB56;
+  --stampy-burgundy: #682025;
+  --stampy-forest: #2D5240;
+  --stampy-navy: #20304E;
+  --stampy-denim: #4A6B82;
+  --stampy-parchment: #FAF5EB;
+  --stampy-charcoal: #1B1B1E;
+  --stampy-bevel: #451215;
 }
 
 @layer base {
-  :root {
-    --background: #141313;
-    --foreground: #e6e1e1;
-    --font-cairo: 'Cairo', sans-serif;
-    --font-playfair: 'Playfair Display', Georgia, serif;
-    --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+  html {
+    scroll-behavior: smooth;
   }
-
   body {
-    background-color: #141313;
-    color: #e6e1e1;
-    font-family: var(--font-jakarta), var(--font-cairo), system-ui, sans-serif;
+    background: var(--stampy-parchment);
+    color: #3D2314;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  }
+  button:not(:disabled),
+  a,
+  select,
+  summary {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 3px solid #682025;
+    outline-offset: 3px;
+  }
+  ::selection {
+    background: #682025;
+    color: #fff;
   }
 }
 
-/* Custom smooth scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #141313;
-}
-::-webkit-scrollbar-thumb {
-  background: #2b2a29;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #55100D;
+@layer components {
+  .display-heading {
+    font-weight: 700;
+    letter-spacing: -0.055em;
+    line-height: 1.18;
+  }
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .paper-card {
+    background: #fffdf8;
+    border: 1px solid #DECBAE;
+    box-shadow: 0 12px 42px -32px #3D231445;
+  }
+  .deep-card {
+    background: #451215;
+    border: 1px solid #ffffff20;
+    box-shadow: 0 20px 50px -35px #451215;
+  }
+  /* Ticket-shaped pass, with visible concave side cuts. Purely presentational:
+     the number and state of stamps still come from verified server visits. */
+  .stampy-ticket-card::before,
+  .stampy-ticket-card::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--stampy-parchment);
+    transform: translateY(-50%);
+    box-shadow: inset 0 2px 5px #45121526;
+  }
+  .stampy-ticket-card::before { right: -13px; }
+  .stampy-ticket-card::after { left: -13px; }
+  .stampy-stamp {
+    box-shadow: inset 1px 2px 5px #45121566, inset -1px -2px 4px #ffffff55;
+  }
+  .action-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    border-radius: 999px;
+    background: #682025;
+    color: #FAF5EB;
+    font-weight: 700;
+    min-height: 3rem;
+    padding: 0.7rem 1.5rem;
+    transition:
+      background 0.2s,
+      transform 0.2s;
+  }
+  .action-primary:hover:not(:disabled) {
+    background: #451215;
+    transform: translateY(-2px);
+  }
+  .action-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    border: 1px solid #3D23142e;
+    border-radius: 999px;
+    color: #3D2314;
+    font-weight: 700;
+    min-height: 3rem;
+    padding: 0.7rem 1.5rem;
+    transition:
+      background 0.2s,
+      transform 0.2s;
+  }
+  .action-secondary:hover:not(:disabled) {
+    background: #EADDC4;
+    transform: translateY(-2px);
+  }
+  .action-primary:disabled,
+  .action-secondary:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .field {
+    width: 100%;
+    border: 1px solid #D5C0A8;
+    border-radius: 0.85rem;
+    background: #fffdf8;
+    color: #3D2314;
+    padding: 0.85rem 1rem;
+    outline: none;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .field:focus {
+    border-color: #682025;
+    box-shadow: 0 0 0 3px #68202529;
+  }
 }
 
-/* Universal Shimmer & Loading Animation */
-@keyframes memories-shimmer {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-.shimmer {
-  position: relative;
-  overflow: hidden;
-}
-.shimmer::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: translateX(100%);
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  animation: memories-shimmer 2s infinite ease-in-out;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
-/* Staff PIN modal error shake */
-@keyframes staff-pin-shake {
-  0%, 100% { transform: translateX(0); }
-  15% { transform: translateX(-8px); }
-  30% { transform: translateX(8px); }
-  45% { transform: translateX(-6px); }
-  60% { transform: translateX(6px); }
-  75% { transform: translateX(-3px); }
-  90% { transform: translateX(3px); }
+/* Slow, optional motion for photos that have passed the screen consent checks.
+   The feed still clears on any failed authorization or lost connection. */
+@keyframes stampy-wall-drift {
+  from { transform: scale(1); }
+  to { transform: scale(1.055); }
 }
-.animate-shake {
-  animation: staff-pin-shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-}
-
-/* Loyalty stamp card: latest stamp lands like an ink stamp on paper */
-@keyframes loyalty-stamp-in {
-  0% {
-    transform: scale(1.7) rotate(-14deg);
-    opacity: 0;
-  }
-  55% {
-    transform: scale(0.94) rotate(2deg);
-    opacity: 1;
-  }
-  75% {
-    transform: scale(1.03) rotate(-1deg);
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
-.loyalty-stamp-in {
-  animation: loyalty-stamp-in 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+.stampy-wall-photo {
+  animation: stampy-wall-drift 7s ease-in-out both;
+  transform-origin: center;
 }
 @media (prefers-reduced-motion: reduce) {
-  .loyalty-stamp-in {
-    animation: none;
-  }
+  .stampy-wall-photo { animation: none; }
 }
-
-/* ─── Luxury Card Language (warm paper, gold foil, velvet depth) ─── */
-
-/* Soft sheen sweeping across the card every few seconds */
-@keyframes loyalty-sheen {
-  0% { transform: translateX(-130%) skewX(-18deg); }
-  55%, 100% { transform: translateX(230%) skewX(-18deg); }
-}
-.lux-sheen::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 45%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.35) 45%,
-    rgba(255, 246, 214, 0.55) 50%,
-    rgba(255, 255, 255, 0.35) 55%,
-    transparent
-  );
-  animation: loyalty-sheen 5.5s ease-in-out infinite;
-  pointer-events: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lux-sheen::after {
-    animation: none;
-    display: none;
-  }
-}
-
-/* Fine paper grain overlay (tiny noise via repeating gradients) */
-.lux-paper {
-  background-image:
-    radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.65), transparent 55%),
-    radial-gradient(ellipse at bottom right, rgba(201, 162, 39, 0.08), transparent 50%),
-    repeating-linear-gradient(45deg, rgba(28, 19, 13, 0.012) 0 2px, transparent 2px 4px);
-}
-
-/* Gold foil text: gradient + subtle metallic shine */
-.lux-gold-text {
-  background: linear-gradient(100deg, #8a6d1f 0%, #c9a227 28%, #f3e18c 50%, #c9a227 72%, #8a6d1f 100%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gold-shift 6s ease-in-out infinite;
-}
-@keyframes gold-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .lux-gold-text {
-    animation: none;
-  }
-}
-
-/* Velvet-dark CTA button with gold ring and inner glow */
-.lux-cta {
-  position: relative;
-  background: linear-gradient(135deg, #2a1d14 0%, #1c130d 55%, #241710 100%);
-  box-shadow:
-    0 10px 24px -10px rgba(28, 19, 13, 0.55),
-    inset 0 1px 0 rgba(255, 235, 180, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(201, 162, 39, 0.45);
-}
-.lux-cta:hover {
-  border-color: rgba(201, 162, 39, 0.8);
-  box-shadow:
-    0 14px 30px -10px rgba(28, 19, 13, 0.6),
-    0 0 0 1px rgba(201, 162, 39, 0.25),
-    inset 0 1px 0 rgba(255, 235, 180, 0.25);
-}
-
-/* Card lifts slightly on hover — subtle 3D presence */
-.lux-lift {
-  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s ease;
-  transform-style: preserve-3d;
-}
-.lux-lift:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 24px 48px -18px rgba(28, 19, 13, 0.35),
-    0 8px 20px -10px rgba(28, 19, 13, 0.2);
-}
-@media (prefers-reduced-motion: reduce) {
-  .lux-lift,
-  .lux-lift:hover {
-    transform: none;
-    transition: none;
-  }
-}
-
-/* Gold-rimmed stamp slots */
-.lux-slot-stamped {
-  border: 1.5px solid rgba(201, 162, 39, 0.55);
-  box-shadow:
-    0 3px 10px -3px rgba(28, 19, 13, 0.28),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.85),
-    inset 0 0 12px rgba(201, 162, 39, 0.12);
-}
-
-/* Empty slot: engraved look instead of flat dashed */
-.lux-slot-empty {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(247, 239, 226, 0.4));
-  border: 1.5px solid rgba(216, 203, 182, 0.55);
-  box-shadow: inset 0 2px 5px rgba(28, 19, 13, 0.06);
-}
-
-/* Gift slot: warm golden aura to hint at the prize */
-.lux-slot-gift {
-  border: 1.5px solid rgba(201, 162, 39, 0.65);
-  background: linear-gradient(135deg, rgba(243, 225, 140, 0.25), rgba(201, 162, 39, 0.1));
-  box-shadow:
-    0 0 14px rgba(201, 162, 39, 0.25),
-    inset 0 0 10px rgba(201, 162, 39, 0.12);
-}
-
-/* Hero entry: luxury login card */
-.lux-hero-card {
-  background:
-    radial-gradient(ellipse at 85% -10%, rgba(201, 162, 39, 0.14), transparent 45%),
-    radial-gradient(ellipse at 10% 110%, rgba(197, 154, 111, 0.1), transparent 45%),
-    linear-gradient(165deg, #fffdf9 0%, #faf4e8 60%, #f5ecdc 100%);
-  border: 1px solid rgba(201, 162, 39, 0.28);
-  box-shadow:
-    0 24px 60px -22px rgba(28, 19, 13, 0.4),
-    0 6px 18px -8px rgba(28, 19, 13, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-/* Camera badge on hero: gold ring glow */
-.lux-hero-badge {
-  background: linear-gradient(135deg, #241710, #1c130d);
-  border: 1px solid rgba(201, 162, 39, 0.5);
-  box-shadow:
-    0 8px 20px -8px rgba(28, 19, 13, 0.5),
-    0 0 0 4px rgba(201, 162, 39, 0.12),
-    inset 0 1px 0 rgba(255, 235, 180, 0.2);
-}
-
-/* Refined focus state for inputs on luxury surfaces */
-.lux-input:focus {
-  border-color: #c9a227;
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.18);
-}
-
-/* Professional Multi-Format Print Style Sheet */
-@media print {
-  @page {
-    size: auto;
-    margin: 12mm;
-  }
-
-  html, body {
-    background-color: #FFFFFF !important;
-    background: #FFFFFF !important;
-    color: #1c1917 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    height: auto !important;
-    overflow: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Universal print hidden elements */
-  nav,
-  header,
-  footer,
-  button,
-  .print\:hidden,
-  [role="dialog"],
-  [role="region"],
-  [role="progressbar"],
-  .lucide-x {
-    display: none !important;
-  }
-
-  /* Specific photobooth strip print optimization when present */
-  body:has(#printable-strip) * {
-    visibility: hidden !important;
-  }
-  body:has(#printable-strip) #printable-strip,
-  body:has(#printable-strip) #printable-strip * {
-    visibility: visible !important;
-  }
-  body:has(#printable-strip) #printable-strip {
-    position: fixed !important;
-    top: 0 !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    margin: 0 auto !important;
-    padding: 14px !important;
-    box-shadow: none !important;
-    border: none !important;
-    background-color: transparent !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  /* Table Standee A6 print optimization when present */
-  body:has(#table-stand-print) * {
-    visibility: hidden !important;
-  }
-  body:has(#table-stand-print) #table-stand-print,
-  body:has(#table-stand-print) #table-stand-print * {
-    visibility: visible !important;
-  }
-  body:has(#table-stand-print) #table-stand-print {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    margin: 0 auto !important;
-    padding: 24px !important;
-    box-shadow: none !important;
-    border: 2px solid #1c1917 !important;
-    border-radius: 16px !important;
-    background-color: #FFFFFF !important;
-    width: 105mm !important;
-    max-width: 105mm !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  a[href]::after {
-    content: "" !important;
-  }
-}
-
-/* ─── Apple Human Interface Guidelines (Cupertino & VisionOS Vibrancy) ─── */
-
-/* Apple System Typography & Smoothing */
-.apple-font {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", var(--font-cairo), sans-serif;
-  letter-spacing: -0.015em;
-}
-
-/* Apple Light Vibrancy Glass */
-.apple-glass {
-  background: rgba(255, 255, 255, 0.76);
-  backdrop-filter: saturate(180%) blur(24px);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: 
-    0 10px 30px -5px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(0, 0, 0, 0.04),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.85);
-}
-
-/* Apple Dark Vibrancy Glass */
-.dark .apple-glass,
-.apple-glass-dark {
-  background: rgba(28, 28, 30, 0.78);
-  backdrop-filter: saturate(190%) blur(28px);
-  -webkit-backdrop-filter: saturate(190%) blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 
-    0 20px 40px -10px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-/* Apple Squircle Card */
-.apple-card {
-  border-radius: 24px;
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
-}
-.apple-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.12);
-}
-
-/* Apple Tactile Button */
-.apple-btn {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  border-radius: 9999px;
-  transition: all 0.18s cubic-bezier(0.2, 0.9, 0.3, 1);
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.apple-btn:active {
-  transform: scale(0.96);
-  opacity: 0.88;
-}
-
-/* Apple Primary Button (iOS Blue) */
-.apple-btn-primary {
-  background: #0071E3;
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-}
-.apple-btn-primary:hover {
-  background: #0077ED;
-  box-shadow: 0 6px 18px rgba(0, 113, 227, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-/* Apple Secondary / Vibrancy Button */
-.apple-btn-secondary {
-  background: rgba(0, 0, 0, 0.05);
-  color: #1D1D1F;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-.dark .apple-btn-secondary {
-  background: rgba(255, 255, 255, 0.12);
-  color: #F5F5F7;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-/* Apple Dynamic Island (visionOS Pill) */
-.apple-dynamic-island {
-  background: #000000;
-  color: #FFFFFF;
-  border-radius: 9999px;
-  box-shadow: 
-    0 10px 25px -3px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Apple iOS Segmented Control Track */
-.apple-segmented-track {
-  background: rgba(118, 118, 128, 0.12);
-  padding: 3px;
-  border-radius: 12px;
-  backdrop-filter: blur(16px);
-}
-.dark .apple-segmented-track {
-  background: rgba(118, 118, 128, 0.24);
-}
-
-/* Apple Titanium Texture */
-.apple-titanium {
-  background: linear-gradient(145deg, #2A2A2E 0%, #1A1A1D 50%, #242428 100%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    0 12px 32px rgba(0, 0, 0, 0.4);
-}
-
-/* Apple Vision Pro Ambient Glow */
-@keyframes apple-vision-glow {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.75; transform: scale(1.04); }
-}
-.apple-ambient-glow {
-  animation: apple-vision-glow 4s ease-in-out infinite;
-}
-

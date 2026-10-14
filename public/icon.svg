@@ -1,25 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2D1F17"/>
-      <stop offset="100%" stop-color="#1A120D"/>
-    </linearGradient>
-    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F59E0B"/>
-      <stop offset="50%" stop-color="#D97706"/>
-      <stop offset="100%" stop-color="#B45309"/>
-    </linearGradient>
+    <clipPath id="app-icon-clip">
+      <rect width="1024" height="1024" rx="224" ry="224" />
+    </clipPath>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
-  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-opacity="0.3"/>
-  <g transform="translate(106, 106)">
-    <rect x="20" y="20" width="260" height="260" rx="36" fill="#FAF6EE" stroke="url(#goldGrad)" stroke-width="6"/>
-    <rect x="44" y="44" width="212" height="130" rx="20" fill="#1C1917"/>
-    <circle cx="150" cy="109" r="38" fill="none" stroke="url(#goldGrad)" stroke-width="8"/>
-    <circle cx="150" cy="109" r="16" fill="#F59E0B"/>
-    <rect x="44" y="196" width="80" height="12" rx="6" fill="#D97706"/>
-    <rect x="44" y="218" width="130" height="8" rx="4" fill="#A8A29E"/>
-    <path d="M 240 40 Q 240 58 248 58 Q 240 58 240 76 Q 240 58 232 58 Q 240 58 240 40 Z" fill="#F59E0B"/>
-    <path d="M 60 240 Q 60 252 66 252 Q 60 252 60 264 Q 60 252 54 252 Q 60 252 60 240 Z" fill="#F59E0B"/>
+
+  <g clip-path="url(#app-icon-clip)">
+    <!-- Background: Solid Warm Gold Ochre (#DFAB56) -->
+    <rect width="1024" height="1024" fill="#DFAB56" />
+
+    <!-- 5 Spectral Emulsion Stripes -->
+
+    <rect x="0" y="392" width="1024" height="48" fill="#3D2314" />
+
+    <rect x="0" y="440" width="1024" height="48" fill="#AC3E25" />
+
+    <rect x="0" y="488" width="1024" height="48" fill="#EBA935" />
+
+    <rect x="0" y="536" width="1024" height="48" fill="#B18944" />
+
+    <rect x="0" y="584" width="1024" height="48" fill="#337482" />
+
+
+    <!-- Aperture Backing Mask (Prevents stripes from showing inside lens) -->
+    <circle cx="512" cy="512" r="196" fill="#DFAB56" />
+    <circle cx="512" cy="512" r="196" fill="none" stroke="#3D2314" stroke-width="10" />
+
+    <!-- 6-Blade Camera Iris Aperture Shutter -->
+    <g transform="translate(512, 512) scale(5.294117647058823) translate(-350, -230)">
+      <path d="M 359.96 235.75 L 359.96 262.51 A 34 34 0 0 1 326.83 254.88 L 350.00 241.50 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 350.00 241.50 L 326.83 254.88 A 34 34 0 0 1 316.87 222.37 L 340.04 235.75 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 340.04 235.75 L 316.87 222.37 A 34 34 0 0 1 340.04 197.49 L 340.04 224.25 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 340.04 224.25 L 340.04 197.49 A 34 34 0 0 1 373.17 205.12 L 350.00 218.50 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 350.00 218.50 L 373.17 205.12 A 34 34 0 0 1 383.13 237.63 L 359.96 224.25 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 359.96 224.25 L 383.13 237.63 A 34 34 0 0 1 359.96 262.51 L 359.96 235.75 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <circle cx="350" cy="230" r="34" fill="none" stroke="#3D2314" stroke-width="1.6" />
+    </g>
   </g>
 </svg>

@@ -1,9 +1,8 @@
+import 'server-only';
 import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js';
-/* eslint-disable @typescript-eslint/no-explicit-any -- the generated Database
-   type in @/types/database does not yet cover every table/column used by the
-   API routes; routes rely on the loose typing until it is regenerated. */
+import type { Database } from '@/types/database';
 
-let sharedAdminClient: SupabaseClient<any> | null = null;
+let sharedAdminClient: SupabaseClient<Database> | null = null;
 
 /**
  * Shared admin (service-role) Supabase client.
@@ -13,9 +12,9 @@ let sharedAdminClient: SupabaseClient<any> | null = null;
  * importing this module stays side-effect free (unit tests import callers of
  * this function without env vars configured).
  */
-export function createAdminClient(): SupabaseClient<any> {
+export function createAdminClient(): SupabaseClient<Database> {
   if (!sharedAdminClient) {
-    sharedAdminClient = createSupabaseClient<any>(
+    sharedAdminClient = createSupabaseClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {

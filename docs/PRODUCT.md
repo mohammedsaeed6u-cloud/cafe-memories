@@ -1,55 +1,11 @@
-# Product Specification — Café Memories
+# المنتج الحالي — Café Memories
 
-## Vision
-"The digital memory & loyalty layer for cafés."
+1. تنشئ المنشأة حساب Supabase Auth بالبريد المؤكد أو Google OAuth (بعد إعداد المزوّد)، ثم تضبط الفروع وعتبة الأختام واسم المكافأة. لا تُنشأ بيانات أو حسابات تجريبية.
+2. يفتح الضيف QR الفرع بحساب Google أو جلسة ضيف Supabase حقيقية. يرسل فتح الصفحة طلب حضور قصير الصلاحية؛ **لا يثبت الشراء**. يؤكد الموظف شراءً حقيقيًا في الفرع، فيمنح ختمًا واحدًا عبر معاملة محمية؛ أي صورة أو QR وحدهما لا يمنحان ختمًا.
+3. بعد الختم المؤكد، يمكن للضيف من موبايله أن يلتقط/يرفع **صورة اختيارية واحدة لكل زيارة**. عدم التصوير لا يضيع الختم. تُحفظ الصورة في bucket خاص؛ عرضها على شاشة الصالة يحتاج موافقة منفصلة من صاحبها، واعتماد الفريق، وشاشة مقترنة بالفرع. يمكن سحب الموافقة لاحقًا.
+4. عند اكتمال الزيارات المحددة للمكافأة، ينشئ PostgreSQL كارت ذكريات خاصًا بثابت الزيارات والمكافأة كما كانت لحظة الاستحقاق، حتى لو تغيّرت قاعدة الأختام لاحقًا. يرى الضيف الصور المرتبطة بهذه الزيارات ومكان الختم الذي لم يصوّره. الكارت رقمي في أرشيفه `/c/<cafeSlug>/keepsakes` حتى إن أُغلق الفرع (ما دامت بياناته وحسابه موجودة)، مع تصميم فوتوبوث متعدد الأوراق A6 عند تجاوز ٦ أختام؛ ويمكنه طباعته أو حفظه PDF من المتصفح وتسليم نسخة بالفرع مع الهدية. يصرف الموظف المكافأة بمفتاح تكرار وتحقق الأهلية في معاملة DB، وتظهر حالة الصرف على الكارت.
+5. صفحة حساب الضيف تحتوي التقدّم الحقيقي، الكروت، ألبوم الذكريات وإعدادات الاسم ورقم تواصل خاص غير موثّق. ربط Google بالجلسة نفسها يحافظ على الصور والكروت؛ الحسابان المختلفان لا يُدمجان تلقائيًا.
 
-## Core Loop
-```
-VISIT → CAPTURE → MEMORY → SHARE → REWARD → LIVE WALL → SOCIAL PROOF → RETURN
-```
+استُلهم وضوح رحلة الولاء من [Tappy](https://runtappy.com/)، لكن لا يوجد قارئ NFC أو إثبات بلمسة عتاد، وبطاقة Wallet لا تصدر إلا عبر WalletWallet.dev بعد ربط وتهيئة حقيقيين وموافقة الضيف؛ ليس لدينا شهادات Apple/Google خاصة بنا. لا توجد طابعة متصلة بالتطبيق: نسخة الطباعة **ملف/نافذة متصفح تحت تحكم الضيف**؛ لا تستطيع محطة الموظف جلب كارت ضيف آخر. ليست هذه تجربة تصوير فوتوبوث بعتاد داخل الفرع أو إرسال طباعة تلقائي. تتطلب الحسابات والوسائط Supabase وخادم Next.js Node وتهيئة حقيقية؛ يجب تجربة ذلك في staging قبل استقبال بيانات عملاء.
 
-## Target Users
-
-### 1. Merchant (Café Owner/Manager)
-- Creates and manages their café presence
-- Configures branding, rewards, QR codes
-- Moderates customer content
-- Manages Live Wall screens
-- Views analytics and customer data
-
-### 2. Customer (Café Visitor)
-- Scans QR to enter café experience
-- Captures photos/moments during visits
-- Tracks visit progress toward rewards
-- Shares branded story cards
-- Optionally appears on Live Wall
-
-### 3. Platform Admin (Us)
-- Manages all organizations
-- Handles platform-wide moderation
-- Controls feature flags
-- Monitors system health
-
-## Differentiation
-| Us | Competitors |
-|----|------------|
-| Memory + Social + Live Wall + Loyalty | Loyalty-only (Tappy, Wink) |
-| Web-based, no app download | App required (Wink) |
-| Persistent café story/journey | One-time photo challenges |
-| Customer → Screen closed loop | Social media hashtag walls |
-
-## MVP Features
-See implementation_plan.md Part 5 for complete feature breakdown.
-
-## Business Model
-- Subscription per branch (Basic/Growth/Pro)
-- Screen hardware as premium add-on
-- Future: agency plans, sponsored challenges
-
-## Success Metrics
-- Repeat Visit Rate: customers with ≥2 visits / customers with ≥1 visit
-- Memory Capture Rate: memories created / visits
-- Share Rate: shared memories / total memories
-- Live Wall Participation: live wall consent / total memories
-- Reward Redemption Rate: redeemed / issued
-- 7-Day Return Rate: customers returning within 7 days
+6. تدير المنشأة هويتها ولوجوها وروابط التواصل وموقع الفرع، وتظهر Café Memories معها في كارت الضيف والفريم وWallet. CRM لا يقرأ صور الضيف الخاصة؛ الشاشة لا تعرض إلا ما وافق عليه وقدّمه الضيف. Wallet خيار ضيف منفصل، وحملات Wallet Pro/Business تستهدف موافقين صراحة مع إبلاغ الفريق بحالات المزوّد غير المؤكدة. موقع الفرع معلومة للجهاز لتحديد صلة البطاقة قرب الفرع، لا تتبع لمكان الضيف.

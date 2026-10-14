@@ -1,84 +1,91 @@
-'use client';
+import Link from "next/link";
 
-import React from 'react';
-import Link from 'next/link';
-import { FileCheck, ArrowRight } from 'lucide-react';
-import { LastUpdatedBadge } from '@/components/ui/LastUpdatedBadge';
-
-export default function TermsOfServicePage() {
+export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] selection:bg-[#DD0200] selection:text-white font-sans antialiased relative overflow-hidden">
-      {/* Ambient background glows */}
-      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-[#55100D]/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-[450px] h-[450px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
-
-      <header className="bg-[#141212]/90 backdrop-blur-xl border-b border-white/10 sticky top-0 z-30 shadow-md">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-serif text-sm shadow-md border border-white/10">
-              ✦
-            </div>
-            <span className="font-bold text-[#FBF9F5] text-base font-serif">Memories • شروط الخدمة</span>
-          </Link>
-          <Link
-            href="/"
-            className="text-xs font-bold text-[#A19E9B] hover:text-[#FBF9F5] transition flex items-center gap-1"
-          >
-            <span>العودة للرئيسية</span>
-            <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-          </Link>
-        </div>
-      </header>
-
-      <main className="max-w-3xl mx-auto px-6 py-12 space-y-8 text-right relative z-10">
-        <div className="space-y-3 border-b border-white/10 pb-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#55100D]/50 text-[#FBF9F5] text-xs font-bold border border-[#DD0200]/40">
-            <FileCheck className="w-3.5 h-3.5 text-[#DD0200]" />
-            <span>اتفاقية الاستخدام والخدمة</span>
-          </div>
-          <h1 className="text-3xl font-bold text-[#FBF9F5] font-serif">شروط الخدمة (Terms of Service)</h1>
-          <LastUpdatedBadge dateString="22 سبتمبر 2026" isoDate="2026-09-22" />
-        </div>
-
-        <section className="space-y-3">
-          <h2 className="text-lg font-bold text-[#FBF9F5] font-serif">1. قبول الشروط (Acceptance of Terms)</h2>
-          <p className="text-sm text-[#A19E9B] leading-relaxed">
-            باستخدامك لمنصة <strong className="text-[#FBF9F5]">Memories</strong> سواء كمالك كافيه أو كزائر يلتقط الصور ويستخدم كروت الولاء، فإنك تقر وتوافق على الالتزام بجميع بنود هذه الاتفاقية وسياسة الخصوصية الملحقة بها.
+    <main
+      dir="rtl"
+      className="min-h-screen bg-paper px-5 py-12 text-ink sm:px-8 sm:py-18"
+    >
+      <article className="mx-auto max-w-3xl space-y-6 leading-8">
+        <Link
+          href="/"
+          className="text-sm font-bold text-rust underline underline-offset-4"
+        >
+          ← الرئيسية
+        </Link>
+        <header>
+          <p className="text-sm text-ink/55">محدّثة: 14 أكتوبر 2026</p>
+          <h1 className="display-heading mt-3 text-4xl sm:text-5xl">
+            شروط الاستخدام
+          </h1>
+        </header>
+        <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
+          <h2 className="text-xl font-bold mb-2">حسابات المنشآت</h2>
+          <p className="text-sm leading-8 text-ink/70">
+            تستخدم المنشأة حساب Supabase Auth وبريدًا إلكترونيًا. على أعضاء
+            الفريق استخدام حسابات وصلاحيات مخصصة؛ لا تشارك بيانات الدخول. لا
+            تُعد رموز PIN المحلية وسيلة اعتماد.
           </p>
         </section>
-
-        <section className="space-y-3">
-          <h2 className="text-lg font-bold text-[#FBF9F5] font-serif">2. طبيعة الخدمة (Service Description)</h2>
-          <p className="text-sm text-[#A19E9B] leading-relaxed">
-            تقدم منصة Memories منظومة رقمية لإدارة كروت الولاء عبر كود الطاولات السريع، وتوثيق ذكريات الزوار في كبائن تصوير افتراضية، وبث الذكريات المعتمدة على شاشات التلفزيون الذكية بالصالة، بالإضافة لنظام تتبع المكافآت.
+        <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
+          <h2 className="text-xl font-bold mb-2">حساب الضيف</h2>
+          <p className="text-sm leading-8 text-ink/70">
+            يمكنك الدخول بحساب Google أو استخدام جلسة ضيف مؤقتة. اربط جلسة الضيف
+            بـ Google قبل فقدان المتصفح حتى لا تفقد إمكانية الوصول للذكريات
+            والرصيد؛ لا نربط حساب Google مستخدمًا بحساب ضيف آخر تلقائيًا. رقم
+            التواصل في الإعدادات اختياري وغير موثّق ولا يمنح زيارة.
           </p>
         </section>
-
-        <section className="space-y-3">
-          <h2 className="text-lg font-bold text-[#FBF9F5] font-serif">3. مسؤوليات المستخدمين والمحتوى المقبول (Acceptable Content)</h2>
-          <p className="text-sm text-[#A19E9B] leading-relaxed">
-            يلتزم الزوار وأصحاب المنشآت بعدم رفع أو بث أي صور أو نصوص مسيئة أو تنتهك الآداب العامة وحقوق الملكية الفكرية. يحتفظ فريق إدارة الكافيه وإدارة المنصة بالحق الكامل في إخفاء أو رفض أي ذكرى تخالف المعايير فوراً.
+        <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
+          <h2 className="text-xl font-bold mb-2">الزيارات والمكافآت</h2>
+          <p className="text-sm leading-8 text-ink/70">
+            رفع صورة لا يمنح زيارة موثقة تلقائيًا. يؤكد موظف المنشأة الشراء
+            والزيارة؛ تعتمد المكافآت على الزيارات الموثقة وقواعد المنشأة. قد
+            تمنع فترات التهدئة إضافة زيارات متكررة في مدة قصيرة.
           </p>
         </section>
-
-        <section className="space-y-3">
-          <h2 className="text-lg font-bold text-[#FBF9F5] font-serif">4. حسابات التجار والمصادقة (Merchant Accounts)</h2>
-          <p className="text-sm text-[#A19E9B] leading-relaxed">
-            يتحمل التاجر مسؤولية سرية حسابه وبيانات تسجيل الدخول عبر Google OAuth أو رمز الدخول السري (Staff PIN)، وأي نشاط يصدر من خلال لوحة التحكم الخاصة بمنشأته.
+        <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
+          <h2 className="text-xl font-bold mb-2">كارت الذكريات</h2>
+          <p className="text-sm leading-8 text-ink/70">
+            بعد ختم يؤكده الموظف، تصوير الزيارة اختياري وخاص في الأصل ولا يمنح
+            ختمًا إضافيًا. عند اكتمال الأختام، يحفظ حساب الضيف كارتًا يضم صور
+            الزيارات التي رفعها وأماكن فارغة لما لم يصوّره، مع المكافأة الموعودة.
+            يمكن لصاحب الحساب حفظه PDF أو إرساله بنفسه للطباعة في الفرع عبر نافذة
+            المتصفح؛ لا نُرسل صور العملاء إلى طابعة تلقائيًا.
           </p>
         </section>
-
-        <section className="space-y-3 border-t border-white/10 pt-6">
-          <h2 className="text-lg font-bold text-[#FBF9F5] font-serif">5. التواصل القانوني (Legal Inquiries)</h2>
-          <p className="text-sm text-[#A19E9B] leading-relaxed">
-            لأي استفسارات قانونية أو تنظيمية:
-            <br />
-            البريد الإلكتروني: <strong className="font-mono text-[#FBF9F5]">legal@memories-c9w.pages.dev</strong>
-            <br />
-            الموقع الرسمي: <strong className="font-mono text-[#FBF9F5]">https://memories-c9w.pages.dev</strong>
+        <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
+          <h2 className="text-xl font-bold mb-2">الصور وشاشة الصالة</h2>
+          <p className="text-sm leading-8 text-ink/70">
+            لا ترفع صورًا دون إذن الأشخاص الظاهرين فيها، أو مواد مسيئة أو تنتهك
+            الحقوق. تتطلب الشاشة اقترانًا وموافقة الضيف ومراجعة الفريق. يحق
+            للضيف سحب موافقته على العرض.
           </p>
         </section>
-      </main>
-    </div>
+        <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
+          <h2 className="text-xl font-bold mb-2">بطاقة Wallet الاختيارية</h2>
+          <p className="text-sm leading-8 text-ink/70">
+            لا نصدر بطاقة Wallet بدون موافقتك وربط مزوّد WalletWallet الفعلي.
+            اختيار رسائل الحملات وقرب الفروع مستقل؛ لا يثبت صدور رابط الإضافة
+            أنك ثبتّ البطاقة أو أن هاتفك عرض إشعارًا. مشاركة البطاقة أو حذفها من
+            الجهاز تحت تحكمك؛ إلغاء الكارت عند المزوّد يعتمد على استجابة الخدمة،
+            وأي نتيجة غير مؤكدة تستوجب إزالة البطاقة من الجهاز ومراجعة الدعم.
+          </p>
+        </section>
+        <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
+          <h2 className="text-xl font-bold mb-2">حدود النسخة الحالية</h2>
+          <p className="text-sm leading-8 text-ink/70">
+            تتطلب الخدمة خادم Next.js وتهيئة Supabase وترحيل قاعدة البيانات. لا
+            توجد فوترة فعلية أو شهادات Apple/Google خاصة بنا أو نظام طباعة تجاري
+            متصل في هذه النسخة. إصدار Wallet الموقع يكون بواسطة WalletWallet عند
+            تفعيله، ويجب اختبار التشغيل وخصوصية البيانات قبل النشر العام.
+          </p>
+        </section>
+        <p className="text-xs leading-7 text-ink/50">
+          وثيقة توضيحية للمنتج الحالي؛ يلزم اعتماد شروط قانونية نهائية قبل
+          الاستخدام التجاري.
+        </p>
+      </article>
+    </main>
   );
 }

@@ -1,927 +1,1144 @@
-'use client';
-
-import React, { useState, useEffect, useRef } from 'react';
-import { BusinessSettings, PhotoboothFrame, CardColorPalette, PhotoboothCardMode, PlacedSticker } from '@/types/photobooth';
-import { BusinessSettingsService } from '@/lib/services/business-settings.service';
-import { CooldownService } from '@/lib/services/cooldown.service';
-import { PrintService } from '@/lib/services/print.service';
-import { CameraViewfinder } from '@/components/photobooth/CameraViewfinder';
-import { CardColorPicker } from '@/components/photobooth/CardColorPicker';
-import { StripComposerService } from '@/lib/services/strip-composer.service';
-import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
-import { PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
-import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
-import { PasswordInput } from '@/components/ui/PasswordInput';
-
-// Dedicated Feature Slices
-import { CoBrandingHeader } from '@/features/co-branding/CoBrandingHeader';
-import { CustomerLoyaltyCard } from '@/features/loyalty/CustomerLoyaltyCard';
-import { StaffQuickStampModal } from '@/features/loyalty/StaffQuickStampModal';
-import { LoyaltyPurseService, CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
-import { VoucherService } from '@/lib/services/voucher.service';
-import { PhotoboothResponsiveCard } from '@/features/photobooth/PhotoboothResponsiveCard';
-import { PhotoCaptureOrUpload } from '@/features/photobooth/PhotoCaptureOrUpload';
-import { InstagramMentionPrompt } from '@/features/social/InstagramMentionPrompt';
-import { WallConsentModal } from '@/features/wall-consent/WallConsentModal';
-import { CompletionGiftRewardModal } from '@/features/rewards/CompletionGiftRewardModal';
-import { ImageSaveService } from '@/lib/services/image-save.service';
-import { IosSaveImageModal } from '@/components/photobooth/IosSaveImageModal';
+"use client";
+/* eslint-disable @next/next/no-img-element -- Private memory images and local blob previews bypass the public image optimizer. */
 
 import {
-  Sparkles,
-  Gift,
-  CheckCircle,
-  CheckCircle2,
-  ArrowRight,
-  ShieldCheck,
-  RotateCcw,
-  Clock,
-  Coffee,
-  Heart,
-  X,
-  UserCheck,
-  Lock,
-  Download,
-  Camera,
-  Share2,
-  Award,
-} from 'lucide-react';
+  useCallback,
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
+import Link from "next/link";
+import { StampyLogo, StampyApertureIcon } from "@/components/brand/StampyLogo";
+import { createClient } from "@/lib/supabase/client";
+import type { KeepsakeStory } from "@/lib/keepsakes";
+import { instagramMention, socialPlatforms, type PublicBrand } from "@/lib/brand";
+import { CustomerWalletPanel } from '@/components/customer/CustomerWalletPanel';
+import { customerGoogleAction } from "@/lib/customer-google-flow";
+import { visibleStampCount } from "@/lib/loyalty-progress";
 
-const createGiftCode = () => `GIFT-${Math.floor(1000 + Math.random() * 9000)}`;
-const createTrackedId = (prefix: string) =>
-  `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
-export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string }) {
-  // Resolve authoritative cafe slug from query params, pathname, or prop
-  const [cafeSlug, setCafeSlug] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryCafe = urlParams.get('cafe') || urlParams.get('slug');
-      if (queryCafe) return decodeURIComponent(queryCafe);
-
-      const match = window.location.pathname.match(/\/c\/([^/?#]+)/);
-      if (match && match[1]) {
-        return decodeURIComponent(match[1]);
-      }
-    }
-    return propCafeSlug || 'memories';
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryCafe = urlParams.get('cafe') || urlParams.get('slug');
-      if (queryCafe) {
-        const resolved = decodeURIComponent(queryCafe);
-        if (resolved !== cafeSlug) {
-          setCafeSlug(resolved);
-          return;
-        }
-      }
-      const match = window.location.pathname.match(/\/c\/([^/?#]+)/);
-      if (match && match[1]) {
-        const resolved = decodeURIComponent(match[1]);
-        if (resolved !== cafeSlug) {
-          setCafeSlug(resolved);
-        }
-      }
-    }
-  }, [propCafeSlug, cafeSlug]);
-
-  // Business settings state
-  const [settings, setSettings] = useState<BusinessSettings>(() =>
-    BusinessSettingsService.getSettings(cafeSlug)
-  );
-
-  const [selectedPaletteId, setSelectedPaletteId] = useState<string>(() => {
-    return settings.activeColorPaletteId || 'memories-signature';
-  });
-
-  const staffLabel =
-    settings.businessType === 'restaurant'
-      ? 'الكاشير أو طاقم الخدمة'
-      : settings.businessType === 'retail'
-      ? 'الكاشير وفريق المبيعات'
-      : settings.businessType === 'salon'
-      ? 'فريق الاستقبال'
-      : settings.businessType === 'events'
-      ? 'منظم الفعالية'
-      : 'موظف الكاونتر / الخدمة';
-
-  // Frame selection
-  const [selectedFrame, setSelectedFrame] = useState<PhotoboothFrame>(() => {
-    const base =
-      settings.frames.find((f) => f.id === settings.activeFrameId) ||
-      settings.frames[0];
-    return {
-      ...base,
-      templateId: settings.defaultTemplateId || base?.templateId || 'korean_noir_2x6',
-      layoutType: settings.defaultLayoutType || base?.layoutType,
-      shotCount: settings.defaultShotCount || base?.shotCount || 3,
-      orientation: settings.defaultOrientation || base?.orientation || 'vertical',
-      frameShape: settings.defaultFrameShape || 'rounded',
-      dimensionsPreset: (settings.defaultDimensionsPreset as any) || 'strip_2x6',
-    };
-  });
-
-  const [cardMode, setCardMode] = useState<PhotoboothCardMode>(
-    settings.defaultCardMode || 'polaroid_vintage'
-  );
-
-  // Sub-customizer states for viral frames
-  const [spotifyBg, setSpotifyBg] = useState<string>('#384C5A');
-  const [spotifyTrack, setSpotifyTrack] = useState<{ title: string; artist: string }>({
-    title: 'Nobody Gets Me',
-    artist: 'SZA • SOS',
-  });
-  const [ticketSeat, setTicketSeat] = useState<string>('ROW 15 • SEAT A33');
-  const [activeTab, setActiveTab] = useState<'studio' | 'loyalty'>('studio');
-
-  // Customer session state
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerProfession, setCustomerProfession] = useState('');
-
-  // Loyalty purse state
-  const [loyaltyData, setLoyaltyData] = useState<CustomerLoyaltyData>(() =>
-    LoyaltyPurseService.getData(customerPhone, cafeSlug, 5)
-  );
-
-  // Modals & Flows
-  const [isStaffStampModalOpen, setIsStaffStampModalOpen] = useState(false);
-  const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
-  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
-  const [isWallConsentModalOpen, setIsWallConsentModalOpen] = useState(false);
-  const [isCompletionRewardOpen, setIsCompletionRewardOpen] = useState(false);
-  const [hasAnsweredWallConsent, setHasAnsweredWallConsent] = useState(false);
-  const [iosSaveModalImage, setIosSaveModalImage] = useState<string | null>(null);
-
-  // Card photos state
-  const [accumulatedPhotos, setAccumulatedPhotos] = useState<string[]>([]);
-  const [todayPhoto, setTodayPhoto] = useState<string | null>(null);
-  const [composedStripUrl, setComposedStripUrl] = useState<string | undefined>(undefined);
-  const [giftCode, setGiftCode] = useState('');
-  const [liveWallConsent, setLiveWallConsent] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [stickers, setStickers] = useState<PlacedSticker[]>([]);
-  const [isStickerTrayOpen, setIsStickerTrayOpen] = useState(false);
-  const [activeCaptureSlot, setActiveCaptureSlot] = useState<number | null>(null);
-
-  const handleAddSticker = (emoji: string) => {
-    if (!emoji.trim()) return;
-    const randomOffset = (Math.random() - 0.5) * 20;
-    const newSticker: PlacedSticker = {
-      id: `stk_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      emoji: emoji.trim(),
-      x: Math.max(15, Math.min(85, 50 + randomOffset)),
-      y: Math.max(15, Math.min(85, 40 + randomOffset)),
-      rotation: Math.round((Math.random() - 0.5) * 30),
-      scale: 1,
-    };
-    setStickers((prev) => [...prev, newSticker]);
+type Memory = {
+  id: string;
+  caption: string | null;
+  status: string;
+  visibility: string;
+  createdAt: string;
+  imageUrl: string;
+};
+type Session = {
+  customer: { id: string; displayName: string };
+  account: {
+    authUserId: string;
+    phone: string | null;
+    email: string | null;
+    isAnonymous: boolean;
+    googleLinked: boolean;
+    hasSavedData: boolean;
   };
+  venue: { organizationName: string; branchName: string;
+    brand?: PublicBrand; mapsUrl?: string | null };
+  verifiedVisits: number;
+  memories: Memory[];
+};
+const authMessages: Record<string, string> = {
+  "link-failed":
+    "لم يكتمل ربط Google. بقيت ذكرياتك في حساب الضيف الحالي. تحقّق من تفعيل ربط الهويات يدويًا؛ إذا كان Google مرتبطًا بحساب آخر فلا يمكن نقل الذكريات تلقائيًا.",
+  "sign-in-failed":
+    "تعذر تسجيل الدخول بحساب Google. يمكنك إعادة المحاولة أو المتابعة كضيف.",
+  "missing-code": "رابط تسجيل الدخول غير صالح. ابدأ من صفحة الفرع مرة أخرى.",
+};
+type Progress = {
+  verifiedVisits: number;
+  totalSlots: number;
+  stampedCount: number;
+  availableRewards: number;
+  rewardRule: { name: string } | null;
+  pendingRewardName: string | null;
+};
 
-  // Customer Onboarding / Registration Form State
-  const [regName, setRegName] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regSuccessNotice, setRegSuccessNotice] = useState<string | null>(null);
+function visitLabel(verifiedAt: string, branchName: string) {
+  return `${branchName} · ${new Intl.DateTimeFormat("ar-EG", {
+    day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Cairo",
+  }).format(new Date(verifiedAt))}`;
+}
 
-  // Total slots authoritative from merchant
-  const totalCardSlots = Math.max(selectedFrame.shotCount || 3, 1);
-  const loyaltyMaxVisits = settings.loyaltyMaxVisits || 5;
+export function CustomerClient({
+  cafeSlug,
+  branchSlug,
+  authError,
+}: {
+  cafeSlug: string;
+  branchSlug?: string;
+  authError?: string;
+}) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [entry, setEntry] = useState<"checking" | "choose" | "ready">(
+    "checking",
+  );
+  const [displayName, setDisplayName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [progressError, setProgressError] = useState("");
+  const [story, setStory] = useState<KeepsakeStory | null>(null);
+  const [storyError, setStoryError] = useState("");
+  const [selectedVisitId, setSelectedVisitId] = useState("");
+  const [storyPage, setStoryPage] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [tab, setTab] = useState<"card" | "memories" | "account">("card");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState("");
+  const [caption, setCaption] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [notice, setNotice] = useState(
+    authError ? (authMessages[authError] ?? "") : "",
+  );
+  const [busy, setBusy] = useState(false);
 
-  // Hydrate persisted session from storage
-  useEffect(() => {
-    const handleSettingsUpdate = () => {
-      setSettings(BusinessSettingsService.getSettings(cafeSlug));
-    };
-    window.addEventListener('memories-settings-updated', handleSettingsUpdate);
-    return () => window.removeEventListener('memories-settings-updated', handleSettingsUpdate);
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview],
+  );
+
+  const loadStory = useCallback(async (page = 0, append = false) => {
+    const query = new URLSearchParams({ cafeSlug, page: String(page) });
+    const response = await fetch(`/api/v1/customer/story?${query}`, { cache: "no-store" });
+    if (!response.ok) throw new Error("Could not load keepsakes");
+    const result = await response.json() as KeepsakeStory;
+    setStory((previous) => append && previous
+      ? { ...result, cards: [...previous.cards, ...result.cards] } : result);
+    if (!append) {
+      setSelectedVisitId((previous) => result.eligibleVisits.some((visit) => visit.id === previous)
+        ? previous : result.eligibleVisits[0]?.id ?? "");
+    }
+    setStoryPage(page);
+    setStoryError("");
   }, [cafeSlug]);
 
-  useEffect(() => {
-    const hydrateSession = () => {
-      const storedName = localStorage.getItem('memories_customer_name') || '';
-      const storedPhone = localStorage.getItem('memories_customer_phone') || '';
-      const storedRole = localStorage.getItem('memories_customer_role') || '';
-      if (storedName) setCustomerName(storedName);
-      if (storedPhone) setCustomerPhone(storedPhone);
-      if (storedRole) setCustomerProfession(storedRole);
-
-      // Restore loyalty data
-      const loyalty = LoyaltyPurseService.getData(storedPhone, cafeSlug, loyaltyMaxVisits);
-      setLoyaltyData(loyalty);
-
-      // Check wall consent answer
-      const consentAnswered = localStorage.getItem(`memories_wall_consent_${cafeSlug}_${storedPhone || 'guest'}`);
-      if (consentAnswered) {
-        setHasAnsweredWallConsent(true);
-        setLiveWallConsent(consentAnswered === 'true');
+  const refresh = useCallback(
+    async (syncAccount = false): Promise<Session> => {
+      const response = await fetch("/api/v1/customer/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cafeSlug, branchSlug }),
+        cache: "no-store",
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "تعذر بدء الجلسة");
+      setSession(body);
+      setEntry("ready");
+      if (syncAccount) {
+        setDisplayName(body.customer.displayName ?? "");
+        setPhone(body.account.phone ?? "");
       }
+      const query = new URLSearchParams({ cafeSlug });
+      if (branchSlug) query.set("branchSlug", branchSlug);
+      try {
+        const loyalty = await fetch(`/api/v1/loyalty/stamps?${query}`, {
+          cache: "no-store",
+        });
+        if (!loyalty.ok) throw new Error("Could not load loyalty progress");
+        setProgress(await loyalty.json());
+        setProgressError("");
+      } catch {
+        setProgress(null);
+        setProgressError(
+          "تعذر تحميل تفاصيل المكافأة الآن. الزيارات المؤكدة ما زالت ظاهرة، ويمكنك المحاولة مجددًا.",
+        );
+      }
+      try {
+        await loadStory();
+      } catch {
+        setStory(null);
+        setSelectedVisitId("");
+        setStoryError("تعذر تحميل زيارات التصوير وكروت الذكريات. حاول تاني.");
+      }
+      return body;
+    },
+    [cafeSlug, branchSlug, loadStory],
+  );
 
-      // Restore saved photos for this customer
-      if (storedPhone) {
-        const clean = storedPhone.trim().replace(/[^0-9]/g, '');
-        const saved = localStorage.getItem(`memories_card_photos_${cafeSlug}_${clean}`);
-        if (saved) {
-          try {
-            const list = JSON.parse(saved);
-            if (Array.isArray(list) && list.length > 0) {
-              setAccumulatedPhotos(list);
-            }
-          } catch {}
+  useEffect(() => {
+    // An unexpected change of user ID during linking requires manual recovery;
+    // do not automatically create a new customer on that identity.
+    if (authError === "identity-mismatch") return;
+    let active = true;
+    (async () => {
+      const {
+        data: { user },
+        error,
+      } = await createClient().auth.getUser();
+      if (error) throw error;
+      if (!active) return;
+      if (!user) {
+        setEntry("choose");
+        return;
+      }
+      await refresh(true);
+    })().catch((error) => {
+      if (active)
+        setNotice(error instanceof Error ? error.message : "تعذر الاتصال");
+    });
+    return () => {
+      active = false;
+    };
+  }, [refresh, authError]);
+
+  async function continueAsGuest() {
+    setBusy(true);
+    setNotice("");
+    try {
+      const { error } = await createClient().auth.signInAnonymously();
+      if (error)
+        throw new Error("يرجى تفعيل دخول الضيوف في Supabase: " + error.message);
+      await refresh(true);
+      setNotice(
+        "أنت الآن ضيف بهذا المتصفح. اربط حساب Google قبل مسح بيانات المتصفح للاحتفاظ بذكرياتك.",
+      );
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "تعذر بدء جلسة الضيف");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function google() {
+    setBusy(true);
+    setNotice("");
+    try {
+      const db = createClient();
+      const {
+        data: { user },
+        error: authError,
+      } = await db.auth.getUser();
+      if (authError) throw authError;
+      if (session ? user?.id !== session.account.authUserId : Boolean(user)) {
+        throw new Error("تغيّرت جلسة الدخول. أعد تحميل الصفحة قبل المتابعة.");
+      }
+      // Fail closed: checking only this venue's visible photos misses pending,
+      // deleted or cross-venue visits and redeemed loyalty rewards.
+      const current = session ? await refresh() : null;
+      if (
+        session &&
+        current?.account.authUserId !== session.account.authUserId
+      ) {
+        throw new Error(
+          "تغيّر الحساب في تبويب آخر. أعد تحميل الصفحة قبل المتابعة.",
+        );
+      }
+      const action = customerGoogleAction(current?.account ?? null);
+      if (action === "already-linked") {
+        setNotice("حسابك مرتبط بالفعل بـ Google.");
+        return;
+      }
+      const callback = new URL(
+        "/auth/customer/callback",
+        window.location.origin,
+      );
+      callback.searchParams.set("cafe", cafeSlug);
+      if (branchSlug) callback.searchParams.set("branch", branchSlug);
+      if (action === "link") {
+        const intent = await fetch("/api/v1/customer/oauth/link-intent", {
+          method: "POST",
+        });
+        if (!intent.ok)
+          throw new Error("تعذر حماية عملية ربط الحساب. أعد المحاولة.");
+        const { nonce } = await intent.json();
+        callback.searchParams.set("flow", "link");
+        callback.searchParams.set("nonce", nonce);
+        const { error } = await db.auth.linkIdentity({
+          provider: "google",
+          options: { redirectTo: callback.toString() },
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await db.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: callback.toString() },
+        });
+        if (error) throw error;
+      }
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "تعذر دخول Google");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveAccount(event: FormEvent) {
+    event.preventDefault();
+    if (!session) return;
+    setBusy(true);
+    setNotice("");
+    try {
+      const response = await fetch("/api/v1/customer/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          authUserId: session.account.authUserId,
+          displayName,
+          phone: phone.trim() || null,
+        }),
+      });
+      if (!response.ok)
+        throw new Error((await response.json()).error ?? "تعذر حفظ الإعدادات");
+      await refresh(true);
+      setNotice("تم حفظ إعدادات حسابك.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "تعذر حفظ الإعدادات");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signOut() {
+    if (!session) return;
+    setBusy(true);
+    setNotice("");
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await createClient().auth.getUser();
+      if (authError || user?.id !== session.account.authUserId) {
+        throw new Error("تغيّرت جلسة الدخول. أعد تحميل الصفحة.");
+      }
+      const latest = await refresh();
+      if (latest.account.authUserId !== user.id)
+        throw new Error("تغيّرت جلسة الدخول. أعد تحميل الصفحة.");
+      if (
+        latest.account.hasSavedData &&
+        (latest.account.isAnonymous ||
+          (!latest.account.googleLinked && !latest.account.email))
+      ) {
+        throw new Error(
+          "لا تخرج قبل ربط حساب يمكن استعادته بـ Google للحفاظ على ذكرياتك.",
+        );
+      }
+      const { error } = await createClient().auth.signOut({ scope: "local" });
+      if (error) throw error;
+      if (preview) URL.revokeObjectURL(preview);
+      setFile(null);
+      setPreview("");
+      setSession(null);
+      setProgress(null);
+      setStory(null);
+      setStoryError("");
+      setSelectedVisitId("");
+      setStoryPage(0);
+      setDisplayName("");
+      setPhone("");
+      setEntry("choose");
+      setTab("card");
+      setNotice("تم تسجيل الخروج من هذا الجهاز.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "تعذر تسجيل الخروج");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const businessMention = instagramMention(session?.venue.brand?.socialLinks ?? {});
+  const platformHandle = process.env.NEXT_PUBLIC_CAFE_MEMORIES_INSTAGRAM;
+  const platformMention = platformHandle && /^@[A-Za-z0-9._]{1,30}$/.test(platformHandle)
+    ? platformHandle : null;
+  const mentionText = [businessMention, platformMention, '#CafeMemories'].filter(Boolean).join(' ');
+
+  async function copyMentions() {
+    try {
+      await navigator.clipboard.writeText(mentionText);
+      setNotice('اتنسخ المنشن. اختار الصورة والمنصة بنفسك؛ مش هننشر باسمك.');
+    } catch { setNotice(`انسخ المنشن بنفسك: ${mentionText}`); }
+  }
+
+  async function shareMemory(memory: Memory) {
+    if (!session) return;
+    setBusy(true); setNotice('');
+    try {
+      const response = await fetch(memory.imageUrl, { cache: 'no-store' });
+      if (!response.ok) throw new Error('الصورة الخاصة غير متاحة الآن. حاول تاني.');
+      const blob = await response.blob();
+      const image = new File([blob], 'cafe-memory.webp', { type: 'image/webp' });
+      const title = `ذكرياتي عند ${session.venue.organizationName}`;
+      const text = `${title} ✳ ${mentionText}`;
+      if (navigator.share && navigator.canShare?.({ files: [image] })) {
+        try {
+          await navigator.share({ files: [image], title, text });
+          setNotice('الصورة اتفتحت في قائمة المشاركة. اختيار النشر والمنشن عندك أنت.');
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === 'AbortError') return;
+          throw error;
         }
       }
-    };
-    requestAnimationFrame(hydrateSession);
-  }, [cafeSlug, loyaltyMaxVisits]);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href = url; link.download = 'cafe-memory.webp';
+      document.body.appendChild(link); link.click(); link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      setNotice('نزّلنا صورتك على جهازك. ارفعها بنفسك للمنصة اللي تحبها وأضف المنشن.');
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'تعذر مشاركة الصورة');
+    } finally { setBusy(false); }
+  }
 
-  // Current photos to display: customer's actual captured photos
-  const currentDisplayPhotos = todayPhoto
-    ? [...accumulatedPhotos, todayPhoto]
-    : accumulatedPhotos;
-
-  // Check completion
-  const isCardCompleted = accumulatedPhotos.length >= totalCardSlots || (todayPhoto && accumulatedPhotos.length + 1 >= totalCardSlots);
-
-  // Direct Staff Stamp Handler
-  const handleStaffStampSuccess = () => {
-    const res = LoyaltyPurseService.addDirectStamp(customerPhone, cafeSlug, loyaltyMaxVisits);
-    const updated = LoyaltyPurseService.getData(customerPhone, cafeSlug, loyaltyMaxVisits);
-    setLoyaltyData(updated);
-    if (res.isCardComplete) {
-      const issued = VoucherService.issueVoucher({
-        cafeSlug,
-        customerPhone,
-        customerName: customerName || 'ضيف مميز',
-        giftTitle: settings.freeGiftOffer.title,
-        giftSubtitle: settings.freeGiftOffer.subtitle,
-      });
-      setGiftCode(issued.code);
-      setIsCompletionRewardOpen(true);
-    }
-  };
-
-  // Customer Registration & Check-in Handler
-  const handleRegisterCustomer = (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = regPhone.trim().replace(/[^0-9]/g, '');
-    const name = regName.trim();
-    if (!clean || clean.length < 8 || !name) return;
-
-    CustomerRegistryService.registerCustomer(clean, name, 'vip_guest', cafeSlug);
-    setCustomerPhone(clean);
-    setCustomerName(name);
-    const updatedLoyalty = LoyaltyPurseService.getData(clean, cafeSlug, loyaltyMaxVisits);
-    setLoyaltyData(updatedLoyalty);
-    setRegSuccessNotice(`تم تثبيت كارت الولاء بنجاح للعميل (${name})! يمكنك الآن التقاط صورك وختم زياراتك.`);
-    setTimeout(() => setRegSuccessNotice(null), 4000);
-  };
-
-  const handleClearCustomer = () => {
-    setCustomerPhone('');
-    setCustomerName('');
-    localStorage.removeItem('memories_customer_phone');
-    localStorage.removeItem('memories_customer_name');
-    setLoyaltyData(LoyaltyPurseService.getData('', cafeSlug, loyaltyMaxVisits));
-  };
-
-  // Add or Replace Photo Handler (from camera or file upload)
-  const handleCommitPhoto = (photoBase64: string, targetSlot?: number) => {
-    const slotIdx = targetSlot !== undefined ? targetSlot : (activeCaptureSlot !== null ? activeCaptureSlot : accumulatedPhotos.length);
-    let updated: string[];
-    if (slotIdx < accumulatedPhotos.length) {
-      updated = [...accumulatedPhotos];
-      updated[slotIdx] = photoBase64;
-    } else {
-      updated = [...accumulatedPhotos, photoBase64];
-    }
-    setAccumulatedPhotos(updated);
-    setActiveCaptureSlot(null);
-
-    const clean = customerPhone.trim().replace(/[^0-9]/g, '') || 'guest';
+  async function copyCustomerId() {
+    if (!session) return;
     try {
-      localStorage.setItem(`memories_card_photos_${cafeSlug}_${clean}`, JSON.stringify(updated));
-      CustomerRegistryService.registerCustomer(clean, customerName || 'ضيف مميز', 'vip_guest', cafeSlug);
-    } catch {}
-
-    // Check if card just completed!
-    if (updated.length >= totalCardSlots) {
-      const issued = VoucherService.issueVoucher({
-        cafeSlug,
-        customerPhone: clean,
-        customerName: customerName || 'ضيف مميز',
-        giftTitle: settings.freeGiftOffer.title,
-        giftSubtitle: settings.freeGiftOffer.subtitle,
-      });
-      setGiftCode(issued.code);
-
-      // Trigger 1-time TV Wall Consent if not answered yet
-      if (!hasAnsweredWallConsent) {
-        setIsWallConsentModalOpen(true);
-      } else {
-        setIsCompletionRewardOpen(true);
-      }
-    }
-  };
-
-  // Handle Wall Consent Answer
-  const handleWallConsent = (consent: boolean) => {
-    setLiveWallConsent(consent);
-    setHasAnsweredWallConsent(true);
-    const clean = customerPhone.trim().replace(/[^0-9]/g, '') || 'guest';
-    localStorage.setItem(`memories_wall_consent_${cafeSlug}_${clean}`, consent ? 'true' : 'false');
-    setIsWallConsentModalOpen(false);
-
-    // If consent given, broadcast to wall feed and notify connected TV screens
-    if (consent) {
-      try {
-        const wallItem = {
-          id: createTrackedId('wall'),
-          customerName: customerName || 'ضيف مميز',
-          photoUrl: accumulatedPhotos[0] || '',
-          caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'Memories'} ✨☕`,
-          timeFormatted: 'الآن',
-          visitNumber: loyaltyData.stampedCount || 1,
-          createdAt: new Date().toISOString(),
-          visibility: 'live_wall',
-          status: 'approved',
-        };
-        const existingFeed = JSON.parse(localStorage.getItem(`memories_wall_feed_${cafeSlug}`) || '[]');
-        const newFeed = [wallItem, ...existingFeed].slice(0, 20);
-        localStorage.setItem(`memories_wall_feed_${cafeSlug}`, JSON.stringify(newFeed));
-        localStorage.setItem('memories_wall_cache_screen-1', JSON.stringify(newFeed));
-        window.dispatchEvent(new CustomEvent('memories-wall-updated', { detail: newFeed }));
-
-        try {
-          const channel = new BroadcastChannel('memories_screens_channel');
-          channel.postMessage({ type: 'WALL_NEW_PHOTO', item: wallItem, feed: newFeed });
-          channel.close();
-        } catch {}
-      } catch {}
-    }
-
-    // Now open completion gift reward modal
-    setIsCompletionRewardOpen(true);
-  };
-
-  // Direct 300 DPI Print or Download
-  const handlePrintOrDownload = async () => {
-    try {
-      const highRes = await StripComposerService.composeStrip({
-        photos: currentDisplayPhotos,
-        totalSlots: totalCardSlots,
-        frame: {
-          ...selectedFrame,
-          shotCount: totalCardSlots,
-          cardMode,
-          bgColor: cardMode === 'spotify_player' ? spotifyBg : selectedFrame.bgColor,
-          songTitle: spotifyTrack.title,
-          songArtist: spotifyTrack.artist,
-          ticketSeat,
-        },
-        branding: settings.branding,
-        freeGiftOffer: settings.freeGiftOffer,
-        giftCode: giftCode || 'GIFT-2026',
-        cardMode,
-        stickers,
-      });
-
-      // Queue in isolated merchant print station
-      try {
-        const queueKey = `memories_print_queue_${cafeSlug}`;
-        const existingQueue = JSON.parse(localStorage.getItem(queueKey) || '[]');
-        const newPrintJob = {
-          id: createTrackedId('print'),
-          name: customerName || 'عميل مميز',
-          phone: customerPhone || 'guest',
-          role: 'loyal_customer',
-          totalVisits: loyaltyData.stampedCount,
-          lastVisit: new Date().toISOString(),
-          photoStripUrl: highRes,
-          format: ((selectedFrame.dimensionsPreset as string) === 'grid_4x6' || (selectedFrame.dimensionsPreset as string) === 'postcard_4x6') ? 'postcard-4x6' : 'standard-2x6',
-          createdAt: new Date().toISOString(),
-        };
-        localStorage.setItem(queueKey, JSON.stringify([newPrintJob, ...existingQueue].slice(0, 30)));
-        window.dispatchEvent(new CustomEvent('memories-print-queue-updated'));
-
-        try {
-          const printChannel = new BroadcastChannel('memories_print_channel');
-          printChannel.postMessage({ type: 'NEW_PRINT_JOB', job: newPrintJob, cafeSlug });
-          printChannel.close();
-        } catch {}
-      } catch {}
-
-      // Cross-platform & Safari-compliant Image Save / Share
-      const saveResult = await ImageSaveService.saveImage({
-        dataUrl: highRes,
-        filename: `${settings.branding.name}-photostrip-${Date.now()}.png`,
-        title: `شريط صور ${customerName || settings.branding.name}`,
-      });
-
-      if (saveResult.method === 'fallback') {
-        // Open iOS Save Modal for iPhone / Safari
-        setIosSaveModalImage(saveResult.blobUrl || highRes);
-      }
+      await navigator.clipboard.writeText(session.customer.id);
+      setNotice("تم نسخ معرّف الضيف. اعرضه للموظف بعد إثبات الشراء.");
     } catch {
-      window.print();
+      setNotice("حدّد معرّف الضيف أدناه لنسخه يدويًا.");
     }
-  };
+  }
+
+  function selectImage(event: ChangeEvent<HTMLInputElement>) {
+    const selected = event.target.files?.[0] ?? null;
+    event.target.value = ""; // Selecting the same photo again should still trigger a change.
+    if (preview) URL.revokeObjectURL(preview);
+    setFile(selected);
+    setPreview(selected ? URL.createObjectURL(selected) : "");
+  }
+
+  async function upload(event: FormEvent) {
+    event.preventDefault();
+    if (!file || !selectedVisitId || !story) return;
+    setBusy(true);
+    setNotice("");
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      form.set("visitId", selectedVisitId);
+      form.set("cafeSlug", cafeSlug);
+      if (branchSlug) form.set("branchSlug", branchSlug);
+      form.set("caption", caption);
+      form.set("liveWallConsent", String(consent));
+      const response = await fetch("/api/v1/memories/upload", {
+        method: "POST",
+        body: form,
+      });
+      const body = await response.json();
+      if (!response.ok) {
+        if (response.status === 409) await loadStory().catch(() => {});
+        throw new Error(response.status === 409 ? "الختم ده ليه صورة بالفعل؛ اختار زيارة تانية."
+          : response.status === 404 ? "الزيارة مش مؤكدة في حسابك. حدّث البطاقة وحاول تاني."
+            : body.error ?? "فشل رفع الصورة");
+      }
+      setFile(null);
+      setCaption("");
+      setConsent(false);
+      if (preview) URL.revokeObjectURL(preview);
+      setPreview("");
+      await refresh();
+      setTab("memories");
+      setNotice(
+        "اتربطت صورتك بالختم المؤكد، وهتظهر في كارت الذكريات لما تكمل المكافأة. تفضل خاصة إلا لو وافقت على عرضها واعتمدها الفريق.",
+      );
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "تعذر رفع الصورة");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function changeConsent(memoryId: string, liveWallConsent: boolean) {
+    setBusy(true);
+    setNotice("");
+    try {
+      const response = await fetch("/api/v1/memories/consent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memoryId, liveWallConsent }),
+      });
+      if (!response.ok) throw new Error((await response.json()).error);
+      await refresh();
+      setNotice(
+        liveWallConsent
+          ? "تمت الموافقة على العرض العام بعد المراجعة"
+          : "أُلغي العرض العام فورًا",
+      );
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "تعذر تغيير الإذن");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const visibleStamps = visibleStampCount(progress);
+
+  if (authError === "identity-mismatch")
+    return (
+      <main dir="rtl" className="min-h-screen bg-paper px-5 py-16 text-ink">
+        <section
+          role="alert"
+          className="paper-card mx-auto max-w-xl rounded-[2rem] p-8"
+        >
+          <span aria-hidden="true" className="text-4xl text-rust">
+            ✳
+          </span>
+          <h1 className="display-heading mt-5 text-3xl">
+            وقفنا ربط الحساب لحماية ذكرياتك.
+          </h1>
+          <p className="mt-4 text-sm leading-8 text-ink/65">
+            تغيّرت هوية الحساب أثناء ربط Google. لم ننقل الصور أو الزيارات إلى
+            حساب آخر. لا تمسح بيانات هذا المتصفح ولا تضف ذكريات جديدة حتى يراجع
+            فريق الدعم الحسابين ويستعيد الوصول بشكل آمن.
+          </p>
+        </section>
+      </main>
+    );
 
   return (
-    <div className="w-full min-h-screen bg-transparent text-white flex flex-col items-center selection:bg-[#DD0200] selection:text-white pb-16 apple-font">
-      {/* 1. CO-BRANDING HEADER: memories × Business */}
-      <div className="w-full pt-3 px-3 sm:px-4">
-        <CoBrandingHeader branding={settings.branding} />
-      </div>
-
-      <main className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-3 flex flex-col items-center space-y-4">
-        {/* Registration Success Toast */}
-        {regSuccessNotice && (
-          <div className="w-full p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-lg backdrop-blur-md">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{regSuccessNotice}</span>
+    <main dir="rtl" className="min-h-screen bg-paper pb-20 text-ink">
+      <header className="border-b border-forest/10 bg-white/80">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <StampyLogo size="xs" showTagline={false} />
+            <div>
+              <p className="text-xs text-ink/55">
+                {session?.venue.organizationName ?? "مساحة الضيف"}
+              </p>
+            </div>
           </div>
-        )}
-
-        {/* TOP LEVEL SEGMENTED NAVIGATION: Clear separation between Photobooth Studio and Loyalty Pass */}
-        <div className="w-full grid grid-cols-2 p-1.5 bg-[#141212] rounded-xl border border-white/10 shadow-2xl backdrop-blur-xl">
-          <button
-            type="button"
-            onClick={() => setActiveTab('studio')}
-            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'studio'
-                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] font-black'
-                : 'text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-white/[0.04]'
-            }`}
-          >
-            <Camera className="w-4 h-4 text-[#FBF9F5]" />
-            <span>استوديو الصور ({totalCardSlots} لقطات)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('loyalty')}
-            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'loyalty'
-                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] font-black'
-                : 'text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-white/[0.04]'
-            }`}
-          >
-            <Award className="w-4 h-4 text-[#FBF9F5]" />
-            <span>كارت الولاء ({loyaltyData.stampedCount}/{loyaltyMaxVisits})</span>
-          </button>
-        </div>
-
-        {/* VIEW 1: PHOTOBOOTH STUDIO (Focused 100% on capturing & customizing the strip) */}
-        {activeTab === 'studio' && (
-          <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in duration-200">
-            {/* Header Strip: Title and slots badge */}
-            <div className="w-full flex items-center justify-between px-1 pt-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-bold text-white">
-                  شريط الذكريات
-                </h2>
-                <span className="text-[10px] font-mono text-[#D9D9D9] bg-white/10 border border-white/15 px-2.5 py-0.5 rounded-full font-bold">
-                  {totalCardSlots} لقطات • {selectedFrame.widthCm === 10 ? 'بوستكارد 4×6' : 'شريط 2×6'}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1.5 text-xs text-[#D9D9D9]/80 font-bold">
-                <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
-                <span>{accumulatedPhotos.length} من {totalCardSlots} لقطات موثقة</span>
-              </div>
-            </div>
-
-            {/* Hero Photobooth Card */}
-            <div className="w-full flex justify-center py-1 animate-in zoom-in-95 duration-200">
-              <PhotoboothResponsiveCard
-                photos={currentDisplayPhotos}
-                frame={{
-                  ...selectedFrame,
-                  shotCount: totalCardSlots,
-                  cardMode,
-                  bgColor: cardMode === 'spotify_player' ? spotifyBg : selectedFrame.bgColor,
-                  songTitle: spotifyTrack.title,
-                  songArtist: spotifyTrack.artist,
-                  ticketSeat,
-                }}
-                branding={settings.branding}
-                freeGiftOffer={settings.freeGiftOffer}
-                cardMode={cardMode}
-                stickers={stickers}
-                onUpdateStickers={setStickers}
-                isStickersInteractive={true}
-                onSlotClick={(slotIdx) => {
-                  setActiveCaptureSlot(slotIdx);
-                  setIsCameraModalOpen(true);
-                }}
-                dimensionPreset={selectedFrame.dimensionsPreset || (selectedFrame.widthCm === 10 ? 'grid_4x6' : 'strip_2x6')}
-              />
-            </div>
-
-            {/* Action: Take Photo Or Upload */}
-            <PhotoCaptureOrUpload
-              canShoot={true}
-              onOpenLiveCamera={() => {
-                setActiveCaptureSlot(accumulatedPhotos.length < totalCardSlots ? accumulatedPhotos.length : 0);
-                setIsCameraModalOpen(true);
-              }}
-              onUploadPhoto={(b64) => handleCommitPhoto(b64)}
-            />
-
-            {/* Viral Theme Pills Selector */}
-            <div className="w-full space-y-2 pt-1">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[11px] font-bold text-[#D9D9D9]/80">طابع وإطار الكارت:</span>
-                <span className="text-[10px] text-[#DD0200] font-mono font-bold">THEMES</span>
-              </div>
-              <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none touch-pan-x">
-                {[
-                  { id: 'luxury_glass', label: 'جلاسي فاخر (Luxury Glass)', icon: '💎' },
-                  { id: 'polaroid_vintage', label: 'بولارويد كلاسيك', icon: '🎞️' },
-                  { id: 'korean_noir', label: 'نوار كوري عاجي', icon: '☕' },
-                  { id: 'ticket_express', label: 'تذكرة الزيارة', icon: '🎟️' },
-                  { id: 'ios_camera', label: 'كاميرا آيفون', icon: '📷' },
-                  { id: 'spotify_player', label: 'مشغل سبوتيفاي', icon: '🎵' },
-                  { id: 'ios_gallery_light', label: 'ألبوم آيفون', icon: '🖼️' },
-                  { id: 'ios_imessage', label: 'آي مسج', icon: '💬' },
-                ].map((mode) => {
-                  const isActive = cardMode === mode.id;
-                  return (
-                    <button
-                      key={mode.id}
-                      type="button"
-                      onClick={() => setCardMode(mode.id as PhotoboothCardMode)}
-                      className={`px-3 py-2 rounded-lg border text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
-                        isActive
-                          ? 'bg-[#DD0200] text-[#FBF9F5] border-[#DD0200] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_6px_16px_-4px_rgba(221,2,0,0.5)] font-black'
-                          : 'bg-[#1C1B1B]/70 hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] border-white/10'
-                      }`}
-                    >
-                      <span className="text-sm">{mode.icon}</span>
-                      <span>{mode.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Sub-customizer for Spotify */}
-              {cardMode === 'spotify_player' && (
-                <div className="p-4 bg-[#141212] border border-white/10 rounded-2xl space-y-3 text-xs shadow-2xl">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-bold text-[#e6e1e1]">لون الخلفية:</span>
-                    {[
-                      { id: '#384C5A', name: 'Slate Blue', hex: '#384C5A' },
-                      { id: '#4E483E', name: 'Warm Taupe', hex: '#4E483E' },
-                      { id: '#161618', name: 'OLED Charcoal', hex: '#161618' },
-                      { id: '#8B3A2B', name: 'Terracotta', hex: '#8B3A2B' },
-                    ].map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setSpotifyBg(c.hex)}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold transition cursor-pointer ${
-                          spotifyBg === c.hex ? 'border-[#DD0200] ring-1 ring-[#DD0200]/40 text-[#FBF9F5] bg-[#55100D]/30' : 'border-white/10 text-[#A19E9B] bg-[#1C1B1B]'
-                        }`}
-                      >
-                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c.hex }} />
-                        <span>{c.name}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2 pt-2 border-t border-white/10">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#e6e1e1]">الأغنية المفضلة للكارت:</span>
-                      <span className="text-[10px] text-[#DD0200] font-mono font-bold">SPOTIFY DOCK</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {[
-                        { title: 'Morning Coffee', artist: 'Lofi Cafe Beats' },
-                        { title: 'Nobody Gets Me', artist: 'SZA • SOS' },
-                        { title: 'صباح ومساء', artist: 'فيروز' },
-                        { title: 'Golden Hour', artist: 'JVKE' },
-                        { title: 'نسم علينا الهوى', artist: 'فيروز' },
-                      ].map((preset) => (
-                        <button
-                          key={preset.title}
-                          type="button"
-                          onClick={() => setSpotifyTrack(preset)}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
-                            spotifyTrack.title === preset.title
-                              ? 'bg-[#55100D]/60 text-[#FBF9F5] border-[#DD0200]/50 font-black'
-                              : 'bg-[#1C1B1B] border-white/10 text-[#A19E9B] hover:text-[#FBF9F5]'
-                          }`}
-                        >
-                          🎵 {preset.title}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
-                      <input
-                        type="text"
-                        value={spotifyTrack.title}
-                        onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, title: e.target.value }))}
-                        placeholder="اسم الأغنية..."
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] focus:bg-[#0E0D0D] focus:outline-none focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 font-bold placeholder-[#A19E9B]/50"
-                      />
-                      <input
-                        type="text"
-                        value={spotifyTrack.artist}
-                        onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, artist: e.target.value }))}
-                        placeholder="اسم الفنان / الألبوم..."
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] focus:bg-[#0E0D0D] focus:outline-none focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 font-bold placeholder-[#A19E9B]/50"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Sub-customizer for Location / Seat */}
-              {cardMode === 'ticket_express' && (
-                <div className="p-4 bg-[#141212] border border-white/10 rounded-2xl space-y-2 text-xs shadow-2xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#e6e1e1]">موقع الجلسة أو الركن:</span>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {['طاولة 04 • صالة', 'جلسة VIP', 'ركن الاستقبال', 'الفرع الرئيسي'].map((seat) => (
-                        <button
-                          key={seat}
-                          type="button"
-                          onClick={() => setTicketSeat(seat)}
-                          className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
-                            ticketSeat === seat
-                              ? 'bg-[#55100D]/60 text-[#FBF9F5] border-[#DD0200]/50 font-black'
-                              : 'bg-[#1C1B1B] border-white/10 text-[#A19E9B] hover:text-[#FBF9F5]'
-                          }`}
-                        >
-                          {seat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <input
-                    type="text"
-                    value={ticketSeat}
-                    onChange={(e) => setTicketSeat(e.target.value)}
-                    placeholder="رقم الطاولة أو الموقع (مثال: طاولة VIP 12 أو الركن 03)..."
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] focus:bg-[#0E0D0D] focus:outline-none focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 font-bold placeholder-[#A19E9B]/50"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Stickers & Doodles Decoration Tray */}
-            <div className="w-full space-y-2">
-              <button
-                type="button"
-                onClick={() => setIsStickerTrayOpen(!isStickerTrayOpen)}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 text-[#FBF9F5] font-bold text-xs shadow-xl transition flex items-center justify-between cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#DD0200]" />
-                  <span>تزيين الكارت بالملصقات والإيموجي (Stickers &amp; Doodles)</span>
-                </div>
-                <span className="text-[10px] font-mono text-[#FBF9F5] bg-[#55100D]/60 px-2.5 py-0.5 rounded-md border border-[#DD0200]/40 font-bold uppercase tracking-wider">
-                  {stickers.length > 0 ? `${stickers.length} ملصق بالكارت` : 'إضافة ملصقات +'}
-                </span>
-              </button>
-
-              {isStickerTrayOpen && (
-                <div className="animate-in fade-in duration-200">
-                  <StickerControlTray
-                    onAddSticker={handleAddSticker}
-                    onClearAll={() => setStickers([])}
-                    stickersCount={stickers.length}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* High Res Download Direct Action */}
+          {session && (
             <button
               type="button"
-              onClick={handlePrintOrDownload}
-              className="w-full max-w-md py-3 px-4 rounded-lg bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 hover:border-[#DD0200]/30 text-[#FBF9F5] font-bold text-xs shadow-xl transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              onClick={() => setTab("account")}
+              className="flex items-center gap-2 rounded-full border border-forest/15 bg-paper px-4 py-2 text-xs font-bold text-forest transition hover:bg-sage"
             >
-              <Download className="w-4 h-4 text-[#DD0200]" />
-              <span>تحميل شريط الذكريات عالي الدقة (300 DPI)</span>
+              <span aria-hidden="true">◉</span> حسابي
             </button>
-
-            {/* Instagram Mention Prompt */}
-            <InstagramMentionPrompt
-              instagramHandle={settings.branding.instagramHandle || '@memories_studio'}
-              businessName={settings.branding.name}
-            />
-
-            {/* Contextual Link to Loyalty */}
-            <div className="w-full p-4 rounded-2xl bg-[#141212] border border-white/10 flex items-center justify-between gap-3 text-right shadow-2xl mt-2">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center shrink-0 font-bold shadow-xs">
-                  <Award className="w-5 h-5 text-[#DD0200]" />
-                </div>
-                <div>
-                  <p className="text-xs font-black text-[#FBF9F5]">هل أنت من رواد {settings.branding.name}؟</p>
-                  <p className="text-[11px] text-[#A19E9B]">اجمع أختام زياراتك واستلم هديتك المجانية في كارت ولاء هاتفك</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveTab('loyalty')}
-                className="px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shrink-0 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] cursor-pointer"
-              >
-                عرض كارت الولاء
-              </button>
-            </div>
+          )}
+        </div>
+      </header>
+      <div className="mx-auto max-w-5xl space-y-7 px-5 pt-9 md:pt-12">
+        {notice && (
+          <div
+            role="status"
+            className="rounded-2xl border border-rust/25 bg-[#fff3eb] p-4 text-sm leading-7 text-[#8a3e2e]"
+          >
+            {notice}
           </div>
         )}
-
-        {/* VIEW 2: LOYALTY PASS & WALLET (Focused 100% on Visits, Stamps, Wallet Passes, and Free Gifts) */}
-        {activeTab === 'loyalty' && (
-          <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in duration-200">
-            {/* Header: Title and Visits Status */}
-            <div className="w-full flex items-center justify-between px-1 pt-1">
+        {entry === "checking" && (
+          <div
+            role="status"
+            className="paper-card mx-auto max-w-xl rounded-[2rem] p-10 text-center"
+          >
+            <span aria-hidden="true" className="text-4xl text-rust">
+              ✳
+            </span>
+            <h1 className="mt-4 text-xl font-bold">بنجهّز بطاقتك…</h1>
+            <p className="mt-2 text-sm text-ink/55">
+              جارٍ التحقق من حسابك والفرع.
+            </p>
+          </div>
+        )}
+        {entry === "choose" && !session && (
+          <section className="mx-auto grid max-w-4xl overflow-hidden rounded-[2rem] border border-forest/10 bg-white shadow-xl md:grid-cols-[.95fr_1fr]">
+            <div className="flex flex-col justify-between bg-forest p-8 text-white sm:p-10">
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-[#FBF9F5]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
-                  كارت الولاء والمحفظة الرقمية
-                </h2>
-                <p className="text-[11px] text-[#A19E9B]">
-                  أختام زياراتك المعتمدة وهديتك الفورية في {settings.branding.name}
+                <p className="eyebrow text-[#efc68e]">أهلًا بيك في المكان</p>
+                <h1 className="display-heading mt-5 text-4xl">
+                  كل زيارة
+                  <br />
+                  تقربك لحاجة حلوة.
+                </h1>
+                <p className="mt-5 text-sm leading-8 text-white/70">
+                  بطاقتك هنا تجمع زياراتك المؤكدة، وذكرياتك تفضل لك وحدك إلا لو
+                  اخترت تشاركها.
                 </p>
               </div>
-
-              <span className="text-[11px] font-mono text-[#FBF9F5] bg-[#55100D]/60 border border-[#DD0200]/40 px-2.5 py-1 rounded-md font-bold">
-                {loyaltyData.stampedCount} من {loyaltyMaxVisits} أختام
+              <div
+                aria-hidden="true"
+                className="mt-10 flex gap-2 text-3xl text-[#eac186]"
+              >
+                ✳ ✳ ✳ ✳ ✳
+              </div>
+            </div>
+            <div className="flex flex-col justify-center p-8 sm:p-10">
+              <p className="eyebrow text-rust">بطاقتك تبدأ هنا</p>
+              <h2 className="display-heading mt-3 text-3xl">
+                تحب تحفظها إزاي؟
+              </h2>
+              <p className="mt-4 text-sm leading-8 text-ink/60">
+                Google يخلي حسابك قابل للاسترجاع على أجهزتك. أو تقدر تبدأ كضيف
+                على المتصفح الحالي.
+              </p>
+              <div className="mt-8 space-y-3">
+                <button
+                  type="button"
+                  onClick={google}
+                  disabled={busy}
+                  className="action-primary w-full"
+                >
+                  المتابعة بحساب Google <span aria-hidden="true">↖</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={continueAsGuest}
+                  disabled={busy}
+                  className="action-secondary w-full"
+                >
+                  المتابعة كضيف
+                </button>
+              </div>
+              <p className="mt-6 text-xs leading-6 text-ink/50">
+                جلسة الضيف حقيقية في Supabase لكنها مرتبطة بهذا المتصفح. اربطها
+                بـ Google قبل مسح بياناته لو حفظت ذكريات أو زيارات.
+              </p>
+            </div>
+          </section>
+        )}
+        {entry !== "choose" && !session && notice && (
+          <button
+            className="action-secondary"
+            onClick={() => window.location.reload()}
+          >
+            إعادة المحاولة
+          </button>
+        )}
+        {session && (
+          <>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="eyebrow text-rust">{session.venue.branchName}</p>
+                <h1 className="display-heading mt-2 text-3xl sm:text-4xl">
+                  أهلًا {session.customer.displayName || "يا ضيفنا"}.
+                </h1>
+                <p className="mt-2 text-sm text-ink/55">
+                  كل زيارة ليها حكاية، وكل حكاية تقربك من مكافأتك.
+                </p>
+              </div>
+              <span className="rounded-full bg-sage px-4 py-2 text-xs font-bold text-forest">
+                ✳ &nbsp; {session.venue.organizationName}
               </span>
             </div>
-
-            {/* Customer Profile & Digital Wallet Pass */}
-            <div className="w-full">
-              {customerPhone ? (
-                <div className="space-y-3">
-                  <div className="w-full p-3 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center font-bold">
-                        <CheckCircle className="w-4 h-4 text-[#DD0200]" />
-                      </div>
-                      <div>
-                        <span className="font-bold text-[#FBF9F5]">{customerName || 'ضيف مميز'}</span>
-                        <span className="text-[10px] text-[#A19E9B] font-mono block" dir="ltr">{customerPhone}</span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleClearCustomer}
-                      className="text-[10px] text-[#A19E9B] hover:text-[#FBF9F5] underline cursor-pointer"
-                    >
-                      تغيير الحساب
-                    </button>
-                  </div>
-
-                  <CustomerLoyaltyCard
-                    loyaltyData={loyaltyData}
-                    giftTitle={settings.freeGiftOffer.title}
-                    brandName={settings.branding.name}
-                    instagramHandle={settings.branding.instagramHandle}
-                    onOpenStaffStamp={() => setIsStaffStampModalOpen(true)}
-                  />
-                </div>
-              ) : (
-                <div className="w-full p-4 sm:p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl text-[#e6e1e1] space-y-3">
-                  <div className="flex items-center gap-2.5 border-b border-white/10 pb-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center font-bold shadow-xs">
-                      <UserCheck className="w-4 h-4 text-[#DD0200]" />
-                    </div>
+            <nav
+              aria-label="أقسام حساب الضيف"
+              className="flex gap-2 overflow-x-auto border-b border-forest/15 pb-2"
+            >
+              {(
+                [
+                  ["card", "بطاقتي"],
+                  ["memories", "ذكرياتي"],
+                  ["account", "حسابي"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTab(key)}
+                  className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-bold transition ${tab === key ? "bg-forest text-white" : "text-ink/55 hover:bg-sand hover:text-ink"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+            {tab === "card" && (
+              <>
+              <div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
+                <section className="stampy-ticket-card relative overflow-hidden rounded-[2rem] bg-forest p-6 text-white shadow-[0_24px_60px_-32px_#451215] sm:p-9"
+                  style={session.venue.brand ? { backgroundColor: session.venue.brand.primaryColor } : undefined}>
+                  <span
+                    aria-hidden="true"
+                    className="absolute -left-10 -top-16 text-[13rem] leading-none text-white/5"
+                  >
+                    ✳
+                  </span>
+                  <div className="relative flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="font-bold text-sm text-[#FBF9F5]">
-                        احفظ أختامك وصورك في محفظة هاتفك
-                      </h3>
-                      <p className="text-[11px] text-[#A19E9B]">
-                        سجّل رقمك لحفظ أختام كارتك واستلام هديتك الفورية عند اكتماله
+                      <p className="eyebrow" style={{ color: session.venue.brand?.accentColor ?? '#efc68e' }}>بطاقة الولاء</p>
+                      <h2 className="mt-2 text-2xl font-bold">
+                        {session.venue.organizationName}
+                      </h2>
+                      <p className="mt-1 text-xs text-white/55">
+                        {session.venue.brand?.tagline || 'رصيدك واحد في كل فروع المكان'}
                       </p>
                     </div>
+                    <div className="flex shrink-0 items-center gap-2" aria-label={`stampy. مع ${session.venue.organizationName}`}>
+                      <img src="/brand/stampy-app-icon-64.png" alt="شعار stampy." className="h-10 w-10 rounded-xl" />
+                      <span aria-hidden="true" className="text-white/45">×</span>
+                      {session.venue.brand?.logoUrl ? <img src={session.venue.brand.logoUrl} alt={`لوجو ${session.venue.organizationName}`}
+                        className="h-10 w-10 rounded-xl bg-white object-contain p-1" />
+                        : <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/20 text-xs">{session.venue.organizationName.slice(0, 1)}</span>}
+                    </div>
                   </div>
-
-                  <form onSubmit={handleRegisterCustomer} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="text-[11px] font-bold text-[#e6e1e1] block mb-1">الاسم أو اللقب:</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="مثال: أحمد، سارة، ضيفنا المميز..."
-                        value={regName}
-                        onChange={(e) => setRegName(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FBF9F5] focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none placeholder-[#A19E9B]/50"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-[#e6e1e1] block mb-1">رقم الموبايل:</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="01xxxxxxxxx"
-                        value={regPhone}
-                        onChange={(e) => setRegPhone(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FBF9F5] focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none font-mono placeholder-[#A19E9B]/50"
-                        dir="ltr"
-                      />
-                    </div>
-                    <div className="sm:col-span-2 pt-1">
-                      <button
-                        type="submit"
-                        className="w-full py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] cursor-pointer"
+                  <div className="relative mt-9">
+                    <p className="text-sm text-white/65">زيارات مؤكدة</p>
+                    <p className="mt-1 text-5xl font-bold tabular-nums" style={{ color: session.venue.brand?.accentColor ?? '#f2c77f' }}>
+                      {progress?.verifiedVisits ?? session.verifiedVisits}
+                    </p>
+                  </div>
+                  {progress?.rewardRule && progress.totalSlots > 0 ? (
+                    <div className="relative mt-9">
+                      <div className="mb-4 flex items-end justify-between gap-3">
+                        <div>
+                          <p className="text-xs text-white/55">
+                            مكافأتك القادمة
+                          </p>
+                          <p className="mt-1 text-lg font-bold">
+                            {progress.availableRewards > 0 ? progress.pendingRewardName ?? progress.rewardRule.name
+                              : progress.rewardRule.name}
+                          </p>
+                        </div>
+                        <p className="text-xs font-bold text-[#efc68e]">
+                          {visibleStamps} / {progress.totalSlots}
+                        </p>
+                      </div>
+                      <div
+                        role="img"
+                        className="grid grid-cols-6 gap-2"
+                        aria-label={`${visibleStamps} من ${progress.totalSlots} أختام في البطاقة الحالية`}
                       >
-                        <CheckCircle2 className="w-4 h-4 text-[#FBF9F5]" />
-                        <span>حفظ كارت الولاء والأختام</span>
-                      </button>
+                        {Array.from(
+                          { length: progress.totalSlots },
+                          (_, index) => (
+                            <span
+                              key={index}
+                              aria-hidden="true"
+                              className={`stampy-stamp grid aspect-square place-items-center rounded-full border ${index < visibleStamps ? "border-[#DFAB56] bg-[#DFAB56]" : "border-dashed border-white/40 bg-white/5 opacity-60"}`}
+                            >
+                              <StampyApertureIcon size={25} color={index < visibleStamps ? "#682025" : "#DFAB56"} strokeColor={index < visibleStamps ? "#DFAB56" : "#682025"} />
+                            </span>
+                          ),
+                        )}
+                      </div>
+                      {progress.availableRewards > 0 && (
+                        <p className="mt-6 rounded-xl bg-[#f2c77f] p-3 text-sm font-bold text-forest">
+                          ✦ عندك {progress.availableRewards} مكافأة جاهزة. اعرض
+                          معرّفك للموظف لصرفها.
+                        </p>
+                      )}
                     </div>
-                  </form>
-                </div>
-              )}
-            </div>
-
-            {/* Contextual Link to Studio */}
-            <div className="w-full p-4 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl flex items-center justify-between gap-3 text-right mt-2">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center shrink-0">
-                  <Camera className="w-5 h-5 text-[#DD0200]" />
-                </div>
-                <div>
-                  <p className="text-xs font-black text-[#FBF9F5]">وثّق زيارتك الحالية بصورة في الاستوديو</p>
-                  <p className="text-[11px] text-[#A19E9B]">التقط لقطة تذكارية بالكاميرا وأضف نغمتك والملصقات المفضلة</p>
+                  ) : (
+                    <p className="relative mt-8 rounded-xl border border-white/15 bg-white/5 p-4 text-sm leading-7 text-white/70">
+                      {progressError ||
+                        "المنشأة لم تحدد مكافأة بعد. زياراتك الموثّقة محفوظة ولن تضيع."}
+                    </p>
+                  )}
+                  {progressError && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        refresh().catch((error) =>
+                          setNotice(
+                            error instanceof Error
+                              ? error.message
+                              : "تعذر تحديث البطاقة",
+                          ),
+                        )
+                      }
+                      className="relative mt-4 text-xs font-bold text-[#f2c77f] underline underline-offset-4"
+                    >
+                      إعادة تحميل المكافأة
+                    </button>
+                  )}
+                  <p className="relative mt-8 border-t border-white/15 pt-5 text-xs leading-6 text-white/55">
+                    الختم يظهر بعد تأكيد الموظف لعملية شراء. الصورة اختيارية بعده،
+                    ومش بتمنح ختم جديد؛ لما تكمل الأختام، مكافأتك وكارت صورك يستنوك.
+                  </p>
+                </section>
+                <div className="space-y-5">
+                  <section className="paper-card rounded-[1.75rem] p-6">
+                    <span
+                      aria-hidden="true"
+                      className="grid h-11 w-11 place-items-center rounded-2xl bg-sage text-xl text-forest"
+                    >
+                      ⌁
+                    </span>
+                    <h2 className="mt-5 text-xl font-bold">في الفرع دلوقتي؟</h2>
+                    <p className="mt-2 text-sm leading-7 text-ink/60">
+                      اعرض المعرّف ده للموظف بعد الشراء. فتح الصفحة يسجل طلب
+                      حضور صالحًا ساعتين، لكن الموظف هو اللي يتحقق من الشراء؛
+                      الرابط وحده لا يثبت وجودك.
+                    </p>
+                    <code
+                      dir="ltr"
+                      className="mt-5 block select-all break-all rounded-xl bg-sand/70 p-3 text-xs text-forest"
+                    >
+                      {session.customer.id}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={copyCustomerId}
+                      className="action-secondary mt-4 w-full text-sm"
+                    >
+                      نسخ معرّف الضيف
+                    </button>
+                  </section>
+                  <section className="rounded-[1.75rem] bg-[#e3e9dc] p-6">
+                    <span className="text-2xl text-rust" aria-hidden="true">
+                      ✳
+                    </span>
+                    <h2 className="mt-3 text-lg font-bold">
+                      ذكرياتك مكانها هنا.
+                    </h2>
+                    <p className="mt-2 text-sm leading-7 text-ink/60">
+                      بعد تأكيد الزيارة، صورتها هتفضل خاصة وتدخل في كارت المكافأة.
+                      وعرضها على الشاشة اختيار منفصل بإذنك.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setTab("memories")}
+                      className="mt-4 text-sm font-bold text-rust underline underline-offset-4"
+                    >
+                      أضف ذكرى ←
+                    </button>
+                  </section>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setActiveTab('studio')}
-                className="px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shrink-0 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] cursor-pointer"
-              >
-                فتح استوديو الصور
-              </button>
-            </div>
-          </div>
+              <CustomerWalletPanel cafeSlug={cafeSlug} />
+              {(session.venue.mapsUrl || socialPlatforms.some((platform) => session.venue.brand?.socialLinks[platform])) &&
+                <section className="paper-card rounded-[1.75rem] p-6 sm:p-8" aria-label="روابط المكان">
+                  <p className="eyebrow text-rust">المكان على خريطتك</p>
+                  <h2 className="mt-2 text-lg font-bold">تواصل مع {session.venue.organizationName}.</h2>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {session.venue.mapsUrl && <a href={session.venue.mapsUrl} target="_blank" rel="noopener noreferrer" className="action-secondary text-xs">افتح Google Maps ↗</a>}
+                    {socialPlatforms.map((platform) => {
+                      const href = session.venue.brand?.socialLinks[platform];
+                      return href ? <a key={platform} href={href} target="_blank" rel="noopener noreferrer" className="action-secondary text-xs">
+                        {platform === 'x' ? 'X' : platform === 'website' ? 'الموقع' : platform.charAt(0).toUpperCase() + platform.slice(1)} ↗
+                      </a> : null;
+                    })}
+                  </div>
+                </section>}
+              <section className="paper-card rounded-[2rem] p-6 sm:p-9">
+                <div className="flex flex-wrap items-end justify-between gap-5">
+                  <div>
+                    <p className="eyebrow text-rust">المكافأة تخلص · الذكرى تفضل</p>
+                    <h2 className="display-heading mt-2 text-2xl sm:text-3xl">كروت ذكرياتك.</h2>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-ink/60">
+                      لما تكمل أختام المكافأة، الكارت يجمع صور الزيارات المؤكدة. يفضل
+                      في حسابك حتى لو اتغيرت شروط المكافأة، وتقدر تحفظه PDF أو تطبعه في الفرع.
+                    </p>
+                  </div>
+                  <Link href={`/c/${cafeSlug}/keepsakes`}
+                    className="action-secondary text-sm">افتح أرشيف الكروت ↖</Link>
+                </div>
+                {storyError && <p role="status" className="mt-5 rounded-xl bg-[#fff2e9] p-4 text-sm text-rust">
+                  {storyError}{" "}
+                  <button type="button" onClick={() => refresh().catch(() => {})}
+                    className="font-bold underline underline-offset-4">إعادة المحاولة</button>
+                </p>}
+                {story && (story.cards.length > 0 ? (
+                  <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {story.cards.map((card) => (
+                      <article key={card.id} className="relative overflow-hidden rounded-[1.5rem] bg-forest p-5 text-white">
+                        <span aria-hidden="true" className="absolute -left-4 -top-10 text-[7rem] leading-none text-white/5">✳</span>
+                        <div className="relative flex items-center justify-between">
+                          <span className="eyebrow text-[#efc68e]">كارت صور · {card.threshold} زيارات</span>
+                          <span aria-hidden="true" className="text-[#efc68e]">✳</span>
+                        </div>
+                        <h3 className="relative mt-5 text-lg font-bold">{card.rewardName}</h3>
+                        <p className="relative mt-1 text-xs text-white/60">
+                          {card.redeemedAt ? "المكافأة اتسلّمت" : "المكافأة جاهزة للاستلام"}
+                        </p>
+                        <Link href={`/c/${cafeSlug}/keepsake/${card.id}`}
+                          className="relative mt-6 inline-flex text-sm font-bold text-[#efc68e] underline underline-offset-4">
+                          افتح الكارت واطبعه ←
+                        </Link>
+                      </article>
+                    ))}
+                  </div>
+                ) : !storyError ? <p className="mt-6 rounded-2xl bg-sand/55 p-5 text-sm leading-7 text-ink/60">
+                  لسه ما اكتملتش دورة أختام. صور الزيارات اللي تضيفها هتتجمع في أول كارت مع المكافأة.
+                </p> : null)}
+                {story && story.cards.length < story.cardsTotal && <button type="button"
+                  disabled={loadingMore} className="action-secondary mt-6 text-sm"
+                  onClick={async () => {
+                    setLoadingMore(true);
+                    try { await loadStory(storyPage + 1, true); }
+                    catch { setStoryError("تعذر تحميل الكروت الأقدم. حاول تاني."); }
+                    finally { setLoadingMore(false); }
+                  }}>
+                  {loadingMore ? "جارٍ التحميل…" : "عرض كروت أقدم"}
+                </button>}
+                {!story && !storyError && <p role="status" className="mt-5 text-sm text-ink/55">بنجهز كروتك…</p>}
+              </section>
+              </>
+            )}
+            {tab === "memories" && (
+              <div className="grid gap-6 lg:grid-cols-[.85fr_1.15fr]">
+                <form
+                  onSubmit={upload}
+                  className="paper-card h-fit rounded-[1.75rem] p-6 sm:p-7"
+                >
+                  <p className="eyebrow text-rust">صورة لكل ختم · بإيدك</p>
+                  <h2 className="mt-2 text-2xl font-bold">خلّي للزيارة صورة.</h2>
+                  <p className="mt-2 text-sm leading-7 text-ink/55">
+                    بعد ما الموظف يؤكد الشراء، اختار الزيارة وصوّر بموبايلك أو ارفع
+                    صورة من جهازك. الصورة اختيارية، والختم محفوظ حتى من غيرها.
+                  </p>
+                  {storyError && <div role="status" className="mt-5 rounded-xl bg-[#fff2e9] p-4 text-sm text-rust">
+                    {storyError}{" "}<button type="button" className="font-bold underline"
+                      onClick={() => refresh().catch(() => {})}>تحديث</button>
+                  </div>}
+                  {story && story.eligibleVisits.length > 0 && (
+                    <label className="mt-5 block text-sm font-bold">
+                      الختم اللي هتربط بيه الصورة
+                      <select className="field mt-2" value={selectedVisitId}
+                        onChange={(event) => setSelectedVisitId(event.target.value)}>
+                        {story.eligibleVisits.map((visit) => <option key={visit.id} value={visit.id}>
+                          {visitLabel(visit.verifiedAt, visit.branchName)}
+                        </option>)}
+                      </select>
+                    </label>
+                  )}
+                  {story && story.eligibleVisits.length === 0 && !storyError && (
+                    <div className="mt-5 rounded-xl bg-sage/45 p-4 text-xs leading-7 text-forest">
+                      مفيش زيارة مؤكدة بدون صورة حاليًا. خلي الموظف يؤكد شراءك، وبعدها{" "}
+                      <button type="button" className="font-bold underline underline-offset-4"
+                        onClick={() => refresh().catch(() => {})}>حدّث البطاقة</button>.
+                    </div>
+                  )}
+                  <label className="mt-6 flex min-h-48 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-forest/25 bg-sand/30 p-5 text-center transition hover:border-rust/60 hover:bg-sand/60">
+                    {preview ? (
+                      <>
+                        <img
+                          src={preview}
+                          alt="معاينة الصورة"
+                          className="max-h-64 w-full rounded-xl object-contain"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <span aria-hidden="true" className="text-4xl text-rust">
+                          ▧
+                        </span>
+                        <span className="mt-2 text-sm font-bold">
+                          التقط صورة أو اختارها من جهازك
+                        </span>
+                        <span className="mt-1 text-xs text-ink/45">
+                          JPG أو PNG أو WebP · حد أقصى 10 ميجابايت
+                        </span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      disabled={!selectedVisitId || busy}
+                      onChange={selectImage}
+                      className="sr-only"
+                      aria-label="التقط أو اختر صورة للزيارة المؤكدة"
+                    />
+                  </label>
+                  <label className="mt-5 block text-sm font-bold">
+                    تعليق اختياري
+                    <input
+                      maxLength={280}
+                      placeholder="إيه اللي خلّى اللحظة دي مميزة؟"
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      className="field mt-2"
+                    />
+                  </label>
+                  <label className="mt-5 flex items-start gap-3 text-xs leading-6 text-ink/65">
+                    <input
+                      type="checkbox"
+                      checked={consent}
+                      onChange={(e) => setConsent(e.target.checked)}
+                      className="mt-1.5 h-4 w-4 accent-rust"
+                    />
+                    أوافق على عرض الصورة على شاشة هذا الفرع بعد مراجعة الفريق.
+                    أقدر أسحب موافقتي بعدين.
+                  </label>
+                  <button
+                    disabled={busy || !file || !selectedVisitId}
+                    className="action-primary mt-6 w-full"
+                  >
+                    {busy ? "جارٍ الحفظ…" : "حفظ الذكرى"}{" "}
+                    <span aria-hidden="true">↖</span>
+                  </button>
+                </form>
+                <section>
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <p className="eyebrow text-rust">ألبومك الخاص</p>
+                      <h2 className="mt-2 text-2xl font-bold">آخر ذكرياتك</h2>
+                      <p className="mt-1 text-xs text-ink/55">تقدر تشاركها بنفسك {businessMention ? `وتعمل منشن ${businessMention}` : 'وتضيف منشن المكان لو حدد حسابه'}؛ المشاركة لا تفعّل شاشة الصالة.</p>
+                    </div>
+                    <span className="rounded-full bg-sand px-3 py-1 text-xs font-bold text-ink/65">
+                      {session.memories.length} صورة
+                    </span>
+                  </div>
+                  {session.memories.length === 0 ? (
+                    <div className="paper-card mt-5 rounded-[1.75rem] p-9 text-center">
+                      <span aria-hidden="true" className="text-4xl text-rust">
+                        ✳
+                      </span>
+                      <p className="mt-3 font-bold">لسه مفيش صور هنا.</p>
+                      <p className="mt-2 text-sm text-ink/55">
+                        أول ذكرى هتظهر بعد ما تحفظها، خاصة بيك.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      {session.memories.map((memory) => (
+                        <article
+                          key={memory.id}
+                          className="paper-card overflow-hidden rounded-2xl"
+                        >
+                          <img
+                            src={memory.imageUrl}
+                            alt={memory.caption || "صورة من ذكرياتك"}
+                            className="h-44 w-full bg-sand object-cover"
+                          />
+                          <div className="p-4">
+                            <p className="line-clamp-2 text-sm font-bold">
+                              {memory.caption || "ذكرى من المكان"}
+                            </p>
+                            <p className="mt-2 text-xs text-ink/55">
+                              {memory.status === "pending"
+                                ? "بانتظار مراجعة الفريق"
+                                : memory.status === "approved"
+                                  ? "اتراجعت"
+                                  : "غير منشورة"}{" "}
+                              ·{" "}
+                              {memory.visibility === "live_wall"
+                                ? "مسموح بالعرض"
+                                : "خاصة"}
+                            </p>
+                            <div className="mt-4 flex flex-wrap items-center gap-4">
+                              <button type="button" disabled={busy} onClick={() => shareMemory(memory)}
+                                className="text-xs font-bold text-rust underline underline-offset-4 disabled:opacity-50">
+                                شارك صورتي ↗
+                              </button>
+                              <button type="button" disabled={busy} onClick={copyMentions}
+                                className="text-xs font-bold text-forest underline underline-offset-4 disabled:opacity-50">
+                                انسخ المنشن
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  changeConsent(
+                                    memory.id,
+                                    memory.visibility !== "live_wall",
+                                  )
+                                }
+                                className="text-xs font-bold text-rust underline underline-offset-4 disabled:opacity-50"
+                              >
+                                {memory.visibility === "live_wall"
+                                  ? "إلغاء العرض العام"
+                                  : "السماح بالعرض بعد المراجعة"}
+                              </button>
+                            </div>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+            {tab === "account" && (
+              <section className="paper-card mx-auto max-w-2xl rounded-[2rem] p-6 sm:p-9">
+                <p className="eyebrow text-rust">بياناتك تحت تحكمك</p>
+                <h2 className="display-heading mt-2 text-3xl">
+                  إعدادات الحساب.
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-ink/60">
+                  {session.account.isAnonymous
+                    ? "بتستخدم جلسة ضيف مرتبطة بالمتصفح ده فقط."
+                    : session.account.googleLinked
+                      ? "حسابك مرتبط بـ Google وتقدر ترجعله من جهاز تاني."
+                      : "أنت داخل بحساب موثّق، وتقدر تربطه بـ Google من غير ما رصيدك يتغيّر."}
+                </p>
+                {session.account.email && (
+                  <p className="mt-5 rounded-xl bg-sage/50 p-3 text-sm">
+                    البريد المرتبط:{" "}
+                    <span
+                      dir="ltr"
+                      className="inline-block break-all font-bold"
+                    >
+                      {session.account.email}
+                    </span>
+                  </p>
+                )}
+                <form onSubmit={saveAccount} className="mt-7 space-y-5">
+                  <label className="block text-sm font-bold">
+                    الاسم المعروض
+                    <input
+                      required
+                      minLength={2}
+                      maxLength={80}
+                      autoComplete="name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="field mt-2"
+                    />
+                  </label>
+                  <label className="block text-sm font-bold">
+                    رقم تواصل اختياري
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      dir="ltr"
+                      pattern="[+]?[0-9]{8,15}"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="01012345678"
+                      className="field mt-2"
+                    />
+                  </label>
+                  <p className="text-xs leading-6 text-ink/50">
+                    رقم التواصل خاص بك، مش موثّق، ومش وسيلة للدخول أو لإثبات
+                    الزيارة.
+                  </p>
+                  <button disabled={busy} className="action-primary">
+                    حفظ التغييرات
+                  </button>
+                </form>
+                {!session.account.googleLinked && (
+                  <div className="mt-9 border-t border-forest/15 pt-7">
+                    <h3 className="text-lg font-bold">خلي حسابك معاك.</h3>
+                    <button
+                      type="button"
+                      onClick={google}
+                      disabled={busy}
+                      className="action-secondary mt-4 w-full"
+                    >
+                      ربط الحساب بـ Google
+                    </button>
+                    {session.account.isAnonymous && (
+                      <p className="mt-3 text-xs leading-7 text-amber-900">
+                        الربط يحافظ على هوية الضيف وصوره وزياراته. لو Google
+                        مرتبط بحساب مختلف، مش هننقل بياناتك تلقائيًا.{" "}
+                        {session.account.hasSavedData
+                          ? "احتفظ بجلسة الضيف واطلب مساعدة الدعم."
+                          : "لو لسه مفيش بيانات، تقدر تخرج وتدخل بحساب Google موجود."}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {session.account.isAnonymous &&
+                  session.account.hasSavedData && (
+                    <p className="mt-6 rounded-xl bg-[#fff3e8] p-4 text-xs leading-7 text-amber-900">
+                      اربط هذا الضيف بـ Google قبل فقدان جلسته؛ لا يمكن استعادة
+                      الصور والرصيد من جهاز آخر بدون ربط.
+                    </p>
+                  )}
+                <button
+                  type="button"
+                  onClick={signOut}
+                  disabled={
+                    busy ||
+                    (session.account.hasSavedData &&
+                      (session.account.isAnonymous ||
+                        (!session.account.googleLinked &&
+                          !session.account.email)))
+                  }
+                  className="mt-8 text-sm font-bold text-rust underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  تسجيل الخروج من هذا الجهاز
+                </button>
+              </section>
+            )}
+          </>
         )}
-      </main>
-
-      {/* 9. MODALS */}
-      {/* Live Camera Viewfinder Modal */}
-      {isCameraModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md bg-[#141212] rounded-2xl p-4 overflow-hidden border border-white/10 shadow-[0_0_50px_-10px_rgba(221,2,0,0.3)] relative">
-            <button
-              type="button"
-              onClick={() => setIsCameraModalOpen(false)}
-              className="absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-black/60 hover:bg-[#DD0200] text-white flex items-center justify-center transition cursor-pointer border border-white/10"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <CameraViewfinder
-              brandName={settings.branding.name}
-              visitNumber={(activeCaptureSlot !== null ? activeCaptureSlot : accumulatedPhotos.length) + 1}
-              onCaptureComplete={(photo: string) => {
-                handleCommitPhoto(photo);
-                setIsCameraModalOpen(false);
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Staff Quick Stamp Modal */}
-      <StaffQuickStampModal
-        isOpen={isStaffStampModalOpen}
-        onClose={() => setIsStaffStampModalOpen(false)}
-        onStampSuccess={handleStaffStampSuccess}
-        staffLabel={staffLabel}
-      />
-
-      {/* TV Wall Display Consent Modal (Triggered ONCE on 100% completion) */}
-      <WallConsentModal
-        isOpen={isWallConsentModalOpen}
-        businessName={settings.branding.name}
-        onConsent={handleWallConsent}
-        onClose={() => setIsWallConsentModalOpen(false)}
-      />
-
-      {/* Completion Gift Reward Voucher Modal */}
-      <CompletionGiftRewardModal
-        isOpen={isCompletionRewardOpen}
-        giftTitle={settings.freeGiftOffer.title}
-        giftSubtitle={settings.freeGiftOffer.subtitle}
-        giftCode={giftCode || 'GIFT-2026'}
-        onClose={() => setIsCompletionRewardOpen(false)}
-        onPrintStrip={handlePrintOrDownload}
-      />
-
-      {/* Safari / iOS Save Image Sheet Modal */}
-      <IosSaveImageModal
-        open={!!iosSaveModalImage}
-        imageUrl={iosSaveModalImage}
-        filename={`${settings.branding.name}-photostrip.png`}
-        onClose={() => setIosSaveModalImage(null)}
-      />
-    </div>
+      </div>
+    </main>
   );
 }
