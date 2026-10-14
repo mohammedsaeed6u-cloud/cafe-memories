@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST as onboard } from '@/app/api/v1/merchant/onboard/route';
 import { GET as callback } from '@/app/auth/callback/route';
+import { POST as merchantIntent } from '@/app/api/v1/merchant/oauth/intent/route';
 
 const mocks = vi.hoisted(() => ({ getUser: vi.fn(), rpc: vi.fn(), exchange: vi.fn() }));
 vi.mock('@/lib/server/context', async () => {
@@ -44,8 +45,8 @@ describe('real merchant registration lifecycle', () => {
     mocks.rpc.mockResolvedValue({ data: null, error: { code: '23505' } });
     expect((await onboard(request({ name: 'بيت القهوة', slug: 'coffee-house' }))).status).toBe(409);
   });
-  it('exchanges the confirmation code and provisions the merchant before dashboard redirect', async () => {
-    const response = await callback(new NextRequest('https://example.test/auth/callback?code=real-code'));
+  it('exchanges a declared email-confirmation code and provisions the merchant before dashboard redirect', async () => {
+    const response = await callback(new NextRequest('https://example.test/auth/callback?flow=email&code=real-code'));
     expect(mocks.exchange).toHaveBeenCalledWith('real-code');
     expect(mocks.rpc).toHaveBeenCalledWith('provision_merchant', {
       p_name: 'بيت القهوة', p_slug: 'coffee-house',
@@ -53,13 +54,50 @@ describe('real merchant registration lifecycle', () => {
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('https://example.test/dashboard');
   });
+  it('does not create a merchant from a customer Google identity without merchant intent', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { ...user, user_metadata: { full_name: 'Customer' } } }, error: null });
+    const response = await callback(new NextRequest('https://example.test/auth/callback?code=customer-code'));
+    expect(response.headers.get('location')).toContain('/login?error=wrong-flow');
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    const forged = await callback(new NextRequest('https://example.test/auth/callback?flow=google&nonce=forged&code=customer-code'));
+    expect(forged.headers.get('location')).toContain('/login?error=wrong-flow');
+    const misplaced = await callback(new NextRequest('https://example.test/auth/callback?flow=link&code=customer-code'));
+    expect(misplaced.headers.get('location')).toContain('/login?error=wrong-flow');
+    expect(mocks.exchange).not.toHaveBeenCalled();
+    const wrongEmailFlow = await callback(new NextRequest('https://example.test/auth/callback?flow=email&code=customer-code'));
+    expect(wrongEmailFlow.headers.get('location')).toContain('/login?error=wrong-flow');
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it('accepts a Google merchant login only with a short-lived same-browser intent', async () => {
+    const request = new NextRequest('https://example.test/api/v1/merchant/oauth/intent', {
+      method: 'POST', headers: { Origin: 'https://example.test' },
+    });
+    const intent = await merchantIntent(request);
+    const { nonce } = await intent.json();
+    const cookie = intent.headers.get('set-cookie')!;
+    expect(cookie).toContain('HttpOnly');
+    expect(cookie).toContain('Path=/auth/callback');
+    mocks.getUser.mockResolvedValue({ data: { user: { ...user, user_metadata: { full_name: 'Google Owner' } } }, error: null });
+    const response = await callback(new NextRequest(
+      `https://example.test/auth/callback?flow=google&nonce=${nonce}&code=google-code`,
+      { headers: { Cookie: cookie.split(';')[0] } },
+    ));
+    expect(response.headers.get('location')).toBe('https://example.test/dashboard');
+    expect(mocks.rpc).toHaveBeenCalledWith('provision_merchant', {
+      p_name: 'Google Owner', p_slug: `cafe-${user.id.slice(0, 8)}`,
+    });
+    const foreign = await merchantIntent(new NextRequest('https://example.test/api/v1/merchant/oauth/intent', {
+      method: 'POST', headers: { Origin: 'https://other.test' },
+    }));
+    expect(foreign.status).toBe(403);
+  });
   it('never provisions when the confirmation code is missing or rejected', async () => {
     const missing = await callback(new NextRequest('https://example.test/auth/callback'));
     expect(missing.headers.get('location')).toContain('/login?error=missing-code');
     mocks.exchange.mockResolvedValue({ error: new Error('expired') });
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
-      const rejected = await callback(new NextRequest('https://example.test/auth/callback?code=expired'));
+      const rejected = await callback(new NextRequest('https://example.test/auth/callback?flow=email&code=expired'));
       expect(rejected.headers.get('location')).toContain('/login?error=setup-failed');
       expect(mocks.rpc).not.toHaveBeenCalled();
     } finally { logged.mockRestore(); }

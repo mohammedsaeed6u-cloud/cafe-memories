@@ -13,7 +13,7 @@ cp .env.example .env.local
 corepack pnpm dev
 ```
 
-طبّق `supabase/migrations/00001_initial_schema.sql` ثم `00002_product_refactor.sql` ثم `00003_secure_core.sql` على مشروع جديد. في مشروع قائم، راجع [دليل الترحيل](docs/DEPLOYMENT_AND_DATA_MIGRATION.md) قبل تطبيق `00003`؛ قد تتطلب البيانات القديمة معالجة يدوية. فعّل Email Auth مع تأكيد البريد وAnonymous Sign-ins في Supabase، واضبط عنوان الموقع و`/auth/callback` في عناوين إعادة التوجيه. رابط إنشاء حساب التاجر: `/login?mode=signup`؛ تنشأ المنشأة والفرع بعد تأكيد البريد داخل معاملة PostgreSQL. لا توجد حسابات تجريبية افتراضية. اضبط `NEXT_PUBLIC_SITE_URL` على أصل HTTPS النهائي لإنتاج روابط sitemap والبيانات الوصفية الصحيحة. Google OAuth اختياري ويتطلب إعداده لدى مزود الهوية ثم ضبط `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`؛ لا يظهر زره إن لم تُفعّله.
+طبّق `supabase/migrations/00001_initial_schema.sql` ثم `00002_product_refactor.sql` ثم `00003_secure_core.sql` ثم `00004_customer_accounts.sql` على مشروع جديد. في مشروع قائم، راجع [دليل الترحيل](docs/DEPLOYMENT_AND_DATA_MIGRATION.md) قبل تطبيق `00003`؛ قد تتطلب البيانات القديمة معالجة يدوية. فعّل Email Auth مع تأكيد البريد وAnonymous Sign-ins في Supabase، واضبط عنوان الموقع وعناوين إعادة التوجيه للمسارين `/auth/callback` (المنشأة) و`/auth/customer/callback` (العميل) مع بارامترات الاستعلام. رابط إنشاء حساب التاجر: `/login?mode=signup`؛ تنشأ المنشأة والفرع بعد تأكيد البريد داخل معاملة PostgreSQL. لا توجد حسابات تجريبية افتراضية. اضبط `NEXT_PUBLIC_SITE_URL` على أصل HTTPS النهائي لإنتاج روابط sitemap والبيانات الوصفية الصحيحة. يظهر زر Google في دخول المنشأة والعميل عند توفر إعداد Supabase؛ لكي يعمل فعليًا يجب تفعيل موفر Google OAuth وضبط بياناته وعناوين إعادة التوجيه. لا يكفي ظهور الزر لإثبات جاهزية Google. فعّل خيار **Enable Manual Linking** في Supabase Auth كي يستطيع الضيف ربط Google بهويته الحالية دون فقد ذكرياته.
 
 ```bash
 corepack pnpm db:types   # أنشئ أنواع قاعدة البيانات من الترحيلات في PostgreSQL محلي (PGlite)
@@ -22,6 +22,12 @@ corepack pnpm test       # تشمل اختبارات SQL/RLS في محرك Postg
 corepack pnpm build
 corepack pnpm lint
 ```
+
+## حسابات الضيوف وGoogle
+
+- عند فتح رابط الفرع `/c/<cafeSlug>` يختار العميل Google (حساب حقيقي يمكن استرجاعه) أو جلسة ضيف مؤقتة في Supabase؛ لا ينشئ التطبيق رقم هاتف أو هويةً في `localStorage`. من «إعدادات الحساب» يستطيع تغيير الاسم ورقم تواصل **اختياري غير موثّق**؛ يُحفظ الرقم في جدول خاص لا يُستخدم للدخول أو الأختام ولا يقرأه موظفو الفروع. البريد مأخوذ من Supabase Auth للعرض فقط.
+- إذا كان للضيف صور/زيارات/مكافآت أو إعدادات محفوظة، يستخدم زر Google `linkIdentity` بدل تبديل المستخدم: يجب أن يظل `auth_user_id` نفسه ليظل رصيد الولاء والذكريات متاحين. عند تعذر الربط (بما في ذلك Google مرتبط بحساب آخر) **لا تُنقل البيانات تلقائيًا**؛ لا تسجّل خروج الضيف أو تمسح بيانات المتصفح، واطلب مساعدة دعم لاستعادة الحسابين والتحقق من ملكيتهما. لا يوجد دمج حسابات ذاتي في هذه النسخة. يمكن للضيف الذي لم يحفظ بيانات بعد تسجيل الخروج من جلسته المؤقتة ثم دخول Google من شاشة الاختيار؛ لا يُستبدل أي حساب ضيف قائم تلقائيًا أثناء OAuth.
+- أنشئ Google OAuth Client لدى Google وأضف عنوان Supabase Auth callback الخاص بمشروعك في Google Cloud. في Supabase فعّل Google Provider وAnonymous Sign-ins و**Enable Manual Linking**، وأضف روابط إعادة التوجيه للمنشأة والعميل (بما يشمل بارامترات الاستعلام؛ راجع صيغة الـallowlist في إصدار Supabase المستخدم) إلى Auth URL Configuration. مسار العميل `/auth/customer/callback` منفصل عن `/auth/callback` الذي ينشئ المنشأة؛ يتطلب الأخير `flow=email` لتأكيد تسجيل منشأة أو تصريح Google قصير الصلاحية بدأ من صفحة المنشأة. روابط تأكيد البريد القديمة التي لا تحمل `flow=email` تُرفض احترازيًا؛ يحتاج أصحابها إلى رابط تأكيد جديد من المشغّل أو إعادة التسجيل إن سمح Supabase بذلك. اختبر تأكيد البريد ودخول Google وربط الضيف على staging فعليًا؛ الاختبارات المحلية لا تشغّل مزود الهوية.
 
 ## حدود الثقة
 

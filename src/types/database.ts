@@ -1,4 +1,4 @@
-// AUTO-GENERATED from supabase/migrations/00001-00003 by `pnpm db:types`.
+// AUTO-GENERATED from supabase/migrations/*.sql by `pnpm db:types`.
 // Regenerate after changing a migration; do not hand-edit this file.
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 export type Database = {
@@ -125,6 +125,26 @@ export type Database = {
         };
         Relationships: [
           { foreignKeyName: 'campaigns_organization_id_fkey'; columns: ['organization_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] },
+        ];
+      };
+      customer_accounts: {
+        Row: {
+          customer_id: string;
+          phone: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          customer_id: string;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          customer_id?: string;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          { foreignKeyName: 'customer_accounts_customer_id_fkey'; columns: ['customer_id']; isOneToOne: true; referencedRelation: 'customers'; referencedColumns: ['id'] },
         ];
       };
       customer_checkins: {
@@ -1047,6 +1067,7 @@ export type Database = {
       configure_visit_reward: { Args: { p_organization_id: string | null; p_name: string | null; p_threshold: number | null }; Returns: string };
       consume_screen_pairing: { Args: { p_code: string | null; p_token_hash: string | null; p_ip_hash: string | null }; Returns: string };
       create_customer_memory: { Args: { p_customer_id: string | null; p_branch_id: string | null; p_original_key: string | null; p_optimized_key: string | null; p_thumbnail_key: string | null; p_caption: string | null; p_live_wall_consent: boolean | null }; Returns: string };
+      customer_has_saved_data: { Args: Record<string, never>; Returns: boolean };
       get_user_org_ids: { Args: { user_id: string | null }; Returns: string[] };
       get_user_org_role: { Args: { user_id: string | null; org_id: string | null }; Returns: Database['public']['Enums']['org_member_role'] };
       is_org_admin: { Args: { user_id: string | null; org_id: string | null }; Returns: boolean };
@@ -1055,6 +1076,7 @@ export type Database = {
       record_qr_scan: { Args: { p_slug: string | null }; Returns: { qr_id: string; org_slug: string; branch_slug: string; qr_source: Database['public']['Enums']['qr_source'] }[] };
       record_verified_visit: { Args: { p_customer_id: string | null; p_branch_id: string | null; p_idempotency_key: string | null }; Returns: Json };
       redeem_customer_reward: { Args: { p_customer_id: string | null; p_branch_id: string | null; p_reward_rule_id: string | null; p_idempotency_key: string | null }; Returns: Json };
+      set_customer_account: { Args: { p_display_name: string | null; p_phone: string | null }; Returns: undefined };
       set_customer_wall_consent: { Args: { p_memory_id: string | null; p_consent: boolean | null }; Returns: undefined };
     };
     Enums: {

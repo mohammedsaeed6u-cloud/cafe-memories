@@ -60,6 +60,7 @@ beforeAll(async () => {
   await db.query('INSERT INTO public.memory_consents(memory_id,customer_id,live_wall_consent) VALUES($1,$2,true)',
     [legacyMemoryId, legacyCustomer]);
   await db.exec(readFileSync(new URL('00003_secure_core.sql', sqlDir), 'utf8'));
+  await db.exec(readFileSync(new URL('00004_customer_accounts.sql', sqlDir), 'utf8'));
   // Mirrors Supabase default public-schema grants; RLS must still reject unsafe operations.
   await db.exec('GRANT USAGE ON SCHEMA public, auth TO authenticated, service_role; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;');
   for (const [name, id] of Object.entries(ids)) await db.query(
@@ -92,6 +93,69 @@ describe('migration security invariants (real PostgreSQL engine)', () => {
       'SELECT m.visibility,c.live_wall_consent FROM public.memories m JOIN public.memory_consents c ON c.memory_id=m.id WHERE m.id=$1',
       [legacyMemoryId])).rows[0];
     expect(legacy).toEqual({ visibility: 'private', live_wall_consent: false });
+  });
+
+  it('persists only the caller’s customer settings and hides the contact number from merchants', async () => {
+    const ownerId = randomUUID();
+    const otherId = randomUUID();
+    await db.query('INSERT INTO auth.users(id) VALUES($1),($2)', [ownerId, otherId]);
+    const owner = (await db.query<{ id: string }>(
+      "INSERT INTO public.customers(auth_user_id,display_name) VALUES($1,'ضيف مميز') RETURNING id", [ownerId])).rows[0].id;
+    await db.query("INSERT INTO public.customers(auth_user_id,display_name) VALUES($1,'ضيف مميز')", [otherId]);
+    await as('authenticated', ownerId, async () => {
+      expect((await db.query<{ customer_has_saved_data: boolean }>(
+        'SELECT public.customer_has_saved_data()')).rows[0].customer_has_saved_data).toBe(false);
+      await expect(db.query('SELECT public.set_customer_account($1,$2)', ['X', '01012345678']))
+        .rejects.toThrow(/Invalid customer settings/);
+      await expect(db.query('SELECT public.set_customer_account($1,$2)', ['أحمد', 'not-verified']))
+        .rejects.toThrow(/Invalid customer settings/);
+      await db.query('SELECT public.set_customer_account($1,$2)', [' أحمد ', '01012345678']);
+      expect((await db.query<{ customer_has_saved_data: boolean }>(
+        'SELECT public.customer_has_saved_data()')).rows[0].customer_has_saved_data).toBe(true);
+      expect((await db.query("UPDATE public.customers SET auth_user_id=$1, email='stolen@example.com' WHERE id=$2 RETURNING id",
+        [otherId, owner])).rows).toEqual([]);
+      expect((await db.query('SELECT * FROM public.customer_accounts')).rows).toEqual([]);
+    });
+    const persisted = (await db.query<{ display_name: string; phone: string }>(
+      'SELECT c.display_name,a.phone FROM public.customers c JOIN public.customer_accounts a ON a.customer_id=c.id WHERE c.id=$1',
+      [owner])).rows[0];
+    expect(persisted).toEqual({ display_name: 'أحمد', phone: '01012345678' });
+    await as('authenticated', otherId, async () => {
+      expect((await db.query('SELECT * FROM public.customer_accounts')).rows).toEqual([]);
+      // No caller-supplied customer ID exists in the write RPC.
+      await db.query('SELECT public.set_customer_account($1,$2)', ['منى', null]);
+    });
+    // Even merchants allowed to view the visited customer's public profile may
+    // never fetch the optional phone number directly.
+    await db.query('INSERT INTO public.visits(customer_id,organization_id,branch_id) VALUES($1,$2,$3)',
+      [owner, orgA, branchA]);
+    await as('authenticated', ids.merchantA, async () => {
+      expect((await db.query<{ id: string }>('SELECT id FROM public.customers WHERE id=$1', [owner])).rows).toHaveLength(1);
+      expect((await db.query('SELECT * FROM public.customer_accounts')).rows).toEqual([]);
+    });
+    expect((await db.query<{ auth_user_id: string; email: string | null }>(
+      'SELECT auth_user_id,email FROM public.customers WHERE id=$1', [owner])).rows[0])
+      .toEqual({ auth_user_id: ownerId, email: null });
+  });
+
+  it('treats pending visits in other venues as history when changing Auth identities', async () => {
+    const guestId = randomUUID();
+    await db.query('INSERT INTO auth.users(id) VALUES($1)', [guestId]);
+    const guest = (await db.query<{ id: string }>(
+      "INSERT INTO public.customers(auth_user_id,display_name) VALUES($1,'ضيف مميز') RETURNING id", [guestId])).rows[0].id;
+    await as('authenticated', guestId, async () => {
+      expect((await db.query<{ customer_has_saved_data: boolean }>(
+        'SELECT public.customer_has_saved_data()')).rows[0].customer_has_saved_data).toBe(false);
+    });
+    await db.query('INSERT INTO public.visits(customer_id,organization_id,branch_id) VALUES($1,$2,$3)',
+      [guest, orgB, branchB]);
+    await as('authenticated', guestId, async () => {
+      expect((await db.query<{ customer_has_saved_data: boolean }>(
+        'SELECT public.customer_has_saved_data()')).rows[0].customer_has_saved_data).toBe(true);
+    });
+    await as('authenticated', ids.merchantA, async () => {
+      await expect(db.query('SELECT public.customer_has_saved_data()')).rejects.toThrow(/Customer account not found/);
+    });
   });
 
   it('prevents self-promotion, anonymous merchant onboarding and cross-tenant membership', async () => {

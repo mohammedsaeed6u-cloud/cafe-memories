@@ -7,9 +7,8 @@ import { useRouter } from 'next/navigation';
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-')
   .replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
 
-export default function MerchantLoginClient({ initialMode, setupError, configured, googleEnabled }: {
+export default function MerchantLoginClient({ initialMode, setupError, configured }: {
   initialMode: 'signup' | 'signin'; setupError: string | null; configured: boolean;
-  googleEnabled: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<'signup' | 'signin'>(initialMode);
@@ -38,9 +37,11 @@ export default function MerchantLoginClient({ initialMode, setupError, configure
       if (mode === 'signup') {
         const businessSlug = slugify(slug || name);
         if (!name.trim() || businessSlug.length < 3) throw new Error('أدخل اسم منشأة ورابطًا صالحًا');
+        const callback = new URL('/auth/callback', window.location.origin);
+        callback.searchParams.set('flow', 'email');
         const { data, error } = await db.auth.signUp({ email, password, options: {
           data: { cafe_name: name.trim(), cafe_slug: businessSlug },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: callback.toString(),
         } });
         if (error) throw error;
         if (!data.session) { setNotice('تحقق من بريدك لتأكيد الحساب؛ بعد التأكيد ستُنشأ منشأتك في قاعدة البيانات تلقائيًا.'); return; }
@@ -66,8 +67,14 @@ export default function MerchantLoginClient({ initialMode, setupError, configure
     if (!configured) return;
     setBusy(true); setNotice('');
     try {
+      const intent = await fetch('/api/v1/merchant/oauth/intent', { method: 'POST' });
+      if (!intent.ok) throw new Error('تعذر بدء دخول Google. حاول مرة أخرى.');
+      const { nonce } = await intent.json();
+      const callback = new URL('/auth/callback', window.location.origin);
+      callback.searchParams.set('flow', 'google');
+      callback.searchParams.set('nonce', nonce);
       const { error } = await createClient().auth.signInWithOAuth({ provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` } });
+        options: { redirectTo: callback.toString() } });
       if (error) throw error;
     } catch (error) { setNotice(error instanceof Error ? error.message : 'تعذر تسجيل الدخول'); setBusy(false); }
   }
@@ -90,7 +97,7 @@ export default function MerchantLoginClient({ initialMode, setupError, configure
         <label className="block text-sm">كلمة المرور<input required type="password" minLength={8} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-2 w-full rounded-lg bg-black/30 border border-white/20 p-3" /></label>
         <button type="submit" disabled={busy || !configured} className="w-full rounded-lg bg-[#dd0200] p-3 font-bold disabled:opacity-50">{busy ? 'انتظر...' : mode === 'signup' ? 'إنشاء الحساب' : 'تسجيل الدخول'}</button>
       </form>
-      {googleEnabled && <button type="button" onClick={google} disabled={busy || !configured} className="w-full rounded-lg border border-white/20 p-3 disabled:opacity-50">الدخول بواسطة Google</button>}
+      <button type="button" onClick={google} disabled={busy || !configured} className="w-full rounded-lg border border-white/20 p-3 disabled:opacity-50">الدخول بواسطة Google</button>
       {notice && <p role="alert" className="text-sm text-amber-300">{notice}</p>}
       <p className="text-xs text-stone-400">لا تُخزَّن كلمات المرور أو بيانات دخول الموظفين في هذا المتصفح.</p>
     </div>

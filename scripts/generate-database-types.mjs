@@ -1,7 +1,7 @@
 /* Regenerate with `pnpm db:types` after changing migrations.
  * Uses an isolated PGlite PostgreSQL engine: no production credentials needed. */
 import { PGlite } from '@electric-sql/pglite';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 
 const db = new PGlite();
 const bootstrap = `
@@ -25,8 +25,9 @@ const mapped = (type, enumNames) => {
 
 try {
   await db.exec(bootstrap);
-  for (const filename of ['00001_initial_schema.sql', '00002_product_refactor.sql', '00003_secure_core.sql']) {
-    await db.exec(readFileSync(new URL(`../supabase/migrations/${filename}`, import.meta.url), 'utf8'));
+  const migrationsDir = new URL('../supabase/migrations/', import.meta.url);
+  for (const filename of readdirSync(migrationsDir).filter((name) => /^\d{5}_.+\.sql$/.test(name)).sort()) {
+    await db.exec(readFileSync(new URL(filename, migrationsDir), 'utf8'));
   }
   const columns = (await db.query(`SELECT table_name, column_name, udt_name, is_nullable, column_default
     FROM information_schema.columns WHERE table_schema='public' AND table_name NOT LIKE 'pg_%'
@@ -52,7 +53,7 @@ try {
   const enumNames = new Set(enums.map(({ name }) => name));
   const tables = Map.groupBy(columns, ({ table_name }) => table_name);
   const lines = [
-    '// AUTO-GENERATED from supabase/migrations/00001-00003 by `pnpm db:types`.',
+    '// AUTO-GENERATED from supabase/migrations/*.sql by `pnpm db:types`.',
     '// Regenerate after changing a migration; do not hand-edit this file.',
     'export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];',
     'export type Database = {', '  public: {', '    Tables: {',
@@ -85,7 +86,10 @@ try {
     else if (fn.result === 'void') result = 'undefined';
     else result = mapped(fn.result.replace(/\[\]$/, ''), enumNames) + (fn.result.endsWith('[]') ? '[]' : '');
     // PL/pgSQL arguments may legally receive NULL; the function itself enforces its domain rules.
-    lines.push(`      ${fn.name}: { Args: { ${args.map(([name, type]) => `${name}: ${mapped(type, enumNames)} | null`).join('; ')} }; Returns: ${result} };`);
+    const argsType = args.length
+      ? `{ ${args.map(([name, type]) => `${name}: ${mapped(type, enumNames)} | null`).join('; ')} }`
+      : 'Record<string, never>';
+    lines.push(`      ${fn.name}: { Args: ${argsType}; Returns: ${result} };`);
   }
   lines.push('    };', '    Enums: {');
   for (const { name, vals } of enums) lines.push(`      ${name}: ${vals.map((value) => `'${value}'`).join(' | ')};`);

@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { apiError, resolveVenue } from '@/lib/server/context';
 
-const sessionSchema = z.object({ cafeSlug: z.string().min(3).max(40), branchSlug: z.string().max(60).optional() });
+const sessionSchema = z.object({ cafeSlug: z.string().regex(/^[a-z0-9][a-z0-9-]{2,39}$/),
+  branchSlug: z.string().regex(/^[a-z0-9][a-z0-9-]{0,59}$/).optional() });
 
 /** Supabase Auth anonymous users are real, independently verifiable sessions. */
 export async function POST(request: Request) {
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
   try {
     const db = await createClient();
     const { data: { user }, error: authError } = await db.auth.getUser();
-    if (authError || !user) return apiError('Start an anonymous Supabase session first', 401);
+    if (authError || !user) return apiError('Sign in or start a Supabase guest session first', 401);
     const venue = await resolveVenue(parsed.data.cafeSlug, parsed.data.branchSlug);
     if (!venue) return apiError('Venue not found', 404);
     const admin = createAdminClient();
@@ -22,7 +23,11 @@ export async function POST(request: Request) {
     if (error) return apiError('Could not load customer', 503);
     let customer = existingCustomer;
     if (!customer) {
-      const created = await admin.from('customers').insert({ auth_user_id: user.id, display_name: 'ضيف مميز' })
+      const suggestedName = user.is_anonymous ? null : user.user_metadata?.full_name;
+      const displayName = typeof suggestedName === 'string' &&
+        suggestedName.trim().length >= 2 && !/\p{Cc}/u.test(suggestedName)
+        ? suggestedName.trim().slice(0, 80) : 'ضيف مميز';
+      const created = await admin.from('customers').insert({ auth_user_id: user.id, display_name: displayName })
         .select('id, display_name').single();
       if (created.error) {
         // Another tab may have provisioned the same auth user concurrently.
@@ -38,7 +43,7 @@ export async function POST(request: Request) {
       console.error('Customer check-in failed:', checkinError);
       return apiError('Could not start venue session', 503);
     }
-    const [visits, memories] = await Promise.all([
+    const [visits, memories, settings, history] = await Promise.all([
       admin.from('visits').select('*', { head: true, count: 'exact' })
         .eq('customer_id', customer.id).eq('organization_id', venue.organizationId)
         .eq('verification_status', 'verified'),
@@ -46,9 +51,18 @@ export async function POST(request: Request) {
         .eq('customer_id', customer.id).eq('organization_id', venue.organizationId)
         .is('deleted_at', null).neq('status', 'deleted')
         .order('created_at', { ascending: false }).limit(30),
+      admin.from('customer_accounts').select('phone').eq('customer_id', customer.id).maybeSingle(),
+      db.rpc('customer_has_saved_data'),
     ]);
-    if (visits.error || memories.error) return apiError('Could not load memories', 503);
+    if (visits.error || memories.error || settings.error || history.error || typeof history.data !== 'boolean') {
+      console.error('Customer account lookup failed:', visits.error ?? memories.error ?? settings.error ?? history.error);
+      return apiError('Could not load customer account', 503);
+    }
     return NextResponse.json({ customer: { id: customer.id, displayName: customer.display_name },
+      account: { authUserId: user.id, phone: settings.data?.phone ?? null,
+        email: user.is_anonymous ? null : user.email ?? null,
+        isAnonymous: user.is_anonymous === true, googleLinked: user.identities?.some((identity) => identity.provider === 'google') ?? false,
+        hasSavedData: history.data },
       venue, verifiedVisits: visits.count ?? 0,
       memories: (memories.data ?? []).map((memory) => ({
         id: memory.id, caption: memory.caption, status: memory.status, visibility: memory.visibility,
