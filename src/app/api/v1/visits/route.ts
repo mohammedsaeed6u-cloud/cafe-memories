@@ -1,123 +1,58 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { evaluateVisitEligibility } from '@/lib/services/anti-fraud';
-import { calculateRewardProgress } from '@/lib/services/rewards';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { apiError, requireMerchant } from '@/lib/server/context';
+import { syncCustomerWalletAfterTransaction } from '@/lib/server/wallet-service';
+import { verifyStaffSessionValue } from '@/lib/staff-session';
 
 export const dynamic = 'force-dynamic';
 
-const createVisitRequestSchema = z.object({
+const visitSchema = z.object({
   customerId: z.string().uuid(),
   branchId: z.string().uuid(),
-  organizationId: z.string().uuid(),
-  qrCodeId: z.string().uuid().optional().nullable(),
-  deviceFingerprint: z.string().max(128).optional().nullable(),
-  source: z.string().default('qr_scan'),
+  idempotencyKey: z.string().uuid(),
 });
 
-export async function POST(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = createVisitRequestSchema.safeParse(rawBody);
+/** Only a signed-in staff member or verified staff session can verify a physical purchase. */
+export async function POST(request: Request) {
+  const raw = await request.json().catch(() => null);
+  const parsed = visitSchema.safeParse(raw);
+  if (!parsed.success) return apiError('Invalid visit request', 400);
 
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
+  // Check merchant authentication or signed staff terminal session
+  const cookieHeader = request.headers.get('cookie') || '';
+  const match = cookieHeader.match(/stampy_staff_session=([^;]+)/);
+  const staffClaims = match ? await verifyStaffSessionValue(match[1]) : null;
 
-    const { customerId, branchId, organizationId, qrCodeId, deviceFingerprint, source } = parsed.data;
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || '127.0.0.1';
+  const auth = await requireMerchant({ branchId: parsed.data.branchId });
+  if (auth.error && !staffClaims) return auth.error;
 
-    const supabase = createAdminClient();
-
-    // 1. Fetch recent visits for anti-fraud evaluation
-    const { data: recentVisitsData } = await supabase
-      .from('visits')
-      .select('created_at, device_fingerprint, ip_hash')
-      .eq('customer_id', customerId)
-      .eq('branch_id', branchId)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    const mappedVisits = (recentVisitsData || []).map(v => ({
-      createdAt: v.created_at,
-      deviceFingerprint: v.device_fingerprint,
-      ipHash: v.ip_hash,
-    }));
-
-    // 2. Evaluate Anti-Fraud Rules
-    const fraudEvaluation = evaluateVisitEligibility({
-      customerId,
-      branchId,
-      deviceFingerprint,
-      ipAddress: clientIp,
-      recentVisits: mappedVisits,
-    });
-
-    if (fraudEvaluation.status === 'cooldown_rejected') {
-      return NextResponse.json(
-        {
-          success: false,
-          error: fraudEvaluation.reason,
-          cooldownRemainingMinutes: fraudEvaluation.cooldownRemainingMinutes,
-        },
-        { status: 429 }
-      );
-    }
-
-    // 3. Record visit
-    const { data: newVisit, error: visitError } = await supabase
-      .from('visits')
-      .insert({
-        customer_id: customerId,
-        branch_id: branchId,
-        organization_id: organizationId,
-        qr_code_id: qrCodeId || null,
-        source,
-        verification_status: fraudEvaluation.status,
-        device_fingerprint: deviceFingerprint || null,
-        ip_hash: fraudEvaluation.ipHash,
-      })
-      .select()
-      .single();
-
-    if (visitError) {
-      return NextResponse.json({ error: 'Failed to record visit', details: visitError.message }, { status: 500 });
-    }
-
-    // 4. Calculate loyalty progression & active rewards
-    const { count: totalVisits } = await supabase
-      .from('visits')
-      .select('*', { count: 'exact', head: true })
-      .eq('customer_id', customerId)
-      .eq('branch_id', branchId)
-      .eq('verification_status', 'verified');
-
-    const visitCount = totalVisits || 1;
-
-    // Check branch reward rules
-    const { data: rules } = await supabase
-      .from('reward_rules')
-      .select('*')
-      .eq('organization_id', organizationId)
-      .eq('is_active', true)
-      .order('threshold', { ascending: true });
-
-    const activeRule = rules && rules.length > 0 ? rules[0] : { id: 'default', threshold: 5, reward_type: 'free_item' };
-    const rewardProgress = calculateRewardProgress({
-      currentVisitCount: visitCount,
-      threshold: activeRule.threshold || 5,
-      rewardType: activeRule.reward_type || 'free_item',
-      ruleId: activeRule.id || 'default',
-    });
-
-    return NextResponse.json({
-      success: true,
-      visitId: newVisit.id,
-      verificationStatus: fraudEvaluation.status,
-      currentVisits: visitCount,
-      rewardProgress,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  const db = auth.context?.db || (await import('@/lib/supabase/admin')).createAdminClient();
+  let orgId = auth.context?.membership?.organizationId;
+  if (!orgId) {
+    const { data: b } = await db.from('branches').select('organization_id').eq('id', parsed.data.branchId).maybeSingle();
+    orgId = (b as { organization_id?: string } | null)?.organization_id;
   }
+
+  const { data, error } = await db.rpc('record_verified_visit', {
+    p_customer_id: parsed.data.customerId,
+    p_branch_id: parsed.data.branchId,
+    p_idempotency_key: parsed.data.idempotencyKey,
+  });
+
+  if (error) {
+    if (error.code === '23514') return apiError('Visit cooldown active', 409);
+    if (error.code === '42501') return apiError('Not authorized for this branch', 403);
+    if (error.code === '22023') return apiError('Invalid visit', 400);
+    console.error('Visit transaction failed:', error);
+    return apiError('Visit could not be recorded', 503);
+  }
+
+  const walletSync = orgId
+    ? await syncCustomerWalletAfterTransaction(orgId, parsed.data.customerId)
+    : null;
+
+  return NextResponse.json(
+    { ...(data as Record<string, unknown>), walletSync },
+    { headers: { 'Cache-Control': 'no-store' } }
+  );
 }

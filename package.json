@@ -7,7 +7,7 @@
     "build": "next build",
     "build:export": "node scripts/build-export.js",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint src",
     "test": "vitest run",
     "test:watch": "vitest"
   },

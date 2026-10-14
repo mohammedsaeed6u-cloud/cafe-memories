@@ -144,6 +144,11 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- Ensure required columns exist on organizations if created by earlier migrations
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS subscription_tier TEXT DEFAULT 'pro';
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS primary_color TEXT DEFAULT '#5B2D9E';
+ALTER TABLE organizations ADD COLUMN IF NOT EXISTS logo_url TEXT;
+
 -- Seed Default Stampy Organization if not exists
 INSERT INTO organizations (name, slug, subscription_tier)
 VALUES ('Stampy Specialty Coffee', 'stampy', 'enterprise')
