@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // Fetch customers strictly scoped to this merchant's organization (Fail-Closed)
     const { data: customersData, error } = await supabase
       .from('customers')
-      .select('*, memories(*), visits!inner(*)')
+      .select('id, display_name, anonymous_id, email, created_at, last_seen_at, memories(id, visit_id, optimized_url, thumbnail_url, caption, visibility, status, created_at), visits!inner(id, created_at, source, organization_id)')
       .eq('visits.organization_id', orgId)
       .order('last_seen_at', { ascending: false });
 
@@ -46,7 +46,12 @@ export async function GET(request: NextRequest) {
     }
 
     const customers = (customersData || []).map(c => {
-      const memoryCount = c.memories ? c.memories.length : 0;
+      // Privacy Guard: Only count and return approved public memories.
+      // Private guest photobooth memories must NEVER be leaked to merchant CRM.
+      const publicMemories = (c.memories || []).filter(
+        (m: any) => m.visibility === 'public' && m.status !== 'rejected'
+      );
+      const memoryCount = publicMemories.length;
       const visitCount = c.visits ? c.visits.length : 0;
       const totalEngagements = Math.max(memoryCount, visitCount);
       
@@ -54,8 +59,12 @@ export async function GET(request: NextRequest) {
       if (totalEngagements >= 3) tier = 'VIP';
       else if (totalEngagements >= 2) tier = 'Regular';
 
-      const phone = c.anonymous_id || '';
-      
+      // Privacy Guard: Mask customer phone to prevent unauthorized PII harvesting
+      const rawPhone = c.anonymous_id || '';
+      const maskedPhone = rawPhone.length > 6
+        ? rawPhone.slice(0, 3) + '••••' + rawPhone.slice(-3)
+        : rawPhone ? '••••' : '';
+
       // Extract persona role from email if present, or fallback
       let role = 'عميل مميز ووفِي';
       if (c.email && c.email.includes('@persona.memories')) {
@@ -64,22 +73,22 @@ export async function GET(request: NextRequest) {
         role = c.email;
       }
 
-      // Map visits tied to their specific memories
+      // Map visits tied exclusively to public memories
       const visitsWithStrips = (c.visits || []).map((v: any) => {
-        const matchingMemory = (c.memories || []).find((m: any) => m.visit_id === v.id);
+        const matchingMemory = publicMemories.find((m: any) => m.visit_id === v.id);
         return {
           id: v.id,
           date: v.created_at,
           source: v.source || 'table',
-          photoUrl: matchingMemory?.optimized_url || matchingMemory?.original_url || (c.memories?.[0]?.optimized_url) || null,
-          caption: matchingMemory?.caption || 'Specialty Memory',
+          photoUrl: matchingMemory?.optimized_url || matchingMemory?.thumbnail_url || null,
+          caption: matchingMemory?.caption || null,
         };
       });
 
       return {
         id: c.id,
         name: c.display_name || 'Guest Regular',
-        phone,
+        phone: maskedPhone,
         role,
         tier,
         memoryCount,
@@ -87,9 +96,9 @@ export async function GET(request: NextRequest) {
         firstSeenAt: c.created_at,
         lastSeenAt: c.last_seen_at,
         visitsWithStrips,
-        recentStrips: (c.memories || []).slice(0, 4).map((m: any) => ({
+        recentStrips: publicMemories.slice(0, 4).map((m: any) => ({
           id: m.id,
-          img: m.optimized_url || m.original_url,
+          img: m.optimized_url || m.thumbnail_url,
           caption: m.caption,
           createdAt: m.created_at,
         })),

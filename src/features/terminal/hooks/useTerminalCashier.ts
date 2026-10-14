@@ -284,7 +284,37 @@ export function useTerminalCashier() {
   const handleAddStamp = async (count: number = stampsToAdd, triggerAutoReset: boolean = false) => {
     if (!selectedCustomer) return;
     const addCount = Math.max(1, count);
-    // LoyaltyPurseService.addDirectStamp updates local purse and syncs exactly once to Supabase via CustomerRegistryService
+
+    // Synchronize authoritative visit proof with server visits API first (Fail-Closed)
+    if (typeof window !== 'undefined') {
+      const branchId = (settings as any).branchId || (selectedCustomer as any).branchId || cafeSlug;
+      const customerId = (selectedCustomer as any).id || (selectedCustomer as any).customerId;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (customerId && uuidRegex.test(customerId) && branchId && uuidRegex.test(branchId)) {
+        try {
+          const res = await fetch('/api/v1/visits', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customerId,
+              branchId,
+              idempotencyKey: crypto.randomUUID(),
+            }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            setErrorNotice(err.error || `تعذر اعتماد الزيارة من الخادم (رمز ${res.status})`);
+            return;
+          }
+        } catch (err) {
+          reportIgnoredError('terminal/server_visit_sync', err);
+          setErrorNotice('تعذر الاتصال بالخادم لتسجيل الزيارة');
+          return;
+        }
+      }
+    }
+
+    // Apply local updates only after authoritative server verification
     LoyaltyPurseService.addDirectStamp(selectedCustomer.phone, cafeSlug, requiredVisits, giftTitle, addCount);
     try {
       TappyAccountingEngine.processTap({
@@ -302,28 +332,6 @@ export function useTerminalCashier() {
 
     recordShiftStamp(addCount);
     SoundEffectsService.playStampChime();
-
-    // Synchronize authoritative visit proof with server visits API
-    if (typeof window !== 'undefined') {
-      try {
-        const branchId = (settings as any).branchId || (selectedCustomer as any).branchId || cafeSlug;
-        const customerId = (selectedCustomer as any).id || (selectedCustomer as any).customerId;
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (customerId && uuidRegex.test(customerId) && branchId && uuidRegex.test(branchId)) {
-          fetch('/api/v1/visits', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              customerId,
-              branchId,
-              idempotencyKey: crypto.randomUUID(),
-            }),
-          }).catch((err) => reportIgnoredError('terminal/server_visit_sync', err));
-        }
-      } catch (err) {
-        reportIgnoredError('terminal/visit_fetch_err', err);
-      }
-    }
 
     try {
       const isComplete = updatedLoyalty.stampedCount >= requiredVisits;
@@ -475,68 +483,7 @@ export function useTerminalCashier() {
     }
 
     if (autoStamp && customerToUse) {
-      const addCount = stampsToAdd;
-      // LoyaltyPurseService.addDirectStamp updates local purse and syncs exactly once to Supabase via CustomerRegistryService
-      LoyaltyPurseService.addDirectStamp(customerToUse.phone, cafeSlug, requiredVisits, giftTitle, addCount);
-      try {
-        TappyAccountingEngine.processTap({
-          customerPhone: customerToUse.phone,
-          customerName: customerToUse.name,
-          branchId: cafeSlug,
-          brandId: 'stampy',
-          isVerified: true,
-          forceBypassCooldown: true,
-        });
-      } catch (e) { reportIgnoredError('terminal/auto_accounting_tap', e); }
-      const updatedLoyalty = LoyaltyPurseService.getData(customerToUse.phone, cafeSlug, requiredVisits);
-      setLoyaltyData(updatedLoyalty);
-      setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: (prev.totalVisits || 0) + addCount } : null));
-
-      recordShiftStamp(addCount);
-      SoundEffectsService.playStampChime();
-
-      try {
-        const isComplete = updatedLoyalty.stampedCount >= requiredVisits;
-        const stampLabel = addCount > 1 ? `${addCount} أختام جديدة` : 'ختم زيارة جديدة';
-        DigitalWalletService.updateCustomerCardComprehensive({
-          cafeSlug,
-          customerPhone: customerToUse.phone,
-          customerName: customerToUse.name,
-          stampedCount: updatedLoyalty.stampedCount,
-          maxSlots: requiredVisits,
-          giftTitle,
-          logoUrl: settings.branding?.logoUrl,
-          cafeName: settings.branding?.name || 'متجر الولاء',
-          cardBackgroundUrl: settings.walletPassConfig?.cardBackgroundUrl,
-          stampIcon: settings.stampConfig?.customEmoji || '☕',
-          colorHex: settings.walletPassConfig?.colorHex || '#1C1C1E',
-          pushMessage: isComplete
-            ? `🎉 مبروك يا ${customerToUse.name}! اكتملت بطاقة الولاء الخاصة بك واستحققت: ${giftTitle}! 🎁`
-            : `☕ تمت إضافة ${stampLabel} لكارت الولاء في ${settings.branding?.name || 'المتجر'}! رصيدك: ${updatedLoyalty.stampedCount}/${requiredVisits}`,
-        }).catch((e) => console.warn('Terminal wallet push failed:', e));
-      } catch (e) {
-        reportIgnoredError('merchant/terminal#auto_wallet_push', e);
-      }
-
-      const stampNotice = addCount > 1 ? `تم ختم ${addCount} أختام فورياً ⚡` : 'تم الختم التلقائي الفوري ⚡';
-      setSuccessNotice(`${stampNotice} للعميل (${customerToUse.name})! الرصيد: ${updatedLoyalty.stampedCount}/${requiredVisits} • تم بث الإشعار للمحفظة 📱✨`);
-
-      cancelAutoReset();
-      setAutoResetTimer(2.5);
-      const startTime = Date.now();
-      autoResetIntervalRef.current = setInterval(() => {
-        const elapsed = (Date.now() - startTime) / 1000;
-        const remaining = Math.max(0, 2.5 - elapsed);
-        setAutoResetTimer(Math.round(remaining * 10) / 10);
-        if (remaining <= 0) {
-          if (autoResetIntervalRef.current) {
-            clearInterval(autoResetIntervalRef.current);
-            autoResetIntervalRef.current = null;
-          }
-          setAutoResetTimer(null);
-          handleClearKeypad();
-        }
-      }, 100);
+      await handleAddStamp(stampsToAdd, true);
     }
   };
 

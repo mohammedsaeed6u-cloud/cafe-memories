@@ -16,31 +16,69 @@ export const dynamic = 'force-dynamic';
  * Apple always rejects.
  */
 export async function GET(request: NextRequest) {
-  // Fail-Closed: require authenticated customer or verified integration key in production
-  if (process.env.NODE_ENV !== 'test') {
-    let authenticated = false;
-    try {
-      const { requireCustomer } = await import('@/lib/server/context');
-      const auth = await requireCustomer();
-      if (!auth.error) authenticated = true;
-    } catch {
-      authenticated = false;
+  let customerContext: { customerId?: string } | null = null;
+
+  // 1. Authenticate (Customer session or scoped API authorization)
+  try {
+    const { requireCustomer } = await import('@/lib/server/context');
+    const auth = await requireCustomer();
+    if (!auth.error && auth.context) {
+      customerContext = { customerId: auth.context.customerId };
     }
-    if (!authenticated) {
-      const { requireApiAuth, isAuthFailure } = await import('@/lib/api-guard');
-      const apiAuth = await requireApiAuth(request, 'any-auth');
-      if (isAuthFailure(apiAuth)) {
-        return NextResponse.json({ error: 'Unauthorized: valid customer session or API key required' }, { status: 401 });
-      }
+  } catch {
+    customerContext = null;
+  }
+
+  if (!customerContext && process.env.NODE_ENV !== 'test') {
+    const { requireApiAuth, isAuthFailure } = await import('@/lib/api-guard');
+    const apiAuth = await requireApiAuth(request, 'any-auth');
+    if (isAuthFailure(apiAuth)) {
+      return NextResponse.json({ error: 'Unauthorized: valid customer session or API key required' }, { status: 401 });
     }
   }
 
   const { searchParams } = new URL(request.url);
   const cafeSlug = searchParams.get('cafe') || 'memories';
   const cafeName = searchParams.get('name') || 'Memories Studio';
-  const customerPhone = searchParams.get('phone') || searchParams.get('customer') || '01000000000';
-  const customerName = searchParams.get('customerName') || 'ضيف مميز';
-  const stampedCount = parseInt(searchParams.get('stamps') || '3', 10);
+  const customerIdParam = searchParams.get('customerId') || searchParams.get('customer_id');
+
+  const targetCustomerId = customerContext?.customerId || customerIdParam;
+  let resolvedPhone = searchParams.get('phone') || searchParams.get('customer') || '01000000000';
+  let resolvedName = searchParams.get('customerName') || 'ضيف مميز';
+  let resolvedStamps = parseInt(searchParams.get('stamps') || '0', 10);
+
+  // Authoritative DB verification: fetch customer profile and count of verified visits
+  if (targetCustomerId) {
+    try {
+      const admin = (await import('@/lib/supabase/admin')).createAdminClient();
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(targetCustomerId)) {
+        const { data: c } = await admin
+          .from('customers')
+          .select('id, display_name, anonymous_id')
+          .eq('id', targetCustomerId)
+          .maybeSingle();
+
+        if (c) {
+          if (c.display_name) resolvedName = c.display_name;
+          if (c.anonymous_id) resolvedPhone = c.anonymous_id;
+
+          const { count } = await admin
+            .from('visits')
+            .select('id', { count: 'exact', head: true })
+            .eq('customer_id', targetCustomerId)
+            .eq('verification_status', 'verified');
+
+          if (typeof count === 'number') {
+            resolvedStamps = count;
+          }
+        }
+      }
+    } catch {
+      // In isolated tests without DB, preserve resolved values
+    }
+  }
+
   const maxSlots = parseInt(searchParams.get('slots') || '4', 10);
   const giftTitle = searchParams.get('gift') || 'هدية ترحيبية خاصة';
   const instagramHandle = searchParams.get('instagram') || `@${cafeSlug}`;
@@ -48,9 +86,9 @@ export async function GET(request: NextRequest) {
   const passData = {
     cafeSlug,
     cafeName,
-    customerPhone,
-    customerName,
-    stampedCount,
+    customerPhone: resolvedPhone,
+    customerName: resolvedName,
+    stampedCount: resolvedStamps,
     maxSlots,
     giftTitle,
     instagramHandle,

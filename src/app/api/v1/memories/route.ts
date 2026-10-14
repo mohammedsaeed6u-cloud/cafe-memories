@@ -177,15 +177,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create memory', details: memoryError.message }, { status: 500 });
     }
 
-    // 2. Link GDPR/CCPA Consent record
-    await supabase.from('memory_consents').insert({
+    // 2. Link GDPR/CCPA Consent record (Fail-Closed: atomic rollback if consent fails)
+    const { error: consentError } = await supabase.from('memory_consents').insert({
       memory_id: memory.id,
       customer_id: customerId,
-      save_consent: consents.saveConsent,
-      social_share_consent: consents.socialShareConsent,
-      live_wall_consent: consents.liveWallConsent,
-      marketing_consent: consents.marketingConsent,
+      save_consent: Boolean(consents.saveConsent),
+      social_share_consent: Boolean(consents.socialShareConsent),
+      live_wall_consent: Boolean(consents.liveWallConsent),
+      marketing_consent: Boolean(consents.marketingConsent),
     });
+
+    if (consentError) {
+      await supabase.from('memories').delete().eq('id', memory.id);
+      return NextResponse.json(
+        { error: 'Failed to record consent for memory', details: consentError.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
