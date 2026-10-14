@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireApiAuth, isAuthFailure } from '@/lib/api-guard';
 import {
-  LOYALTY_TOTAL_SLOTS,
   pickMemoryThumbnail,
   getStampState,
   getCachedLoyaltyStamps,
   setCachedLoyaltyStamps,
   type LoyaltyStampSlot,
 } from '@/lib/services/loyalty-stamps';
+import { phoneLookupVariants } from '@/lib/services/phone';
+
+/** Last-resort card size when no active reward rule exists. */
+const LOYALTY_TOTAL_SLOTS_FALLBACK = 10;
 
 /**
  * GET /api/v1/loyalty/stamps?cafeSlug=...&phone=...
@@ -72,8 +78,40 @@ function resolveBranchAllowlist(rows: BranchRow[], cafeSlug: string): Set<string
   return new Set(rows.slice(0, 1).map((r) => r.id));
 }
 
+/* ------------------------------------------------------------------ *
+ * Card-size cache — the active reward rule's threshold ("N visits →
+ * free gift") is the merchant-authoritative card size; it changes
+ * rarely, so cache it alongside the branch list.
+ * ------------------------------------------------------------------ */
+
+let cardSlotsCache: { threshold: number; expiresAt: number } | null = null;
+
+async function getCardSlots(
+  supabase: ReturnType<typeof createAdminClient>
+): Promise<{ threshold: number } | null> {
+  if (cardSlotsCache && cardSlotsCache.expiresAt > Date.now()) {
+    return { threshold: cardSlotsCache.threshold };
+  }
+  const { data } = await supabase
+    .from('reward_rules')
+    .select('threshold')
+    .eq('is_active', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (!data || typeof data.threshold !== 'number' || data.threshold < 1) return null;
+
+  cardSlotsCache = { threshold: data.threshold, expiresAt: Date.now() + BRANCHES_CACHE_TTL_MS };
+  return { threshold: cardSlotsCache.threshold };
+}
+
 export async function GET(request: NextRequest) {
   try {
+    // Stamp state contains customer PII — merchant/staff-only (CWE-306)
+    const auth = await requireApiAuth(request, 'any-auth');
+    if (isAuthFailure(auth)) return auth;
+
     const { searchParams } = new URL(request.url);
     const cafeSlug = searchParams.get('cafeSlug')?.trim();
     const digitsOnly = searchParams.get('phone')?.replace(/\D/g, '') ?? '';
@@ -88,7 +126,7 @@ export async function GET(request: NextRequest) {
     // The capture route stores the phone exactly as normalized at capture
     // time ("+2010…" when the customer typed a "+", digits-only otherwise).
     // Look up both forms so the card is found regardless of convention.
-    const phoneVariants = [...new Set([digitsOnly, `+${digitsOnly}`])];
+    const phoneVariants = phoneLookupVariants(searchParams.get('phone') ?? '');
 
     // Burst protection: same customer + cafe within the TTL answers from
     // memory without touching the database at all.
@@ -99,7 +137,7 @@ export async function GET(request: NextRequest) {
         ok: true,
         slots: cached,
         stampedCount: state.stampedCount,
-        totalSlots: LOYALTY_TOTAL_SLOTS,
+        totalSlots: cardSlotsCache?.threshold ?? LOYALTY_TOTAL_SLOTS_FALLBACK,
         isComplete: state.isComplete,
       });
     }
@@ -110,7 +148,7 @@ export async function GET(request: NextRequest) {
     // list fire together. No sequential query chain on any path. Sorting and
     // the 10-slot cap happen in-memory (PostgREST cannot order embedded rows
     // portably, and a card holds at most 10 stamps).
-    const [{ data, error }, branchRows] = await Promise.all([
+    const [{ data, error }, branchRows, rewardRule] = await Promise.all([
       supabase
         .from('customers')
         .select(
@@ -119,6 +157,7 @@ export async function GET(request: NextRequest) {
         .in('anonymous_id', phoneVariants)
         .maybeSingle(),
       getBranchRows(supabase),
+      getCardSlots(supabase),
     ]);
 
     if (error) {
@@ -129,10 +168,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Card size is merchant-authoritative: the active reward rule's
+    // threshold ("N visits → free gift"), not a hard-coded constant.
+    const totalSlots = rewardRule?.threshold ?? LOYALTY_TOTAL_SLOTS_FALLBACK;
+
     const memories = ((data as { memories: EmbeddedMemory[] | null } | null)?.memories ?? [])
       .filter((m) => m.status !== 'deleted')
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
-      .slice(0, LOYALTY_TOTAL_SLOTS);
+      .slice(0, totalSlots);
     const allowedBranchIds = resolveBranchAllowlist(branchRows, cafeSlug);
 
     const slots: LoyaltyStampSlot[] = memories
@@ -155,7 +198,7 @@ export async function GET(request: NextRequest) {
       ok: true,
       slots,
       stampedCount: state.stampedCount,
-      totalSlots: LOYALTY_TOTAL_SLOTS,
+      totalSlots,
       isComplete: state.isComplete,
     });
   } catch (err) {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { CustomerVisitRecord } from './CustomerCRMTab';
+import { CustomerVisitRecord } from '@/types/photobooth';
 import { Printer, Gift, CheckCircle2, Clock, Sparkles, Sliders, Scissors, Bell, BellOff } from 'lucide-react';
 import { PrintService, PrintFormat, getPrintDimensions } from '@/lib/services/print.service';
 import { SoundEffectsService } from '@/lib/services/sound-effects.service';
@@ -15,7 +15,7 @@ interface PrintStationTabProps {
 export const PrintStationTab: React.FC<PrintStationTabProps> = ({
   queue,
   onPrintItem,
-  brandName = 'Memories',
+  brandName = 'متجر ولاء',
 }) => {
   const [activeFormat, setActiveFormat] = useState<PrintFormat>('standard-2x6');
   const [handedOverGifts, setHandedOverGifts] = useState<Record<string, boolean>>({});
@@ -60,7 +60,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
       {/* Top Header & Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#1C1B1B] border border-white/10 text-[#DD0200] flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-[#1C1B1B] border border-white/10 text-[#d97706] flex items-center justify-center">
             <Printer className="w-6 h-6" />
           </div>
           <div>
@@ -70,7 +70,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
         </div>
 
         <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#DD0200] flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-[#b45309] border border-[#d97706]/40 text-[#d97706] flex items-center justify-center">
             <Gift className="w-6 h-6" />
           </div>
           <div>
@@ -81,7 +81,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
 
         <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#1C1B1B] border border-white/10 text-[#FBF9F5] flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-[#DD0200]" />
+            <Sparkles className="w-6 h-6 text-[#d97706]" />
           </div>
           <div>
             <p className="text-xs text-[#A19E9B] font-bold">البروفايل النشط حالياً</p>
@@ -95,7 +95,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4 mb-4">
           <div>
             <h4 className="text-sm font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <Sliders className="w-4 h-4 text-[#DD0200]" />
+              <Sliders className="w-4 h-4 text-[#d97706]" />
               <span>محرك المعايرة والطباعة عالي الدقة (Hardware Print Calibration)</span>
             </h4>
             <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -115,7 +115,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                 onClick={() => setActiveFormat(fmt.id as PrintFormat)}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   activeFormat === fmt.id
-                    ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
+                    ? 'bg-[#d97706] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
                     : 'bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] border border-white/10'
                 }`}
               >
@@ -160,7 +160,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
       <div className="bg-[#141212] p-6 rounded-2xl border border-white/10 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-            <Clock className="w-4 h-4 text-[#DD0200]" />
+            <Clock className="w-4 h-4 text-[#d97706]" />
             <span>طابور الأشرطة الجاهزة للطباعة والتسليم لطاقم الكاونتر</span>
           </h3>
 
@@ -174,20 +174,20 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
             }}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 border cursor-pointer ${
               soundAlertEnabled
-                ? 'bg-[#55100D]/70 text-[#FBF9F5] border-[#DD0200]/40 shadow-xs'
+                ? 'bg-[#b45309]/70 text-[#FBF9F5] border-[#d97706]/40 shadow-xs'
                 : 'bg-[#1C1B1B] text-[#A19E9B] border-white/10 hover:bg-[#211F1F]'
             }`}
             title="تفعيل أو كتم جرس تنبيه الطلبات الجديدة لطاقم العمل"
           >
             {soundAlertEnabled ? (
-              <Bell className="w-3.5 h-3.5 text-[#DD0200] animate-pulse" />
+              <Bell className="w-3.5 h-3.5 text-[#d97706] animate-pulse" />
             ) : (
               <BellOff className="w-3.5 h-3.5 text-[#A19E9B]/60" />
             )}
             <span>تنبيه صوتي للطلبات</span>
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${
-                soundAlertEnabled ? 'bg-[#DD0200] text-[#FBF9F5]' : 'bg-[#141212] text-[#A19E9B]'
+                soundAlertEnabled ? 'bg-[#d97706] text-[#FBF9F5]' : 'bg-[#141212] text-[#A19E9B]'
               }`}
             >
               {soundAlertEnabled ? 'مفعل' : 'مكتوم'}
@@ -213,7 +213,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                   className={`p-5 rounded-xl border transition flex items-center justify-between gap-4 ${
                     isHandedOver
                       ? 'bg-[#141212] border-white/5 opacity-60'
-                      : 'bg-[#1C1B1B] border-white/10 shadow-lg hover:border-[#DD0200]/40'
+                      : 'bg-[#1C1B1B] border-white/10 shadow-lg hover:border-[#d97706]/40'
                   }`}
                 >
                   {/* Strip Thumbnail */}
@@ -239,7 +239,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                         {item.name}
                       </h4>
                       {item.totalVisits && item.totalVisits >= 5 ? (
-                        <span className="px-2 py-0.5 rounded-md bg-[#55100D]/80 border border-[#DD0200]/50 text-[#FBF9F5] font-bold text-[9px] shadow-xs flex items-center gap-1 shrink-0 font-mono">
+                        <span className="px-2 py-0.5 rounded-md bg-[#b45309]/80 border border-[#d97706]/50 text-[#FBF9F5] font-bold text-[9px] shadow-xs flex items-center gap-1 shrink-0 font-mono">
                           <span>VIP</span>
                           <span>VIP ذهبي (#{item.totalVisits})</span>
                         </span>
@@ -256,8 +256,8 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                     </p>
 
                     {/* Gift Code */}
-                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#0B0A0A] border border-white/10 text-[#DD0200] text-xs font-mono font-bold">
-                      <Gift className="w-3.5 h-3.5 text-[#DD0200]" />
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#0B0A0A] border border-white/10 text-[#d97706] text-xs font-mono font-bold">
+                      <Gift className="w-3.5 h-3.5 text-[#d97706]" />
                       <span>{item.giftCode || '#GIFT-FREE'}</span>
                     </div>
                   </div>
@@ -267,7 +267,7 @@ export const PrintStationTab: React.FC<PrintStationTabProps> = ({
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => handlePrint(item, activeFormat)}
-                        className="px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold flex items-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
+                        className="px-3.5 py-2 rounded-lg bg-[#d97706] hover:bg-[#b45309] text-[#FBF9F5] text-xs font-bold flex items-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
                         title={`طباعة بنمط: ${activeDims.nameAr}`}
                       >
                         <Printer className="w-3.5 h-3.5 text-[#FBF9F5]" />

@@ -9,6 +9,7 @@ import {
   Settings,
   Coffee,
   CheckCircle,
+  FileCheck,
 } from 'lucide-react';
 import { BusinessSettings } from '@/types/photobooth';
 import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
@@ -25,6 +26,9 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
   customerLiveUrl,
   onOpenQuickSetup,
 }) => {
+  const brandName = settings.branding?.name || 'مقهى ومحمصة ولاء';
+  const cafeSlug = settings.cafeSlug || 'stampy';
+
   const svgDownloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&data=${encodeURIComponent(
     customerLiveUrl
   )}&margin=2&format=svg`;
@@ -34,42 +38,44 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
   )}&margin=2&format=png`;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* 1. Header Banner */}
+      <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <QrCode className="w-5 h-5 text-[#DD0200]" />
-              <span>أكواد وتصاميم ستاندات الطاولات (Table QR &amp; Coasters)</span>
-            </h3>
-            <span className="px-2.5 py-0.5 rounded-md bg-[#55100D]/70 text-[#FBF9F5] border border-[#DD0200]/40 font-mono text-[10px] font-bold">
-              300 DPI VECTOR
+          <div className="flex items-center gap-2 mb-1">
+            <span className="p-2 rounded-xl bg-gradient-to-br from-[#c92a54] to-[#98183c] text-white shadow-md border border-white/10">
+              <QrCode className="w-5 h-5 text-white" />
+            </span>
+            <span className="text-xs font-bold text-[#FBF9F5] bg-[#98183c]/60 px-2.5 py-1 rounded-md border border-[#c92a54]/40 font-mono">
+              300 DPI VECTOR READY • أصول الطباعة الرسمية
             </span>
           </div>
-          <p className="text-xs text-[#A19E9B] mt-1 font-sans">
-            ملفات طباعة مجهزة بأبعاد دقيقة للطابعات وشركات الدعاية والإعلان بدون تشويش.
+          <h2 className="text-xl sm:text-2xl font-bold text-[#FBF9F5] font-serif">
+            أكواد وتصاميم ستاندات الطاولات والكاونتر
+          </h2>
+          <p className="text-xs text-[#A19E9B] mt-1 max-w-xl">
+            ملفات متجهة وفكتور بدقة استثنائية جاهزة للإرسال المباشر للمطابع وشركات الدعاية والإعلان لإنتاج ستاندات الأكريليك.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
           <a
             href={svgDownloadUrl}
-            download={`memories-qr-${settings.cafeSlug}.svg`}
+            download={`stampy-qr-${cafeSlug}.svg`}
             target="_blank"
             rel="noreferrer"
-            className="px-4 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2.5 rounded-lg bg-[#c92a54] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] transition flex items-center gap-2 cursor-pointer active:scale-95"
           >
-            <Download className="w-4 h-4" />
-            <span>تحميل فيكتور للطباعة (SVG)</span>
+            <Download className="w-4 h-4 text-[#FBF9F5]" />
+            <span>تحميل فيكتور (SVG)</span>
           </a>
 
           <a
             href={pngDownloadUrl}
-            download={`memories-qr-${settings.cafeSlug}.png`}
+            download={`stampy-qr-${cafeSlug}.png`}
             target="_blank"
             rel="noreferrer"
-            className="px-4 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center gap-2 cursor-pointer active:scale-95"
           >
             <Download className="w-4 h-4 text-[#A19E9B]" />
             <span>تحميل صورة عالية الدقة (PNG)</span>
@@ -78,21 +84,21 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
           <button
             type="button"
             onClick={onOpenQuickSetup}
-            className="px-4 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center gap-2 cursor-pointer"
           >
-            <Printer className="w-4 h-4 text-[#DD0200]" />
+            <Printer className="w-4 h-4 text-[#c92a54]" />
             <span>معاينة ستاند الأكريليك</span>
           </button>
         </div>
       </div>
 
-      {/* Visual Coaster / Table Tent Preview Showcase */}
+      {/* 2. Visual Table Tent Preview & Production Guidelines */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-6 flex justify-center">
           <div className="w-full max-w-sm p-8 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl space-y-6 text-center relative overflow-hidden">
             <div className="w-full flex justify-center">
               <CoBrandingLogos
-                cafeName={settings.branding?.name || 'Memories Studio'}
+                cafeName={brandName}
                 cafeLogoUrl={settings.branding?.logoUrl}
                 size="md"
                 showTagline={false}
@@ -102,10 +108,10 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
 
             <div className="space-y-1">
               <h4 className="text-base font-bold text-[#FBF9F5] font-serif">
-                وثّق لحظاتك واحصل على هديتك الترحيبية
+                وثّق لحظاتك واكسب هديتك الترحيبية
               </h4>
               <p className="text-xs text-[#A19E9B]">
-                امسح الكود بكاميرا هاتفك للبدء فوراً بدون تحميل أي تطبيق
+                امسح الكود بكاميرا هاتفك لحفظ كارت الولاء في Apple & Google Wallet
               </p>
             </div>
 
@@ -113,43 +119,43 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
               <RealOutsourcedQr
                 value={customerLiveUrl}
                 size={168}
-                alt={`كود طاولة ${settings.branding?.name}`}
+                alt={`كود طاولة ${brandName}`}
                 className="w-full h-full object-contain"
               />
             </div>
 
             <div className="pt-2 text-[11px] font-mono text-[#A19E9B] border-t border-white/10 flex items-center justify-between">
-              <span>SCAN WITH CAMERA</span>
-              <span>300 DPI TABLE STAND</span>
+              <span className="font-bold">SCAN WITH CAMERA</span>
+              <span className="font-bold text-[#c92a54]">300 DPI TABLE STAND</span>
             </div>
           </div>
         </div>
 
         <div className="lg:col-span-6 space-y-4">
-          <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-3">
-            <h4 className="font-bold text-sm text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <Sparkles className="w-4 h-4 text-[#DD0200]" />
-              <span>إرشادات طباعة ستاندات الطاولات لضمان أفضل تفاعل:</span>
+          <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
+            <h4 className="font-bold text-sm text-[#FBF9F5] flex items-center gap-2 pb-3 border-b border-white/10 font-serif">
+              <Sparkles className="w-4 h-4 text-[#c92a54]" />
+              <span>إرشادات طباعة ستاندات الطاولات لضمان أفضل تفاعل للعملاء:</span>
             </h4>
-            <ul className="text-xs text-[#A19E9B] space-y-2.5 leading-relaxed">
-              <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-md bg-[#55100D] border border-[#DD0200]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
-                <span><strong className="text-[#FBF9F5]">المقاس الموصى به:</strong> ستاند أكريليك عمودي مقاس 10×15 سم (A6) أو كوستر خشبي 9×9 سم.</span>
+            <ul className="text-xs text-[#A19E9B] space-y-3 leading-relaxed">
+              <li className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-md bg-[#98183c] border border-[#c92a54]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+                <span><strong className="text-[#FBF9F5]">المقاس القياسي الموصى به:</strong> ستاند أكريليك شفاف عمودي مقاس 10×15 سم (A6) أو كوستر خشبي محفور 9×9 سم.</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-md bg-[#55100D] border border-[#DD0200]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
-                <span><strong className="text-[#FBF9F5]">جودة الفيكتور:</strong> استخدم ملف الـ SVG المرفق عند إرسال التصميم للمطبعة لضمان دقة لا متناهية عند المسح.</span>
+              <li className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-md bg-[#98183c] border border-[#c92a54]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+                <span><strong className="text-[#FBF9F5]">ملف الفيكتور المباشر:</strong> استخدم ملف SVG المرفق عند إرسال التصميم للمطبعة لضمان دقة متناهية لا تتأثر بالتكبير.</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-md bg-[#55100D] border border-[#DD0200]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
-                <span><strong className="text-[#FBF9F5]">موقع التثبيت:</strong> ثبّت ستاند واحد على كل طاولة، كاونتر استقبال، أو نقطة دفع لتحقيق معدل مسح يتجاوز 65% من رواد الكافيه.</span>
+              <li className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-md bg-[#98183c] border border-[#c92a54]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+                <span><strong className="text-[#FBF9F5]">مواقع التثبيت الإستراتيجية:</strong> ستاند واحد على كل طاولة، وستاند على كاونتر الاستلام والطلب لتحقيق أعلى نسبة حفظ لكارت المحفظة.</span>
               </li>
             </ul>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#0B0A0A] border border-white/10 text-xs font-mono text-[#A19E9B] flex items-center justify-between">
-            <span>الرابط المشفر في الـ QR:</span>
-            <span className="font-bold text-[#DD0200] truncate max-w-xs">{customerLiveUrl}</span>
+          <div className="p-4 rounded-xl bg-[#0B0A0A] border border-white/10 text-xs font-mono text-[#A19E9B] flex items-center justify-between shadow-inner">
+            <span className="text-[#A19E9B]/60">الرابط المشفر في الـ QR:</span>
+            <span className="font-bold text-[#c92a54] truncate max-w-xs">{customerLiveUrl}</span>
           </div>
         </div>
       </div>

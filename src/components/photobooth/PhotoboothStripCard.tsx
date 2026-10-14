@@ -71,6 +71,8 @@ interface PhotoboothStripCardProps {
   onUpdateStickers?: (stickers: PlacedSticker[]) => void;
   isStickersInteractive?: boolean;
   onSlotClick?: (slotIdx: number) => void;
+  /** Studio flip preview: wrap the card in a 3D flip stage and render a themed back face. Omit to render exactly as before. */
+  isFlipped?: boolean;
 }
 
 export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
@@ -89,6 +91,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   onUpdateStickers,
   isStickersInteractive = false,
   onSlotClick,
+  isFlipped,
 }) => {
   const cardContainerRef = useRef<HTMLDivElement>(null);
 
@@ -148,6 +151,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
 
   // Visual Theme Identifiers
   const isLuxuryGlass = cardMode === 'luxury_glass';
+  const isAtelierScrapbook = cardMode === 'atelier_scrapbook';
   const isTicketExpress = cardMode === 'ticket_express';
   const isSpotifyPlayer = cardMode === 'spotify_player';
   const isIosGalleryLight = cardMode === 'ios_gallery_light';
@@ -172,6 +176,8 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
   // Base Effective Colors
   const effectiveBg = isLuxuryGlass
     ? '#08080B'
+    : isAtelierScrapbook
+    ? '#FAF6EE'
     : isTicketExpress
     ? '#FAF5EC'
     : isSpotifyPlayer
@@ -186,6 +192,8 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
 
   const effectiveBorder = isLuxuryGlass
     ? 'rgba(255, 255, 255, 0.18)'
+    : isAtelierScrapbook
+    ? '#d1c7b7'
     : isTicketExpress
     ? '#4A121A'
     : isSpotifyPlayer
@@ -200,6 +208,8 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
 
   const effectiveText = isLuxuryGlass
     ? '#D9D9D9'
+    : isAtelierScrapbook
+    ? '#1a1c1e'
     : isTicketExpress
     ? '#381016'
     : isSpotifyPlayer || isIosGalleryDark || isIosCamera
@@ -209,7 +219,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     : frame.textColor || template?.defaultText || modeInfo.defaultText;
 
   const effectiveAccent = isLuxuryGlass
-    ? '#DD0200'
+    ? '#B45309'
     : isTicketExpress
     ? '#8B2635'
     : isSpotifyPlayer
@@ -407,6 +417,17 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
+      {isFlipped !== undefined && (
+        <div className="relative w-full flex justify-center" style={{ perspective: '1400px' }}>
+          <div
+            className="relative transition-transform duration-700 ease-in-out motion-reduce:transition-none"
+            style={{
+              transformStyle: 'preserve-3d',
+              transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            }}
+          >
+            {/* FRONT FACE */}
+            <div style={{ backfaceVisibility: 'hidden' }}>
       {/* Printable Base Card with Dynamic Visual Themes */}
       <div
         id="printable-strip"
@@ -414,13 +435,13 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         style={{
           backgroundColor: isLuxuryGlass ? undefined : effectiveBg,
           background: isLuxuryGlass
-            ? 'radial-gradient(circle at 18% 10%, rgba(221, 2, 0, 0.22) 0%, rgba(85, 16, 13, 0.10) 28%, transparent 60%), radial-gradient(circle at 85% 85%, rgba(255, 255, 255, 0.85) 0%, transparent 65%), linear-gradient(165deg, #EAEAEA 0%, #D9D9D9 45%, #C8C8C8 100%)'
+            ? 'radial-gradient(circle at 18% 10%, rgba(201, 42, 84, 0.22) 0%, rgba(152, 24, 60, 0.10) 28%, transparent 60%), radial-gradient(circle at 85% 85%, rgba(255, 255, 255, 0.85) 0%, transparent 65%), linear-gradient(165deg, #EAEAEA 0%, #D9D9D9 45%, #C8C8C8 100%)'
             : undefined,
           boxShadow: isLuxuryGlass
-            ? '0 25px 60px -15px rgba(0, 0, 0, 0.25), 0 0 30px -5px rgba(221, 2, 0, 0.15), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9)'
+            ? '0 25px 60px -15px rgba(0, 0, 0, 0.25), 0 0 30px -5px rgba(201, 42, 84, 0.15), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9)'
             : undefined,
           backdropFilter: isLuxuryGlass ? 'blur(24px)' : undefined,
-          borderColor: isLuxuryGlass ? 'rgba(85, 16, 13, 0.22)' : (isArabicaGold ? '#D4AF37' : effectiveBorder),
+          borderColor: isLuxuryGlass ? 'rgba(152, 24, 60, 0.22)' : (isArabicaGold ? '#D4AF37' : effectiveBorder),
           color: isLuxuryGlass ? '#1A0706' : effectiveText,
           borderRadius: isLuxuryGlass ? '28px' : borderRadiusValue,
         }}
@@ -435,21 +456,46 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           }}
         />
 
+        {/* Scrapbook Washi Tapes & Side Perforations */}
+        {isAtelierScrapbook && (
+          <>
+            <div className="washi-tape-berry w-16 h-4 absolute -top-1.5 -right-2 rotate-[-5deg] z-30 pointer-events-none rounded-xs opacity-90" />
+            <div className="washi-tape-cream w-16 h-4 absolute -bottom-1.5 -left-2 rotate-[3deg] z-30 pointer-events-none rounded-xs opacity-90" />
+            <div className="absolute top-0 bottom-0 left-1 w-2 perforations opacity-25 pointer-events-none z-10" />
+            <div className="absolute top-0 bottom-0 right-1 w-2 perforations opacity-25 pointer-events-none z-10" />
+          </>
+        )}
+
         {/* ------------------------------------------------------------- */}
         {/* HEADER RENDERING PER THEME                                    */}
         {/* ------------------------------------------------------------- */}
+
+        {/* SCRAPBOOK HEADER */}
+        {isAtelierScrapbook && (
+          <div className="relative z-20 mb-2 pt-1.5 px-2 text-center">
+            <div className="flex items-center justify-between">
+              <div className="washi-tape-cream px-2.5 py-0.5 rounded-xs rotate-[-2deg] text-[#1a1c1e] shadow-xs text-[10px] font-bold flex items-center gap-1 border border-[#b4a08c]/40">
+                <span>✂️</span>
+                <span>طبعة استوديو سيول</span>
+              </div>
+              <span className="bg-[#2B2D2F] text-white px-2 py-0.5 rounded-full font-mono text-[9px] uppercase tracking-wider font-bold">
+                35MM • ISO 400
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* LUXURY GLASS HEADER: Minimal, Sophisticated Studio Branding */}
         {isLuxuryGlass && (
           <div className="relative z-10 mb-2.5 pt-1 px-1 text-center apple-font">
             <div className="flex items-center justify-between text-[#1A0706]">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-[#DD0200]">✦</span>
+                <span className="text-xs text-amber-600">✦</span>
                 <span className="text-[10px] font-mono tracking-[0.2em] font-black uppercase text-[#1A0706]">
                   {branding.name || 'MEMORIES'}
                 </span>
               </div>
-              <span className="text-[8px] font-mono tracking-widest uppercase font-bold text-[#55100D] opacity-80">
+              <span className="text-[8px] font-mono tracking-widest uppercase font-bold text-[#98183c] opacity-80">
                 STUDIO
               </span>
             </div>
@@ -562,7 +608,8 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           <div className={`relative z-10 flex flex-col items-center justify-center text-center ${isKinfolkMinimal ? 'mb-3 pt-1' : 'mb-2'}`}>
             <CoBrandingLogos
               cafeName={branding.name || 'Café Partner'}
-              cafeLogoUrl={branding.logoUrl}
+              cafeLogoUrl={branding.showLogo === false ? null : branding.logoUrl}
+              showLogo={branding.showLogo !== false}
               size="sm"
               theme={effectiveText === '#FFFFFF' ? 'dark' : 'light'}
               showTagline={false}
@@ -777,21 +824,34 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           </div>
         )}
 
-        {/* ATELIER NOSTALGIA LUXURY FOOTER */}
+        {/* SCRAPBOOK FOOTER */}
+        {isAtelierScrapbook && (
+          <div className="relative z-10 mt-2.5 pt-2 border-t border-[#d1c7b7] flex items-center justify-between px-1 text-[8.5px] font-mono text-[#594043]">
+            <div className="flex items-center gap-1 font-bold text-amber-600">
+              <span>✦</span>
+              <span>{dateFormatted} • SEOUL 4-CUTS</span>
+            </div>
+            <div className="border border-amber-600 text-amber-600 px-1.5 py-0.5 rounded-xs uppercase font-bold text-[8px] rotate-[-3deg] tracking-wider bg-[#fcecef]">
+              APPROVED ✓
+            </div>
+          </div>
+        )}
+
+        {/* LUXURY FOOTER */}
         {isLuxuryGlass && (
           <div className="relative z-10 mt-3 pt-2 border-t border-[#1A0706]/15 flex items-center justify-between px-1 text-[8.5px] font-mono text-[#1A0706]/80">
             <div className="flex items-center gap-1.5 font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#DD0200]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
               <span>{dateFormatted}</span>
             </div>
-            <span className="tracking-[0.2em] uppercase font-bold text-[#55100D]">
-              ATELIER • NOSTALGIA
+            <span className="tracking-[0.2em] uppercase font-bold text-amber-700">
+              STAMPY • STUDIO
             </span>
           </div>
         )}
 
         {/* 6. STANDARD MINIMALIST ARTISANAL FOOTER */}
-        {!isTicketExpress && !isSpotifyPlayer && !isIosGallery && !isIosCamera && !isIosIMessage && !isLuxuryGlass && (
+        {!isTicketExpress && !isSpotifyPlayer && !isIosGallery && !isIosCamera && !isIosIMessage && !isLuxuryGlass && !isAtelierScrapbook && (
           <div
             style={{ borderColor: isArabicaGold ? '#D4AF37' : effectiveBorder }}
             className="relative z-10 mt-2.5 pt-1.5 border-t-[0.5px] flex items-center justify-between text-[8px] opacity-85 font-mono px-1"
@@ -832,6 +892,71 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           </div>
         )}
       </div>
+            </div>
+
+            {/* BACK FACE: themed business identity + gift terms (mirrors the front's effective theme) */}
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center text-center p-5 gap-2.5 select-none"
+              style={{
+                backfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)',
+                backgroundColor: isLuxuryGlass ? undefined : effectiveBg,
+                background: isLuxuryGlass
+                  ? 'radial-gradient(circle at 18% 10%, rgba(201, 42, 84, 0.22) 0%, rgba(152, 24, 60, 0.10) 28%, transparent 60%), linear-gradient(165deg, #EAEAEA 0%, #D9D9D9 45%, #C8C8C8 100%)'
+                  : undefined,
+                color: isLuxuryGlass ? '#1A0706' : effectiveText,
+                border: `1px solid ${
+                  isLuxuryGlass ? 'rgba(152, 24, 60, 0.22)' : isArabicaGold ? '#D4AF37' : effectiveBorder
+                }`,
+                borderRadius: isLuxuryGlass ? '28px' : borderRadiusValue,
+              }}
+            >
+              {branding.logoUrl && branding.showLogo !== false ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={branding.logoUrl}
+                  alt={branding.name}
+                  className="w-12 h-12 rounded-xl object-cover border shadow-md"
+                  style={{ borderColor: isArabicaGold ? '#D4AF37' : effectiveBorder }}
+                />
+              ) : (
+                <span
+                  className="w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg border shadow-md font-serif"
+                  style={{
+                    borderColor: isArabicaGold ? '#D4AF37' : effectiveBorder,
+                    color: effectiveAccent,
+                  }}
+                >
+                  {(branding.name || 'M').trim().charAt(0)}
+                </span>
+              )}
+              <div className="font-serif font-black text-base leading-tight">
+                {branding.name || 'MEMORIES'}
+              </div>
+              {branding.tagline && (
+                <div className="text-[10px] opacity-80 font-medium leading-snug">{branding.tagline}</div>
+              )}
+              {branding.instagramHandle && (
+                <div className="text-[9px] font-mono opacity-70" dir="ltr">
+                  {branding.instagramHandle}
+                </div>
+              )}
+              <div className="w-12 border-t opacity-60" style={{ borderColor: effectiveBorder }} />
+              <div className="text-[10px] font-bold leading-relaxed opacity-90">
+                اكتمل الكارت؟ هديتك في انتظارك:
+                <br />
+                <span style={{ color: effectiveAccent }}>{freeGiftOffer.title}</span>
+              </div>
+              <div
+                className="mt-1 px-2.5 py-1 rounded-full text-[9px] font-mono font-bold border"
+                style={{ borderColor: effectiveAccent, color: effectiveAccent }}
+              >
+                {widthCm}×{heightCm} CM • MEMORIES CLUB
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

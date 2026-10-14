@@ -7,6 +7,7 @@
  * 3. Thermal Sticker Printer mode (80mm and 58mm roll widths with high contrast styling).
  * 4. Exact @page and @media print CSS rules eliminating all browser margins, headers, and footers.
  */
+import { reportIgnoredError } from '@/lib/services/diagnostics';
 
 export type PrintFormat =
   | 'standard-2x6'
@@ -681,7 +682,7 @@ export class PrintService {
             setTimeout(() => {
               try {
                 iframe.remove();
-              } catch {}
+              } catch (e) { reportIgnoredError('services/print', e); }
             }, 1000);
           };
           if (win) {
@@ -708,4 +709,42 @@ export class PrintService {
       triggerPrint();
     }
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * The two FIXED physical card sizes.
+ *
+ * Venues print exactly two formats: the classic 2x6 inch strip and the
+ * 4x6 inch sheet (twin strips or postcard). Any legacy or off-brand
+ * dimension must snap to the nearest fixed size so every canvas, print
+ * sheet, and thermal roll stays physically real paper — never an
+ * unprintable size.
+ * ------------------------------------------------------------------ */
+
+export type FixedCardSizeId = 'strip_2x6' | 'card_4x6';
+
+export function resolveFixedCardSize(input: {
+  widthCm?: number;
+  heightCm?: number;
+  dimensionsPreset?: string;
+}): FixedCardSizeId {
+  if (input.dimensionsPreset === 'grid_4x6') return 'card_4x6';
+  if (input.dimensionsPreset === 'strip_2x6') return 'strip_2x6';
+  const w = input.widthCm ?? 5.08;
+  const h = input.heightCm ?? 15.24;
+  const long = Math.max(w, h);
+  const short = Math.max(Math.min(w, h), 0.01);
+  // 2x6 has a 3:1 long edge; 4x6 (and any postcard-like legacy size) is ~1.5:1.
+  return long / short >= 2.2 ? 'strip_2x6' : 'card_4x6';
+}
+
+/** True 300 DPI canvas geometry for a fixed size in a given orientation. */
+export function getFixedCardCanvasSize(
+  size: FixedCardSizeId,
+  orientation: 'vertical' | 'horizontal'
+): { width: number; height: number } {
+  const portrait =
+    size === 'strip_2x6' ? { width: 600, height: 1800 } : { width: 1200, height: 1800 };
+  if (orientation === 'vertical') return portrait;
+  return { width: portrait.height, height: portrait.width };
 }

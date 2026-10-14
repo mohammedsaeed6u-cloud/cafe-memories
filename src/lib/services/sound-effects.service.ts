@@ -4,6 +4,8 @@
  * Zero external MP3/WAV network requests, 100% offline, zero latency, SSR/headless safe.
  */
 
+import { reportIgnoredError } from './diagnostics';
+
 const MUTED_STORAGE_KEY = 'cafe_memories_sound_muted';
 const VOLUME_STORAGE_KEY = 'cafe_memories_sound_volume';
 
@@ -45,7 +47,7 @@ export class SoundEffectsService {
   public static getAudioContext(): AudioContext | null {
     if (this.audioCtx && this.audioCtx.state !== 'closed') {
       if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume().catch(() => {});
+        this.audioCtx.resume().catch((e) => reportIgnoredError('sound-effects/resume', e));
       }
       return this.audioCtx;
     }
@@ -63,10 +65,11 @@ export class SoundEffectsService {
         this.audioCtx = new AudioContextClass();
       }
       if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume().catch(() => {});
+        this.audioCtx.resume().catch((e) => reportIgnoredError('sound-effects/resume_init', e));
       }
       return this.audioCtx;
-    } catch {
+    } catch (e) {
+      reportIgnoredError('sound-effects/init_ctx', e);
       return null;
     }
   }
@@ -259,6 +262,13 @@ export class SoundEffectsService {
    * Emulates a warm acoustic bronze chime (D5 -> A5 harmony with warm overtones).
    * Returns true if sound was successfully scheduled, false otherwise.
    */
+  /**
+   * Alias for playStampChime.
+   */
+  public static playStampSound(volumeScale = 1): boolean {
+    return this.playStampChime(volumeScale);
+  }
+
   public static playStampChime(volumeScale = 1): boolean {
     if (this.isMuted() || this.volume <= 0) return false;
     const ctx = this.getAudioContext();
@@ -534,6 +544,33 @@ export class SoundEffectsService {
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.085);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Crisp high-frequency POS barcode scanner confirmation beep (~2200Hz, 50ms).
+   */
+  public static playScanBeep(volumeScale = 1): boolean {
+    if (this.isMuted() || this.volume <= 0) return false;
+    const ctx = this.getAudioContext();
+    if (!ctx) return false;
+
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2200, now);
+      gain.gain.setValueAtTime(this.volume * 0.25 * volumeScale, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.055);
       return true;
     } catch {
       return false;

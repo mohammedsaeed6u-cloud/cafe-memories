@@ -245,7 +245,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
         {/* Loading / Error */}
         {!isCameraReady && !cameraError && !capturedPhoto && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141212] text-[#FBF9F5] p-6 text-center">
-            <RefreshCw className="w-8 h-8 text-[#DD0200] animate-spin mb-3" />
+            <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mb-3" />
             <p className="font-semibold text-base">جاري تشغيل كاميرا الاستوديو...</p>
             <p className="text-[#A19E9B] text-xs mt-1">تأكد من إعطاء إذن الكاميرا</p>
           </div>
@@ -253,13 +253,13 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
 
         {cameraError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141212] text-[#FBF9F5] p-6 text-center">
-            <Camera className="w-10 h-10 text-[#DD0200] mb-3" />
+            <Camera className="w-10 h-10 text-amber-500 mb-3" />
             <p className="font-bold text-rose-400 text-sm leading-relaxed">{cameraError}</p>
             <button
               onClick={startCamera}
               className="mt-4 px-5 py-2.5 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] rounded-lg border border-white/10 text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-[#DD0200]" /> إعادة المحاولة
+              <RefreshCw className="w-3.5 h-3.5 text-amber-500" /> إعادة المحاولة
             </button>
           </div>
         )}
@@ -282,9 +282,9 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
             {/* Top Status Pill */}
             <div className="absolute top-4 inset-x-0 flex justify-center">
               <div className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-md flex items-center gap-2 border border-white/15">
-                <span className="w-2 h-2 rounded-full bg-[#DD0200] animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-[#c92a54] animate-pulse" />
                 <span className="text-[10px] font-mono font-bold text-[#FBF9F5] tracking-widest uppercase">
-                  SHOT #{String(visitNumber).padStart(2, '0')} • ATELIER STUDIO
+                  SHOT #{String(visitNumber).padStart(2, '0')} • STAMPY STUDIO
                 </span>
               </div>
             </div>
@@ -296,7 +296,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px] z-40">
             <span
               key={countdown}
-              className="text-8xl font-black text-[#DD0200] drop-shadow-[0_4px_30px_rgba(221,2,0,0.8)] scale-100 animate-in zoom-in-50 duration-200"
+              className="text-8xl font-black text-[#c92a54] drop-shadow-[0_4px_30px_rgba(201, 42, 84,0.8)] scale-100 animate-in zoom-in-50 duration-200"
               style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
             >
               {countdown}
@@ -318,7 +318,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
                   onClick={() => setActiveFilter(filter.id)}
                   className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
                     activeFilter === filter.id
-                      ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                      ? 'bg-[#c92a54] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
                       : 'text-[#A19E9B] hover:text-[#FBF9F5]'
                   }`}
                 >
@@ -359,9 +359,9 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
             <button
               onClick={handleSnap}
               disabled={!isCameraReady || isShooting}
-              className="group relative w-18 h-18 rounded-full bg-[#1C1B1B] hover:bg-[#211F1F] flex items-center justify-center shadow-2xl active:scale-95 transition-all border-4 border-[#DD0200]/30 hover:border-[#DD0200] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              className="group relative w-18 h-18 rounded-full bg-[#1C1B1B] hover:bg-[#211F1F] flex items-center justify-center shadow-2xl active:scale-95 transition-all border-4 border-[#c92a54]/30 hover:border-[#c92a54] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-full bg-[#DD0200] flex items-center justify-center shadow-inner group-hover:bg-[#B50200] transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]">
+              <div className="w-12 h-12 rounded-full bg-[#c92a54] flex items-center justify-center shadow-inner group-hover:bg-[#98183c] transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]">
                 <Camera className="w-5 h-5 text-white" />
               </div>
             </button>
@@ -380,7 +380,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-[2] py-3 px-5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] transition flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-[2] py-3 px-5 rounded-lg bg-[#c92a54] hover:bg-[#98183c] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(201, 42, 84,0.4)] transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4 text-[#FBF9F5]" />
               <span>اعتماد اللقطة وإضافتها للكارت</span>
@@ -390,7 +390,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
       </div>
 
       <p className="text-[10px] text-[#A19E9B] mt-3 font-mono text-center">
-        • ATELIER NOSTALGIA • {brandName}
+        • STAMPY • {brandName}
       </p>
     </div>
   );

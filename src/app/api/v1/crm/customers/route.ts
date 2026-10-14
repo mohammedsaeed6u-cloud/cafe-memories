@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireApiAuth, isAuthFailure } from '@/lib/api-guard';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Unified server-side auth guard (CWE-862, CWE-306)
+    const auth = await requireApiAuth(request, 'any-auth');
+    if (isAuthFailure(auth)) return auth;
+
+    const supabase = createAdminClient();
+
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format');
     const search = searchParams.get('search')?.toLowerCase();
     const roleFilter = searchParams.get('role');
-
-    const supabase = createAdminClient();
 
     // Fetch customers with related memories and visits
     const { data: customersData, error } = await supabase

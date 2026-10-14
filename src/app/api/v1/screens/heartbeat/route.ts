@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const heartbeatSchema = z.object({
   screenId: z.string().min(1),
   currentMemoryId: z.string().optional().nullable(),

@@ -1,133 +1,102 @@
 ---
-name: Atelier Nostalgia
+name: stampy-design-system
 colors:
-  surface: '#141313'
-  surface-dim: '#141313'
-  surface-bright: '#3b3939'
-  surface-container-lowest: '#0f0e0e'
-  surface-container-low: '#1c1b1b'
-  surface-container: '#211f1f'
-  surface-container-high: '#2b2a29'
-  surface-container-highest: '#363434'
-  on-surface: '#e6e1e1'
-  on-surface-variant: '#e9bcb5'
-  inverse-surface: '#e6e1e1'
-  inverse-on-surface: '#323030'
-  outline: '#af8781'
-  outline-variant: '#5e3f3a'
-  surface-tint: '#ffb4a8'
-  primary: '#ffb4a8'
-  on-primary: '#680100'
-  primary-container: '#dd0200'
-  on-primary-container: '#ffedea'
-  inverse-primary: '#c00200'
-  secondary: '#ffb4ab'
-  on-secondary: '#5e1612'
-  secondary-container: '#7c2d26'
-  on-secondary-container: '#ff9a8e'
-  tertiary: '#c8c6c3'
-  on-tertiary: '#30312e'
-  tertiary-container: '#6e6e6b'
-  on-tertiary-container: '#f3f1ed'
-  error: '#ffb4ab'
-  on-error: '#690005'
-  error-container: '#93000a'
-  on-error-container: '#ffdad6'
-  primary-fixed: '#ffdad4'
-  primary-fixed-dim: '#ffb4a8'
-  on-primary-fixed: '#410000'
-  on-primary-fixed-variant: '#930100'
-  secondary-fixed: '#ffdad6'
-  secondary-fixed-dim: '#ffb4ab'
-  on-secondary-fixed: '#400203'
-  on-secondary-fixed-variant: '#7c2d26'
-  tertiary-fixed: '#e4e2de'
-  tertiary-fixed-dim: '#c8c6c3'
-  on-tertiary-fixed: '#1b1c1a'
-  on-tertiary-fixed-variant: '#474744'
-  background: '#141313'
-  on-background: '#e6e1e1'
-  surface-variant: '#363434'
-  coffee-bean: '#1A0706'
-  surface-charcoal: '#141212'
-  surface-stone: '#1F1D1D'
-  border-hairline: rgba(255, 255, 255, 0.08)
-  border-accent: rgba(221, 2, 0, 0.35)
-  alabaster-muted: '#D9D9D9'
-  text-secondary: '#A19E9B'
+  surface: '#FAF5EB'
+  surface-dim: '#EADDC4'
+  surface-bright: '#FFFDF9'
+  surface-container-lowest: '#FFFFFF'
+  surface-container-low: '#F5ECDC'
+  surface-container: '#EFE2CC'
+  surface-container-high: '#E8D7BD'
+  surface-container-highest: '#E0CCAD'
+  on-surface: '#3D2314'
+  on-surface-variant: '#6E4E38'
+  outline: '#8C6C52'
+  outline-variant: '#D5C0A8'
+  primary: '#B83A26'
+  on-primary: '#FFFFFF'
+  primary-container: '#FBE8E5'
+  on-primary-container: '#5B140B'
+  secondary: '#E5A836'
+  on-secondary: '#3D2314'
+  secondary-container: '#FDF1D7'
+  on-secondary-container: '#543600'
+  tertiary: '#527E78'
+  on-tertiary: '#FFFFFF'
+  tertiary-container: '#DCE8E6'
+  on-tertiary-container: '#183833'
+  background: '#EADDC4'
+  on-background: '#3D2314'
+  deep-earth: '#3D2314'
+  burnt-sienna: '#B83A26'
+  warm-orange: '#D97328'
+  gold-ochre: '#E5A836'
+  slate-teal: '#527E78'
+  vintage-blue: '#1F617E'
+  sandpaper: '#EADDC4'
 typography:
-  display-lg:
-    fontFamily: Playfair Display
-    fontSize: 56px
-    fontWeight: '600'
-    lineHeight: 64px
-    letterSpacing: -0.02em
-  display-lg-mobile:
-    fontFamily: Playfair Display
+  display-hero:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 54px
+    fontWeight: '900'
+    lineHeight: 62px
+    letterSpacing: -0.04em
+  display-hero-mobile:
+    fontFamily: Plus Jakarta Sans
     fontSize: 36px
-    fontWeight: '600'
+    fontWeight: '900'
     lineHeight: 44px
-    letterSpacing: -0.01em
-  headline-xl:
-    fontFamily: Playfair Display
-    fontSize: 40px
-    fontWeight: '600'
-    lineHeight: 48px
-    letterSpacing: -0.015em
-  headline-xl-mobile:
-    fontFamily: Playfair Display
-    fontSize: 28px
-    fontWeight: '600'
-    lineHeight: 36px
-    letterSpacing: -0.01em
+    letterSpacing: -0.03em
   headline-lg:
-    fontFamily: Playfair Display
+    fontFamily: Plus Jakarta Sans
     fontSize: 32px
-    fontWeight: '500'
+    fontWeight: '800'
     lineHeight: 40px
+    letterSpacing: -0.02em
+  headline-md:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 24px
+    fontWeight: '800'
+    lineHeight: 32px
     letterSpacing: -0.01em
   headline-sm:
-    fontFamily: Playfair Display
-    fontSize: 22px
-    fontWeight: '500'
+    fontFamily: Plus Jakarta Sans
+    fontSize: 20px
+    fontWeight: '700'
     lineHeight: 28px
-    letterSpacing: 0em
-  title-md:
-    fontFamily: Plus Jakarta Sans
-    fontSize: 18px
-    fontWeight: '600'
-    lineHeight: 26px
-    letterSpacing: -0.01em
   body-lg:
-    fontFamily: Plus Jakarta Sans
-    fontSize: 16px
+    fontFamily: DM Sans
+    fontSize: 18px
     fontWeight: '400'
-    lineHeight: 26px
-    letterSpacing: 0em
+    lineHeight: 28px
   body-md:
-    fontFamily: Plus Jakarta Sans
-    fontSize: 14px
+    fontFamily: DM Sans
+    fontSize: 15px
     fontWeight: '400'
-    lineHeight: 22px
-    letterSpacing: 0.005em
+    lineHeight: 24px
   body-sm:
-    fontFamily: Plus Jakarta Sans
-    fontSize: 12px
-    fontWeight: '400'
-    lineHeight: 18px
-    letterSpacing: 0.01em
-  label-lg:
-    fontFamily: Plus Jakarta Sans
+    fontFamily: DM Sans
     fontSize: 13px
-    fontWeight: '600'
-    lineHeight: 16px
-    letterSpacing: 0.04em
-  label-sm:
-    fontFamily: Plus Jakarta Sans
+    fontWeight: '400'
+    lineHeight: 20px
+  label-lg:
+    fontFamily: Space Mono
+    fontSize: 13px
+    fontWeight: '700'
+    lineHeight: 18px
+    letterSpacing: 0.12em
+  label-md:
+    fontFamily: Space Mono
     fontSize: 11px
     fontWeight: '700'
+    lineHeight: 16px
+    letterSpacing: 0.14em
+  label-sm:
+    fontFamily: Space Mono
+    fontSize: 9.5px
+    fontWeight: '700'
     lineHeight: 14px
-    letterSpacing: 0.08em
+    letterSpacing: 0.16em
 rounded:
   sm: 0.25rem
   DEFAULT: 0.5rem
@@ -137,108 +106,52 @@ rounded:
   full: 9999px
 spacing:
   gutter: 1.5rem
-  gutter-desktop: 2rem
-  margin: 1.25rem
-  margin-desktop: 3.5rem
+  margin: 2rem
   space-xs: 0.25rem
   space-sm: 0.5rem
   space-md: 1rem
   space-lg: 1.5rem
   space-xl: 2.5rem
   space-2xl: 4rem
-  space-3xl: 6rem
 ---
 
 ## Brand & Style
 
-The design system establishes a high-caliber digital salon tailored for luxury hospitality, legacy archive curation, and elite loyalty programs. It blends editorial nostalgia with modern studio precision. The interface must feel like an exhibition catalog printed on heavy handmade paper, paired with the optical sharpness of a modern dark-room studio.
+**stampy-design-system** is the official visual system and component architecture for **stampy.**
+The brand's core mission is to immortalize **Romantic Stories, Love Moments, and Analog Memories**. 
+Official Slogan: *"Every moment is a stamp in time."*
 
-### Design Movement & Core Philosophy
-The aesthetic combines **Minimalism** with **Modern Editorial Luxury**:
-- **Uncluttered Canvas:** Expansive negative space acts as a framing device for photography, member privileges, and commemorative keepsakes.
-- **Warm Contrast Balance:** Deep carbon and obsidian dark modes seamlessly interface with rich alabaster and limestone surfaces, avoiding cold tech-neutral grays.
-- **Curated Accents:** Color is applied with deliberate restraint—flashes of vivid crimson and deep black cherry draw immediate focus to key actions, status tiers, and brand milestones.
-- **Glass & Micro-Depth:** Subtle smoked-glass surfaces and delicate hairline borders evoke the physical tactility of museum vitrines and archival mountings.
+### Brand Personality & Core Values
+- **Romantic Storytelling:** The platform celebrates emotional intimacy, first glances, couples' anniversaries, and forever memories.
+- **Analogue Tactility & Archival Charm:** Surfaces emulate warm sandpaper linen (#EADDC4), vintage cinema ticket stubs, and letterpress impressions.
+- **Coffee Role:** Coffee is strictly a standalone companion beverage served during the date; it is not the identity or core business of the brand.
 
 ## Colors
 
-The palette revolves around deep, warm shadow tiers accented by fiery crimson and vintage black cherry tones. It rejects sterile blue-tinted blacks in favor of organic carbon and espresso undertones.
-
-### Palette Hierarchy & Roles
-- **Primary (`#DD0200`):** Used strictly for high-impact brand statements, primary interaction triggers, active state glows, and conversion endpoints.
-- **Secondary (`#55100D`):** Rich black cherry for secondary containers, badge backings, active card halos, and subtle atmospheric gradients.
-- **Tertiary (`#FBF9F5`):** Warm alabaster stone utilized for primary typographic headers, crisp iconography, and light-theme foundational panels.
-- **Neutral (`#0E0D0D`):** Archival darkness that provides deep, ink-like contrast without crushing midtone visual content.
-- **Named Tones:**
-  - `coffee-bean` (`#1A0706`) and `surface-charcoal` (`#141212`) construct ambient layering and container separation.
-  - `border-hairline` provides ethereal 1px structural framing without visual weight.
+The palette directly mirrors the official Brand Identity & Visual System board:
+- **Deep Earth (#3D2314)**: Foundational contrast tone for typography, borders, and camera shutter blades.
+- **Burnt Sienna (#B83A26)**: Primary emotional action color, stamp seals, and romantic CTA anchors.
+- **Warm Orange (#D97328)**: Sunset glow highlights, celebratory progress rings, and interactive micro-states.
+- **Gold Ochre (#E5A836)**: Ticket body base, VIP tier markers, and golden memory badges.
+- **Slate Teal (#527E78)**: Balanced archival contrast for tags, timestamps, and date pass credentials.
+- **Vintage Blue (#1F617E)**: Deep cyan film stripe tone for digital hyperlinks and confirmed states.
+- **Sandpaper Canvas (#EADDC4)**: Warm parchment foundation for all application screens and cards.
 
 ## Typography
 
-The type system stages a dialogue between classical editorial authority and hyper-functional modern layout design:
+- **Headlines & Brand:** Plus Jakarta Sans / Stampy Round - Bold, rounded, and approachable with signature lowercase stampy.
+- **Body & Editorial:** DM Sans / Vintage Sans - Warm, legible grotesque for reading stories and reflections.
+- **Badges & Numbers:** Space Mono - Monospaced mechanical aesthetic reminiscent of ticket perforations and timestamps.
 
-- **Playfair Display:** Selected for its graceful serifs, dramatic thick-thin strokes, and timeless heritage. Used for hero headers, commemorative statements, tier levels, and narrative accents. It commands attention without resorting to aggressive weight.
-- **Plus Jakarta Sans:** Provides pristine clarity for dense interface tasks, tables, transaction logs, timestamps, and input controls. Its open counters and geometric balance counterbalance the ornate nature of the serif headlines.
-- **Case and Tracking Rules:** Category eyebrows and status tags must use `label-sm` set to uppercase with wide tracking (`0.08em`) to mimic boutique archival labels.
+## Shapes & Geometry
 
-## Layout & Spacing
+- **Ticket Notch Cutouts:** Interactive passes feature 45-degree chamfers and serrated tear-off edge motifs.
+- **Aperture Focus:** 6-blade mechanical iris motifs represent the moment a memory is captured and preserved.
+- **Elevation:** Low-diffusion sepia ambient shadows (rgba(61, 35, 20, 0.08)) over warm sandpaper cards.
 
-The layout philosophy follows a disciplined **12-column fluid grid** system bounded by generous outer margins that act as an editorial mat board.
+## Core Components
 
-### Structural Framework
-- **Desktop (1200px+):** 12 columns with a maximum inner container of `1440px`. Gutters sit at `2rem`, flanked by wide `3.5rem` margins.
-- **Tablet (768px - 1199px):** 8 columns, `1.5rem` gutters, and `2rem` margins. Secondary studio panels convert into collapsible drawers.
-- **Mobile (< 768px):** 4 columns with `1.25rem` margins and `1rem` gutters. Grid stacks vertically; metadata blocks align horizontally along the bottom bounds.
-
-### Rhythmic Philosophy
-Whitespace is intentionally treated as luxury real estate. Dense clustering of interface elements is prohibited; distinct functional zones are separated by `space-2xl` or `space-3xl`, creating a deliberate, museum-curated pacing as the user traverses the interface.
-
-## Elevation & Depth
-
-Visual hierarchy rejects sharp drop-shadows and generic blur cones, relying instead on tonal layering, delicate hairline luminescence, and diffuse organic glows.
-
-### Elevation Tiers
-1. **Canvas Level (Ground 0):** Pure `#0E0D0D` deep foundation, optionally washed with a 15% opacity radial gradient of `#55100D` or `#1A0706` in the upper canvas corner.
-2. **Resting Cards & Studio Cells (Tier 1):** Solid `#141212` with a 1px border of `rgba(255, 255, 255, 0.07)`. No direct cast shadow; edges define plane separation.
-3. **Elevated Vitrines & Active Cards (Tier 2):** Semi-opaque background (`rgba(26, 23, 23, 0.85)`) coupled with `backdrop-filter: blur(16px)` and an ambient shadow: `0 20px 40px -12px rgba(0, 0, 0, 0.6)`.
-4. **Interactive Highlights & Modals (Tier 3):** Frosted glass (`rgba(31, 29, 29, 0.92)`), bordered with subtle primary luminance (`rgba(221, 2, 0, 0.25)`), paired with a deep crimson ambient bloom: `0 0 35px -5px rgba(221, 2, 0, 0.20)`.
-
-## Shapes
-
-The design system maintains balanced corner geometries (`roundedness: 2`), reflecting the look of archival matte frames, photo mounts, and precision-cut card stock.
-
-### Corner Archetypes
-- **Interactive Controls (Buttons, Inputs, Badges):** Feature `0.5rem` (`rounded`) corners, delivering a comfortable, tactile feel without drifting into juvenile pill shapes.
-- **Card Vitrines & Media Mountings:** Use `1rem` (`rounded-lg`) corner radii for structured presentation.
-- **Dialogs & Overlay Portals:** Anchor with `1.5rem` (`rounded-xl`) outer perimeters for architectural presence.
-- **Micro Accents:** Diamonds and small monogram badges may feature crisp, precise 90-degree corners or circle cuts to introduce structural variety.
-
-## Components
-
-### Buttons
-- **Primary:** Background in vivid crimson (`#DD0200`) with text in warm alabaster (`#FBF9F5`). Subtle micro-bevel using an inset highlight border (`inset 0 1px 0 rgba(255, 255, 255, 0.2)`). On hover, transitions with a black-cherry ambient glow.
-- **Secondary / Ghost:** Transparent surface with a 1px `border-hairline` outline and alabaster text. On hover, fills with `rgba(255, 255, 255, 0.05)` and transitions border color to `border-accent`.
-- **Text / Editorial Link:** Serif or semi-bold label paired with an inline hairline arrow, animated with a rightward translation on hover.
-
-### Cards & Vitrines
-- Constructed using `surface-charcoal` (`#141212`) surfaces framed with `border-hairline`.
-- Headers within cards pair a delicate uppercase tracking tag with a serif headline (`headline-sm`).
-- Hover states initiate a soft 200ms scale lift (`scale: 1.008`) and introduce a crimson perimeter trace (`rgba(221, 2, 0, 0.35)`).
-
-### Input Fields
-- Dark recessed backgrounds (`#0B0A0A`) framed with subtle border channels.
-- Placeholder text styled in `text-secondary` (`#A19E9B`).
-- Active focus state sharpens the border to `#DD0200` with an accompanying 2px diffused glow ring (`rgba(221, 2, 0, 0.15)`).
-
-### Chips & Status Badges
-- Compact rectangular profiles with `rounded` (8px) corners.
-- VIP and loyalty tiers use dark cherry backing (`#55100D`) with high-contrast alabaster typography and faint red hairline borders.
-
-### Checkboxes & Radio Elements
-- Custom geometric frames set at 18px.
-- Unchecked: `#141212` fill with 1px `border-hairline`.
-- Checked: `#DD0200` solid fill centered with an ivory-white glyph.
-
-### Studio-Specific Components
-- **Memory Filmstrip:** Horizontal scroll-snapped cards featuring precise aspect-ratio containers, micro-perforations along card borders, and warm grain overlays.
-- **Tier Horizon Bar:** A minimal 2px hairline progress tracker transitioning from `#55100D` to luminous `#DD0200` to indicate membership progression and studio rewards.
+- **Ticket Action Button:** Deep Earth or Burnt Sienna background with subtle letterpress deboss on click.
+- **Photobooth 35mm Strip:** Vertical 3-frame card with date stamp and archival ink badge.
+- **Date Pass (Admit Two):** Couple's pass card with two stamp slots and secret note fold.
+- **Accompanying Sips Card:** Standalone menu card for beverages, framing drinks as companions to conversation.

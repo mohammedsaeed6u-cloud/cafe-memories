@@ -15,11 +15,44 @@ interface SearchItem {
 
 const SEARCH_ITEMS: SearchItem[] = [
   {
+    id: 'admin',
+    title: 'بورتال إدارة الساس والمنظومة (Super Admin)',
+    description: 'إدارة المشتركين والخطط والـ MRR ومراقبة حالة الخدمات السحابية للساس',
+    category: 'الإدارة',
+    href: '/admin',
+    icon: Sparkles,
+  },
+  {
+    id: 'terminal',
+    title: 'محطة الكاشير والباريستا POS',
+    description: 'واجهة الكاونتر السريعة للبحث برقم الجوال والختم برمز PIN في ثانيتين',
+    category: 'التطبيقات',
+    href: '/terminal',
+    icon: Sparkles,
+  },
+  {
+    id: 'kiosk',
+    title: 'وضع الكشك الذكي والتابلت (In-Store Kiosk)',
+    description: 'واجهة التابلت الذاتي في الصالة للعملاء بدون هاتف محمول',
+    category: 'التطبيقات',
+    href: '/kiosk/stampy',
+    icon: Camera,
+  },
+  {
+    id: 'standees',
+    title: 'استوديو ستاندات الطاولات NFC & QR',
+    description: 'تصميم وطباعة ستاندات الطاولات بروابط مخصصة حسب رقم كل طاولة',
+    category: 'الخدمات',
+    href: '/dashboard',
+    icon: Sparkles,
+  },
+
+  {
     id: 'customer',
     title: 'منظومة العميل وكارت التوثيق',
     description: 'واجهة كاميرا الهاتف وكارت التوثيق الفوري مع أختام الولاء التفاعلية',
     category: 'التطبيقات',
-    href: '/c/memories',
+    href: '/c/stampy',
     icon: Camera,
   },
   {

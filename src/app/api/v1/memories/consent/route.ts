@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const updateConsentSchema = z.object({
   memoryId: z.string().uuid(),
   liveWallConsent: z.boolean().optional(),

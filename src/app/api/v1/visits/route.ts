@@ -4,6 +4,8 @@ import { evaluateVisitEligibility } from '@/lib/services/anti-fraud';
 import { calculateRewardProgress } from '@/lib/services/rewards';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const createVisitRequestSchema = z.object({
   customerId: z.string().uuid(),
   branchId: z.string().uuid(),

@@ -92,16 +92,16 @@ export function MemoriesLogo({
     xl: 'text-sm tracking-[0.3em]',
   };
 
-  // Theme color palettes (Atelier Nostalgia)
+  // Theme color palettes (Stampy)
   const colorMap = {
     auto: {
-      icon: '#DD0200',
+      icon: '#B45309',
       text: '#FBF9F5',
       tagline: '#A19E9B',
       bg: 'transparent',
     },
     dark: {
-      icon: '#DD0200',
+      icon: '#B45309',
       text: '#FBF9F5',
       tagline: '#A19E9B',
       bg: 'transparent',
@@ -109,7 +109,7 @@ export function MemoriesLogo({
     light: {
       icon: '#141313',
       text: '#141313',
-      tagline: '#55100D',
+      tagline: '#78350F',
       bg: 'transparent',
     },
     forest: {
@@ -122,14 +122,14 @@ export function MemoriesLogo({
       icon: '#FBF9F5',
       text: '#FBF9F5',
       tagline: '#FBF9F5',
-      bg: '#55100D',
+      bg: '#B45309',
     },
   };
 
   const colors = colorMap[theme] || colorMap.auto;
   const iconPixel = iconSizeMap[size];
 
-  // Coaster Variant (Atelier Nostalgia vitrine coaster)
+  // Coaster Variant (Stampy vitrine coaster)
   if (variant === 'coaster') {
     const isDarkCoaster = theme === 'forest' || theme === 'dark' || theme === 'auto';
     return (
@@ -144,7 +144,7 @@ export function MemoriesLogo({
       >
         <MemoriesArchIcon
           size={iconPixel * 1.3}
-          color={isDarkCoaster ? '#DD0200' : '#141313'}
+          color={isDarkCoaster ? '#D97706' : '#231C18'}
         />
       </div>
     );

@@ -1,60 +1,114 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Sparkles, Camera } from 'lucide-react';
-import { AppleLuxuryShowcase } from '@/components/photobooth/AppleLuxuryShowcase';
 
 export function MarketingHero() {
+  const [stamps, setStamps] = useState<number>(7);
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+
+  const handleTap = (index: number) => {
+    const next = index + 1;
+    setStamps(next);
+    if (next >= 10) {
+      setIsUnlocked(true);
+    } else {
+      setIsUnlocked(false);
+    }
+  };
+
   return (
-    <section className="relative px-4 sm:px-6 pt-16 sm:pt-24 pb-20 max-w-5xl mx-auto text-center apple-font">
-      {/* Category Pill */}
-      <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-md border border-white/10 bg-white/[0.03] text-stone-300 text-[11px] font-mono font-bold mb-8 backdrop-blur-xl shadow-lg">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#DD0200] animate-pulse" />
-        <span className="tracking-[0.18em] uppercase text-[#D9D9D9]">
-          ATELIER NOSTALGIA • MEMORIES STUDIO
-        </span>
+    <section className="tappy-hero" aria-label="Hero">
+      {/* Grid Pattern Background */}
+      <div className="hero-grid-bg" />
+
+      {/* Floating Sparks */}
+      <div className="hero-sparks" aria-hidden="true">
+        <span className="hero-spark hs-1">✦</span>
+        <span className="hero-spark hs-2">✦</span>
+        <span className="hero-spark hs-3">✦</span>
+        <span className="hero-spark hs-4">✦</span>
+        <span className="hero-spark hs-5">✦</span>
+        <span className="hero-spark hs-6">✦</span>
       </div>
 
-      {/* Hero Headline */}
-      <div className="max-w-3xl mx-auto space-y-5">
-        <h1
-          className="text-4xl sm:text-6xl md:text-7xl font-semibold text-white tracking-tight leading-[1.12]"
-          style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-        >
-          استوديو الذكريات والولاء الفاخر.<br />
-          <span className="bg-gradient-to-r from-[#DD0200] via-[#FF5E5B] to-[#D9D9D9] bg-clip-text text-transparent font-normal italic">
-            كل زيارة تصنع أثراً يدوم.
-          </span>
+      <div className="hero-inner">
+        {/* Kicker Pill Tag */}
+        <div className="hero-tag">
+          <span className="hero-tag-dot" />
+          <span>STAMPY • WALLET & LOYALTY SAAS</span>
+        </div>
+
+        {/* Big Poster Typography: Every Moment is a Stamp in Time */}
+        <h1 className="poster">
+          <span className="line-1">EVERY MOMENT IS A</span>
+          <span className="line-2">STAMP IN TIME.</span>
+          <span className="tapping-word">stampy.</span>
         </h1>
 
-        <p className="mt-3 text-sm sm:text-base md:text-lg text-[#A19E9B] max-w-xl mx-auto leading-relaxed font-normal">
-          كروت تصوير زجاجية تفاعلية، بطاقات ولاء رقمية في Apple Wallet، وشاشات صالة حية تعيد الزوار لمكانك بدون تطبيقات أو تعقيد.
+        {/* Emotional Resonance Sub-line */}
+        <p className="poster-sub-line">
+          <span className="psl-part">الارتباط العاطفي هو المحرك الأقوى لولاء العملاء.</span>
+          <span className="star" aria-hidden="true">✦</span>
+          <span className="psl-part">محفظة Apple Wallet وتذكار مادي فاخر.</span>
+          <span className="star" aria-hidden="true">✦</span>
+          <span className="psl-part">كل ختم يروي قصة.</span>
         </p>
-      </div>
 
-      {/* Two Restrained Atelier Nostalgia CTAs */}
-      <div className="mt-8 mb-12 flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto">
-        <Link
-          href="/c/memories"
-          className="w-full sm:w-auto text-xs py-3 px-6 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_12px_30px_-8px_rgba(221,2,0,0.4)] transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-        >
-          <Camera className="w-3.5 h-3.5 text-[#FBF9F5]" />
-          <span>فتح استوديو التصوير المباشر</span>
-          <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-        </Link>
+        <p className="text-xs sm:text-sm font-bold text-[#682025]/80 max-w-xl mx-auto -mt-4 mb-8 font-mono">
+          مثل شوبيفاي لمحافظ Apple & Google — تفعيل فوري سحابي في دقيقتين وبدون أي تطبيقات.
+        </p>
 
-        <Link
-          href="/login"
-          className="w-full sm:w-auto text-xs py-3 px-6 rounded-lg bg-transparent hover:bg-white/[0.04] border border-white/10 hover:border-[#DD0200]/40 text-[#FBF9F5] font-semibold backdrop-blur-md transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-        >
-          <span>لوحة تحكم التاجر</span>
-        </Link>
-      </div>
+        {/* Hero CTA Actions */}
+        <div className="hero-actions">
+          <Link href="/login?tab=signup" className="btn-fat">
+            <span>ابدأ تجربة مجانية</span>
+            <span style={{ fontSize: '18px' }}>→</span>
+          </Link>
 
-      {/* Centerpiece: Apple Luxury Interactive Studio */}
-      <div className="mt-6">
-        <AppleLuxuryShowcase />
+          <a href="#how" className="btn-fat-ghost">
+            شاهد كيف يعمل
+          </a>
+
+          <Link href="/c/stampy" className="btn-fat-ghost text-xs">
+            📱 جرّب كارت العميل
+          </Link>
+        </div>
+
+        <div className="text-center mb-6">
+          <Link href="/login?tab=signin" className="text-xs font-bold text-[#4a3a6a] hover:text-[#682025] transition underline decoration-[#682025]/40 font-head uppercase tracking-wider">
+            لديك حساب بالفعل؟ تسجيل الدخول
+          </Link>
+        </div>
+
+        {/* ==================== 10-STAMP PROGRESS ROW (TAPPY MILLIMETER) ==================== */}
+        <div className="hero-card-row" aria-label="شريط الأختام">
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((idx) => {
+            const num = idx + 1;
+            const filled = num <= stamps;
+            return (
+              <button
+                type="button"
+                key={idx}
+                onClick={() => handleTap(idx)}
+                className={`stamp-big ${filled ? 'is-filled' : ''} ${num === stamps ? 'is-latest' : ''}`}
+                title={`الختم ${num} (اضغط للتجربة)`}
+              />
+            );
+          })}
+
+          {/* 10th Slot: Reward Slot */}
+          <button
+            type="button"
+            onClick={() => handleTap(9)}
+            className={`stamp-big reward ${stamps >= 10 ? 'is-unlocked' : ''}`}
+            title="المكافأة المجانية (اضغط لفتح المكافأة)"
+          />
+        </div>
+
+        <div className="hero-card-label">
+          ختم بعد ختم <span className="arrow">→</span> {stamps >= 10 ? '🎉 المكافأة فُتحت بنجاح!' : 'المكافأة جاهزة (Tap by tap → Reward unlocked)'}
+        </div>
       </div>
     </section>
   );

@@ -158,6 +158,8 @@ export interface Database {
           branch_id: string;
           name: string;
           pairing_code: string | null;
+          device_token?: string | null;
+          paired_at?: string | null;
           status: ScreenStatus;
           last_heartbeat_at: string | null;
           created_at: string;
@@ -282,6 +284,52 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
+      };
+      screen_pairing_codes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          branch_id: string;
+          code: string;
+          screen_name: string | null;
+          expires_at: string;
+          is_used: boolean;
+          attempts: number;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['screen_pairing_codes']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['screen_pairing_codes']['Insert']>;
+      };
+      wallet_pass_links: {
+        Row: {
+          id: string;
+          customer_id: string;
+          cafe_slug: string;
+          pass_serial: string;
+          google_save_url: string | null;
+          share_url: string | null;
+          last_stamped_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['wallet_pass_links']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['wallet_pass_links']['Insert']>;
+      };
+      tenant_wallet_quotas: {
+        Row: {
+          id: string;
+          organization_id: string;
+          monthly_pass_quota: number;
+          used_passes_this_month: number;
+          quota_reset_date: string;
+          use_platform_key: boolean;
+          wallet_api_key: string | null;
+          allow_over_quota: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['tenant_wallet_quotas']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['tenant_wallet_quotas']['Insert']>;
       };
     };
   };

@@ -1,13 +1,17 @@
 /**
  * Pure, testable logic for the loyalty stamp card.
  *
- * A customer's loyalty card has a fixed number of slots (LOYALTY_TOTAL_SLOTS).
+ * A customer's loyalty card has a merchant-configurable number of slots
+ * (the active reward rule's threshold - see /api/v1/loyalty/card-config).
  * Every photobooth capture = one stamp, and the stamp itself is the photo's
  * thumbnail rendered inside the slot. Slots fill in capture order (oldest
  * first) and the card is complete once every slot is stamped.
  */
 
-export const LOYALTY_TOTAL_SLOTS = 10;
+export const LOYALTY_DEFAULT_TOTAL_SLOTS = 10;
+
+/** @deprecated Legacy hard-coded size kept for existing importers. */
+export const LOYALTY_TOTAL_SLOTS = LOYALTY_DEFAULT_TOTAL_SLOTS;
 
 /** How long a customer's stamps stay cached in server memory. */
 export const LOYALTY_STAMPS_CACHE_TTL_MS = 30_000;
@@ -43,21 +47,21 @@ function sanitizeSlots(slots: readonly (LoyaltyStampSlot | null | undefined)[]):
       slot!.takenAt.length > 0 &&
       typeof slot!.thumbnailUrl === 'string' &&
       slot!.thumbnailUrl.length > 0
-    )
-    .slice(0, LOYALTY_TOTAL_SLOTS);
+    );
 }
 
 /** Computes the card state from real slot data (server or local fallback). */
 export function getStampState(
-  slots: readonly (LoyaltyStampSlot | null | undefined)[]
+  slots: readonly (LoyaltyStampSlot | null | undefined)[],
+  totalSlots: number = LOYALTY_DEFAULT_TOTAL_SLOTS
 ): LoyaltyStampState {
-  const valid = sanitizeSlots(slots);
+  const valid = sanitizeSlots(slots).slice(0, Math.max(1, totalSlots));
   const stampedCount = valid.length;
-  const isComplete = stampedCount >= LOYALTY_TOTAL_SLOTS;
+  const isComplete = stampedCount >= totalSlots;
 
   return {
     stampedCount,
-    remaining: Math.max(LOYALTY_TOTAL_SLOTS - stampedCount, 0),
+    remaining: Math.max(totalSlots - stampedCount, 0),
     isComplete,
     nextSlotIndex: isComplete ? -1 : stampedCount,
     latestStamp: stampedCount > 0 ? valid[stampedCount - 1] : null,
@@ -70,13 +74,18 @@ export function getStampState(
  */
 export function mapLocalPhotosToSlots(
   photos: readonly string[],
-  now: Date = new Date()
+  /** Slot cap, or a legacy Date "now" argument (then the default cap applies). */
+  totalSlotsOrNow: number | Date = LOYALTY_DEFAULT_TOTAL_SLOTS,
+  maybeNow?: Date
 ): LoyaltyStampSlot[] {
   if (!Array.isArray(photos)) return [];
+  const totalSlots =
+    typeof totalSlotsOrNow === 'number' ? totalSlotsOrNow : LOYALTY_DEFAULT_TOTAL_SLOTS;
+  const now = totalSlotsOrNow instanceof Date ? totalSlotsOrNow : (maybeNow ?? new Date());
 
   return photos
     .filter((photo): photo is string => typeof photo === 'string' && photo.length > 0)
-    .slice(-LOYALTY_TOTAL_SLOTS)
+    .slice(-Math.max(1, totalSlots))
     .map((thumbnailUrl, index) => ({
       // Storage does not persist timestamps; approximate oldest-first order.
       takenAt: new Date(now.getTime() - (photos.length - index) * 86_400_000).toISOString(),

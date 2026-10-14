@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * AppleLuxuryShowcase — Atelier Nostalgia Masterpiece Exhibition Vitrine
+ * AppleLuxuryShowcase — Stampy Masterpiece Exhibition Vitrine
  * 
  * Replaces fake phone mockups and swatch pickers with authentic, world-class previews
  * of the core platform products:
- * 1. Atelier Photobooth Strip (Physical tactile film card)
+ * 1. Stampy Photobooth Strip (Physical tactile film card)
  * 2. Digital Loyalty Pass (Apple Wallet NFC smart pass with Tier Horizon Bar)
  * 3. Live TV Wall Display (Digital signage hospitality experience)
  */
@@ -42,7 +42,7 @@ export function AppleLuxuryShowcase({
   className = '',
   onSelectPalette,
   onApplyTheme,
-  activeColorHex = '#DD0200',
+  activeColorHex = '#B45309',
 }: AppleLuxuryShowcaseProps) {
   const [activeTab, setActiveTab] = useState<'strip' | 'loyalty' | 'wall'>('strip');
 
@@ -58,7 +58,7 @@ export function AppleLuxuryShowcase({
           <AppleTabsList className="bg-[#141212] border border-white/10 backdrop-blur-xl p-1.5 rounded-xl shadow-2xl flex items-center gap-1">
             <AppleTabTrigger
               value="strip"
-              className="text-xs font-semibold py-2 px-4 sm:px-6 rounded-lg transition-all data-[selected]:bg-[#DD0200] data-[selected]:text-[#FBF9F5] data-[selected]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] text-[#A19E9B] hover:text-[#FBF9F5] cursor-pointer"
+              className="text-xs font-semibold py-2 px-4 sm:px-6 rounded-lg transition-all data-[selected]:bg-amber-600 data-[selected]:text-white data-[selected]:shadow-md text-[#A19E9B] hover:text-[#FBF9F5] cursor-pointer"
             >
               <Camera className="w-3.5 h-3.5 ml-1.5 inline text-[#FBF9F5]" />
               شريط الذكريات المطبوع
@@ -66,7 +66,7 @@ export function AppleLuxuryShowcase({
 
             <AppleTabTrigger
               value="loyalty"
-              className="text-xs font-semibold py-2 px-4 sm:px-6 rounded-lg transition-all data-[selected]:bg-[#DD0200] data-[selected]:text-[#FBF9F5] data-[selected]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] text-[#A19E9B] hover:text-[#FBF9F5] cursor-pointer"
+              className="text-xs font-semibold py-2 px-4 sm:px-6 rounded-lg transition-all data-[selected]:bg-amber-600 data-[selected]:text-white data-[selected]:shadow-md text-[#A19E9B] hover:text-[#FBF9F5] cursor-pointer"
             >
               <Award className="w-3.5 h-3.5 ml-1.5 inline text-[#FBF9F5]" />
               كارت الولاء الرقمي
@@ -74,7 +74,7 @@ export function AppleLuxuryShowcase({
 
             <AppleTabTrigger
               value="wall"
-              className="text-xs font-semibold py-2 px-4 sm:px-6 rounded-lg transition-all data-[selected]:bg-[#DD0200] data-[selected]:text-[#FBF9F5] data-[selected]:shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] text-[#A19E9B] hover:text-[#FBF9F5] cursor-pointer"
+              className="text-xs font-semibold py-2 px-4 sm:px-6 rounded-lg transition-all data-[selected]:bg-amber-600 data-[selected]:text-white data-[selected]:shadow-md text-[#A19E9B] hover:text-[#FBF9F5] cursor-pointer"
             >
               <Tv className="w-3.5 h-3.5 ml-1.5 inline text-[#FBF9F5]" />
               شاشة الصالة الحية
@@ -87,8 +87,8 @@ export function AppleLuxuryShowcase({
           <AppleTabContent value="strip" className="mt-2">
             <div className="relative rounded-2xl bg-[#141212] p-6 sm:p-10 border border-white/10 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.95)] overflow-hidden flex flex-col items-center">
               {/* Luxury Ambient Bloom */}
-              <div className="absolute top-0 right-0 w-72 h-72 bg-[#DD0200]/15 rounded-full blur-[100px] pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#55100D]/20 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute top-0 right-0 w-72 h-72 bg-amber-600/15 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-72 h-72 bg-amber-800/20 rounded-full blur-[100px] pointer-events-none" />
 
               <div className="relative z-10 flex flex-col items-center">
                 {/* Photobooth Strip Component */}
@@ -97,7 +97,7 @@ export function AppleLuxuryShowcase({
                     photos={SHOWCASE_PHOTOS}
                     frame={{
                       id: 'atelier_signature',
-                      name: 'Atelier Signature',
+                      name: 'Stampy Signature',
                       nameAr: 'استوديو نوار الفاخر',
                       shotCount: 3,
                       widthCm: 5,
@@ -106,7 +106,7 @@ export function AppleLuxuryShowcase({
                       bgColor: '#141313',
                       textColor: '#FBF9F5',
                       borderColor: 'rgba(255,255,255,0.1)',
-                      accentColor: '#DD0200',
+                      accentColor: '#B45309',
                       cornerEmojis: {
                         topRight: '',
                         bottomLeft: '',
@@ -128,7 +128,7 @@ export function AppleLuxuryShowcase({
                 </div>
 
                 <div className="mt-6 flex items-center gap-2 text-[11px] font-mono text-[#A19E9B]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#DD0200] animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                   <span>PREMIUM 300 DPI THERMAL & DIGITAL PRINT ARCHIVE</span>
                 </div>
               </div>
@@ -141,8 +141,8 @@ export function AppleLuxuryShowcase({
           <AppleTabContent value="loyalty" className="mt-2">
             <div className="relative rounded-2xl bg-[#141212] p-6 sm:p-10 border border-white/10 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.95)] overflow-hidden flex flex-col items-center">
               {/* Luxury Ambient Bloom */}
-              <div className="absolute top-0 left-0 w-72 h-72 bg-[#55100D]/25 rounded-full blur-[100px] pointer-events-none" />
-              <div className="absolute bottom-0 right-0 w-72 h-72 bg-[#DD0200]/12 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute top-0 left-0 w-72 h-72 bg-amber-800/20 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-72 h-72 bg-amber-600/12 rounded-full blur-[100px] pointer-events-none" />
 
               <div className="relative z-10 w-full max-w-md">
                 <CustomerLoyaltyCard
@@ -179,7 +179,7 @@ export function AppleLuxuryShowcase({
               <div className="relative rounded-xl bg-[#0B0A0A] border border-white/15 p-4 sm:p-6 shadow-2xl overflow-hidden">
                 <div className="flex items-center justify-between pb-4 border-b border-white/10">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#DD0200] animate-ping" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#c92a54] animate-ping" />
                     <div>
                       <h4 className="text-xs sm:text-sm font-bold text-[#FBF9F5]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
                         شاشة الصالة المباشرة • Memories Wall
@@ -187,7 +187,7 @@ export function AppleLuxuryShowcase({
                       <p className="text-[10px] text-[#A19E9B] font-mono">LIVE GUEST MEMORIES IN SALON</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono font-bold text-[#FBF9F5] bg-[#55100D]/60 border border-[#DD0200]/40 px-2.5 py-0.5 rounded-md">
+                  <span className="text-[10px] font-mono font-bold text-[#FBF9F5] bg-amber-950/60 border border-amber-500/40 text-amber-300 px-2.5 py-0.5 rounded-md">
                     24 LIVE MEMORIES
                   </span>
                 </div>
@@ -217,7 +217,7 @@ export function AppleLuxuryShowcase({
                   <span>تعمل على أي شاشة تلفزيون ذكية عبر المتصفح</span>
                   <Link
                     href="/wall/screen-1"
-                    className="inline-flex items-center gap-1 text-[#DD0200] hover:text-[#FF5E5B] font-semibold transition"
+                    className="inline-flex items-center gap-1 text-amber-400 hover:text-amber-300 font-semibold transition"
                   >
                     <span>معاينة الشاشة بكامل العرض</span>
                     <ExternalLink className="w-3 h-3" />

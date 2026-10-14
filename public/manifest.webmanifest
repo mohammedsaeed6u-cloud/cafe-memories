@@ -1,56 +1,80 @@
 {
-  "name": "Memories • استوديو ذكريات المقاهي المختصة",
-  "short_name": "Memories",
-  "description": "استوديو تصوير فوتوبوث تفاعلي، شاشات عرض الصالة الحية، وبطاقات ولاء رقمية لمحفظة Apple و Google Wallet",
+  "name": "Stampy • منصة بطاقات الولاء ومحافظ الهواتف الذكية",
+  "short_name": "Stampy",
+  "description": "المنظومة السحابية لبطاقات الولاء في Apple Wallet و Google Wallet واستوديو الذكريات التفاعلي",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FAF6EE",
-  "theme_color": "#FAF6EE",
+  "background_color": "#F7F3EA",
+  "theme_color": "#DFAB56",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/brand/stampy-app-icon-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/stampy-app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/06-stampy-app-icon.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
   "shortcuts": [
     {
-      "name": "استوديو الصور",
-      "short_name": "الاستوديو",
-      "description": "التقاط وتوثيق لقطة الزيارة",
-      "url": "/c/memories",
+      "name": "بطاقة الولاء والاستوديو",
+      "short_name": "كارت الولاء",
+      "description": "كارت الولاء الذكي وتوثيق الزيارة",
+      "url": "/c/stampy",
       "icons": [
         {
-          "src": "/icon.svg",
-          "sizes": "512x512"
+          "src": "/brand/stampy-app-icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "محطة الكاشير والباريستا",
+      "short_name": "الكاشير",
+      "description": "محطة ختم الزيارات وإدارة الطاولات",
+      "url": "/terminal",
+      "icons": [
+        {
+          "src": "/brand/stampy-app-icon-192.png",
+          "sizes": "192x192"
         }
       ]
     },
     {
       "name": "شاشة الصالة الحية",
-      "short_name": "الشاشة",
-      "description": "بث ذكريات الصالة الذكية",
-      "url": "/wall/screen-1",
+      "short_name": "شاشة الصالة",
+      "description": "بث ذكريات الصالة التفاعلية",
+      "url": "/wall",
       "icons": [
         {
-          "src": "/icon.svg",
-          "sizes": "512x512"
+          "src": "/brand/stampy-app-icon-192.png",
+          "sizes": "192x192"
         }
       ]
     },
     {
       "name": "لوحة تحكم التاجر",
       "short_name": "لوحة التحكم",
-      "description": "إدارة الفروع والباريستا والاشتراك",
+      "description": "إدارة الفروع، البطاقات، الحملات، والتحليلات",
       "url": "/dashboard",
       "icons": [
         {
-          "src": "/icon.svg",
-          "sizes": "512x512"
+          "src": "/brand/stampy-app-icon-192.png",
+          "sizes": "192x192"
         }
       ]
     }

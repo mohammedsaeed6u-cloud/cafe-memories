@@ -6,6 +6,7 @@ import {
   PlacedSticker,
 } from '@/types/photobooth';
 import { PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
+import { getFixedCardCanvasSize, resolveFixedCardSize } from '@/lib/services/print.service';
 
 export interface ComposeStripOptions {
   photos: string[]; // Base64 data URLs
@@ -47,12 +48,17 @@ export class StripComposerService {
     const totalSlots = Math.max(options.totalSlots || frame.shotCount || 3, 1);
     const canvas = document.createElement('canvas');
 
-    const is4x6 = frame.dimensionsPreset === 'grid_4x6' || frame.widthCm === 10;
-    // High resolution canvas dimensions (300 DPI print standard)
-    // 2x6 strip: 600 x 1800 px
-    // 4x6 postcard: 1200 x 1800 px
-    const width = isHorizontal ? (is4x6 ? 1800 : 1200) : (is4x6 ? 1200 : 600);
-    const height = isHorizontal ? (is4x6 ? 1200 : 800) : 1800;
+    // Single source of truth: every card is one of the two fixed print
+    // sizes (2x6 strip / 4x6 sheet); legacy dimensions snap to the nearest.
+    const fixedSize = resolveFixedCardSize({
+      widthCm: frame.widthCm,
+      heightCm: frame.heightCm,
+      dimensionsPreset: frame.dimensionsPreset,
+    });
+    const { width, height } = getFixedCardCanvasSize(
+      fixedSize,
+      isHorizontal ? 'horizontal' : 'vertical'
+    );
 
     canvas.width = width;
     canvas.height = height;
@@ -310,7 +316,7 @@ export class StripComposerService {
       const headerY = 70;
       ctx.textAlign = 'center';
 
-      if (logoImg && logoImg.width) {
+      if (branding.showLogo !== false && logoImg && logoImg.width) {
         const maxLogoW = 160;
         const maxLogoH = 55;
         const scale = Math.min(maxLogoW / logoImg.width, maxLogoH / logoImg.height);

@@ -127,7 +127,7 @@ export const DraggableStickerLayer: React.FC<DraggableStickerLayerProps> = ({
               onMouseDown={(e) => handleDragStart(s.id, e)}
               onTouchStart={(e) => handleDragStart(s.id, e)}
               className={`absolute pointer-events-auto select-none cursor-grab active:cursor-grabbing transition-transform duration-75 ${
-                isSelected ? 'ring-2 ring-[#DD0200] rounded-2xl p-1 bg-[#55100D]/40 shadow-lg scale-110 z-40' : ''
+                isSelected ? 'ring-2 ring-[#c92a54] rounded-2xl p-1 bg-[#98183c]/40 shadow-lg scale-110 z-40' : ''
               }`}
               title="اسحب الستيكر لتحريكه في أي مكان على الكارت"
             >
@@ -176,7 +176,7 @@ export const StickerControlTray: React.FC<{
     <div className={`w-full bg-[#141212]/95 backdrop-blur-md p-4 rounded-3xl border border-white/10 shadow-sm space-y-3 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#DD0200]" />
+          <Sparkles className="w-4 h-4 text-[#c92a54]" />
           <h4 className="text-xs font-bold text-[#FBF9F5]">
             إضافة ستيكرز وإيموجيز للكارت (قابلة للسحب والتحريك):
           </h4>
@@ -213,7 +213,7 @@ export const StickerControlTray: React.FC<{
             key={emoji}
             type="button"
             onClick={() => onAddSticker(emoji)}
-            className="w-9 h-9 rounded-xl bg-[#0B0A0A] hover:bg-[#55100D]/40 hover:scale-110 active:scale-95 border border-white/10 hover:border-[#DD0200]/50 flex items-center justify-center text-xl transition shrink-0 shadow-2xs cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-[#0B0A0A] hover:bg-[#98183c]/40 hover:scale-110 active:scale-95 border border-white/10 hover:border-[#c92a54]/50 flex items-center justify-center text-xl transition shrink-0 shadow-2xs cursor-pointer"
             title={`إضافة ${emoji} للكارت`}
           >
             {emoji}
@@ -228,12 +228,12 @@ export const StickerControlTray: React.FC<{
           value={customEmoji}
           onChange={(e) => setCustomEmoji(e.target.value)}
           placeholder="أو اكتب كود الرمز (مثال: EST, VIP, CAFE)..."
-          className="flex-1 text-xs px-3 py-2 rounded-xl border border-white/10 focus:outline-none focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200] bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50"
+          className="flex-1 text-xs px-3 py-2 rounded-xl border border-white/10 focus:outline-none focus:border-[#c92a54] focus:ring-1 focus:ring-[#c92a54] bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50"
         />
         <button
           type="submit"
           disabled={!customEmoji.trim()}
-          className="px-3.5 py-2 rounded-xl bg-[#DD0200] hover:bg-[#b00200] text-white text-xs font-bold transition flex items-center gap-1 disabled:opacity-40 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
+          className="px-3.5 py-2 rounded-xl bg-[#c92a54] hover:bg-[#b00200] text-white text-xs font-bold transition flex items-center gap-1 disabled:opacity-40 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5 text-white" />
           <span>إضافة</span>
@@ -241,7 +241,7 @@ export const StickerControlTray: React.FC<{
       </form>
 
       <p className="text-[10px] text-[#A19E9B] font-medium text-center flex items-center justify-center gap-1">
-        <Move className="w-3 h-3 text-[#DD0200]" />
+        <Move className="w-3 h-3 text-[#c92a54]" />
         <span>المس أو اسحب أي إيموجي على الكارت لوضعه في الزاوية أو المكان الذي يعجبك!</span>
       </p>
     </div>

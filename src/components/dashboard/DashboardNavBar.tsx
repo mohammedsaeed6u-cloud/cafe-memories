@@ -20,6 +20,7 @@ import {
   LogOut,
   Menu,
   X,
+  Camera,
 } from 'lucide-react';
 import { BusinessSettings } from '@/types/photobooth';
 import { StaffMember } from '@/types/staff';
@@ -27,9 +28,10 @@ import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
 
 export type DashboardTab =
   | 'overview'
+  | 'wallet'
+  | 'customers'
   | 'print'
   | 'memories'
-  | 'customers'
   | 'wall'
   | 'rewards'
   | 'qrcodes'
@@ -82,25 +84,26 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
   }, [isMobileMenuOpen]);
 
   const allTabs: { id: DashboardTab; label: string; icon: any; badge?: number }[] = [
-    { id: 'overview', label: 'نظرة عامة', icon: LayoutDashboard },
+    { id: 'overview', label: 'الرئيسية والنبض', icon: LayoutDashboard },
+    { id: 'wallet', label: 'كارت Apple Wallet والمكافآت', icon: CreditCard },
+    { id: 'customers', label: 'سجل العملاء والنشاط', icon: Users },
     { id: 'print', label: 'محطة الطباعة', icon: Printer, badge: printQueueCount },
     { id: 'memories', label: 'اعتماد الذكريات', icon: ImageIcon, badge: pendingMemoriesCount },
-    { id: 'customers', label: 'العملاء والولاء', icon: Users },
     { id: 'wall', label: 'شاشات الصالة', icon: Tv },
     { id: 'rewards', label: 'المكافآت', icon: Gift },
     { id: 'qrcodes', label: 'أكواد الطاولات', icon: QrCode },
     { id: 'frames', label: 'استوديو الإطارات', icon: Sliders },
     { id: 'analytics', label: 'التحليلات', icon: BarChart3 },
-    { id: 'settings', label: 'الإعدادات والهوية', icon: Settings },
+    { id: 'settings', label: 'الإعدادات والموظفين', icon: Settings },
     { id: 'billing', label: 'الاشتراك والباقة', icon: CreditCard },
   ];
 
   return (
-    <header className="bg-[#141212]/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-30 shadow-md text-[#e6e1e1]">
+    <header className="bg-[#141212]/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-30 shadow-md text-[#FBF9F5]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <CoBrandingLogos
-            cafeName={settings.branding?.name || 'Memories Studio'}
+            cafeName={settings.branding?.name || 'Stampy OS'}
             cafeLogoUrl={settings.branding?.logoUrl}
             size="md"
             theme="dark"
@@ -113,9 +116,9 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
           <button
             type="button"
             onClick={onOpenQuickSetup}
-            className="px-3.5 py-1.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center gap-1.5 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg bg-[#682025] hover:bg-[#451215] text-[#FBF9F5] font-bold text-xs flex items-center gap-1.5 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>إعداد المنشأة والـ QR</span>
           </button>
 
@@ -125,8 +128,20 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
             rel="noreferrer"
             className="px-3.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 bg-[#1C1B1B] hover:bg-[#211F1F] text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition"
           >
-            <Tv className="w-3.5 h-3.5 text-[#DD0200]" />
-            <span>فتح شاشة العرض (Live Wall)</span>
+            <Tv className="w-3.5 h-3.5 text-[#DFAB56]" />
+            <span>شاشة العرض (Live Wall)</span>
+            <ExternalLink className="w-3 h-3 text-[#A19E9B]" />
+          </a>
+
+          <a
+            href={`/kiosk/${settings.cafeSlug || 'stampy'}`}
+            target="_blank"
+            rel="noreferrer"
+            className="px-3.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 bg-[#1C1B1B] hover:bg-[#211F1F] text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition"
+            title="فتح كشك الصالة المخصص للآيباد (Photobooth Kiosk)"
+          >
+            <Camera className="w-3.5 h-3.5 text-[#DFAB56]" />
+            <span>كشك الصالة (Kiosk)</span>
             <ExternalLink className="w-3 h-3 text-[#A19E9B]" />
           </a>
 
@@ -136,16 +151,16 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
             className="px-3.5 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition cursor-pointer"
             title="إدارة الباقة والاشتراك"
           >
-            <CreditCard className="w-3.5 h-3.5 text-[#DD0200]" />
+            <CreditCard className="w-3.5 h-3.5 text-[#DFAB56]" />
             <span>الاشتراك والباقة</span>
           </button>
 
           <a
             href={`/terminal?cafe=${settings.cafeSlug || 'memories'}`}
-            className="px-3.5 py-1.5 rounded-lg bg-[#55100D]/60 hover:bg-[#55100D]/80 border border-[#DD0200]/40 text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+            className="px-3.5 py-1.5 rounded-lg bg-[#682025]/60 hover:bg-[#682025]/80 border border-[#DFAB56]/40 text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition cursor-pointer shadow-xs"
             title="فتح محطة الكاونتر ونقاط الخدمة المستقلة"
           >
-            <Store className="w-3.5 h-3.5 text-[#DD0200]" />
+            <Store className="w-3.5 h-3.5 text-[#DFAB56]" />
             <span>محطة الكاونتر (POS)</span>
           </a>
 
@@ -165,7 +180,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
             className="px-3.5 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition cursor-pointer"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{activeStaff ? activeStaff.name : 'تسجيل الموظف (PIN)'}</span>
+            <span>{activeStaff ? activeStaff.name : 'رمز PIN للموظف'}</span>
           </button>
 
           <button
@@ -178,7 +193,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
           </button>
         </div>
 
-        {/* Mobile Top Controls: Quick Stamp + Hamburger Toggle */}
+        {/* Mobile Top Controls: Quick Redeem + Hamburger Toggle */}
         <div className="flex lg:hidden items-center gap-2">
           <button
             type="button"
@@ -218,14 +233,14 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
               onClick={() => onSelectTab(tab.id)}
               className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer ${
                 isActive
-                  ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  ? 'bg-[#682025] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
                   : 'text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-white/5'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
               {Boolean(tab.badge && tab.badge > 0) && (
-                <span className="px-1.5 py-0.5 rounded-full bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] text-[10px] font-black animate-pulse">
+                <span className="px-1.5 py-0.5 rounded-full bg-[#682025] border border-[#DFAB56]/40 text-[#FBF9F5] text-[10px] font-black animate-pulse">
                   {tab.badge}
                 </span>
               )}
@@ -246,7 +261,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
               onClick={() => onSelectTab(tab.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer active:scale-95 ${
                 isActive
-                  ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
+                  ? 'bg-[#682025] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
                   : 'text-[#A19E9B] bg-[#1C1B1B] border border-white/10 hover:bg-[#211F1F]'
               }`}
             >
@@ -255,7 +270,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
               {Boolean(tab.badge && tab.badge > 0) && (
                 <span
                   className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${
-                    isActive ? 'bg-white text-stone-900' : 'bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/40'
+                    isActive ? 'bg-white text-stone-900' : 'bg-[#682025] text-[#FBF9F5] border border-[#DFAB56]/40'
                   }`}
                 >
                   {tab.badge}
@@ -285,7 +300,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
                   setIsMobileMenuOpen(false);
                   onOpenQuickSetup();
                 }}
-                className="p-2.5 rounded-lg bg-[#DD0200] text-[#FBF9F5] text-xs font-bold flex items-center justify-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                className="p-2.5 rounded-lg bg-[#682025] text-[#FBF9F5] text-xs font-bold flex items-center justify-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>إعداد الـ QR</span>
@@ -305,9 +320,9 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
 
               <a
                 href={`/terminal?cafe=${settings.cafeSlug || 'memories'}`}
-                className="p-2.5 rounded-lg bg-[#55100D]/50 border border-[#DD0200]/40 text-[#FBF9F5] text-xs font-bold flex items-center justify-center gap-1.5"
+                className="p-2.5 rounded-lg bg-[#682025]/50 border border-[#DFAB56]/40 text-[#FBF9F5] text-xs font-bold flex items-center justify-center gap-1.5"
               >
-                <Store className="w-3.5 h-3.5 text-[#DD0200]" />
+                <Store className="w-3.5 h-3.5 text-[#DFAB56]" />
                 <span>محطة POS</span>
               </a>
 
@@ -317,7 +332,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
                 rel="noreferrer"
                 className="p-2.5 rounded-lg bg-[#1C1B1B] border border-white/10 text-[#FBF9F5] text-xs font-bold flex items-center justify-center gap-1.5"
               >
-                <Tv className="w-3.5 h-3.5 text-[#DD0200]" />
+                <Tv className="w-3.5 h-3.5 text-[#DFAB56]" />
                 <span>شاشة الصالة</span>
               </a>
             </div>
@@ -341,7 +356,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
                       }}
                       className={`w-full px-3.5 py-3 rounded-lg text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                         isActive
-                          ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                          ? 'bg-[#682025] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
                           : 'text-[#A19E9B] hover:text-[#FBF9F5] bg-[#1C1B1B] border border-white/10 hover:bg-[#211F1F]'
                       }`}
                     >
@@ -351,7 +366,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
                       </div>
                       {Boolean(tab.badge && tab.badge > 0) && (
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                          isActive ? 'bg-white text-stone-900' : 'bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/40'
+                          isActive ? 'bg-white text-stone-900' : 'bg-[#682025] text-[#FBF9F5] border border-[#DFAB56]/40'
                         }`}>
                           {tab.badge}
                         </span>
@@ -382,4 +397,3 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
     </header>
   );
 };
-

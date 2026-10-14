@@ -3,6 +3,24 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 import crypto from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
+const PAIR_RATE_WINDOW_MS = 60_000;
+const PAIR_RATE_MAX_PER_WINDOW = 10;
+const pairAttemptBuckets = new Map<string, number[]>();
+
+function isPairRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const bucket = (pairAttemptBuckets.get(ip) || []).filter((t) => now - t < PAIR_RATE_WINDOW_MS);
+  if (bucket.length >= PAIR_RATE_MAX_PER_WINDOW) {
+    pairAttemptBuckets.set(ip, bucket);
+    return true;
+  }
+  bucket.push(now);
+  pairAttemptBuckets.set(ip, bucket);
+  return false;
+}
+
 const pairScreenSchema = z.object({
   pairingCode: z.string().length(6, 'Pairing code must be 6 digits'),
   screenName: z.string().min(1).max(100).optional(),
@@ -12,6 +30,11 @@ const pairScreenSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || '127.0.0.1';
+    if (isPairRateLimited(clientIp)) {
+      return NextResponse.json({ error: 'تم تجاوز عدد محاولات الاقتران. يرجى الانتظار دقيقة' }, { status: 429 });
+    }
+
     const rawBody = await request.json();
     const parsed = pairScreenSchema.safeParse(rawBody);
 

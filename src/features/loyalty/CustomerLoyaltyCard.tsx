@@ -1,181 +1,222 @@
 'use client';
 
-import React, { useState } from 'react';
-import { CustomerLoyaltyData } from './loyalty-purse.service';
-import { ShieldCheck, Sparkles, Award, Gift, Check, Download } from 'lucide-react';
-import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
-import { AddToWalletButtons } from '@/components/wallet/AddToWalletButtons';
-import { CardCanvasExportService } from '@/lib/services/card-canvas-export.service';
-import { ImageSaveService } from '@/lib/services/image-save.service';
+import React from 'react';
+import { CustomerThemeConfig } from '@/features/customization/customer-themes';
+import { CUSTOMER_THEMES } from '@/features/customization/CustomerCustomizerBar';
 import { IosSaveImageModal } from '@/components/photobooth/IosSaveImageModal';
+import { VenueLocationConfig, WalletPassCustomizationConfig } from '@/types/photobooth';
+import { AppleWalletPassFace } from './components/AppleWalletPassFace';
+import { AppleWalletPassBack } from './components/AppleWalletPassBack';
+import { AppleWalletInstallButtons } from './components/AppleWalletInstallButtons';
+import { LoyaltyCardActionRow } from './components/LoyaltyCardActionRow';
+import { useCustomerLoyaltyCard } from './hooks/useCustomerLoyaltyCard';
 
-interface CustomerLoyaltyCardProps {
-  loyaltyData: CustomerLoyaltyData;
+export interface CustomerLoyaltyDataProp {
+  stampedCount: number;
+  maxSlots: number;
+  completedCardsCount?: number;
+  customerPhone?: string;
+  cafeSlug?: string;
+  photos?: string[];
+}
+
+export interface CustomerLoyaltyCardProps {
+  loyaltyData: CustomerLoyaltyDataProp;
   giftTitle?: string;
   brandName?: string;
+  cafeLogoUrl?: string;
   customerName?: string;
+  customerTitle?: string;
+  themeConfig?: CustomerThemeConfig;
+  stampIconEmoji?: string;
+  stampConfig?: any;
+  locationConfig?: VenueLocationConfig;
+  walletPassConfig?: WalletPassCustomizationConfig;
   instagramHandle?: string;
   onOpenStaffStamp: () => void;
+  onOpenNotificationBroadcaster?: () => void;
   className?: string;
 }
 
 export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
   loyaltyData,
-  giftTitle = 'هدية ترحيبية خاصة',
-  brandName = 'Memories Studio',
+  giftTitle = 'هدية الزيارة أو خصم ترحيبي',
+  brandName = 'Stampy',
+  cafeLogoUrl,
   customerName = 'ضيف مميز',
-  instagramHandle = '@memories',
+  customerTitle = 'عضو مميز',
+  themeConfig,
+  stampIconEmoji = '📸',
+  stampConfig,
+  locationConfig,
+  walletPassConfig,
+  instagramHandle = '@stampy',
   onOpenStaffStamp,
+  onOpenNotificationBroadcaster,
   className = '',
 }) => {
   const { stampedCount, maxSlots, customerPhone, cafeSlug } = loyaltyData;
-  const [isExporting, setIsExporting] = useState(false);
-  const [iosModalImage, setIosModalImage] = useState<string | null>(null);
+  const activeTheme = themeConfig || CUSTOMER_THEMES[0];
+  const activeStamp = stampConfig?.customEmoji || stampIconEmoji || '📸';
+  const stampedCountLive = Math.min(stampedCount, maxSlots);
 
-  const cleanPhone = encodeURIComponent(customerPhone || 'guest');
-  const stampQrValue = `https://memories-c9w.pages.dev/c/${cafeSlug || 'memories'}?action=stamp&customer=${cleanPhone}`;
-
-  const handleSaveCardToDevice = async () => {
-    setIsExporting(true);
-    try {
-      const dataUrl = await CardCanvasExportService.exportCardToDataUrl({
-        customerName: customerName || 'ضيف مميز',
-        cafeName: brandName,
-        stampsCount: stampedCount,
-        totalSlots: maxSlots,
-        theme: 'botanical_matcha',
-      });
-      const res = await ImageSaveService.saveImage({
-        dataUrl,
-        filename: `loyalty-card-${(customerName || brandName).replace(/\s+/g, '-')}.png`,
-        title: `كارت ولاء ${brandName}`,
-        text: `كارت ذكرياتي في ${brandName} • ${stampedCount}/${maxSlots} ختم • Memories`,
-      });
-      if (res.method === 'fallback') {
-        setIosModalImage(res.blobUrl || dataUrl);
-      }
-    } catch (err) {
-      console.warn('Failed to save card to device:', err);
-    } finally {
-      setIsExporting(false);
-    }
+  const passData = {
+    cafeSlug: cafeSlug || 'stampy',
+    cafeName: brandName || 'Stampy',
+    logoUrl: cafeLogoUrl,
+    iconUrl: cafeLogoUrl,
+    customerPhone: customerPhone || 'guest',
+    customerName: customerName || 'ضيف مميز',
+    customerTitle: customerTitle || 'عضو مميز',
+    colorPreset: walletPassConfig?.colorPreset || 'dark',
+    color: walletPassConfig?.colorHex || '#1C1C1E',
+    barcodeFormat: walletPassConfig?.barcodeFormat || 'QR',
+    barcodeAltText: walletPassConfig?.barcodeAltText || 'امسح عند الكاشير للختم الفوري',
+    sharingProhibited: walletPassConfig?.sharingProhibited ?? true,
+    expirationDays: walletPassConfig?.expirationDays,
+    stampIcon: activeStamp,
+    stampedCount: stampedCountLive,
+    maxSlots,
+    giftTitle,
+    instagramHandle: instagramHandle || `@${cafeSlug || 'stampy'}`,
+    locations:
+      locationConfig?.enabled && locationConfig.latitude && locationConfig.longitude
+        ? [
+            {
+              latitude: locationConfig.latitude,
+              longitude: locationConfig.longitude,
+              altitude: locationConfig.altitude,
+              relevantText:
+                locationConfig.relevantText || `أهلاً بك في ${brandName}! كارتك جاهز للختم ☕`,
+            },
+          ]
+        : undefined,
   };
 
+  const {
+    isExporting,
+    iosModalImage,
+    setIosModalImage,
+    isPassFlipped,
+    setIsPassFlipped,
+    oneTapState,
+    handleSaveCardToDevice,
+    handleShareCard,
+    handleOneTapAddToAppleWallet,
+    handleOneTapAddToGoogleWallet,
+  } = useCustomerLoyaltyCard({
+    passData,
+    customerName,
+    customerTitle,
+    brandName,
+    stampedCountLive,
+    maxSlots,
+    activeThemeId: activeTheme.id,
+    cafeSlug: cafeSlug || 'stampy',
+    giftTitle,
+    activeStamp,
+    cafeLogoUrl,
+    passBgColor: walletPassConfig?.colorHex || '#1C1C1E',
+    cardBgUrl: walletPassConfig?.cardBackgroundUrl,
+  });
+
+  const passBgColor = walletPassConfig?.colorHex || '#1C1C1E';
+  const cardBgUrl = walletPassConfig?.cardBackgroundUrl;
+  const overlayOpacity = walletPassConfig?.cardOverlayOpacity ?? 0.65;
+  const qrTargetUrl = `https://memories-c9w.pages.dev/c/${cafeSlug || 'stampy'}?action=stamp&customer=${(customerPhone || '').replace(/[^0-9]/g, '')}`;
+
   return (
-    <div className={`w-full max-w-xl mx-auto p-5 sm:p-6 bg-[#141212] border border-white/10 rounded-2xl shadow-2xl text-[#e6e1e1] backdrop-blur-xl transition-all relative overflow-hidden ${className}`}>
-      {/* Ambient background glow */}
-      <div className="absolute top-0 right-0 w-40 h-40 bg-[#55100D]/20 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-5 relative z-10">
-        <div className="flex-1 text-center sm:text-right space-y-3 w-full">
-          <div className="flex items-center justify-center sm:justify-start gap-2.5">
-            <Award className="w-4 h-4 text-[#DD0200]" />
-            <h3 className="text-base font-semibold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
-              كارت الولاء والأختام الرقمي
-            </h3>
-            {/* VIP / Loyalty Tier Badge: Dark Cherry Backing (#55100D) with high-contrast alabaster typography and faint red hairline border */}
-            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-md bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] font-bold shadow-xs">
-              {stampedCount} / {maxSlots} أختام
-            </span>
-          </div>
-
-          {/* Tier Horizon Bar: minimal hairline progress tracker transitioning from #55100D to #DD0200 */}
-          <div className="w-full bg-[#1C1B1B] h-1.5 rounded-full overflow-hidden border border-white/5">
-            <div
-              className="h-full bg-gradient-to-r from-[#55100D] to-[#DD0200] transition-all duration-500 rounded-full shadow-[0_0_8px_rgba(221,2,0,0.5)]"
-              style={{ width: `${Math.min(100, (stampedCount / maxSlots) * 100)}%` }}
-            />
-          </div>
-
-          <p className="text-xs text-[#A19E9B] leading-relaxed">
-            امسح الرمز عند كل زيارة ليختم لك فريق الخدمة وتفتح لقطاتك وتستلم <span className="font-bold text-[#FBF9F5]">{giftTitle}</span>.
-          </p>
-
-          {/* Stamp Rings */}
-          <div className="flex items-center justify-center sm:justify-start gap-2 pt-1 flex-wrap">
-            {Array.from({ length: maxSlots }).map((_, idx) => {
-              const isStamped = idx < stampedCount;
-              const isGiftSlot = idx === maxSlots - 1;
-              return (
-                <div
-                  key={idx}
-                  className={`w-9 h-9 rounded-lg border flex items-center justify-center text-xs font-bold transition-all ${
-                    isStamped
-                      ? 'bg-[#DD0200] border-[#DD0200] text-white shadow-md shadow-red-950/60 scale-105'
-                      : isGiftSlot
-                      ? 'bg-[#55100D]/50 border-dashed border-[#DD0200]/60 text-[#FBF9F5]'
-                      : 'bg-[#1C1B1B] border-white/10 text-stone-500'
-                  }`}
-                >
-                  {isStamped ? (
-                    <Check className="w-4 h-4 text-white stroke-[3]" />
-                  ) : isGiftSlot ? (
-                    <Gift className="w-3.5 h-3.5 text-[#FBF9F5]" />
-                  ) : (
-                    <span className="font-mono text-[10px] text-stone-500">{idx + 1}</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <button
-              type="button"
-              onClick={onOpenStaffStamp}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-[#FBF9F5] text-[11px] font-bold border border-white/10 hover:border-[#DD0200]/30 transition cursor-pointer backdrop-blur-md"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#DD0200]" />
-              <span>ختم مباشر للموظف (PIN)</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveCardToDevice}
-              disabled={isExporting}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-[11px] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-6px_rgba(221,2,0,0.4)] transition cursor-pointer active:scale-95 disabled:opacity-50"
-            >
-              <Download className="w-3.5 h-3.5 text-[#FBF9F5]" />
-              <span>{isExporting ? 'جاري تجهيز الكارت...' : 'حفظ الكارت في ألبوم الصور'}</span>
-            </button>
-          </div>
-
-          <div className="pt-1.5 border-t border-white/10">
-            <AddToWalletButtons
-              passData={{
-                cafeSlug: cafeSlug || 'memories',
-                cafeName: brandName || 'Memories Studio',
-                customerPhone: customerPhone || 'guest',
-                stampedCount,
-                maxSlots,
-                giftTitle,
-                instagramHandle: instagramHandle || '@memories',
-              }}
-            />
-          </div>
+    <div className={`w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center select-none ${className}`}>
+      {/* Exact Native iOS Apple Wallet Sheet Header Bar */}
+      <div className="w-full flex items-center justify-between px-4 py-2.5 mb-2 bg-[#161618] rounded-2xl border border-white/10 shadow-md text-white">
+        <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-stone-300">
+          ✕
         </div>
-
-        {/* QR Section with Dark Framing */}
-        <div className="flex flex-col items-center justify-center p-3.5 bg-[#1C1B1B] rounded-xl border border-white/10 shadow-lg shrink-0 text-center">
-          <div className="w-24 h-24 bg-white p-1 rounded-lg border border-white/20 flex items-center justify-center shadow-xs overflow-hidden">
-            <RealOutsourcedQr
-              value={stampQrValue}
-              size={84}
-              alt="QR ختم الولاء الحقيقي"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <span className="text-[9px] font-mono text-[#A19E9B] font-bold mt-2 uppercase tracking-wider">
-            QR الختم الفوري
-          </span>
-        </div>
+        <span className="text-xs sm:text-sm font-semibold tracking-tight text-white font-sans">
+          كارت ولاء {brandName} الذكي
+        </span>
+        <button
+          type="button"
+          onClick={handleOneTapAddToAppleWallet}
+          className="bg-[#007AFF] hover:bg-[#0062CC] active:scale-95 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-sm transition cursor-pointer"
+        >
+          Add
+        </button>
       </div>
 
-      {/* iOS Safari Save Modal */}
+      {/* Exact Native Apple Wallet Pass Container */}
+      <div
+        className="w-full relative rounded-[26px] overflow-hidden transition-all duration-300 shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] border border-white/10"
+        style={{
+          backgroundColor: passBgColor,
+          color: '#FFFFFF',
+        }}
+      >
+        {/* Optional Brand Background Artwork */}
+        {cardBgUrl && (
+          <div
+            className="absolute inset-0 bg-cover bg-center z-0 transition-opacity duration-300 pointer-events-none"
+            style={{ backgroundImage: `url(${cardBgUrl})` }}
+          />
+        )}
+        {/* Dark / Tint Overlay for Crisp Readability */}
+        <div
+          className="absolute inset-0 z-0 transition-opacity duration-300 pointer-events-none"
+          style={{
+            backgroundColor: passBgColor,
+            opacity: cardBgUrl ? overlayOpacity : 1,
+          }}
+        />
+        {/* Subtle Radial Glass Sheen */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-white/10 via-transparent to-black/40 pointer-events-none" />
+
+        {!isPassFlipped ? (
+          <AppleWalletPassFace
+            brandName={brandName}
+            cafeLogoUrl={cafeLogoUrl}
+            stampedCount={stampedCountLive}
+            maxSlots={maxSlots}
+            activeStamp={activeStamp}
+            giftTitle={giftTitle}
+            customerName={customerName}
+            customerTitle={customerTitle}
+            qrTargetUrl={qrTargetUrl}
+            onFlip={() => setIsPassFlipped(true)}
+            accentColor={activeTheme.accentHex}
+          />
+        ) : (
+          <AppleWalletPassBack
+            brandName={brandName}
+            customerPhone={customerPhone}
+            giftTitle={giftTitle}
+            maxSlots={maxSlots}
+            instagramHandle={instagramHandle}
+            onFlipBack={() => setIsPassFlipped(false)}
+          />
+        )}
+      </div>
+
+      {/* Apple & Google Wallet One-Tap Add Buttons */}
+      <AppleWalletInstallButtons
+        onAddToAppleWallet={handleOneTapAddToAppleWallet}
+        onAddToGoogleWallet={handleOneTapAddToGoogleWallet}
+        oneTapState={oneTapState}
+      />
+
+      {/* Actions: Share & Save */}
+      <LoyaltyCardActionRow
+        onShare={handleShareCard}
+        onSaveToDevice={handleSaveCardToDevice}
+        onOpenStaffStamp={onOpenStaffStamp}
+        onOpenNotificationBroadcaster={onOpenNotificationBroadcaster}
+        isExporting={isExporting}
+      />
+
+      {/* Hidden/Modal: iOS Save Image Modal */}
       <IosSaveImageModal
-        imageUrl={iosModalImage}
         isOpen={Boolean(iosModalImage)}
+        imageUrl={iosModalImage || ''}
         onClose={() => setIosModalImage(null)}
-        title="كارت الولاء والمحفظة"
       />
     </div>
   );

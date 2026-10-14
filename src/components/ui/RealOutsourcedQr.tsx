@@ -11,6 +11,9 @@ interface RealOutsourcedQrProps {
   onDataUrlReady?: (dataUrl: string) => void;
 }
 
+// Global in-memory cache so once a QR is generated, it renders in 0ms instantly
+const qrMemoryCache = new Map<string, string>();
+
 export const RealOutsourcedQr: React.FC<RealOutsourcedQrProps> = ({
   value,
   size = 200,
@@ -18,59 +21,61 @@ export const RealOutsourcedQr: React.FC<RealOutsourcedQrProps> = ({
   alt = 'Scan QR Code',
   onDataUrlReady,
 }) => {
-  // 1. Primary: Established high-speed outsourced QR API
-  const outsourcedApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(
-    value
-  )}&margin=1&format=svg`;
+  const cacheKey = `${value}___${size}`;
+  const [dataUrl, setDataUrl] = useState<string>(() => qrMemoryCache.get(cacheKey) || '');
 
-  const [currentSrc, setCurrentSrc] = useState<string>(outsourcedApiUrl);
-  const [hasError, setHasError] = useState(false);
-
-  // 2. Client-side local fallback generation with npm 'qrcode' (Zero-fail offline resilience)
   useEffect(() => {
     let isMounted = true;
+    if (qrMemoryCache.has(cacheKey)) {
+      const cached = qrMemoryCache.get(cacheKey)!;
+      setDataUrl(cached);
+      onDataUrlReady?.(cached);
+      return;
+    }
+
+    // Zero-network instant local generation
     QRCode.toDataURL(value, {
       width: size,
       margin: 1,
-      errorCorrectionLevel: 'H',
+      errorCorrectionLevel: 'M',
       color: {
-        dark: '#18181B',
+        dark: '#141212',
         light: '#FFFFFF',
       },
     })
-      .then((dataUrl) => {
+      .then((url) => {
+        qrMemoryCache.set(cacheKey, url);
         if (isMounted) {
-          onDataUrlReady?.(dataUrl);
-          // If the external network failed, switch to the locally generated dataUrl
-          if (hasError) {
-            setCurrentSrc(dataUrl);
-          }
+          setDataUrl(url);
+          onDataUrlReady?.(url);
         }
       })
       .catch((err) => {
-        console.warn('Local QR fallback generation note:', err);
+        console.warn('QR generation note:', err);
       });
 
     return () => {
       isMounted = false;
     };
-  }, [value, size, hasError, onDataUrlReady]);
+  }, [value, size, cacheKey, onDataUrlReady]);
+
+  if (!dataUrl) {
+    return (
+      <div
+        style={{ width: size, height: size }}
+        className={`flex items-center justify-center bg-white/5 rounded-lg animate-pulse ${className}`}
+      />
+    );
+  }
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={currentSrc}
+      src={dataUrl}
       alt={alt}
       width={size}
       height={size}
-      onError={() => {
-        setHasError(true);
-        // Fallback to local DataURL
-        QRCode.toDataURL(value, { width: size, margin: 1, errorCorrectionLevel: 'H' })
-          .then((localUrl) => setCurrentSrc(localUrl))
-          .catch(() => {});
-      }}
-      className={`block object-contain transition-opacity duration-200 ${className}`}
+      className={`block object-contain ${className}`}
       style={{ imageRendering: 'pixelated' }}
     />
   );

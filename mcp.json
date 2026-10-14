@@ -1,4 +1,4 @@
-﻿{
+{
   "mcpServers": {
     "supabase": {
       "url": "https://mcp.supabase.com/mcp?project_ref=rflyenjmzgssxzcockss&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching",
@@ -40,6 +40,13 @@
       "args": [
         "C:\\Users\\mhmd saeed\\.gemini\\nagdy-plugins\\mcp-server-for-woo\\src\\server.py"
       ]
+    },
+    "stitch": {
+      "url": "https://stitch.googleapis.com/mcp",
+      "serverUrl": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "${STITCH_API_KEY}"
+      }
     }
   }
 }

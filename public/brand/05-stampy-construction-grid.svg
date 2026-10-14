@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 450" width="700" height="450">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Inter:wght@700&amp;display=swap');
+  </style>
+  <rect width="100%" height="100%" fill="#EDE4D3" />
+  <text x="40" y="45" font-family="'Inter', sans-serif" font-size="20" font-weight="700" fill="#44230D">Construction Grid</text>
+    <g class="construction-grid" font-family="'Space Mono', 'Consolas', monospace">
+    <!-- Grid Alignment & Centerlines -->
+    <g stroke="#547A88" stroke-width="1" stroke-dasharray="3,3" opacity="0.45">
+      <line x1="90" y1="230" x2="610" y2="230" />
+      <line x1="350" y1="87.5" x2="350" y2="372.5" />
+      <line x1="140" y1="102.5" x2="140" y2="357.5" />
+      <line x1="560" y1="102.5" x2="560" y2="357.5" />
+      <line x1="158" y1="102.5" x2="158" y2="357.5" stroke-dasharray="2,2" />
+      <line x1="542" y1="102.5" x2="542" y2="357.5" stroke-dasharray="2,2" />
+    </g>
+
+    <!-- Outer Ticket Blueprint Contour -->
+    <path d="M 158.0 127.5 L 542.0 127.5 A 18 18 0 0 0 560.0 145.5 C 556.2 152.3 556.2 162.9 560.0 169.6 C 556.2 176.4 556.2 187.0 560.0 193.8 C 556.2 200.5 556.2 211.2 560.0 217.9 C 556.2 224.7 556.2 235.3 560.0 242.1 C 556.2 248.8 556.2 259.5 560.0 266.2 C 556.2 273.0 556.2 283.6 560.0 290.4 C 556.2 297.1 556.2 307.7 560.0 314.5 A 18 18 0 0 0 542.0 332.5 L 158.0 332.5 A 18 18 0 0 0 140.0 314.5 C 143.8 307.7 143.8 297.1 140.0 290.4 C 143.8 283.6 143.8 273.0 140.0 266.2 C 143.8 259.5 143.8 248.8 140.0 242.1 C 143.8 235.3 143.8 224.7 140.0 217.9 C 143.8 211.2 143.8 200.5 140.0 193.8 C 143.8 187.0 143.8 176.4 140.0 169.6 C 143.8 162.9 143.8 152.3 140.0 145.5 A 18 18 0 0 0 158.0 127.5 Z" fill="none" stroke="#547A88" stroke-width="1.8" />
+
+    <!-- Inner Chamfered Border Contour -->
+    <path d="M 168.0 140.5 L 532.0 140.5 L 547.0 155.5 L 547.0 304.5 L 532.0 319.5 L 168.0 319.5 L 153.0 304.5 L 153.0 155.5 Z" fill="none" stroke="#547A88" stroke-width="1.4" />
+
+    <!-- Hatched Guideline Stripe Bands -->
+    <g fill="#BDD1D6" fill-opacity="0.35" stroke="#547A88" stroke-width="1">
+      <rect x="153" y="211.25" width="394" height="7.5" />
+      <rect x="153" y="218.75" width="394" height="7.5" />
+      <rect x="153" y="226.25" width="394" height="7.5" />
+      <rect x="153" y="233.75" width="394" height="7.5" />
+      <rect x="153" y="241.25" width="394" height="7.5" />
+    </g>
+
+    <!-- Center Aperture in Blueprint -->
+    <circle cx="350" cy="230" r="34" fill="#BDD1D6" fill-opacity="0.4" stroke="#547A88" stroke-width="1.8" />
+  <g class="aperture-symbol">
+    <circle cx="350" cy="230" r="34" fill="none" />
+    <polygon points="359.96,224.25 359.96,235.75 350.00,241.50 340.04,235.75 340.04,224.25 350.00,218.50" fill="none" />
+    <path d="M 359.96 235.75 L 359.96 262.51 A 34 34 0 0 1 326.83 254.88 L 350.00 241.50 Z" fill="none" stroke="#547A88" stroke-width="1.4" stroke-linejoin="round" />
+    <path d="M 350.00 241.50 L 326.83 254.88 A 34 34 0 0 1 316.87 222.37 L 340.04 235.75 Z" fill="none" stroke="#547A88" stroke-width="1.4" stroke-linejoin="round" />
+    <path d="M 340.04 235.75 L 316.87 222.37 A 34 34 0 0 1 340.04 197.49 L 340.04 224.25 Z" fill="none" stroke="#547A88" stroke-width="1.4" stroke-linejoin="round" />
+    <path d="M 340.04 224.25 L 340.04 197.49 A 34 34 0 0 1 373.17 205.12 L 350.00 218.50 Z" fill="none" stroke="#547A88" stroke-width="1.4" stroke-linejoin="round" />
+    <path d="M 350.00 218.50 L 373.17 205.12 A 34 34 0 0 1 383.13 237.63 L 359.96 224.25 Z" fill="none" stroke="#547A88" stroke-width="1.4" stroke-linejoin="round" />
+    <path d="M 359.96 224.25 L 383.13 237.63 A 34 34 0 0 1 359.96 262.51 L 359.96 235.75 Z" fill="none" stroke="#547A88" stroke-width="1.4" stroke-linejoin="round" />
+  </g>
+
+    <!-- CAD DIMENSIONS -->
+    <!-- Top: 36" -->
+    <g stroke="#547A88" stroke-width="1.2">
+      <line x1="158" y1="127.5" x2="158" y2="105.5" />
+      <line x1="542" y1="127.5" x2="542" y2="105.5" />
+      <line x1="158" y1="110.5" x2="542" y2="110.5" />
+      <line x1="158" y1="105.5" x2="158" y2="115.5" />
+      <line x1="542" y1="105.5" x2="542" y2="115.5" />
+    </g>
+    <text x="350" y="103.5" font-size="13" font-weight="600" fill="#44230D" text-anchor="middle">36"</text>
+
+    <!-- Bottom: 1" - 36" - 1" -->
+    <g stroke="#547A88" stroke-width="1.2">
+      <line x1="140" y1="332.5" x2="140" y2="356.5" />
+      <line x1="158" y1="332.5" x2="158" y2="356.5" />
+      <line x1="542" y1="332.5" x2="542" y2="356.5" />
+      <line x1="560" y1="332.5" x2="560" y2="356.5" />
+      <line x1="140" y1="350.5" x2="560" y2="350.5" />
+      <line x1="140" y1="345.5" x2="140" y2="355.5" />
+      <line x1="158" y1="345.5" x2="158" y2="355.5" />
+      <line x1="542" y1="345.5" x2="542" y2="355.5" />
+      <line x1="560" y1="345.5" x2="560" y2="355.5" />
+    </g>
+    <text x="149" y="364.5" font-size="11" font-weight="600" fill="#44230D" text-anchor="middle">1"</text>
+    <text x="350" y="364.5" font-size="13" font-weight="600" fill="#44230D" text-anchor="middle">36"</text>
+    <text x="551" y="364.5" font-size="11" font-weight="600" fill="#44230D" text-anchor="middle">1"</text>
+
+    <!-- Left: 18" -->
+    <g stroke="#547A88" stroke-width="1.2">
+      <line x1="140" y1="127.5" x2="118" y2="127.5" stroke-dasharray="2,2" />
+      <line x1="140" y1="332.5" x2="118" y2="332.5" stroke-dasharray="2,2" />
+      <line x1="124" y1="127.5" x2="124" y2="332.5" />
+      <line x1="119" y1="127.5" x2="129" y2="127.5" />
+      <line x1="119" y1="332.5" x2="129" y2="332.5" />
+    </g>
+    <text x="115" y="235" font-size="13" font-weight="600" fill="#44230D" text-anchor="end">18"</text>
+
+    <!-- Right: 3" - 16" - 3" -->
+    <g stroke="#547A88" stroke-width="1.2">
+      <line x1="560" y1="127.5" x2="584" y2="127.5" />
+      <line x1="560" y1="145.5" x2="584" y2="145.5" />
+      <line x1="560" y1="314.5" x2="584" y2="314.5" />
+      <line x1="560" y1="332.5" x2="584" y2="332.5" />
+      <line x1="578" y1="127.5" x2="578" y2="332.5" />
+      <line x1="573" y1="127.5" x2="583" y2="127.5" />
+      <line x1="573" y1="145.5" x2="583" y2="145.5" />
+      <line x1="573" y1="314.5" x2="583" y2="314.5" />
+      <line x1="573" y1="332.5" x2="583" y2="332.5" />
+    </g>
+    <text x="586" y="140.5" font-size="11" font-weight="600" fill="#44230D">3"</text>
+    <text x="586" y="235" font-size="12" font-weight="600" fill="#44230D">16"</text>
+    <text x="586" y="327.5" font-size="11" font-weight="600" fill="#44230D">3"</text>
+  </g>
+</svg>

@@ -103,7 +103,11 @@ export class ImageSaveService {
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         const file = new File([blob], filename, { type: blob.type || 'image/png' });
-        if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+        const canShareFiles = typeof navigator.canShare === 'function'
+          ? navigator.canShare({ files: [file] })
+          : true;
+
+        if (canShareFiles) {
           await navigator.share({
             files: [file],
             title,

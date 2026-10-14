@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { processImageDerivatives } from '@/lib/services/images';
+import { requireApiAuth, isAuthFailure } from '@/lib/api-guard';
+
+export const dynamic = 'force-dynamic';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    // Uploads consume storage quota — merchant/staff-only (CWE-306)
+    const auth = await requireApiAuth(request, 'any-auth');
+    if (isAuthFailure(auth)) return auth;
+
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const organizationId = formData.get('organizationId') as string | null;

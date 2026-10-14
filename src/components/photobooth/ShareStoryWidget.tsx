@@ -55,35 +55,34 @@ export const ShareStoryWidget: React.FC<ShareStoryWidgetProps> = ({
     setIsSharing(true);
 
     try {
-      // Convert dataUrl to File for Web Share API
-      const res = await fetch(stripDataUrl);
-      const blob = await res.blob();
+      // Convert dataUrl to File for Web Share API synchronously
+      const blob = ImageSaveService.dataUrlToBlob(stripDataUrl);
       const file = new File([blob], 'memories-story.png', { type: 'image/png' });
 
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const canShareFiles = typeof navigator.canShare === 'function'
+        ? navigator.canShare({ files: [file] })
+        : true;
+
+      if (canShareFiles) {
         await navigator.share({
           title: `ذكرياتي في ${brandName}`,
           text: `أحلى لحظات فوتوبوث في ${brandName} ${cafeHandle} #Memories #Photobooth`,
           files: [file],
         });
       } else {
-        // Fallback: Copy caption
-        await navigator.clipboard.writeText(
-          `أحلى لحظات فوتوبوث في ${brandName} ${cafeHandle} #Memories #Photobooth`
-        );
-        setCopiedNotice(true);
-        setTimeout(() => setCopiedNotice(false), 3500);
+        setIosModalOpen(true);
       }
     } catch (err) {
       console.warn('Share cancelled or not supported', err);
+      setIosModalOpen(true);
     } finally {
       setIsSharing(false);
     }
   };
 
   return (
-    <div className="w-full space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="w-full space-y-4">
+      <div className="grid grid-cols-2 gap-4">
         {/* Download HD Button (Strictly Gated) */}
         {isCardComplete ? (
           <button
@@ -96,7 +95,7 @@ export const ShareStoryWidget: React.FC<ShareStoryWidgetProps> = ({
         ) : (
           <button
             onClick={handleDownload}
-            className="py-3 px-3 rounded-2xl bg-stone-100 hover:bg-stone-200/80 text-stone-500 font-bold text-[11px] border border-stone-200 transition flex items-center justify-center gap-1.5"
+            className="py-3 px-4 rounded-2xl bg-stone-100 hover:bg-stone-200/80 text-stone-500 font-bold text-[11px] border border-stone-200 transition flex items-center justify-center gap-2"
             title="التحميل مقفول حتى إكمال الكارت"
           >
             <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
@@ -116,7 +115,7 @@ export const ShareStoryWidget: React.FC<ShareStoryWidgetProps> = ({
       </div>
 
       {lockedNotice && (
-        <div className="p-3 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-2 animate-in fade-in">
+        <div className="p-4 bg-amber-50 border border-amber-300 text-amber-900 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-2 animate-in fade-in">
           <Lock className="w-4 h-4 text-amber-700 shrink-0" />
           <span>
             التحميل عالي الدقة مقفول! اطلب مجدداً واجمع باقي الصور ({remaining} صور متبقية) لإلغاء القفل وتحميل الكارت بدقة عالية.

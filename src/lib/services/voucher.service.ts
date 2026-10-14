@@ -1,4 +1,5 @@
 'use client';
+import { reportIgnoredError } from '@/lib/services/diagnostics';
 
 export interface IssuedVoucher {
   code: string; // e.g. "GIFT-5421"
@@ -34,7 +35,7 @@ export class VoucherService {
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
         localStorage.setItem(key, value);
-      } catch {}
+      } catch (e) { reportIgnoredError('services/voucher', e); }
     }
     this.inMemoryStore.set(key, value);
   }
@@ -44,7 +45,14 @@ export class VoucherService {
   }
 
   public static generateCode(): string {
-    const num = Math.floor(1000 + Math.random() * 9000);
+    let num = 1000;
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const arr = new Uint32Array(1);
+      crypto.getRandomValues(arr);
+      num = 1000 + (arr[0] % 9000);
+    } else {
+      num = Math.floor(1000 + Math.random() * 9000);
+    }
     return `GIFT-${num}`;
   }
 

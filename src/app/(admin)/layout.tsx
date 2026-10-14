@@ -7,18 +7,18 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#141313] text-[#e6e1e1]">
-      <aside className="w-64 bg-[#0E0D0D] border-l border-white/10 text-[#FBF9F5] flex-shrink-0 flex flex-col justify-between">
+    <div className="flex min-h-screen bg-[#141313] text-[#FBF9F5] font-sans">
+      <aside className="w-64 bg-[#141212] border-l border-[rgba(255,255,255,0.1)] text-[#FBF9F5] flex-shrink-0 flex flex-col justify-between shadow-xs">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-bold text-xs shadow-md border border-white/10">
-              <Shield className="w-4 h-4 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-[#FBF9F5] text-amber-400 flex items-center justify-center font-bold text-xs shadow-xs border border-stone-800">
+              <Shield className="w-4 h-4 text-amber-400" />
             </div>
             <div>
-              <h2 className="text-sm font-bold tracking-tight text-[#FBF9F5] font-serif">
+              <h2 className="text-sm font-black tracking-tight text-[#FBF9F5]">
                 System Admin
               </h2>
-              <span className="text-[10px] font-mono text-[#A19E9B]">
+              <span className="text-[10px] font-mono text-[#c92a54] bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                 SUPER ADMIN
               </span>
             </div>
@@ -27,21 +27,21 @@ export default function AdminLayout({
           <nav className="space-y-1">
             <Link
               href="/admin"
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#55100D]/40 text-[#FBF9F5] border border-[#DD0200]/30 text-xs font-bold transition"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-[#FBF9F5] text-white text-xs font-bold transition shadow-xs"
             >
               <span>لوحة الإدارة المركزية</span>
             </Link>
             <Link
               href="/dashboard"
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-white/[0.04] text-xs font-medium transition"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-stone-600 hover:text-[#FBF9F5] hover:bg-[#0B0A0A] text-xs font-bold transition"
             >
-              <span>لوحة التاجر</span>
+              <span>لوحة التاجر والـ CRM</span>
             </Link>
           </nav>
         </div>
 
-        <div className="p-6 border-t border-white/10 text-[11px] text-[#A19E9B]">
-          <span>Memories Platform v2.4</span>
+        <div className="p-6 border-t border-[rgba(255,255,255,0.1)] text-[11px] text-stone-400 font-mono">
+          <span>Stampy Platform v3.0 SaaS</span>
         </div>
       </aside>
       <main className="flex-1 p-6 md:p-8 bg-[#141313] overflow-y-auto">

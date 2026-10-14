@@ -13,6 +13,7 @@ import {
   STAFF_ROSTER,
   type ActiveStaffSession,
   type StaffMember,
+  type StaffRole,
 } from '@/types/staff';
 
 const SESSION_STORAGE_KEY = 'memories_active_staff_session_v1';
@@ -269,21 +270,166 @@ export async function verifyStaffPin(
   return { success: true, staff, switchedAt: session?.switchedAt };
 }
 
+// --- Dynamic Staff Management & Anti-Brute-Force Provisioning ---
+
+const WEAK_PINS = new Set([
+  '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999',
+  '1234', '4321', '0123', '2345', '3456', '4567', '5678', '6789', '9876', '8765', '1212', '6969'
+]);
+
+/**
+ * Generates an unguessable, non-trivial, cryptographically secure 4-digit PIN.
+ */
+export function generateSecureStaffPin(): string {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    let pinNumber = 0;
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      const arr = new Uint32Array(1);
+      crypto.getRandomValues(arr);
+      pinNumber = 1000 + (arr[0] % 9000);
+    } else {
+      pinNumber = Math.floor(1000 + Math.random() * 9000);
+    }
+    const pinStr = pinNumber.toString();
+    if (!WEAK_PINS.has(pinStr)) {
+      return pinStr;
+    }
+  }
+  return '7829'; // High-entropy fallback if loop exhausts
+}
+
+export function getStaffMembersForCafe(cafeSlug: string = 'memories'): StaffMember[] {
+  if (!hasLocalStorage()) return STAFF_ROSTER;
+  const key = `memories_staff_roster_${cafeSlug}`;
+  const custom = readJson<StaffMember[]>(key, []);
+  if (custom && custom.length > 0) {
+    return custom;
+  }
+  return STAFF_ROSTER;
+}
+
+export function addCustomStaffMember(
+  cafeSlug: string = 'memories',
+  name: string,
+  role: StaffRole = 'barista'
+): { staff: StaffMember; pin: string } {
+  const pin = generateSecureStaffPin();
+  const staffId = `staff_${Date.now()}_${Math.floor(Math.random() * 900 + 100)}`;
+  const staff: StaffMember = {
+    id: staffId,
+    name: name.trim(),
+    role,
+    avatarUrl: `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(name.trim())}`,
+  };
+
+  if (hasLocalStorage()) {
+    const rosterKey = `memories_staff_roster_${cafeSlug}`;
+    const pinsKey = `memories_staff_pins_${cafeSlug}`;
+    
+    // If this is the first custom staff member, start a clean slate (no demo roster)
+    const existing = readJson<StaffMember[]>(rosterKey, []);
+    const updatedRoster = [...existing, staff];
+    writeJson(rosterKey, updatedRoster);
+
+    const pins = readJson<Record<string, string>>(pinsKey, {});
+    pins[staffId] = pin;
+    writeJson(pinsKey, pins);
+  }
+
+  // Also register in-memory
+  STAFF_PIN_CREDENTIALS[staffId] = pin;
+
+  return { staff, pin };
+}
+
+export function deleteCustomStaffMember(cafeSlug: string = 'memories', staffId: string): boolean {
+  if (hasLocalStorage()) {
+    const rosterKey = `memories_staff_roster_${cafeSlug}`;
+    const pinsKey = `memories_staff_pins_${cafeSlug}`;
+    const existing = readJson<StaffMember[]>(rosterKey, []);
+    const filtered = existing.filter((s) => s.id !== staffId);
+    writeJson(rosterKey, filtered);
+
+    const pins = readJson<Record<string, string>>(pinsKey, {});
+    delete pins[staffId];
+    writeJson(pinsKey, pins);
+  }
+  delete STAFF_PIN_CREDENTIALS[staffId];
+  return true;
+}
+
+export function getStaffPinForOwner(cafeSlug: string = 'memories', staffId: string): string | null {
+  if (hasLocalStorage()) {
+    const pinsKey = `memories_staff_pins_${cafeSlug}`;
+    const pins = readJson<Record<string, string>>(pinsKey, {});
+    if (pins[staffId]) return pins[staffId];
+  }
+  return STAFF_PIN_CREDENTIALS[staffId] || null;
+}
+
 /**
  * Direct PIN verification without requiring dropdown selection.
+ * Protects against brute-force attacks across any PIN attempts.
  */
-export async function verifyPinOnly(pin: string): Promise<StaffAuthResult> {
+export async function verifyPinOnly(pin: string, cafeSlug: string = 'memories'): Promise<StaffAuthResult> {
   const clean = pin.trim();
   if (clean.length !== 4) {
     return { success: false, error: 'يجب أن يتكون الرمز السري من 4 أرقام.' };
   }
+
+  // Global terminal brute force check
+  const globalLockKey = `terminal_lock_${cafeSlug}`;
+  const remainingLockout = getRemainingLockoutSeconds(globalLockKey);
+  if (remainingLockout > 0) {
+    return {
+      success: false,
+      error: `تم إيقاف محاولات الدخول مؤقتاً لحماية الحساب. يرجى المحاولة بعد ${remainingLockout} ثانية.`,
+    };
+  }
+
+  // Check custom pins in localStorage first
+  if (hasLocalStorage()) {
+    const pinsKey = `memories_staff_pins_${cafeSlug}`;
+    const rosterKey = `memories_staff_roster_${cafeSlug}`;
+    const customPins = readJson<Record<string, string>>(pinsKey, {});
+    const customRoster = readJson<StaffMember[]>(rosterKey, []);
+
+    for (const [staffId, expectedPin] of Object.entries(customPins)) {
+      if (clean === expectedPin) {
+        const staff = customRoster.find((s) => s.id === staffId);
+        if (staff) {
+          clearFailures(globalLockKey);
+          const session = switchActiveStaff(staff.id);
+          return { success: true, staff, switchedAt: session?.switchedAt };
+        }
+      }
+    }
+  }
+
+  // Fallback to static credentials
   for (const [staffId, expectedPin] of Object.entries(STAFF_PIN_CREDENTIALS)) {
     if (clean === expectedPin) {
+      clearFailures(globalLockKey);
       return verifyStaffPin(staffId, clean);
     }
   }
-  if (clean === '9999') {
-    return verifyStaffPin('staff-4', '4567');
+
+  // Legacy manager bypass removed: '9999' previously minted a staff-4
+  // session for anyone (CWE-798 hardcoded backdoor). Manager overrides
+  // now go through StaffManagementSection with per-staff custom PINs.
+
+  // Record brute-force failure
+  const { lockedOut, failedAttempts } = recordFailure(globalLockKey);
+  if (lockedOut) {
+    return {
+      success: false,
+      error: `تم إيقاف المحاولات مؤقتاً لحماية الأمان لمدة ${Math.ceil(LOCKOUT_DURATION_MS / 1000)} ثانية بعد 3 محاولات خاطئة.`,
+    };
   }
-  return { success: false, error: 'الرمز السري للموظف غير صحيح.' };
+
+  const remaining = MAX_FAILED_ATTEMPTS - failedAttempts;
+  return {
+    success: false,
+    error: `الرمز السري غير صحيح. متبقي ${remaining} ${remaining === 1 ? 'محاولة' : 'محاولات'} قبل الإيقاف المؤقت.`,
+  };
 }

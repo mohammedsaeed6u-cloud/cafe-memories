@@ -36,6 +36,7 @@ function createMockQueryBuilder(result: { data?: any; error?: any; count?: numbe
     limit: vi.fn().mockImplementation(() => builder),
     range: vi.fn().mockImplementation(() => builder),
     order: vi.fn().mockImplementation(() => builder),
+    in: vi.fn().mockImplementation(() => builder),
     maybeSingle: vi.fn().mockImplementation(async () => queryResult),
     single: vi.fn().mockImplementation(async () => queryResult),
     then: (resolve: any, reject: any) => Promise.resolve(queryResult).then(resolve, reject),
@@ -287,7 +288,14 @@ describe('Requirement 1: Guest Privacy & Consent Engine', () => {
         return createMockQueryBuilder();
       });
 
+      // status=all is the merchant/staff moderation bypass (CWE-862) —
+      // it now requires a signed staff session cookie.
+      const { createStaffSessionValue, STAFF_SESSION_COOKIE } = await import('@/lib/staff-session');
       const request = new NextRequest('http://localhost:3000/api/v1/memories?status=all&visibility=all');
+      request.cookies.set(
+        STAFF_SESSION_COOKIE,
+        await createStaffSessionValue({ staffId: 'staff-1', cafeSlug: 'memories', role: 'admin' })
+      );
       const response = await memoriesGET(request);
       expect(response.status).toBe(200);
 

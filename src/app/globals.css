@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../styles/tappy.css";
 
 @theme {
   --color-surface: #141313;
@@ -7,21 +8,75 @@
   --color-surface-dim: #141313;
   --color-surface-bright: #3b3939;
 
-  --color-primary: #DD0200;
-  --color-primary-container: #DD0200;
-  --color-secondary: #55100D;
-  --color-secondary-container: #7C2D26;
+  --color-primary: #c92a54;
+  --color-primary-container: #c92a54;
+  --color-secondary: #98183c;
+  --color-secondary-container: #7a1230;
 
   --color-alabaster: #FBF9F5;
   --color-alabaster-muted: #D9D9D9;
   --color-coffee-bean: #1A0706;
 
   --color-border-hairline: rgba(255, 255, 255, 0.08);
-  --color-border-accent: rgba(221, 2, 0, 0.35);
+  --color-border-accent: rgba(201, 42, 84, 0.35);
 
   --font-playfair: var(--font-playfair), 'Playfair Display', Georgia, serif;
   --font-jakarta: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
   --font-cairo: var(--font-cairo), 'Cairo', sans-serif;
+
+  /* Atelier Nostalgia Palette & Fonts */
+  --color-matGreen: #1b4335;
+  --color-matDark: #123326;
+  --color-berry: #c92a54;
+  --color-berryLight: #e14974;
+  --color-berryDeep: #98183c;
+  --color-craftBg: #fbf7f2;
+  --color-craftCard: #f5efe6;
+  --color-craftMuted: #ede4d8;
+  --color-charcoal: #222225;
+  --color-paperWhite: #ffffff;
+  --color-roseTint: #fcecef;
+  --color-roseBorder: #f4c7d2;
+
+  --font-script: var(--font-caveat, 'Caveat'), cursive;
+  --font-display: var(--font-playfair, 'Playfair Display'), Georgia, serif;
+  --font-epilogue: 'Epilogue', sans-serif;
+  --font-body: 'Work Sans', sans-serif;
+  /* Stampy Official Design System Colors (DESIGN_SYSTEM.md v1.0.0) */
+  --color-stampy-ochre: #DFAB56;
+  --color-stampy-burgundy: #682025;
+  --color-stampy-forest: #2D5240;
+  --color-stampy-navy: #20304E;
+  --color-stampy-denim: #4A6B82;
+  --color-stampy-lightOchre: #E8BF70;
+  --color-stampy-parchment: #F7F3EA;
+  --color-stampy-charcoal: #1B1B1E;
+  --color-stampy-bevel: #451215;
+
+
+  --shadow-diecut: 0 12px 28px -4px rgba(28, 25, 23, 0.18), 0 4px 10px -2px rgba(28, 25, 23, 0.12);
+  --shadow-diecut-lg: 0 18px 36px -6px rgba(18, 16, 15, 0.26), 0 6px 12px -2px rgba(18, 16, 15, 0.15);
+  --shadow-mat: 0 20px 40px -10px rgba(10, 30, 20, 0.35), inset 0 0 0 2px #245745;
+  --shadow-pushpin: 0 8px 12px -2px rgba(0, 0, 0, 0.45), inset 0 2px 3px rgba(255, 255, 255, 0.8);
+    --shadow-ticket: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+
+  /* Centralized 8px Grid Spacing Scale */
+  --spacing-space-0: 0px;
+  --spacing-space-1: 8px;
+  --spacing-space-2: 16px;
+  --spacing-space-3: 24px;
+  --spacing-space-4: 32px;
+  --spacing-space-5: 40px;
+  --spacing-space-6: 48px;
+  --spacing-space-7: 56px;
+  --spacing-space-8: 64px;
+  --spacing-space-9: 72px;
+  --spacing-space-10: 80px;
+  --spacing-space-11: 88px;
+  --spacing-space-12: 96px;
+  --spacing-space-13: 104px;
+  --spacing-space-14: 112px;
+  --spacing-space-15: 120px;
 }
 
 @layer base {
@@ -30,7 +85,62 @@
     --foreground: #e6e1e1;
     --font-cairo: 'Cairo', sans-serif;
     --font-playfair: 'Playfair Display', Georgia, serif;
-    --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+        --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+    /* Stampy Official Design System Tokens (DESIGN_SYSTEM.md v1.0.0) */
+    --stampy-ochre: #DFAB56;
+    --stampy-burgundy: #682025;
+    --stampy-forest: #2D5240;
+    --stampy-navy: #20304E;
+    --stampy-denim: #4A6B82;
+    --stampy-light-ochre: #E8BF70;
+    --stampy-parchment: #F7F3EA;
+    --stampy-charcoal: #1B1B1E;
+    --stampy-bevel: #451215;
+
+    /* Semantic UI Tokens */
+    --stampy-surface-primary: var(--stampy-ochre);
+    --stampy-surface-card: var(--stampy-parchment);
+    --stampy-surface-dark: var(--stampy-charcoal);
+    
+    --stampy-text-primary: var(--stampy-burgundy);
+    --stampy-text-inverse: var(--stampy-parchment);
+    --stampy-text-muted: var(--stampy-denim);
+
+    --stampy-border-stitch: rgba(247, 243, 234, 0.65);
+    --stampy-shadow-ticket: 0 12px 28px -6px rgba(69, 18, 21, 0.35);
+
+    /* Geometry & Radii */
+    --stampy-radius-fillet: 32px;
+    --stampy-scallop-size: 24.5px;
+    --stampy-tilt-deg: -6.42deg;
+
+
+    /* Centralized 8px Grid Spacing Token System */
+    --space-0: 0px;
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 32px;
+    --space-5: 40px;
+    --space-6: 48px;
+    --space-7: 56px;
+    --space-8: 64px;
+    --space-9: 72px;
+    --space-10: 80px;
+    --space-11: 88px;
+    --space-12: 96px;
+    --space-13: 104px;
+    --space-14: 112px;
+    --space-15: 120px;
+
+    /* Semantic Spacing Hierarchy Aliases */
+    --space-micro: var(--space-1);        /* 8px: icon ↔ label, label ↔ input, compact metadata */
+    --space-component: var(--space-2);    /* 16px: input groups, button groups, card internal */
+    --space-subsection: var(--space-3);   /* 24px: content groups, card sections, toolbar */
+    --space-major: var(--space-4);        /* 32px: major card separation, dashboard blocks */
+    --space-page-sm: var(--space-6);      /* 48px: mobile section separation */
+    --space-page-md: var(--space-8);      /* 64px: desktop section separation */
+    --space-page-lg: var(--space-10);     /* 80px: hero sections, major transitions */
   }
 
   body {
@@ -42,6 +152,55 @@
   }
 }
 
+/* Stampy Luxury SaaS Background & Card Styling */
+.stampy-luxury-bg {
+  background-color: #141313;
+  color: #FBF9F5;
+}
+
+.scrapbook-bg {
+  background-color: #141313;
+  color: #FBF9F5;
+}
+
+.stampy-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(231, 229, 228, 0.8);
+}
+
+.stampy-glass-dark {
+  background: rgba(20, 18, 17, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stampy-card-gold-glow {
+  box-shadow: 0 10px 30px -10px rgba(184, 134, 11, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Subtle legacy fallbacks for maximum safety */
+.cutting-mat-grid {
+  background: #141211;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+.diecut-sticker, .diecut-sticker-lg {
+  border: 1px solid rgba(231, 229, 228, 0.9);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}
+.push-pin, .washi-tape-pink, .washi-tape-mint, .washi-tape-craft, .scallop-badge {
+  display: none !important;
+}
+
+/* Perforated ticket edge */
+.ticket-edge {
+  background-image: radial-gradient(circle at 0 50%, transparent 12px, #ffffff 12px),
+                    radial-gradient(circle at 100% 50%, transparent 12px, #ffffff 12px);
+}
+
 /* Custom smooth scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -51,11 +210,11 @@
   background: #141313;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2b2a29;
+  background: #2b2929;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #55100D;
+  background: #98183c;
 }
 
 /* Universal Shimmer & Loading Animation */
@@ -478,3 +637,33 @@
   animation: apple-vision-glow 4s ease-in-out infinite;
 }
 
+
+/* Infinite Marquee Animation for Industry Strip */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Stampy Official Ticket Card & Perforations (DESIGN_SYSTEM.md) */
+.stampy-scallop-ticket {
+  background-color: var(--stampy-ochre);
+  color: var(--stampy-burgundy);
+  border-radius: var(--stampy-radius-fillet);
+  box-shadow: var(--stampy-shadow-ticket);
+  position: relative;
+}
+
+.stampy-stitch-border {
+  border: 2px dashed var(--stampy-border-stitch);
+  border-radius: 20px;
+}

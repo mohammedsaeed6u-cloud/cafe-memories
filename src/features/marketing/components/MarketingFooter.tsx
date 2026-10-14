@@ -2,39 +2,90 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { StampyLogo } from '@/components/brand/StampyLogo';
 
 export function MarketingFooter() {
   return (
-    <footer className="bg-[#0E0D0D] border-t border-white/10 py-14 px-6 text-xs text-[#D9D9D9]/70 apple-font select-none relative z-10">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 border border-white/20">
-            <span className="text-sm font-serif">✦</span>
+    <footer className="tappy-footer" data-purpose="footer">
+      <div className="foot-grid">
+        {/* Brand Column */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <StampyLogo variant="horizontal" size="sm" theme="dark" showTagline={false} />
           </div>
-          <div>
-            <span className="text-base font-bold tracking-tight text-white block leading-tight">
-              memories studio
-            </span>
-            <span className="text-[9px] font-mono tracking-[0.18em] text-[#A19E9B] font-semibold uppercase block leading-none">
-              ATELIER NOSTALGIA EDITION • 2026
+          <p className="text-xs text-white/70 leading-relaxed max-w-sm">
+            The Apple & Google Wallet loyalty platform for modern coffee shops, barbers, restaurants, and retail spaces.
+            <br />
+            المنظومة السحابية الرائدة لبطاقات الولاء الرقمية واستوديو الذكريات التفاعلي.
+          </p>
+          <div className="pt-2">
+            <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-white/80 font-mono text-[10px] font-bold">
+              EST. 2026 • RIYADH & CLOUDFLARE GLOBAL EDGE
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-[#D9D9D9]/80 font-medium">
-          <Link href="/privacy" className="hover:text-white transition-colors">
-            سياسة الخصوصية
-          </Link>
-          <Link href="/terms" className="hover:text-white transition-colors">
-            الشروط والأحكام
-          </Link>
-          <Link href="/login" className="hover:text-white transition-colors">
-            لوحة تحكم التاجر
-          </Link>
+        {/* Product Column */}
+        <div className="foot-col">
+          <div className="foot-col-t">PRODUCT</div>
+          <ul>
+            <li><a href="#how">How It Works</a></li>
+            <li><a href="#rules">Rules & Rewards</a></li>
+            <li><a href="#dashboard">Live Dashboard</a></li>
+            <li><a href="#operations">Lockscreen Push</a></li>
+            <li><a href="#services">Photobooth Studio</a></li>
+            <li><a href="#pricing">Pricing Plans</a></li>
+          </ul>
         </div>
 
-        <div className="text-[11px] font-mono text-[#D9D9D9]/50">
-          All Rights Reserved © 2026 Memories Studio
+        {/* Solutions Column */}
+        <div className="foot-col">
+          <div className="foot-col-t">SOLUTIONS</div>
+          <ul>
+            <li><a href="#rules">Coffee Shops & Roasters</a></li>
+            <li><a href="#rules">Barbershops & Salons</a></li>
+            <li><a href="#rules">Bakeries & Pastries</a></li>
+            <li><a href="#rules">Pharmacies & Retail</a></li>
+            <li><a href="#rules">Car Washes & Auto</a></li>
+            <li><a href="#rules">Chains & Multi-branch</a></li>
+          </ul>
+        </div>
+
+        {/* Quick Access Column */}
+        <div className="foot-col">
+          <div className="foot-col-t">PORTALS</div>
+          <ul>
+            <li><Link href="/login?tab=signin">تسجيل الدخول</Link></li>
+            <li><Link href="/login?tab=signup">إنشاء حساب مجاناً</Link></li>
+            <li><Link href="/dashboard">لوحة التحكم السحابية</Link></li>
+            <li><Link href="/terminal">محطة الكاشير POS</Link></li>
+            <li><Link href="/wall/screen-1">شاشة الصالة 4K</Link></li>
+            <li><Link href="/c/stampy">كارت الولاء الحي</Link></li>
+            <li><Link href="/admin">بورتال إدارة الساس (Admin)</Link></li>
+            <li><Link href="/kiosk/stampy">كشك التابلت (Tablet Kiosk)</Link></li>
+          </ul>
+        </div>
+
+        {/* Legal Column */}
+        <div className="foot-col">
+          <div className="foot-col-t">LEGAL & TRUST</div>
+          <ul>
+            <li><Link href="/privacy">سياسة الخصوصية GDPR</Link></li>
+            <li><Link href="/terms">شروط الاستخدام</Link></li>
+            <li><a href="#security">معايير أمان Apple PKPass</a></li>
+            <li><a href="#sla">اتفاقية مستوى الخدمة 99.9%</a></li>
+            <li><a href="#contact">الدعم الفني المباشر</a></li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="foot-bot">
+        <span>© 2026 Stampy Technologies Inc. All rights reserved.</span>
+        <div className="flex items-center gap-4 text-xs">
+          <span>Made with passion for real retail connections.</span>
+          <span className="text-[#f0456a]">✦</span>
+          <span>Apple & Google Wallet Verified Partner</span>
         </div>
       </div>
     </footer>

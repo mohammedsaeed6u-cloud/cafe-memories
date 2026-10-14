@@ -5,6 +5,15 @@ export interface TenantFeatureFlags {
   loyaltyCard: boolean;
 }
 
+export interface TenantWalletConfig {
+  walletWalletApiKey?: string;
+  monthlyPassQuota: number;
+  usedPassesThisMonth: number;
+  quotaResetDate: string;
+  usePlatformKey: boolean;
+  allowOverQuota: boolean;
+}
+
 export interface TenantSummary {
   id: string;
   name: string;
@@ -12,6 +21,7 @@ export interface TenantSummary {
   tier: 'digital' | 'print' | 'multi_location' | 'enterprise' | 'free' | 'pro';
   status: 'active' | 'suspended' | 'trial';
   features: TenantFeatureFlags;
+  walletConfig?: TenantWalletConfig;
   dailyPhotos: number;
   totalCustomers: number;
   storageUsedMb: number;

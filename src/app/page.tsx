@@ -10,28 +10,26 @@ import { CookieConsentBanner } from '@/components/ui/CookieConsentBanner';
 import { MarketingHeader } from '@/features/marketing/components/MarketingHeader';
 import { MarketingHero } from '@/features/marketing/components/MarketingHero';
 import { MarketingVisualSteps } from '@/features/marketing/components/MarketingVisualSteps';
+import { MarketingIndustryRules } from '@/features/marketing/components/MarketingIndustryRules';
+import { MarketingDashboardMockup } from '@/features/marketing/components/MarketingDashboardMockup';
 import { MarketingRetentionLoop } from '@/features/marketing/components/MarketingRetentionLoop';
-import { MarketingWallSection } from '@/features/marketing/components/MarketingWallSection';
-import { AtelierRoiCalculator } from '@/features/marketing/components/AtelierRoiCalculator';
+import { StampyServicesSection } from '@/features/marketing/components/StampyServicesSection';
+import { StampyRoiCalculator } from '@/features/marketing/components/StampyRoiCalculator';
 import { MarketingPricing } from '@/features/marketing/components/MarketingPricing';
 import { MarketingTrustSection } from '@/features/marketing/components/MarketingTrustSection';
 import { MarketingFaq } from '@/features/marketing/components/MarketingFaq';
+import { StampyContactSection } from '@/features/marketing/components/StampyContactSection';
 import { MarketingFooter } from '@/features/marketing/components/MarketingFooter';
 
 export default function HomePage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] selection:bg-[#DD0200] selection:text-white font-sans relative overflow-x-hidden">
-      {/* Atelier Nostalgia Ambient Mesh Glows in Background */}
-      <div className="fixed top-0 left-0 w-[650px] h-[550px] bg-gradient-to-br from-[#55100D]/25 via-[#1A0706]/35 to-transparent rounded-full blur-[140px] pointer-events-none z-0" />
-      <div className="fixed top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-tl from-[#DD0200]/12 via-[#55100D]/15 to-transparent rounded-full blur-[160px] pointer-events-none z-0" />
-      <div className="fixed bottom-0 left-1/4 w-[700px] h-[500px] bg-gradient-to-tr from-[#1A0706]/50 via-[#55100D]/20 to-transparent rounded-full blur-[150px] pointer-events-none z-0" />
-
+    <div className="min-h-screen bg-[#F7F3EA] text-[#1B1B1E] selection:bg-[#682025] selection:text-white font-sans relative overflow-x-hidden">
       {/* Accessibility: Skip to Content */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#DD0200] focus:text-white focus:rounded-xl focus:shadow-lg focus:outline-none"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#682025] focus:text-white focus:rounded-xl focus:shadow-lg focus:outline-none"
       >
         تخطي إلى المحتوى الرئيسي
       </a>
@@ -50,29 +48,38 @@ export default function HomePage() {
 
       {/* Main Landmark */}
       <main id="main-content" tabIndex={-1} className="relative z-10 outline-none">
-        {/* Hero Section */}
+        {/* 1. Hero Section with Above-The-Fold 10-Stamp Row & Simulator */}
         <MarketingHero />
 
-        {/* Step-by-Step Experience */}
+        {/* 2. Step-by-Step Experience (Three taps to loyal) */}
         <MarketingVisualSteps />
 
-        {/* Guest Retention Loop */}
+        {/* 3. Industry Marquee & Flexible Earning Rules (Your Shop, Your Rules) */}
+        <MarketingIndustryRules />
+
+        {/* 4. Embedded Live macOS Merchant Dashboard Window (Insights, Card Designer, Promotions) */}
+        <MarketingDashboardMockup />
+
+        {/* 5. Retention Engine: iPhone Lockscreen Stack & 6 SaaS Pillars */}
         <MarketingRetentionLoop />
 
-        {/* TV Live Wall Showcase */}
-        <MarketingWallSection />
+        {/* 6. Exclusive Superior Services: Photobooth Strip Studio, 4K Live Wall Signage, Staff Cashier POS */}
+        <StampyServicesSection />
 
-        {/* Business ROI & Retention Calculator */}
-        <AtelierRoiCalculator />
+        {/* 7. Interactive ROI & Retention Calculator */}
+        <StampyRoiCalculator />
 
-        {/* Transparent Pricing */}
+        {/* 8. SaaS Subscription Pricing Table */}
         <MarketingPricing />
 
-        {/* Security & Privacy Trust Section */}
+        {/* 9. Security & Privacy Trust Section */}
         <MarketingTrustSection />
 
-        {/* FAQ Accordion */}
+        {/* 10. FAQ Accordion (Objection Buster) */}
         <MarketingFaq />
+
+        {/* 11. Final Risk-Free CTA */}
+        <StampyContactSection />
       </main>
 
       {/* Footer */}

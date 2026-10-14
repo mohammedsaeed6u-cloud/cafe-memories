@@ -419,9 +419,15 @@ export class SubscriptionBillingService {
     const baseAmount = parseFloat((price / 1.15).toFixed(2));
     const taxAmount = parseFloat((price - baseAmount).toFixed(2));
 
+    const randSeq = typeof crypto !== 'undefined' && crypto.getRandomValues ? (() => {
+      const arr = new Uint32Array(1);
+      crypto.getRandomValues(arr);
+      return String(100 + (arr[0] % 900));
+    })() : String(Math.floor(100 + Math.random() * 900));
+
     const invoice: InvoiceRecord = {
       id: `inv-${Date.now()}`,
-      invoiceNumber: `ZATCA-INV-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}${String(Math.floor(100 + Math.random() * 900))}`,
+      invoiceNumber: `ZATCA-INV-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}${randSeq}`,
       cafeSlug,
       planId: newPlanId,
       amount: baseAmount,

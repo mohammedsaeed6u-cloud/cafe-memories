@@ -1,5 +1,14 @@
-import { BusinessSettings, PhotoboothFrame, ShotCount, StripOrientation } from '@/types/photobooth';
+import {
+  BusinessSettings,
+  PhotoboothFrame,
+  ShotCount,
+  StripOrientation,
+  BusinessStampConfig,
+  VenueLocationConfig,
+  WalletPassCustomizationConfig,
+} from '@/types/photobooth';
 import { DEFAULT_BUSINESS_SETTINGS } from '@/lib/constants/photobooth-presets';
+import { reportIgnoredError } from '@/lib/services/diagnostics';
 
 const STORAGE_PREFIX = 'memories_business_settings_';
 
@@ -80,6 +89,7 @@ export class BusinessSettingsService {
           ...DEFAULT_BUSINESS_SETTINGS.branding,
           ...rawBranding,
           name: sanitizedBrandingName,
+          showLogo: rawBranding.showLogo === false ? false : true,
         };
 
         return {
@@ -106,6 +116,9 @@ export class BusinessSettingsService {
             parsed.allowedColorIds || DEFAULT_BUSINESS_SETTINGS.allowedColorIds,
           lockFrameForCustomers:
             parsed.lockFrameForCustomers ?? DEFAULT_BUSINESS_SETTINGS.lockFrameForCustomers ?? true,
+          stampConfig: parsed.stampConfig || DEFAULT_BUSINESS_SETTINGS.stampConfig,
+          locationConfig: parsed.locationConfig || DEFAULT_BUSINESS_SETTINGS.locationConfig,
+          walletPassConfig: parsed.walletPassConfig || DEFAULT_BUSINESS_SETTINGS.walletPassConfig,
         };
       } catch (err) {
         console.warn('Failed to read settings from localStorage', err);
@@ -113,18 +126,18 @@ export class BusinessSettingsService {
     }
 
     // Intelligently infer cafe name from slug or query param if not stored
-    let dynamicCafeName = 'Memories Studio';
-    if (cafeSlug && cafeSlug !== 'memories' && cafeSlug !== 'studio') {
-      if (typeof window !== 'undefined') {
+    let dynamicCafeName = 'متجر ولاء';
+    if (cafeSlug) {
+      if (typeof window !== 'undefined' && typeof window.location?.search === 'string') {
         try {
           const urlParams = new URLSearchParams(window.location.search);
           const nameParam = urlParams.get('name');
           if (nameParam) {
             dynamicCafeName = decodeURIComponent(nameParam);
           }
-        } catch {}
+        } catch (e) { reportIgnoredError('services/business-settings#1', e); }
       }
-      if (dynamicCafeName === 'Memories Studio') {
+      if (dynamicCafeName === 'متجر ولاء' && cafeSlug !== 'demo') {
         dynamicCafeName = cafeSlug
           .split('-')
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -139,7 +152,7 @@ export class BusinessSettingsService {
       branding: {
         ...DEFAULT_BUSINESS_SETTINGS.branding,
         name: dynamicCafeName,
-        instagramHandle: cafeSlug === 'memories' ? '@memories_studio' : `@${cafeSlug.replace(/[^a-z0-9_]/gi, '')}`,
+        instagramHandle: `@${cafeSlug.replace(/[^a-z0-9_]/gi, '')}`,
       },
       frames: (DEFAULT_BUSINESS_SETTINGS.frames || []).map((f) => ({
         ...f,
@@ -170,7 +183,7 @@ export class BusinessSettingsService {
 
   static updateBranding(
     cafeSlug: string,
-    branding: { name?: string; logoUrl?: string; tagline?: string }
+    branding: { name?: string; logoUrl?: string; tagline?: string; showLogo?: boolean }
   ): BusinessSettings {
     const current = this.getSettings(cafeSlug);
     const updated: BusinessSettings = {
@@ -180,6 +193,45 @@ export class BusinessSettingsService {
         ...branding,
       },
       cafeName: branding.name ? `Memories • ${branding.name}` : current.cafeName,
+    };
+    this.saveSettings(updated);
+    return updated;
+  }
+
+  static updateStampConfig(cafeSlug: string, stampConfig: Partial<BusinessStampConfig>): BusinessSettings {
+    const current = this.getSettings(cafeSlug);
+    const updated: BusinessSettings = {
+      ...current,
+      stampConfig: {
+        ...(current.stampConfig || DEFAULT_BUSINESS_SETTINGS.stampConfig!),
+        ...stampConfig,
+      },
+    };
+    this.saveSettings(updated);
+    return updated;
+  }
+
+  static updateLocationConfig(cafeSlug: string, locationConfig: Partial<VenueLocationConfig>): BusinessSettings {
+    const current = this.getSettings(cafeSlug);
+    const updated: BusinessSettings = {
+      ...current,
+      locationConfig: {
+        ...(current.locationConfig || DEFAULT_BUSINESS_SETTINGS.locationConfig!),
+        ...locationConfig,
+      },
+    };
+    this.saveSettings(updated);
+    return updated;
+  }
+
+  static updateWalletPassConfig(cafeSlug: string, walletPassConfig: Partial<WalletPassCustomizationConfig>): BusinessSettings {
+    const current = this.getSettings(cafeSlug);
+    const updated: BusinessSettings = {
+      ...current,
+      walletPassConfig: {
+        ...(current.walletPassConfig || DEFAULT_BUSINESS_SETTINGS.walletPassConfig!),
+        ...walletPassConfig,
+      },
     };
     this.saveSettings(updated);
     return updated;

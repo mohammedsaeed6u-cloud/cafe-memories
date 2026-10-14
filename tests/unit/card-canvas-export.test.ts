@@ -113,6 +113,103 @@ describe('CardCanvasExportService', () => {
         expect(url).toBeTruthy();
       }
     });
+
+    it('renders 1:1 Apple Wallet vertical format (800x1320) with exact pass fields', async () => {
+      const mockFill = vi.fn();
+      const mockStroke = vi.fn();
+      const mockFillText = vi.fn();
+      const mockArc = vi.fn();
+      const mockRoundRect = vi.fn();
+      const mockSave = vi.fn();
+      const mockRestore = vi.fn();
+      const mockBeginPath = vi.fn();
+      const mockCreateLinearGradient = vi.fn().mockReturnValue({
+        addColorStop: vi.fn(),
+      });
+
+      const mockCtx = {
+        save: mockSave,
+        restore: mockRestore,
+        beginPath: mockBeginPath,
+        roundRect: mockRoundRect,
+        arc: mockArc,
+        fill: mockFill,
+        stroke: mockStroke,
+        fillText: mockFillText,
+        fillRect: vi.fn(),
+        measureText: vi.fn().mockReturnValue({ width: 150 }),
+        createLinearGradient: mockCreateLinearGradient,
+        lineWidth: 1,
+        strokeStyle: '',
+        fillStyle: '',
+        font: '',
+        textAlign: '',
+        textBaseline: '',
+      };
+
+      const mockCanvas = {
+        width: 0,
+        height: 0,
+        getContext: vi.fn().mockReturnValue(mockCtx),
+        toDataURL: vi.fn().mockReturnValue('data:image/png;base64,APPLE_WALLET_PASS_VERTICAL'),
+      };
+
+      const originalDocument = globalThis.document;
+      // @ts-expect-error Mock document for node environment
+      globalThis.document = {
+        createElement: (tagName: string) => {
+          if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement;
+          return {};
+        },
+      };
+
+      const url = await CardCanvasExportService.exportCardToDataUrl({
+        format: 'apple_wallet',
+        customerName: 'Mohammed Saeed',
+        profession: 'عضو مميز',
+        cafeName: 'Stampy',
+        stampsCount: 1,
+        totalSlots: 5,
+        giftTitle: 'هدية الزيارة أو خصم ترحيبي',
+        stampIcon: '📸',
+        backgroundColor: '#1C1C1E',
+      });
+
+      expect(url).toBe('data:image/png;base64,APPLE_WALLET_PASS_VERTICAL');
+      expect(mockCanvas.width).toBe(800);
+      expect(mockCanvas.height).toBe(1320);
+      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('Stampy'), expect.any(Number), expect.any(Number));
+      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('Mohammed Saeed'), expect.any(Number), expect.any(Number));
+      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('هدية الزيارة أو خصم ترحيبي'), expect.any(Number), expect.any(Number));
+      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('APPLE WALLET PASS'), expect.any(Number), expect.any(Number));
+
+      globalThis.document = originalDocument;
+    });
+
+    it('generates Apple Wallet strip image with exact 1125x369 dimensions and stamp slots', async () => {
+      const stripDataUrl = await CardCanvasExportService.generateAppleWalletStripImage({
+        stampsCount: 2,
+        totalSlots: 5,
+        stampIcon: '☕',
+        giftTitle: 'مشروب مجاني',
+        cafeName: 'Stampy',
+      });
+
+      expect(stripDataUrl).toMatch(/^data:image\/png;base64,/);
+
+      const svg = CardCanvasExportService.buildStripSvg({
+        stampsCount: 2,
+        totalSlots: 5,
+        stampIcon: '☕',
+        giftTitle: 'مشروب مجاني',
+      });
+
+      expect(svg).toContain('viewBox="0 0 1125 369"');
+      expect(svg).toContain('سجل أختامك التراكمية');
+      expect(svg).toContain('2 / 5');
+      expect(svg).toContain('☕');
+      expect(svg).toContain('الهدية');
+    });
   });
 
   describe('downloadCardImage', () => {

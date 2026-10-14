@@ -22,14 +22,14 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
   }
 
   return (
-    <div className={`w-full bg-[#141212]/90 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-2xl ${className}`}>
+    <div className={`w-full bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-[rgba(255,255,255,0.1)] shadow-xs ${className}`}>
       <div className="flex items-center justify-between mb-3 px-1">
-        <div className="flex items-center gap-2 text-xs font-semibold text-[#e6e1e1]">
-          <Palette className="w-3.5 h-3.5 text-[#DD0200]" />
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#FBF9F5]">
+          <Palette className="w-3.5 h-3.5 text-[#c92a54]" />
           <span>اختر لون الكارت المفضل:</span>
         </div>
-        <span className="text-[10px] font-mono font-bold text-[#FBF9F5] bg-[#55100D]/60 px-2 py-0.5 rounded-md border border-[#DD0200]/40 uppercase tracking-wider">
-          ATELIER PALETTES
+        <span className="text-[10px] font-mono font-bold text-[#FBF9F5] bg-[#98183c]/60 px-2 py-0.5 rounded-md border border-[#c92a54]/40 uppercase tracking-wider">
+          STAMPY PALETTES
         </span>
       </div>
 
@@ -43,8 +43,8 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
               onClick={() => onSelectPalette(palette)}
               className={`p-2.5 rounded-lg border text-right transition-all duration-200 flex items-center justify-between gap-2 cursor-pointer ${
                 isSelected
-                  ? 'border-[#DD0200] bg-[#55100D]/30 shadow-[0_0_15px_-3px_rgba(221,2,0,0.35)] ring-1 ring-[#DD0200]/40'
-                  : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#211F1F]'
+                  ? 'border-amber-500 bg-amber-50/50 shadow-xs ring-1 ring-amber-500/40'
+                  : 'border-[rgba(255,255,255,0.1)] hover:border-stone-300 bg-white hover:bg-[#0B0A0A]'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -62,7 +62,7 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
               </div>
 
               {isSelected && (
-                <div className="w-4 h-4 rounded-md bg-[#DD0200] text-white flex items-center justify-center shrink-0">
+                <div className="w-4 h-4 rounded-md bg-[#c92a54] text-white flex items-center justify-center shrink-0">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </div>
               )}

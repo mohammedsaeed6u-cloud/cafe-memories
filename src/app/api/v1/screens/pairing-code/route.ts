@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
+import { requireApiAuth, isAuthFailure } from '@/lib/api-guard';
+
+export const dynamic = 'force-dynamic';
 
 const generateCodeSchema = z.object({
   organizationId: z.string().uuid(),
@@ -10,6 +13,10 @@ const generateCodeSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Pairing codes grant wall access — merchant-only (CWE-306)
+    const auth = await requireApiAuth(request, 'any-auth');
+    if (isAuthFailure(auth)) return auth;
+
     const rawBody = await request.json();
     const parsed = generateCodeSchema.safeParse(rawBody);
 
@@ -21,7 +28,8 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient();
 
     // Generate random 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const cryptoMod = await import('crypto');
+    const code = cryptoMod.randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
 
     // Store in screen_pairing_codes

@@ -10,6 +10,8 @@ export interface CornerEmojiConfig {
 export interface BusinessBranding {
   name: string;
   logoUrl?: string;
+  /** Merchant toggle: render the logo on composed cards. Default true. */
+  showLogo?: boolean;
   tagline?: string;
   instagramHandle?: string;
 }
@@ -43,7 +45,8 @@ export type PhotoboothCardMode =
   | 'arabica_luxury_gold'
   | 'film_35mm'
   | 'polaroid_vintage'
-  | 'tokyo_pastel';
+  | 'tokyo_pastel'
+  | 'atelier_scrapbook';
 
 export interface PlacedSticker {
   id: string;
@@ -172,6 +175,46 @@ export interface BusinessSettings {
   allowedModes?: PhotoboothCardMode[];
   lockFrameForCustomers?: boolean; // When true, customer cannot change the business's enforced frame layout, shotCount, or orientation
   businessType?: BusinessType;
+  stampConfig?: BusinessStampConfig;
+  locationConfig?: VenueLocationConfig;
+  walletPassConfig?: WalletPassCustomizationConfig;
+}
+
+export interface VenueLocationConfig {
+  enabled: boolean;
+  latitude: number;
+  longitude: number;
+  altitude?: number;
+  relevantText?: string; // Lock-screen text shown within ~100m (up to 128 chars)
+}
+
+export type WalletBarcodeFormat = 'QR' | 'PDF417' | 'Aztec' | 'Code128';
+export type WalletColorPreset = 'dark' | 'blue' | 'green' | 'red' | 'purple' | 'orange';
+
+export interface WalletPassCustomizationConfig {
+  colorPreset?: WalletColorPreset;
+  colorHex?: string; // Pro hex color like #231C18
+  barcodeFormat?: WalletBarcodeFormat;
+  barcodeAltText?: string;
+  sharingProhibited?: boolean;
+  expirationDays?: number;
+  cardBackgroundUrl?: string; // Custom uploaded background photo or texture URL/dataURI
+  cardOverlayOpacity?: number; // 0.1 to 0.9 (overlay darkness for text readability)
+  cardBackgroundPresetId?: string; // ID of selected curated texture preset
+  stripUrl?: string; // Optional strip/banner image
+}
+
+export type StampCustomType = 'emoji' | 'logo';
+export type StampShapeStyle = 'circle' | 'square' | 'vintage_seal' | 'postal_stamp';
+
+export interface BusinessStampConfig {
+  type: StampCustomType;        // 'emoji' | 'text' | 'logo'
+  customEmoji?: string;         // e.g. '☕' or '🌸' or '⭐'
+  customText?: string;          // e.g. 'M' or 'VIP' or 'MEM'
+  logoUrl?: string;             // URL of venue logo
+  knockoutLogo?: boolean;       // whether to knockout/isolate the logo as an ink stamp
+  inkColor?: string;            // stamp ink color
+  shape?: StampShapeStyle;      // 'circle' | 'square' | 'vintage_seal' | 'postal_stamp'
 }
 
 export type BusinessType =
@@ -198,4 +241,16 @@ export interface PhotoboothCaptureResult {
   frameId: string;
   giftCode: string;
   timestamp: string;
+}
+
+export interface CustomerVisitRecord {
+  id: string;
+  name: string;
+  phone: string;
+  role?: CustomerPersonaKey;
+  totalVisits: number;
+  lastVisit: string;
+  giftCode?: string;
+  photoStripUrl?: string;
+  photos?: string[];
 }

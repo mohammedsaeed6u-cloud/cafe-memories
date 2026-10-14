@@ -23,10 +23,38 @@ export const PhotoCaptureOrUpload: React.FC<PhotoCaptureOrUploadProps> = ({
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
-        onUploadPhoto(result);
-      }
+      const rawData = event.target?.result as string;
+      if (!rawData) return;
+
+      // Fast client-side resize & compression to max 1200px (drops 15MB phone photos to ~150KB)
+      const img = new window.Image();
+      img.onload = () => {
+        const maxDim = 1200;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.86);
+          onUploadPhoto(compressed);
+        } else {
+          onUploadPhoto(rawData);
+        }
+      };
+      img.onerror = () => onUploadPhoto(rawData);
+      img.src = rawData;
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -44,7 +72,7 @@ export const PhotoCaptureOrUpload: React.FC<PhotoCaptureOrUploadProps> = ({
       <button
         type="button"
         onClick={onOpenLiveCamera}
-        className="w-full py-3.5 px-6 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm sm:text-base shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] cursor-pointer"
+        className="w-full py-3.5 px-6 rounded-lg bg-[#c92a54] hover:bg-[#98183c] text-[#FBF9F5] font-bold text-sm sm:text-base shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(201, 42, 84,0.4)] transition-all flex items-center justify-center gap-2.5 active:scale-[0.98] cursor-pointer"
       >
         <Camera className="w-5 h-5 text-[#FBF9F5]" />
         <span>التقاط صورة بكاميرا الهاتف</span>

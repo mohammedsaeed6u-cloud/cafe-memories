@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Cairo, Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
+import { Cairo, Playfair_Display, Plus_Jakarta_Sans, Caveat, Lobster, Barlow_Condensed } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +24,27 @@ const jakarta = Plus_Jakarta_Sans({
   display: 'swap',
 });
 
+const caveat = Caveat({
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  variable: '--font-caveat',
+  display: 'swap',
+});
+
+const lobster = Lobster({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-script',
+  display: 'swap',
+});
+
+const barlowCondensed = Barlow_Condensed({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  variable: '--font-head',
+  display: 'swap',
+});
+
 export const viewport: Viewport = {
   themeColor: '#141313',
   width: 'device-width',
@@ -34,30 +55,36 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://memories-c9w.pages.dev'),
-  title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
+  title: 'Stampy • منصة بطاقات الولاء ومحافظ Apple & Google للمتاجر والمقاهي',
   description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوري عبر الهاتف بدون تطبيق، شاشات عرض تفاعلية للصالة، وكروت ولاء رقمية في محفظة Apple و Google Wallet للمطاعم، الكافيهات، المتاجر، الصالونات، والفعاليات.',
   keywords: ['فوتوبوث رقمي', 'ولاء العملاء', 'استوديو تصوير للأنشطة التجارية', 'شاشات الصالة الذكية', 'بطاقات ولاء رقمية', 'تجربة العميل', 'Apple Wallet', 'Google Wallet'],
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: '/icon.svg',
-    apple: '/icon.svg',
+    icon: [
+      { url: '/brand/stampy-app-icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/brand/06-stampy-app-icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/brand/stampy-app-icon-32.png',
+    apple: [
+      { url: '/brand/stampy-app-icon-180.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Memories',
+    title: 'Stampy',
   },
   openGraph: {
-    title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
+    title: 'Stampy • بطاقات الولاء ومحافظ الهواتف الذكية',
     description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
     url: 'https://memories-c9w.pages.dev',
-    siteName: 'memories',
+    siteName: 'Stampy',
     locale: 'ar_SA',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
+    title: 'Stampy • منصة بطاقات الولاء ومحافظ Apple & Google الذكية',
     description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
   },
   verification: {
@@ -75,9 +102,16 @@ export default function RootLayout({
       lang="ar"
       dir="rtl"
       suppressHydrationWarning
-      className={cn(cairo.variable, playfair.variable, jakarta.variable)}
+      className={cn(
+        cairo.variable,
+        playfair.variable,
+        jakarta.variable,
+        caveat.variable,
+        lobster.variable,
+        barlowCondensed.variable
+      )}
     >
-      <body className="min-h-screen bg-[#141313] text-[#e6e1e1] font-sans antialiased selection:bg-[#DD0200] selection:text-white">
+      <body className="min-h-screen bg-[#141313] text-[#e6e1e1] font-sans antialiased selection:bg-[#DFAB56] selection:text-white">
         {children}
       </body>
     </html>

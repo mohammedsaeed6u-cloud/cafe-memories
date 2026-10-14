@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireApiAuth, isAuthFailure } from '@/lib/api-guard';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Unified server-side auth guard (CWE-862, CWE-306)
+    const auth = await requireApiAuth(request, 'any-auth');
+    if (isAuthFailure(auth)) return auth;
+
+    const supabase = createAdminClient();
+
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId');
     const branchId = searchParams.get('branchId');
-
-    const supabase = createAdminClient();
 
     // Start of today (UTC)
     const todayStart = new Date();

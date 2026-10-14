@@ -1,0 +1,4 @@
+# Cloudflare Pages Single-Page Application (SPA) Fallbacks
+/c/*    /c    200
+/wall/* /wall/screen-1 200
+/kiosk/* /kiosk/stampy 200

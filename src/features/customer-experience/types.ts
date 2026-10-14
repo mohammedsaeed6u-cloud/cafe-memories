@@ -1,0 +1,75 @@
+import { BusinessSettings, PhotoboothFrame, PhotoboothCardMode, PlacedSticker } from '@/types/photobooth';
+import { CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
+import { CustomerCustomizationData } from '@/features/customization/CustomerCustomizerBar';
+
+export interface CustomerClientProps {
+  cafeSlug: string;
+  tableNumber?: string | null;
+}
+
+export interface UseCustomerExperienceReturn {
+  cafeSlug: string;
+  tableNumber?: string | null;
+  settings: BusinessSettings;
+  setSettings: React.Dispatch<React.SetStateAction<BusinessSettings>>;
+  staffLabel: string;
+  selectedFrame: PhotoboothFrame;
+  setSelectedFrame: React.Dispatch<React.SetStateAction<PhotoboothFrame>>;
+  cardMode: PhotoboothCardMode;
+  setCardMode: React.Dispatch<React.SetStateAction<PhotoboothCardMode>>;
+  spotifyBg: string;
+  setSpotifyBg: React.Dispatch<React.SetStateAction<string>>;
+  spotifyTrack: { title: string; artist: string };
+  setSpotifyTrack: React.Dispatch<React.SetStateAction<{ title: string; artist: string }>>;
+  ticketSeat: string;
+  setTicketSeat: React.Dispatch<React.SetStateAction<string>>;
+  activeTab: 'studio' | 'loyalty';
+  setActiveTab: React.Dispatch<React.SetStateAction<'studio' | 'loyalty'>>;
+  customerName: string;
+  setCustomerName: React.Dispatch<React.SetStateAction<string>>;
+  customerPhone: string;
+  setCustomerPhone: React.Dispatch<React.SetStateAction<string>>;
+  loyaltyData: CustomerLoyaltyData;
+  setLoyaltyData: React.Dispatch<React.SetStateAction<CustomerLoyaltyData>>;
+  customization: CustomerCustomizationData;
+  handleCustomizationChange: (newCustomization: Partial<CustomerCustomizationData>) => void;
+  isStaffStampModalOpen: boolean;
+  setIsStaffStampModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isNotificationModalOpen: boolean;
+  setIsNotificationModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isCustomizerOpen: boolean;
+  setIsCustomizerOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isCameraModalOpen: boolean;
+  setIsCameraModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isWallConsentModalOpen: boolean;
+  setIsWallConsentModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isCompletionRewardOpen: boolean;
+  setIsCompletionRewardOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  hasAnsweredWallConsent: boolean;
+  iosSaveModalImage: string | null;
+  setIosSaveModalImage: React.Dispatch<React.SetStateAction<string | null>>;
+  accumulatedPhotos: string[];
+  setAccumulatedPhotos: React.Dispatch<React.SetStateAction<string[]>>;
+  giftCode: string;
+  stickers: PlacedSticker[];
+  setStickers: React.Dispatch<React.SetStateAction<PlacedSticker[]>>;
+  isStickerTrayOpen: boolean;
+  setIsStickerTrayOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  activeCaptureSlot: number | null;
+  setActiveCaptureSlot: React.Dispatch<React.SetStateAction<number | null>>;
+  regName: string;
+  setRegName: React.Dispatch<React.SetStateAction<string>>;
+  regPhone: string;
+  setRegPhone: React.Dispatch<React.SetStateAction<string>>;
+  regSuccessNotice: string | null;
+  totalCardSlots: number;
+  loyaltyMaxVisits: number;
+  currentDisplayPhotos: string[];
+  handleAddSticker: (emoji: string) => void;
+  handleStaffStampSuccess: () => void;
+  handleRegisterCustomer: (e: React.FormEvent) => void;
+  handleClearCustomer: () => void;
+  handleCommitPhoto: (photoBase64: string, targetSlot?: number) => void;
+  handleWallConsent: (consent: boolean) => void;
+  handlePrintOrDownload: () => Promise<void>;
+}

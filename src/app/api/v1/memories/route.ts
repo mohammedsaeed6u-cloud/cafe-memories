@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
+import { requireApiAuth, isAuthFailure } from '@/lib/api-guard';
+
+export const dynamic = 'force-dynamic';
 
 const createMemoryRequestSchema = z.object({
   customerId: z.string().uuid(),
@@ -47,7 +50,16 @@ export async function GET(request: NextRequest) {
 
     // Guest Privacy & Wall display verification:
     // Strictly fetch memories where visibility === 'live_wall' AND status === 'approved'
-    // (Only bypassed when explicitly requested with 'all' by authorized dashboard moderation)
+    // The 'all' bypass exposes pending/rejected/hidden moderation rows and is
+    // therefore merchant/staff-only (CWE-862) — anonymous callers stay pinned
+    // to approved+live_wall regardless of what they request.
+    const requestsModerationBypass =
+      statusParam === 'all' || visibilityParam === 'all';
+    if (requestsModerationBypass) {
+      const auth = await requireApiAuth(request, 'any-auth');
+      if (isAuthFailure(auth)) return auth;
+    }
+
     if (statusParam && statusParam !== 'all') {
       query = query.eq('status', statusParam);
     } else if (!statusParam) {
@@ -147,6 +159,10 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Moderation is merchant/staff-only (CWE-862)
+    const auth = await requireApiAuth(request, 'any-auth');
+    if (isAuthFailure(auth)) return auth;
+
     const rawBody = await request.json();
     const parsed = updateMemoryStatusSchema.safeParse(rawBody);
 
@@ -175,6 +191,36 @@ export async function PATCH(request: NextRequest) {
       success: true,
       memory: updatedMemory,
     });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    // Deletion is merchant/staff-only (CWE-862)
+    const auth = await requireApiAuth(request, 'any-auth');
+    if (isAuthFailure(auth)) return auth;
+
+    const { searchParams } = new URL(request.url);
+    let memoryId = searchParams.get('memoryId');
+    if (!memoryId) {
+      const body = await request.json().catch(() => ({}));
+      memoryId = body.memoryId;
+    }
+
+    if (!memoryId) {
+      return NextResponse.json({ error: 'memoryId is required' }, { status: 400 });
+    }
+
+    const supabase = createAdminClient();
+    const { error } = await supabase.from('memories').delete().eq('id', memoryId);
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to delete memory', details: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, memoryId });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }

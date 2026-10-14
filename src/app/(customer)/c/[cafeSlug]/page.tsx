@@ -2,6 +2,10 @@ import { CustomerClient } from '@/components/customer/CustomerClient';
 
 export function generateStaticParams() {
   return [
+    { cafeSlug: 'demo' },
+    { cafeSlug: 'stampy' },
+    { cafeSlug: 'espresso-lab' },
+    { cafeSlug: 'loyalty' },
     { cafeSlug: 'memories' },
     { cafeSlug: 'studio' },
     { cafeSlug: 'flagship' },
@@ -27,7 +31,7 @@ interface CustomerPageProps {
 
 export default async function CustomerPhotoboothPage({ params }: CustomerPageProps) {
   const resolved = await params;
-  const cafeSlug = resolved?.cafeSlug || 'memories';
+  const cafeSlug = resolved?.cafeSlug || 'stampy';
 
   return <CustomerClient cafeSlug={cafeSlug} />;
 }

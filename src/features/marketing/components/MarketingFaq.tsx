@@ -1,105 +1,86 @@
 'use client';
 
-import React from 'react';
-import { AppleAccordion, AppleAccordionItem } from '@/components/ui/ark/AppleAccordion';
-import { HelpCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronDown, Sparkles } from 'lucide-react';
 
 export function MarketingFaq() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
   const faqs = [
     {
-      id: 'no-app',
-      q: 'هل يحتاج العميل لتحميل أي تطبيق على هاتفه؟',
-      a: 'لا، نهائياً. تعمل المنظومة مباشرة داخل متصفح هاتف الزائر (Safari / Chrome) بمجرد مسح رمز QR الطاولة، دون أي تحميل أو تسجيل حساب معقد.',
+      q: 'هل يحتاج عميلي لتحميل أي تطبيق على هاتفه؟',
+      a: 'لا، نهائياً وبشكل قاطع. يمسح العميل رمز الـ QR بكاميرا هاتفه فيفتح الكارت مباشرة في المتصفح ويُحفظ بنقرة واحدة في محفظة Apple Wallet أو Google Wallet الرسمية المثبتة مسبقاً في جهازه.',
     },
     {
-      id: 'no-booth',
-      q: 'هل يحتاج المكان لشراء كابينة تصوير باهظة؟',
-      a: 'لا حاجة لكابينة تصوير مخصصة. يلتقط الزائر الصور بكاميرا هاتفه الشخصية مباشرة من طاولته، مما يوفر مساحة الصالة وتكاليف الأجهزة.',
+      q: 'هل أحتاج لشراء أجهزة كاشير POS جديدة أو جهاز مخصص؟',
+      a: 'لا، ستامبي يعمل سحابياً بالكامل. يمكنك إدارة الكروت والختم من أي شاشة كاشير، هاتف، أو تابلت موجود في متجرك حالياً عبر المتصفح برمز PIN سريع لا يستغرق أكثر من ثانيتين.',
     },
     {
-      id: 'tv-screen',
-      q: 'هل نحتاج بالضرورة إلى شاشة تلفزيون (TV) في الصالة؟',
-      a: 'الشاشة ميزة تفاعلية اختيارية. يمكنك تشغيل شاشة الصالة الحية (Live Wall) على أي شاشة تلفزيون ذكية موجودة بالصالة عبر فتح الرابط المخصص للفرع بمتصفح الشاشة، أو الاكتفاء بالمنظومة الرقمية بالكامل على هواتف الزوار.',
+      q: 'كم يستغرق تجهيز وإطلاق كارت متجري؟',
+      a: 'دقيقتان فقط. ترفع شعار علامتك، تختار ألوانك ورمز الختم والهدية، وتطبع رمز الـ QR لتبدأ فوراً مع أول زبون يدخل متجرك اليوم.',
     },
     {
-      id: 'printer',
-      q: 'هل نحتاج إلى شراء طابعة مخصصة؟',
-      a: 'الطابعة اختيارية تماماً. يمكنك العمل بالنظام الرقمي 100% حيث يحفظ الزائر كارت الذكرى في محفظة Apple و Google Wallet، وإذا رغبت في تقديم طباعة ورقية ملموسة، فالنظام متوافق مع أي طابعة صور لاسلكية تدعم بروتوكولات الطباعة القياسية.',
+      q: 'كيف تعمل تنبيهات شاشة القفل التلقائية (Geofencing)؟',
+      a: 'محافظ Apple & Google تدعم تحديد الموقع الجغرافي المدمج. بمجرد اقتراب حامل الكارت من متجرك بمسافة 100 متر، يضيء هاتفه تلقائياً بإشعار ترحيبي يذكره بزيارتكم واستلام مكافأته، مجاناً بالكامل وبدون رسوم رسائل SMS.',
     },
     {
-      id: 'digital-only',
-      q: 'هل يمكن تشغيل النظام بدون طباعة ورقية نهائياً؟',
-      a: 'نعم، باقة DIGITAL مصممة للعمل رقمياً بالكامل: التقاط الهاتف، شاشة الصالة الحية، وحفظ كارت الولاء في المحفظة الإلكترونية بدون الحاجة لأي ورق أو أحبار.',
-    },
-    {
-      id: 'branding',
-      q: 'هل يمكننا تخصيص الشعار والألوان والفريمات لتطابق هويتنا؟',
-      a: 'نعم بالكامل. تتيح لك لوحة التحكم رفع شعار علامتك التجارية، اختيار ألوان الكارت، كتابة اسم حساب إنستغرام لعمل المنشن التلقائي، وتحديد نمط الفريم (كوري، نوار، إيديتوريال، أو بطاقة بريدية).',
-    },
-    {
-      id: 'loyalty',
-      q: 'كيف يعمل نظام ولاء العملاء والأختام الرقمية؟',
-      a: 'يحصل الزائر على كارت ولاء رقمي يُحفظ في محفظة الهاتف (Apple Wallet / Google Wallet). مع كل زيارة يمسح موظف الكاونتر أو الكاشير كود العميل السريع أو يُدخل رمز PIN لمنحه ختماً، وعند اكتمال الأختام تُفتح له المكافأة المستحقة.',
-    },
-    {
-      id: 'moderation',
-      q: 'كيف تتم مراجعة واعتماد الصور قبل ظهورها على شاشة الصالة؟',
-      a: 'تمر الصور بمرحلتين أمان: أولاً موافقة الزائر الصريحة على رغبته بالظهور في الشاشة، وثانياً مراجعة فورية من طاقم العمل عبر تبويب (اعتماد الذكريات) في لوحة التحكم لمنع ظهور أي محتوى غير لائق.',
-    },
-    {
-      id: 'deletion',
-      q: 'هل يستطيع الزائر حذف صوره وبياناته في أي وقت؟',
-      a: 'نعم، نحترم خصوصية الزوار تماماً. تحتوي واجهة الزائر على خيار طلب حذف الصورة والبيانات، كما يمكن لفريق العمل إخفاء أو حذف أي ذكرى مباشرة من لوحة التحكم.',
-    },
-    {
-      id: 'multi-branch',
-      q: 'هل يمكنني إدارة أكثر من فرع لنشاطي التجاري من حساب واحد؟',
-      a: 'نعم، عبر باقة MULTI-LOCATION يمكنك إضافة وإدارة فروعك بالكامل، تخصيص شاشة صالة منفصلة لكل فرع، ومتابعة تقارير الزيارات والولاء لكل موقع من لوحة إدارة موحدة.',
-    },
-    {
-      id: 'pos',
-      q: 'هل يتكامل النظام مع برامج نقاط البيع (POS)؟',
-      a: 'يعمل النظام باستقلالية كاملة وسلاسة دون الحاجة لربط معقد مع الكاشير، كما نوفر في باقة المؤسسات (Enterprise) واجهات برمجة تطبيقات (Webhooks / API) للربط المباشر مع أنظمة نقاط البيع المعتمدة.',
-    },
-    {
-      id: 'cancellation',
       q: 'هل يمكنني إلغاء الاشتراك في أي وقت؟',
-      a: 'نعم، اشتراكاتنا شهرية مرنة بدون عقود إلزامية سنوية أو شروط جزائية. يمكنك ترقية أو تخفيض أو إلغاء باقتك في أي وقت من لوحة الإعدادات.',
+      a: 'نعم، بكل سهولة ومن نقرة واحدة في الإعدادات. لا توجد أي عقود سنوية ملزمة ولا رسوم خفية.',
     },
   ];
 
   return (
-    <section id="faq" className="py-24 px-6 max-w-4xl mx-auto border-t border-white/10 apple-font">
-      <div className="text-center mb-16">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-md border border-white/10 bg-[#55100D]/50 text-[10px] font-mono tracking-widest text-[#FBF9F5] uppercase mb-3 backdrop-blur-xl">
-          <HelpCircle className="w-3.5 h-3.5 text-[#DD0200]" />
-          <span>FREQUENTLY ASKED • إجابات واضحة</span>
+    <section className="faq-section py-20 px-4 bg-[#F7F3EA] border-b-[2.5px] border-[#1B1B1E]" id="faq">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <span className="kicker">FREQUENTLY ASKED QUESTIONS</span>
+          <h2 className="h2-poster center">
+            GOT QUESTIONS? <span className="purp">WE GOT TAPS.</span>
+          </h2>
+          <p className="sub-poster center">
+            Everything you need to know about ditching paper and owning your customer relationship.
+            <br className="hidden sm:inline" />
+            كل ما تحتاج معرفته عن كروت الولاء الرقمية واستبدال الكروت الورقية للأبد.
+          </p>
         </div>
-        <h2
-          className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight"
-          style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-        >
-          كل ما تحتاج معرفته قبل الانطلاق.
-        </h2>
-        <p className="text-sm sm:text-base text-[#A19E9B] mt-3.5 max-w-xl mx-auto leading-relaxed">
-          إجابات دقيقة ومباشرة على أكثر الأسئلة شيوعاً حول تقنية الأستوديو وتشغيل البيزنس.
-        </p>
-      </div>
 
-      <AppleAccordion defaultValue={['no-app']} collapsible className="space-y-3">
-        {faqs.map((f) => (
-          <AppleAccordionItem
-            key={f.id}
-            value={f.id}
-            title={f.q}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] backdrop-blur-xl transition-all duration-200"
-          >
-            <div className="text-xs sm:text-sm text-[#D9D9D9]/80 leading-relaxed pt-1 pb-2">
-              {f.a}
-            </div>
-          </AppleAccordionItem>
-        ))}
-      </AppleAccordion>
+        {/* Neo-brutalist Accordion Items */}
+        <div className="space-y-4">
+          {faqs.map((faq, i) => {
+            const isOpen = openIndex === i;
+            return (
+              <div
+                key={i}
+                className="bg-white rounded-2xl border-[2.5px] border-[#1B1B1E] shadow-[4px_4px_0_#1B1B1E] transition-all overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(isOpen ? null : i)}
+                  className="w-full p-5 sm:p-6 text-right flex items-center justify-between gap-4 cursor-pointer select-none"
+                >
+                  <span className="font-head text-lg sm:text-xl font-black text-[#1B1B1E] uppercase tracking-tight">
+                    {faq.q}
+                  </span>
+                  <div
+                    className={`w-8 h-8 rounded-full border-2 border-[#1B1B1E] flex items-center justify-center shrink-0 transition-transform duration-200 ${
+                      isOpen ? 'bg-[#f0456a] text-white rotate-180' : 'bg-[#FAF5EB] text-[#682025]'
+                    }`}
+                  >
+                    <ChevronDown className="w-4 h-4 stroke-[3]" />
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <div className="px-5 sm:px-6 pb-6 text-sm text-[#4a3a6a] leading-relaxed border-t-2 border-[#e2dbf0] pt-4">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </section>
   );
 }
