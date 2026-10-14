@@ -12,6 +12,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@/middleware': path.resolve(__dirname, './src/proxy.ts'),
       '@': path.resolve(__dirname, './src'),
     },
   },

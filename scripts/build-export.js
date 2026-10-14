@@ -8,6 +8,9 @@ const backupPath = path.join(rootDir, 'api_routes_backup');
 const publicDir = path.join(rootDir, 'public');
 const outDir = path.join(rootDir, 'out');
 
+const authCustomerPath = path.join(rootDir, 'src', 'app', 'auth', 'customer');
+const authCustomerBackup = path.join(rootDir, 'auth_customer_backup');
+
 console.log('[build-export] Preparing Next.js static export for Cloudflare Pages...');
 
 function safeMove(src, dst) {
@@ -31,12 +34,19 @@ function safeMove(src, dst) {
   }
 }
 
-let moved = false;
+let movedApi = false;
+let movedAuthCustomer = false;
 try {
   if (fs.existsSync(apiPath)) {
     safeMove(apiPath, backupPath);
-    moved = true;
+    movedApi = true;
     console.log('[build-export] Moved src/app/api -> api_routes_backup');
+  }
+
+  if (fs.existsSync(authCustomerPath)) {
+    safeMove(authCustomerPath, authCustomerBackup);
+    movedAuthCustomer = true;
+    console.log('[build-export] Moved src/app/auth/customer -> auth_customer_backup');
   }
 
   process.env.STATIC_EXPORT = '1';
@@ -66,8 +76,12 @@ try {
   console.error('[build-export] Build failed:', err.message);
   process.exit(1);
 } finally {
-  if (moved && fs.existsSync(backupPath)) {
+  if (movedApi && fs.existsSync(backupPath)) {
     safeMove(backupPath, apiPath);
     console.log('[build-export] Restored api_routes_backup -> src/app/api');
+  }
+  if (movedAuthCustomer && fs.existsSync(authCustomerBackup)) {
+    safeMove(authCustomerBackup, authCustomerPath);
+    console.log('[build-export] Restored auth_customer_backup -> src/app/auth/customer');
   }
 }

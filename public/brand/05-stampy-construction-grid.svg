@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 450" width="700" height="450">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Inter:wght@700&amp;display=swap');
+  <style>700&amp;family=Inter:wght@700&amp;display=swap');
   </style>
   <rect width="100%" height="100%" fill="#EDE4D3" />
   <text x="40" y="45" font-family="'Inter', sans-serif" font-size="20" font-weight="700" fill="#44230D">Construction Grid</text>

@@ -56,7 +56,7 @@ function applySecurityHeaders(res: NextResponse, isApi: boolean, requestOrigin?:
   return res;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
   const isApi = pathname.startsWith('/api/');
   const origin = request.headers.get('origin');
@@ -228,15 +228,20 @@ export async function middleware(request: NextRequest) {
   return applySecurityHeaders(supabaseResponse, isApi, origin);
 }
 
+export const middleware = proxy;
+
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/dashboard/:path*",
+    "/terminal/:path*",
+    "/barista/:path*",
+    // /brand is the merchant page; /brand/* hosts the official public logo/PWA assets.
+    // The layout protects the page too. Never intercept its static descendants.
+    "/brand",
+    "/crm/:path*",
+    "/campaigns/:path*",
+    "/admin/:path*",
+    "/onboarding/:path*",
+    '/((?!_next/static|_next/image|favicon.ico|brand/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

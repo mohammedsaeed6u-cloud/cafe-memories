@@ -1,102 +1,76 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import crypto from 'crypto';
+import { apiError, resolveVenue } from '@/lib/server/context';
 
-export const dynamic = 'force-dynamic';
+const sessionSchema = z.object({ cafeSlug: z.string().regex(/^[a-z0-9][a-z0-9-]{2,39}$/),
+  branchSlug: z.string().regex(/^[a-z0-9][a-z0-9-]{0,59}$/).optional() });
 
-export async function POST(request: NextRequest) {
+/** Supabase Auth anonymous users are real, independently verifiable sessions. */
+export async function POST(request: Request) {
+  const parsed = sessionSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return apiError('Invalid venue', 400);
   try {
-    let body: any = {};
-    try {
-      body = await request.json();
-    } catch {
-      body = {};
-    }
-
-    const cookieAnonId = request.cookies.get('cafe_memories_anon_id')?.value;
-    const clientAnonId = body.anonymousId || cookieAnonId;
-
-    const supabase = createAdminClient();
-    let customer: any = null;
-
-    if (clientAnonId) {
-      const { data: existingCustomer } = await supabase
-        .from('customers')
-        .select('id, anonymous_id, display_name, created_at, last_seen_at')
-        .eq('anonymous_id', clientAnonId)
-        .maybeSingle();
-
-      if (existingCustomer) {
-        customer = existingCustomer;
-        // Update last seen
-        await supabase
-          .from('customers')
-          .update({ last_seen_at: new Date().toISOString() })
-          .eq('id', customer.id);
-      }
-    }
-
+    const db = await createClient();
+    const { data: { user }, error: authError } = await db.auth.getUser();
+    if (authError || !user) return apiError('Sign in or start a Supabase guest session first', 401);
+    const venue = await resolveVenue(parsed.data.cafeSlug, parsed.data.branchSlug);
+    if (!venue) return apiError('Venue not found', 404);
+    const admin = createAdminClient();
+    const { data: existingCustomer, error } = await admin.from('customers')
+      .select('id, display_name').eq('auth_user_id', user.id).is('deleted_at', null).maybeSingle();
+    if (error) return apiError('Could not load customer', 503);
+    let customer = existingCustomer;
     if (!customer) {
-      const newAnonId = 'anon_' + crypto.randomBytes(16).toString('hex');
-      const { data: newCustomer, error } = await supabase
-        .from('customers')
-        .insert({
-          anonymous_id: newAnonId,
-          display_name: 'ضيف مميز',
-        })
-        .select()
-        .single();
-
-      if (error || !newCustomer) {
-        return NextResponse.json({ error: 'Failed to create guest identity', details: error?.message }, { status: 500 });
-      }
-
-      customer = newCustomer;
-
-      // Link identity provider
-      await supabase.from('customer_identities').insert({
-        customer_id: customer.id,
-        provider: 'anonymous',
-        provider_subject: newAnonId,
-      });
+      const suggestedName = user.is_anonymous ? null : user.user_metadata?.full_name;
+      const displayName = typeof suggestedName === 'string' &&
+        suggestedName.trim().length >= 2 && !/\p{Cc}/u.test(suggestedName)
+        ? suggestedName.trim().slice(0, 80) : 'ضيف مميز';
+      const created = await admin.from('customers').insert({ auth_user_id: user.id, display_name: displayName })
+        .select('id, display_name').single();
+      if (created.error) {
+        // Another tab may have provisioned the same auth user concurrently.
+        const retry = await admin.from('customers').select('id, display_name')
+          .eq('auth_user_id', user.id).is('deleted_at', null).maybeSingle();
+        if (retry.error || !retry.data) return apiError('Could not create customer', 503);
+        customer = retry.data;
+      } else customer = created.data;
     }
-
-    // Fetch customer's verified visits count & memories for café story
-    const { count: visitsCount } = await supabase
-      .from('visits')
-      .select('*', { count: 'exact', head: true })
-      .eq('customer_id', customer.id)
-      .eq('verification_status', 'verified');
-
-    const { data: memories } = await supabase
-      .from('memories')
-      .select('id, original_url, optimized_url, thumbnail_url, caption, status, visibility, created_at')
-      .eq('customer_id', customer.id)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    const response = NextResponse.json({
-      success: true,
-      customer: {
-        id: customer.id,
-        anonymousId: customer.anonymous_id,
-        displayName: customer.display_name,
-        visitsCount: visitsCount || 0,
-        memories: memories || [],
-      },
-    });
-
-    // Set persistent session cookie (1 year expiry)
-    response.cookies.set('cafe_memories_anon_id', customer.anonymous_id, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 365 * 24 * 60 * 60,
-    });
-
-    return response;
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    // Customer presence is branch-scoped and short-lived. It never counts as a purchase.
+    const { error: checkinError } = await db.rpc('check_in_customer', { p_branch_id: venue.branchId });
+    if (checkinError) {
+      console.error('Customer check-in failed:', checkinError);
+      return apiError('Could not start venue session', 503);
+    }
+    const [visits, memories, settings, history] = await Promise.all([
+      admin.from('visits').select('*', { head: true, count: 'exact' })
+        .eq('customer_id', customer.id).eq('organization_id', venue.organizationId)
+        .eq('verification_status', 'verified'),
+      admin.from('memories').select('id, caption, status, visibility, created_at, branch_id')
+        .eq('customer_id', customer.id).eq('organization_id', venue.organizationId)
+        .is('deleted_at', null).neq('status', 'deleted')
+        .order('created_at', { ascending: false }).limit(30),
+      admin.from('customer_accounts').select('phone').eq('customer_id', customer.id).maybeSingle(),
+      db.rpc('customer_has_saved_data'),
+    ]);
+    if (visits.error || memories.error || settings.error || history.error || typeof history.data !== 'boolean') {
+      console.error('Customer account lookup failed:', visits.error ?? memories.error ?? settings.error ?? history.error);
+      return apiError('Could not load customer account', 503);
+    }
+    return NextResponse.json({ customer: { id: customer.id, displayName: customer.display_name },
+      account: { authUserId: user.id, phone: settings.data?.phone ?? null,
+        email: user.is_anonymous ? null : user.email ?? null,
+        isAnonymous: user.is_anonymous === true, googleLinked: user.identities?.some((identity) => identity.provider === 'google') ?? false,
+        hasSavedData: history.data },
+      venue, verifiedVisits: visits.count ?? 0,
+      memories: (memories.data ?? []).map((memory) => ({
+        id: memory.id, caption: memory.caption, status: memory.status, visibility: memory.visibility,
+        createdAt: memory.created_at, branchId: memory.branch_id,
+        imageUrl: `/api/v1/media/${memory.id}?variant=optimized`,
+      })) }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) {
+    console.error('Customer session failed:', error);
+    return apiError('Customer session unavailable', 503);
   }
 }

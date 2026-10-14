@@ -23,6 +23,9 @@
       }
     ],
     "paths": {
+      "@/middleware": [
+        "./src/proxy.ts"
+      ],
       "@/*": [
         "./src/*"
       ]

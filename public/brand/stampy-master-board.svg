@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg id="stampy-master-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="auto">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=Space+Mono:wght@400;700&amp;display=swap');
+  <style>400;500;600;700;800;900&amp;family=Space+Mono:wght@400;700&amp;display=swap');
     .section-head { font-family: 'Inter', Arial, sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
     .body-sans { font-family: 'Inter', Arial, sans-serif; }
     .mono-cad { font-family: 'Inter', Arial, sans-serif; }
@@ -93,7 +92,7 @@
     <!-- Chamfered Solid Border -->
     <path d="M 753.0 331.0 L 912.0 331.0 L 924.0 343.0 L 924.0 412.0 L 912.0 424.0 L 753.0 424.0 L 741.0 412.0 L 741.0 343.0 Z" fill="none" stroke="#44230D" stroke-width="1.8" />
 
-    
+
 
     <!-- Centered Aperture -->
     <g transform="translate(832.5, 377.5) scale(1.0783657066309444) translate(-59.86, -74.08)">
