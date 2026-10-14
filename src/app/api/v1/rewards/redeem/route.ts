@@ -129,7 +129,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Atomically record redemption event
+    // 4. Atomically record redemption event via authoritative RPC
+    if (branchId && uuidRegex.test(branchId) && uuidRegex.test(rule.id) && customerId && uuidRegex.test(customerId)) {
+      const { data: rpcData, error: rpcError } = await supabase.rpc('redeem_customer_reward', {
+        p_customer_id: customerId,
+        p_branch_id: branchId,
+        p_reward_rule_id: rule.id,
+        p_idempotency_key: idempotencyKey,
+      });
+
+      if (!rpcError && rpcData) {
+        return NextResponse.json({
+          success: true,
+          ...(rpcData as Record<string, unknown>),
+        });
+      }
+      if (rpcError && rpcError.code === '23514') {
+        return NextResponse.json({ error: 'العميل لا يمتلك زيارات كافية لصرف هذه المكافأة' }, { status: 403 });
+      }
+    }
+
     const { data: newEvent, error: insertError } = await supabase
       .from('reward_events')
       .insert({

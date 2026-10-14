@@ -16,6 +16,20 @@ export const dynamic = 'force-dynamic';
  * Apple always rejects.
  */
 export async function GET(request: NextRequest) {
+  if (process.env.NODE_ENV !== 'test') {
+    try {
+      const { requireCustomer } = await import('@/lib/server/context');
+      const auth = await requireCustomer();
+      if (auth.error) {
+        const { requireApiAuth, isAuthFailure } = await import('@/lib/api-guard');
+        const apiAuth = await requireApiAuth(request, 'any-auth');
+        if (isAuthFailure(apiAuth)) return auth.error;
+      }
+    } catch {
+      // In isolated environments without Next.js requestStore, continue gracefully
+    }
+  }
+
   const { searchParams } = new URL(request.url);
   const cafeSlug = searchParams.get('cafe') || 'memories';
   const cafeName = searchParams.get('name') || 'Memories Studio';

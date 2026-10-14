@@ -39,7 +39,14 @@ async function as<T>(role: 'authenticated' | 'service_role', userId: string | nu
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(bootstrap);
-  for (const migration of ['00001_initial_schema.sql', '00002_product_refactor.sql']) {
+  for (const migration of [
+    '00001_initial_schema.sql',
+    '00002_product_refactor.sql',
+    '00003_wallet_pass_links.sql',
+    '00004_tenant_wallet_quotas.sql',
+    '00005_security_and_rls_hardening.sql',
+    '00006_production_complete.sql',
+  ]) {
     await db.exec(readFileSync(new URL(migration, sqlDir), 'utf8'));
   }
   // A historical API could set verification_status without staff authorization.
@@ -63,6 +70,7 @@ beforeAll(async () => {
   await db.exec(readFileSync(new URL('00008_customer_accounts.sql', sqlDir), 'utf8'));
   await db.exec(readFileSync(new URL('00009_visit_keepsakes.sql', sqlDir), 'utf8'));
   await db.exec(readFileSync(new URL('00010_brand_wallet_privacy.sql', sqlDir), 'utf8'));
+  await db.exec(readFileSync(new URL('00011_remediate_legacy_policies.sql', sqlDir), 'utf8'));
   // Mirrors Supabase default public-schema grants while preserving explicit
   // server-only secrets / validated-write restrictions from the migration.
   await db.exec(`GRANT USAGE ON SCHEMA public, auth TO authenticated, service_role;
@@ -100,6 +108,13 @@ describe('migration security invariants (real PostgreSQL engine)', () => {
       'SELECT m.visibility,c.live_wall_consent FROM public.memories m JOIN public.memory_consents c ON c.memory_id=m.id WHERE m.id=$1',
       [legacyMemoryId])).rows[0];
     expect(legacy).toEqual({ visibility: 'private', live_wall_consent: false });
+  });
+
+  it('ensures loose legacy RLS policies are completely remediated', async () => {
+    const policies = (await db.query<{ policyname: string }>(
+      "SELECT policyname FROM pg_policies WHERE policyname IN ('Visits insertable by visitors', 'Customers can register checkins', 'Customers can upload memories', 'Wallet links readable and writable', 'Wallet pass links viewable by all')"
+    )).rows;
+    expect(policies).toHaveLength(0);
   });
 
   it('persists only the caller’s customer settings and hides the contact number from merchants', async () => {

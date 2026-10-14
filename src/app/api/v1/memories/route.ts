@@ -109,6 +109,14 @@ export async function POST(request: NextRequest) {
       consents,
     } = parsed.data;
 
+    // Strict customer identity validation: only the authenticated guest can post memories
+    const { requireCustomer } = await import('@/lib/server/context');
+    const customerAuth = await requireCustomer();
+    if (customerAuth.error) return customerAuth.error;
+    if (customerAuth.context.customerId !== customerId) {
+      return NextResponse.json({ error: 'Forbidden: customer mismatch' }, { status: 403 });
+    }
+
     const supabase = createAdminClient();
 
     // 1. Insert memory record

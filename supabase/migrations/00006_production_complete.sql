@@ -7,7 +7,11 @@
 -- ==============================================================================
 
 -- 1. Ensure extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+DO $$ BEGIN
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
 
 -- 2. Organizations (Tenants)
 CREATE TABLE IF NOT EXISTS organizations (
@@ -122,34 +126,15 @@ ALTER TABLE visits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wallet_pass_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tenant_wallet_quotas ENABLE ROW LEVEL SECURITY;
 
--- Anonymous Customer & Storefront Policies
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public organizations are readable') THEN
-        CREATE POLICY "Public organizations are readable" ON organizations FOR SELECT USING (true);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public branches are readable') THEN
-        CREATE POLICY "Public branches are readable" ON branches FOR SELECT USING (true);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Approved memories viewable on wall') THEN
-        CREATE POLICY "Approved memories viewable on wall" ON memories FOR SELECT USING (status = 'approved');
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Customers can register checkins') THEN
-        CREATE POLICY "Customers can register checkins" ON visits FOR INSERT WITH CHECK (true);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Customers can upload memories') THEN
-        CREATE POLICY "Customers can upload memories" ON memories FOR INSERT WITH CHECK (true);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Wallet links readable and writable') THEN
-        CREATE POLICY "Wallet links readable and writable" ON wallet_pass_links FOR ALL USING (true) WITH CHECK (true);
-    END IF;
-END $$;
+-- Anonymous Customer & Storefront Policies handled authoritatively by 00007-00011
 
 -- Ensure required columns exist on organizations if created by earlier migrations
+ALTER TABLE organizations ALTER COLUMN country SET DEFAULT 'SA';
 ALTER TABLE organizations ADD COLUMN IF NOT EXISTS subscription_tier TEXT DEFAULT 'pro';
 ALTER TABLE organizations ADD COLUMN IF NOT EXISTS primary_color TEXT DEFAULT '#5B2D9E';
 ALTER TABLE organizations ADD COLUMN IF NOT EXISTS logo_url TEXT;
 
 -- Seed Default Stampy Organization if not exists
-INSERT INTO organizations (name, slug, subscription_tier)
-VALUES ('Stampy Specialty Coffee', 'stampy', 'enterprise')
+INSERT INTO organizations (name, slug, country, subscription_tier)
+VALUES ('Stampy Specialty Coffee', 'stampy', 'SA', 'enterprise')
 ON CONFLICT (slug) DO NOTHING;

@@ -6,22 +6,32 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Unified server-side auth guard (CWE-862, CWE-306)
-    const auth = await requireApiAuth(request, 'any-auth');
-    if (isAuthFailure(auth)) return auth;
+    const { requireMerchant } = await import('@/lib/server/context');
+    const auth = await requireMerchant();
+    if (auth.error) {
+      const legacyAuth = await requireApiAuth(request, 'any-auth');
+      if (isAuthFailure(legacyAuth)) return auth.error;
+    }
 
-    const supabase = createAdminClient();
+    const orgId = auth.context?.membership?.organizationId;
+    const supabase = auth.context?.db || createAdminClient();
 
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format');
     const search = searchParams.get('search')?.toLowerCase();
     const roleFilter = searchParams.get('role');
 
-    // Fetch customers with related memories and visits
-    const { data: customersData, error } = await supabase
+    // Fetch customers scoped to the merchant's organization
+    let query = supabase
       .from('customers')
       .select('*, memories(*), visits(*)')
       .order('last_seen_at', { ascending: false });
+
+    if (orgId) {
+      query = query.eq('visits.organization_id', orgId);
+    }
+
+    const { data: customersData, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

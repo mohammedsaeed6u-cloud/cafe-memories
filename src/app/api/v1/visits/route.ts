@@ -28,8 +28,18 @@ export async function POST(request: Request) {
 
   const db = auth.context?.db || (await import('@/lib/supabase/admin')).createAdminClient();
   let orgId = auth.context?.membership?.organizationId;
+
   if (!orgId) {
-    const { data: b } = await db.from('branches').select('organization_id').eq('id', parsed.data.branchId).maybeSingle();
+    const { data: b } = await db
+      .from('branches')
+      .select('organization_id, organizations!inner(slug)')
+      .eq('id', parsed.data.branchId)
+      .maybeSingle();
+
+    if (!b) return apiError('Branch not found', 404);
+    if (staffClaims && (b as any).organizations?.slug !== staffClaims.cafeSlug) {
+      return apiError('Staff session does not match branch', 403);
+    }
     orgId = (b as { organization_id?: string } | null)?.organization_id;
   }
 
