@@ -1,181 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { apiError, requireMerchant } from '@/lib/server/context';
+import type { Database } from '@/types/database';
 
-const createMemoryRequestSchema = z.object({
-  customerId: z.string().uuid(),
-  organizationId: z.string().uuid(),
-  branchId: z.string().uuid(),
-  visitId: z.string().uuid().optional().nullable(),
-  originalUrl: z.string().url(),
-  optimizedUrl: z.string().url().optional().nullable(),
-  thumbnailUrl: z.string().url().optional().nullable(),
-  caption: z.string().max(280).optional().nullable(),
-  consents: z.object({
-    saveConsent: z.boolean().default(true),
-    socialShareConsent: z.boolean().default(false),
-    liveWallConsent: z.boolean().default(false),
-    marketingConsent: z.boolean().default(false),
-  }),
-});
+const moderationSchema = z.object({ memoryId: z.uuid(), status: z.enum(['approved', 'rejected', 'hidden', 'deleted']) });
 
-const updateMemoryStatusSchema = z.object({
-  memoryId: z.string().uuid(),
-  status: z.enum(['pending', 'approved', 'rejected', 'hidden', 'deleted']),
-  actorId: z.string().optional(),
-});
-
+/** Private moderation queue. The public wall has a separate, device-scoped feed. */
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const branchId = searchParams.get('branchId');
-    const organizationId = searchParams.get('organizationId');
-    const statusParam = searchParams.get('status');
-    const visibilityParam = searchParams.get('visibility');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
-    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
-
-    const supabase = createAdminClient();
-    let query = supabase
-      .from('memories')
-      .select('*, customers(display_name, avatar_url)')
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (branchId) query = query.eq('branch_id', branchId);
-    if (organizationId) query = query.eq('organization_id', organizationId);
-
-    // Guest Privacy & Wall display verification:
-    // Strictly fetch memories where visibility === 'live_wall' AND status === 'approved'
-    // (Only bypassed when explicitly requested with 'all' by authorized dashboard moderation)
-    if (statusParam && statusParam !== 'all') {
-      query = query.eq('status', statusParam);
-    } else if (!statusParam) {
-      query = query.eq('status', 'approved');
-    }
-
-    if (visibilityParam && visibilityParam !== 'all') {
-      query = query.eq('visibility', visibilityParam);
-    } else if (!visibilityParam) {
-      query = query.eq('visibility', 'live_wall');
-    }
-
-    const { data: memories, error, count } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: 'Failed to fetch memories', details: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      memories: memories || [],
-      count: count || (memories ? memories.length : 0),
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  const params = request.nextUrl.searchParams;
+  const auth = await requireMerchant({ organizationId: params.get('organizationId'), branchId: params.get('branchId') });
+  if (auth.error) return auth.error;
+  const { membership } = auth.context;
+  const branchId = membership.branchId ?? params.get('branchId');
+  const limit = Math.min(Math.max(Number(params.get('limit')) || 30, 1), 100);
+  const status = params.get('status');
+  if (status && !['all', 'pending', 'approved', 'rejected', 'hidden'].includes(status)) return apiError('Invalid status', 400);
+  let query = createAdminClient().from('memories')
+    .select('id, customer_id, branch_id, caption, created_at, status, visibility, customers(display_name)')
+    .eq('organization_id', membership.organizationId)
+    .order('created_at', { ascending: false }).limit(limit);
+  if (branchId) query = query.eq('branch_id', branchId);
+  if (status && status !== 'all') query = query.eq('status', status as Database['public']['Enums']['memory_status']);
+  else query = query.neq('status', 'deleted');
+  const before = params.get('before');
+  if (before && !Number.isNaN(Date.parse(before))) query = query.lt('created_at', before);
+  const { data, error } = await query;
+  if (error) {
+    console.error('Moderation read failed:', error);
+    return apiError('Could not load memories', 503);
   }
+  return NextResponse.json({ memories: (data ?? []).map((item) => ({
+    ...item, imageUrl: `/api/v1/media/${item.id}?variant=optimized`,
+  })) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = createMemoryRequestSchema.safeParse(rawBody);
-
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
-
-    const {
-      customerId,
-      organizationId,
-      branchId,
-      visitId,
-      originalUrl,
-      optimizedUrl,
-      thumbnailUrl,
-      caption,
-      consents,
-    } = parsed.data;
-
-    const supabase = createAdminClient();
-
-    // 1. Insert memory record
-    const { data: memory, error: memoryError } = await supabase
-      .from('memories')
-      .insert({
-        customer_id: customerId,
-        organization_id: organizationId,
-        branch_id: branchId,
-        visit_id: visitId || null,
-        original_url: originalUrl,
-        optimized_url: optimizedUrl || originalUrl,
-        thumbnail_url: thumbnailUrl || originalUrl,
-        caption: caption || null,
-        status: 'pending',
-        visibility: consents.liveWallConsent ? 'live_wall' : 'private',
-      })
-      .select()
-      .single();
-
-    if (memoryError) {
-      return NextResponse.json({ error: 'Failed to create memory', details: memoryError.message }, { status: 500 });
-    }
-
-    // 2. Link GDPR/CCPA Consent record
-    await supabase.from('memory_consents').insert({
-      memory_id: memory.id,
-      customer_id: customerId,
-      save_consent: consents.saveConsent,
-      social_share_consent: consents.socialShareConsent,
-      live_wall_consent: consents.liveWallConsent,
-      marketing_consent: consents.marketingConsent,
-    });
-
-    return NextResponse.json({
-      success: true,
-      memory: {
-        id: memory.id,
-        status: memory.status,
-        visibility: memory.visibility,
-        createdAt: memory.created_at,
-      },
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
-  }
+/** The legacy JSON endpoint accepted arbitrary external URLs and identity IDs. */
+export async function POST() {
+  return apiError('Use authenticated multipart /api/v1/memories/upload', 410);
 }
 
-export async function PATCH(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = updateMemoryStatusSchema.safeParse(rawBody);
-
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
-
-    const { memoryId, status, actorId } = parsed.data;
-    const supabase = createAdminClient();
-
-    const { data: updatedMemory, error } = await supabase
-      .from('memories')
-      .update({
-        status,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', memoryId)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: 'Failed to update memory status', details: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      memory: updatedMemory,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+export async function PATCH(request: Request) {
+  const parsed = moderationSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return apiError('Invalid moderation request', 400);
+  const auth = await requireMerchant({ roles: ['owner', 'admin', 'manager'] });
+  if (auth.error) return auth.error;
+  const admin = createAdminClient();
+  const { data: memory, error: readError } = await admin.from('memories')
+    .select('id, branch_id, visibility').eq('id', parsed.data.memoryId)
+    .eq('organization_id', auth.context.membership.organizationId).maybeSingle();
+  if (readError) return apiError('Memory unavailable', 503);
+  if (!memory || (auth.context.membership.branchId && memory.branch_id !== auth.context.membership.branchId)) {
+    return apiError('Memory not found in your branch', 404);
   }
+  if (parsed.data.status === 'approved' && memory.visibility === 'live_wall') {
+    const { data: consent } = await admin.from('memory_consents').select('live_wall_consent')
+      .eq('memory_id', memory.id).eq('live_wall_consent', true).maybeSingle();
+    if (!consent) return apiError('Customer wall consent required', 409);
+  }
+  const { data, error } = await admin.from('memories')
+    .update({ status: parsed.data.status, updated_at: new Date().toISOString() })
+    .eq('id', memory.id).eq('organization_id', auth.context.membership.organizationId)
+    .select('id, status, visibility').single();
+  if (error) {
+    console.error('Moderation update failed:', error);
+    return apiError('Could not moderate memory', 503);
+  }
+  return NextResponse.json({ memory: data }, { headers: { 'Cache-Control': 'no-store' } });
 }

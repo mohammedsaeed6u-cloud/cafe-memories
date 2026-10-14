@@ -1,19 +1,7 @@
-# memories
+# Café Memories
 
-> Café Moments. Lasting Loyalty. The loyalty, photobooth, and live wall platform for specialty coffee shops and independent venues.
+Café Memories is a Next.js / Supabase app for private customer photos, branch QR codes, merchant moderation and staff-verified visits. A display requires pairing and only receives approved photos with explicit customer consent.
 
-## Overview
-memories transforms casual coffee visits into lasting customer loyalty through zero-app photobooth experiences, ambient TV walls, and digital loyalty passes.
+Merchants can register and confirm an email account. Guests use a Supabase anonymous account on a venue page; their browser session is required to access their memories. Wallet passes, real billing, live printing and photobooth strips are not available in the current product.
 
-## Key Features
-- Zero-App Photobooth: Guests scan a QR code on table coasters with standard mobile camera to capture memories.
-- Live Community TV Wall: Curated guest photos broadcast to ambient 4K in-store displays with offline caching.
-- Digital Loyalty Passes: Brand stories and reward stamps with automated fraud protection.
-- Korean & Specialty Coffee Aesthetics: Life Four Cuts inspired vertical film strips, polaroids, and artisanal coasters.
-
-## Canonical URLs
-- Home: https://memories-c9w.pages.dev/
-- Customer Experience: https://memories-c9w.pages.dev/c/memories
-- Live Wall Display: https://memories-c9w.pages.dev/wall/screen-1
-- Privacy Policy: https://memories-c9w.pages.dev/privacy
-- Terms of Service: https://memories-c9w.pages.dev/terms
+Public pages: /, /privacy, /terms. Merchant registration: /login?mode=signup. Customer pages are tenant-specific and must not be treated as demo links.

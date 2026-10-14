@@ -1,6 +1,8 @@
 import sharp from 'sharp';
 
 export interface ProcessedImageDerivatives {
+  /** Rotated, metadata-stripped original; never store the camera's raw EXIF bytes. */
+  originalBuffer: Buffer;
   optimizedBuffer: Buffer;
   thumbnailBuffer: Buffer;
   width: number;
@@ -30,8 +32,13 @@ export async function processImageDerivatives(inputBuffer: Buffer): Promise<Proc
   }
 
   // Strip EXIF metadata for privacy, auto-rotate based on orientation tag
-  const baseSharp = sharp(inputBuffer).rotate();
+  const baseSharp = sharp(inputBuffer, { limitInputPixels: 40_000_000 }).rotate();
   const metadata = await baseSharp.metadata();
+  if (!metadata.width || !metadata.height || metadata.width * metadata.height > 40_000_000) {
+    throw new Error('Image dimensions exceed processing limit');
+  }
+
+  const originalBuffer = await baseSharp.clone().webp({ quality: 90, effort: 4 }).toBuffer();
 
   // 1. Optimized derivative: Max 1080x1080 WebP for Live Wall display
   const optimizedBuffer = await baseSharp
@@ -48,6 +55,7 @@ export async function processImageDerivatives(inputBuffer: Buffer): Promise<Proc
     .toBuffer();
 
   return {
+    originalBuffer,
     optimizedBuffer,
     thumbnailBuffer,
     width: metadata.width || 1080,

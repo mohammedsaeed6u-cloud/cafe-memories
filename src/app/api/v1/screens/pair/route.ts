@@ -1,87 +1,36 @@
+import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
-import crypto from 'crypto';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { apiError } from '@/lib/server/context';
+import { hashScreenToken, screenCookieName } from '@/lib/server/screen';
 
-const pairScreenSchema = z.object({
-  pairingCode: z.string().length(6, 'Pairing code must be 6 digits'),
-  screenName: z.string().min(1).max(100).optional(),
-  resolution: z.string().default('1920x1080'),
-  orientation: z.enum(['landscape', 'portrait']).default('landscape'),
-});
+const schema = z.object({ pairingCode: z.string().regex(/^\d{8}$/) });
 
+/** The untrusted TV submits a code; only the server holds the device token. */
 export async function POST(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = pairScreenSchema.safeParse(rawBody);
-
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
-
-    const { pairingCode, screenName, resolution, orientation } = parsed.data;
-    const supabase = createAdminClient();
-
-    // 1. Look up valid, unexpired, unused pairing code
-    const { data: codeRecord, error: codeError } = await supabase
-      .from('screen_pairing_codes')
-      .select('*')
-      .eq('code', pairingCode)
-      .eq('is_used', false)
-      .gt('expires_at', new Date().toISOString())
-      .maybeSingle();
-
-    if (codeError || !codeRecord) {
-      return NextResponse.json({ error: 'كود الاقتران غير صالح أو منتهي الصلاحية' }, { status: 400 });
-    }
-
-    // Rate limiting check on attempts
-    if (codeRecord.attempts >= 5) {
-      return NextResponse.json({ error: 'تم تجاوز عدد محاولات الاقتران المسموح بها لهذا الكود' }, { status: 429 });
-    }
-
-    // Mark code as used
-    await supabase
-      .from('screen_pairing_codes')
-      .update({ is_used: true, attempts: codeRecord.attempts + 1 })
-      .eq('id', codeRecord.id);
-
-    // 2. Generate permanent screen device token
-    const deviceToken = 'scrtok_' + crypto.randomBytes(24).toString('hex');
-    const finalScreenName = screenName || codeRecord.screen_name || 'شاشة الصالة الحية';
-
-    // 3. Insert or update paired screen record
-    const { data: screen, error: screenError } = await supabase
-      .from('screens')
-      .insert({
-        organization_id: codeRecord.organization_id,
-        branch_id: codeRecord.branch_id,
-        name: finalScreenName,
-        pairing_code: pairingCode,
-        device_token: deviceToken,
-        status: 'online',
-        last_heartbeat_at: new Date().toISOString(),
-        resolution,
-        orientation,
-      })
-      .select()
-      .single();
-
-    if (screenError) {
-      return NextResponse.json({ error: 'Failed to pair screen in registry', details: screenError.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      screenId: screen.id,
-      deviceToken,
-      branchId: screen.branch_id,
-      organizationId: screen.organization_id,
-      screenName: screen.name,
-      status: screen.status,
-      pairedAt: screen.created_at,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  const parsed = schema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return apiError('Invalid pairing code', 400);
+  const token = `scr_${crypto.randomBytes(32).toString('hex')}`;
+  // Trust a client-IP header only when the operator's ingress overwrites it.
+  // Otherwise all attempts share one restrictive bucket (fail closed, not spoofable).
+  const header = process.env.TRUSTED_CLIENT_IP_HEADER?.toLowerCase();
+  const ip = header && /^[a-z0-9-]{1,40}$/.test(header)
+    ? request.headers.get(header)?.split(',')[0]?.trim() || 'unknown' : 'unknown';
+  const ipHash = crypto.createHmac('sha256', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '')
+    .update(ip).digest('hex');
+  const { data: screenId, error } = await createAdminClient().rpc('consume_screen_pairing', {
+    p_code: parsed.data.pairingCode, p_token_hash: hashScreenToken(token), p_ip_hash: ipHash,
+  });
+  if (error) {
+    console.error('Pairing transaction failed:', error);
+    return apiError('Could not pair screen', 503);
   }
+  if (!screenId) return apiError('Invalid, expired or rate-limited pairing code', 400);
+  const response = NextResponse.json({ screenId }, { headers: { 'Cache-Control': 'no-store' } });
+  response.cookies.set(screenCookieName(screenId), token, {
+    httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax',
+    path: '/', maxAge: 60 * 60 * 24 * 90,
+  });
+  return response;
 }

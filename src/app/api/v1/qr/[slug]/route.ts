@@ -1,57 +1,19 @@
-export function generateStaticParams() {
-  return [{ slug: 'table-01' }, { slug: 'counter' }, { slug: 'main' }];
-}
-
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { apiError } from '@/lib/server/context';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+/** Public QR resolution; the DB increments scan_count atomically. */
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  if (!slug) {
-    return NextResponse.json({ error: 'Slug parameter is required' }, { status: 400 });
+  if (!/^[a-zA-Z0-9_-]{2,80}$/.test(slug)) return apiError('QR not found', 404);
+  const { data, error } = await createAdminClient().rpc('record_qr_scan', { p_slug: slug });
+  if (error) {
+    console.error('QR resolution failed:', error);
+    return apiError('QR unavailable', 503);
   }
-
-  const supabase = createAdminClient();
-
-  // 1. Fetch QR code details
-  const { data: qrCode, error } = await supabase
-    .from('qr_codes')
-    .select('id, organization_id, branch_id, source, label, is_active, scan_count')
-    .eq('slug', slug)
-    .single();
-
-  if (error || !qrCode) {
-    return NextResponse.json({ error: 'QR Code not found' }, { status: 404 });
-  }
-
-  if (!qrCode.is_active) {
-    return NextResponse.json({ error: 'QR Code is deactivated' }, { status: 410 });
-  }
-
-  // 2. Fetch associated branch
-  const { data: branch } = await supabase
-    .from('branches')
-    .select('id, name, slug, organization_id')
-    .eq('id', qrCode.branch_id)
-    .single();
-
-  // 3. Atomically increment scan_count
-  await supabase
-    .from('qr_codes')
-    .update({ scan_count: qrCode.scan_count + 1, updated_at: new Date().toISOString() })
-    .eq('id', qrCode.id);
-
-  const destination = branch ? `/c/${branch.slug}?ref=${slug}&src=${qrCode.source}` : `/c/memories?ref=${slug}`;
-
-  return NextResponse.json({
-    success: true,
-    qrCodeId: qrCode.id,
-    branchId: qrCode.branch_id,
-    organizationId: qrCode.organization_id,
-    source: qrCode.source,
-    destinationUrl: destination,
-  });
+  const qr = data?.[0];
+  if (!qr) return apiError('QR not found or inactive', 404);
+  const destinationUrl = `/c/${encodeURIComponent(qr.org_slug)}?branch=${encodeURIComponent(qr.branch_slug)}&ref=${encodeURIComponent(slug)}`;
+  return NextResponse.json({ destinationUrl, source: qr.qr_source },
+    { headers: { 'Cache-Control': 'no-store' } });
 }

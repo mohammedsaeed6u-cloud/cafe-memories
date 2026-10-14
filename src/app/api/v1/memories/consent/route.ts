@@ -1,60 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { apiError, requireCustomer } from '@/lib/server/context';
 
-const updateConsentSchema = z.object({
-  memoryId: z.string().uuid(),
-  liveWallConsent: z.boolean().optional(),
-  socialShareConsent: z.boolean().optional(),
-  marketingConsent: z.boolean().optional(),
-});
+const consentSchema = z.object({ memoryId: z.uuid(), liveWallConsent: z.boolean() });
 
-export async function POST(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = updateConsentSchema.safeParse(rawBody);
-
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
-
-    const { memoryId, liveWallConsent, socialShareConsent, marketingConsent } = parsed.data;
-    const supabase = createAdminClient();
-
-    const updates: any = {};
-    if (liveWallConsent !== undefined) updates.live_wall_consent = liveWallConsent;
-    if (socialShareConsent !== undefined) updates.social_share_consent = socialShareConsent;
-    if (marketingConsent !== undefined) updates.marketing_consent = marketingConsent;
-
-    const { data: consent, error: consentError } = await supabase
-      .from('memory_consents')
-      .update(updates)
-      .eq('memory_id', memoryId)
-      .select()
-      .single();
-
-    if (consentError) {
-      return NextResponse.json({ error: 'Failed to update consent', details: consentError.message }, { status: 500 });
-    }
-
-    if (liveWallConsent === false) {
-      await supabase
-        .from('memories')
-        .update({ visibility: 'private', updated_at: new Date().toISOString() })
-        .eq('id', memoryId);
-    } else if (liveWallConsent === true) {
-      await supabase
-        .from('memories')
-        .update({ visibility: 'live_wall', updated_at: new Date().toISOString() })
-        .eq('id', memoryId);
-    }
-
-    return NextResponse.json({
-      success: true,
-      memoryId,
-      consent,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+/** A guest may only change consent for a memory attached to their auth user. */
+export async function POST(request: Request) {
+  const parsed = consentSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return apiError('Invalid consent request', 400);
+  const auth = await requireCustomer();
+  if (auth.error) return auth.error;
+  const { error } = await auth.context.db.rpc('set_customer_wall_consent', {
+    p_memory_id: parsed.data.memoryId, p_consent: parsed.data.liveWallConsent,
+  });
+  if (error) {
+    if (error.code === '42501') return apiError('Memory not owned by this customer', 403);
+    console.error('Consent transaction failed:', error);
+    return apiError('Could not update consent', 503);
   }
+  return NextResponse.json({ memoryId: parsed.data.memoryId, liveWallConsent: parsed.data.liveWallConsent },
+    { headers: { 'Cache-Control': 'no-store' } });
 }

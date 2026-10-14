@@ -30,17 +30,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Never commit credentials; the template contains placeholder values only.
 .env*
+!.env.example
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-.vercel
-.env*
+# generated hosting and TypeScript artifacts
+supabase/.temp/
+.vercel/
 .open-next/
 .wrangler/
+*.tsbuildinfo
+next-env.d.ts

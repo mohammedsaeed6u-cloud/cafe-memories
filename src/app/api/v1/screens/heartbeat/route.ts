@@ -1,46 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { apiError } from '@/lib/server/context';
+import { getPairedScreen } from '@/lib/server/screen';
 
-const heartbeatSchema = z.object({
-  screenId: z.string().min(1),
-  currentMemoryId: z.string().optional().nullable(),
-  batteryLevel: z.number().min(0).max(100).optional().nullable(),
-});
-
-export async function POST(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = heartbeatSchema.safeParse(rawBody);
-
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
-    }
-
-    const { screenId } = parsed.data;
-    const supabase = createAdminClient();
-
-    const { data: updatedScreen, error } = await supabase
-      .from('screens')
-      .update({
-        status: 'online',
-        last_heartbeat_at: new Date().toISOString(),
-      })
-      .eq('id', screenId)
-      .select('id, status, orientation')
-      .single();
-
-    if (error || !updatedScreen) {
-      return NextResponse.json({ error: 'Screen not found or update failed' }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      screenId: updatedScreen.id,
-      status: updatedScreen.status,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
-  }
+const schema = z.object({ screenId: z.uuid() });
+export async function POST(request: Request) {
+  const parsed = schema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return apiError('Invalid screen ID', 400);
+  const screen = await getPairedScreen(parsed.data.screenId);
+  if (!screen) return apiError('Device not paired or revoked', 401);
+  const { error } = await createAdminClient().from('screens')
+    .update({ status: 'online', last_heartbeat_at: new Date().toISOString() }).eq('id', screen.id);
+  if (error) return apiError('Heartbeat unavailable', 503);
+  return NextResponse.json({ online: true }, { headers: { 'Cache-Control': 'no-store' } });
 }

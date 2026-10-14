@@ -1,7 +1,3 @@
-﻿# Cafe Memories - Antigravity Agent Directives
+# Café Memories
 
-Refer to [AGENTS.md](./AGENTS.md) and [.agents/rules/](./.agents/rules/) for all active architecture and coding rules.
-- Framework: Next.js 16 (App Router, Server Components, Server Actions)
-- Styling: Tailwind CSS v4 + Lucide Icons + Radix UI
-- Backend & Auth: Supabase SSR (Row Level Security enabled)
-- Package Manager: pnpm
+اقرأ [README.md](README.md) و[AGENTS.md](AGENTS.md) للبنية والتعليمات الحالية. يستخدم المشروع Next.js 16 وTailwind CSS 4 وSupabase Auth/PostgreSQL. خطط Cloudflare وLucide/Radix والفوترة والفوتوبوث القديمة ليست جزءًا من التطبيق المنشور الحالي.

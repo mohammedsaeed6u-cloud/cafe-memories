@@ -1,33 +1,17 @@
+import { notFound } from 'next/navigation';
 import { CustomerClient } from '@/components/customer/CustomerClient';
+import { resolveVenue } from '@/lib/server/context';
 
-export function generateStaticParams() {
-  return [
-    { cafeSlug: 'memories' },
-    { cafeSlug: 'studio' },
-    { cafeSlug: 'flagship' },
-    { cafeSlug: 'cafe' },
-    { cafeSlug: 'specialty' },
-    { cafeSlug: 'coffee' },
-    { cafeSlug: 'roastery' },
-    { cafeSlug: 'soil-roastery' },
-    { cafeSlug: 'elan-cafe' },
-    { cafeSlug: 'barns' },
-    { cafeSlug: 'half-million' },
-    { cafeSlug: 'arabica' },
-    { cafeSlug: 'brew' },
-    { cafeSlug: 'espresso' },
-  ];
-}
-
-interface CustomerPageProps {
-  params: Promise<{
-    cafeSlug: string;
-  }>;
-}
-
-export default async function CustomerPhotoboothPage({ params }: CustomerPageProps) {
-  const resolved = await params;
-  const cafeSlug = resolved?.cafeSlug || 'memories';
-
-  return <CustomerClient cafeSlug={cafeSlug} />;
+export default async function CustomerPage({ params, searchParams }: {
+  params: Promise<{ cafeSlug: string }>;
+  searchParams: Promise<{ branch?: string }>;
+}) {
+  const { cafeSlug } = await params;
+  const { branch } = await searchParams;
+  if (!/^[a-z0-9][a-z0-9-]{2,39}$/.test(cafeSlug) ||
+      !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) notFound();
+  let venue;
+  try { venue = await resolveVenue(cafeSlug, branch); } catch { notFound(); }
+  if (!venue) notFound();
+  return <CustomerClient cafeSlug={cafeSlug} branchSlug={branch} />;
 }

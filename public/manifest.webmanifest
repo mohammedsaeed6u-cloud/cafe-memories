@@ -1,12 +1,11 @@
 {
-  "name": "Memories • استوديو ذكريات المقاهي المختصة",
-  "short_name": "Memories",
-  "description": "استوديو تصوير فوتوبوث تفاعلي، شاشات عرض الصالة الحية، وبطاقات ولاء رقمية لمحفظة Apple و Google Wallet",
+  "name": "Café Memories • ذكريات الضيوف",
+  "short_name": "Café Memories",
+  "description": "ذكريات ضيوف خاصة، وشاشة صالة بإذنهم، وبرنامج ولاء بزيارات موثقة.",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#FAF6EE",
-  "theme_color": "#FAF6EE",
+  "background_color": "#141313",
+  "theme_color": "#141313",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
@@ -18,41 +17,7 @@
     }
   ],
   "shortcuts": [
-    {
-      "name": "استوديو الصور",
-      "short_name": "الاستوديو",
-      "description": "التقاط وتوثيق لقطة الزيارة",
-      "url": "/c/memories",
-      "icons": [
-        {
-          "src": "/icon.svg",
-          "sizes": "512x512"
-        }
-      ]
-    },
-    {
-      "name": "شاشة الصالة الحية",
-      "short_name": "الشاشة",
-      "description": "بث ذكريات الصالة الذكية",
-      "url": "/wall/screen-1",
-      "icons": [
-        {
-          "src": "/icon.svg",
-          "sizes": "512x512"
-        }
-      ]
-    },
-    {
-      "name": "لوحة تحكم التاجر",
-      "short_name": "لوحة التحكم",
-      "description": "إدارة الفروع والباريستا والاشتراك",
-      "url": "/dashboard",
-      "icons": [
-        {
-          "src": "/icon.svg",
-          "sizes": "512x512"
-        }
-      ]
-    }
+    { "name": "تسجيل المنشأة", "url": "/login?mode=signup" },
+    { "name": "لوحة المنشأة", "url": "/dashboard" }
   ]
 }
