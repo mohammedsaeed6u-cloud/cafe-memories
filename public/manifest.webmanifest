@@ -4,8 +4,8 @@
   "description": "ذكريات ضيوف خاصة، وشاشة صالة بإذنهم، وبرنامج ولاء بزيارات موثقة.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#141313",
-  "theme_color": "#141313",
+  "background_color": "#f7f3eb",
+  "theme_color": "#183a32",
   "lang": "ar",
   "dir": "rtl",
   "icons": [

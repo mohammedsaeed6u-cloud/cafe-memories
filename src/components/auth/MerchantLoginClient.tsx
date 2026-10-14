@@ -1,105 +1,373 @@
-'use client';
+"use client";
 
-import { useState, type FormEvent } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useState, type FormEvent } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-')
-  .replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40);
 
-export default function MerchantLoginClient({ initialMode, setupError, configured }: {
-  initialMode: 'signup' | 'signin'; setupError: string | null; configured: boolean;
+export default function MerchantLoginClient({
+  initialMode,
+  setupError,
+  configured,
+}: {
+  initialMode: "signup" | "signin";
+  setupError: string | null;
+  configured: boolean;
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState<'signup' | 'signin'>(initialMode);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
+  const [mode, setMode] = useState<"signup" | "signin">(initialMode);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const onboard = async (businessName: string, businessSlug: string) => {
-    const result = await fetch('/api/v1/merchant/onboard', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const result = await fetch("/api/v1/merchant/onboard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: businessName, slug: businessSlug }),
     });
-    if (!result.ok) throw new Error((await result.json()).error ?? 'تعذر إنشاء المنشأة');
-    router.replace('/dashboard');
+    if (!result.ok) {
+      if (result.status === 409)
+        throw new Error("رابط المنشأة مستخدم بالفعل. اختر رابطًا آخر.");
+      if (result.status === 401)
+        throw new Error("انتهت جلسة الدخول. سجّل الدخول من جديد.");
+      throw new Error("تعذر إنشاء المنشأة الآن. حاول مرة أخرى.");
+    }
+    router.replace("/dashboard");
   };
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!configured) return;
-    setBusy(true); setNotice('');
+    setBusy(true);
+    setNotice("");
     try {
       const db = createClient();
-      if (mode === 'signup') {
+      if (mode === "signup") {
         const businessSlug = slugify(slug || name);
-        if (!name.trim() || businessSlug.length < 3) throw new Error('أدخل اسم منشأة ورابطًا صالحًا');
-        const callback = new URL('/auth/callback', window.location.origin);
-        callback.searchParams.set('flow', 'email');
-        const { data, error } = await db.auth.signUp({ email, password, options: {
-          data: { cafe_name: name.trim(), cafe_slug: businessSlug },
-          emailRedirectTo: callback.toString(),
-        } });
+        if (!name.trim() || businessSlug.length < 3)
+          throw new Error("أدخل اسم منشأة ورابطًا صالحًا");
+        const callback = new URL("/auth/callback", window.location.origin);
+        callback.searchParams.set("flow", "email");
+        const { data, error } = await db.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { cafe_name: name.trim(), cafe_slug: businessSlug },
+            emailRedirectTo: callback.toString(),
+          },
+        });
         if (error) throw error;
-        if (!data.session) { setNotice('تحقق من بريدك لتأكيد الحساب؛ بعد التأكيد ستُنشأ منشأتك في قاعدة البيانات تلقائيًا.'); return; }
+        if (!data.session) {
+          setNotice(
+            "تحقق من بريدك لتأكيد الحساب؛ بعد التأكيد ستُنشأ منشأتك في قاعدة البيانات تلقائيًا.",
+          );
+          return;
+        }
         await onboard(name.trim(), businessSlug);
       } else {
-        const { data, error } = await db.auth.signInWithPassword({ email, password });
-        if (error || !data.user) throw error ?? new Error('فشل تسجيل الدخول');
+        const { data, error } = await db.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error || !data.user) throw error ?? new Error("فشل تسجيل الدخول");
         const metadataName = data.user.user_metadata?.cafe_name;
         const metadataSlug = data.user.user_metadata?.cafe_slug;
-        const emailPrefix = data.user.email?.split('@')[0];
-        const businessName = typeof metadataName === 'string' && metadataName.trim().length >= 2
-          ? metadataName.trim().slice(0, 100)
-          : emailPrefix && emailPrefix.length >= 2 ? emailPrefix : 'منشأة جديدة';
-        const businessSlug = typeof metadataSlug === 'string' && /^[a-z0-9][a-z0-9-]{2,39}$/.test(metadataSlug)
-          ? metadataSlug : `cafe-${data.user.id.slice(0, 8)}`;
+        const emailPrefix = data.user.email?.split("@")[0];
+        const businessName =
+          typeof metadataName === "string" && metadataName.trim().length >= 2
+            ? metadataName.trim().slice(0, 100)
+            : emailPrefix && emailPrefix.length >= 2
+              ? emailPrefix
+              : "منشأة جديدة";
+        const businessSlug =
+          typeof metadataSlug === "string" &&
+          /^[a-z0-9][a-z0-9-]{2,39}$/.test(metadataSlug)
+            ? metadataSlug
+            : `cafe-${data.user.id.slice(0, 8)}`;
         await onboard(businessName, businessSlug);
       }
-    } catch (error) { setNotice(error instanceof Error ? error.message : 'تعذر تسجيل الدخول'); }
-    finally { setBusy(false); }
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "تعذر تسجيل الدخول");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function google() {
     if (!configured) return;
-    setBusy(true); setNotice('');
+    setBusy(true);
+    setNotice("");
     try {
-      const intent = await fetch('/api/v1/merchant/oauth/intent', { method: 'POST' });
-      if (!intent.ok) throw new Error('تعذر بدء دخول Google. حاول مرة أخرى.');
+      const intent = await fetch("/api/v1/merchant/oauth/intent", {
+        method: "POST",
+      });
+      if (!intent.ok) throw new Error("تعذر بدء دخول Google. حاول مرة أخرى.");
       const { nonce } = await intent.json();
-      const callback = new URL('/auth/callback', window.location.origin);
-      callback.searchParams.set('flow', 'google');
-      callback.searchParams.set('nonce', nonce);
-      const { error } = await createClient().auth.signInWithOAuth({ provider: 'google',
-        options: { redirectTo: callback.toString() } });
+      const callback = new URL("/auth/callback", window.location.origin);
+      callback.searchParams.set("flow", "google");
+      callback.searchParams.set("nonce", nonce);
+      const { error } = await createClient().auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: callback.toString() },
+      });
       if (error) throw error;
-    } catch (error) { setNotice(error instanceof Error ? error.message : 'تعذر تسجيل الدخول'); setBusy(false); }
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "تعذر تسجيل الدخول");
+      setBusy(false);
+    }
   }
 
-  return <main dir="rtl" className="min-h-screen bg-[#141313] text-[#fbf9f5] flex items-center justify-center p-5">
-    <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1c1b1b] p-7 space-y-6 shadow-2xl">
-      <div><h1 className="text-2xl font-bold">Café Memories</h1><p className="text-stone-400 text-sm mt-2">لوحة إدارة ذكريات وولاء ضيوفك</p></div>
-      {!configured && <p role="alert" className="rounded-lg bg-amber-950/50 border border-amber-500/40 p-3 text-sm text-amber-100">
-        إنشاء الحسابات غير متاح حتى يُضبط مشروع Supabase. أضف قيم البيئة من ملف .env.example ثم أعد تشغيل الخادم؛ لا تُنشأ حسابات تجريبية محليًا.
-      </p>}
-      {setupError && <p role="alert" className="rounded-lg bg-amber-950/50 p-3 text-sm text-amber-100">{setupError}</p>}
-      <div className="grid grid-cols-2 rounded-lg bg-black/30 p-1 text-sm">
-        <button type="button" className={`p-2 rounded-md ${mode === 'signin' ? 'bg-[#dd0200]' : ''}`} onClick={() => setMode('signin')}>دخول</button>
-        <button type="button" className={`p-2 rounded-md ${mode === 'signup' ? 'bg-[#dd0200]' : ''}`} onClick={() => setMode('signup')}>تسجيل منشأة</button>
+  return (
+    <main dir="rtl" className="min-h-screen bg-paper text-ink">
+      <div className="mx-auto grid min-h-screen max-w-7xl lg:grid-cols-[1fr_1.05fr]">
+        <section className="flex flex-col justify-center px-5 py-8 sm:px-12 lg:px-18 lg:py-12">
+          <Link
+            href="/"
+            className="mb-12 flex w-fit items-center gap-3"
+            aria-label="Café Memories - الرئيسية"
+          >
+            <span
+              aria-hidden="true"
+              className="grid h-10 w-10 place-items-center rounded-[14px] bg-forest text-2xl text-[#f3c178]"
+            >
+              ✳
+            </span>
+            <span dir="ltr" className="text-lg font-bold">
+              café<span className="text-rust">memories</span>
+            </span>
+          </Link>
+          <div className="w-full max-w-md">
+            <p className="eyebrow text-rust">مساحة أصحاب الأماكن</p>
+            <h1 className="display-heading mt-3 text-4xl sm:text-5xl">
+              {mode === "signup" ? "خلّي ضيوفك يرجعوا." : "نورت مكانك تاني."}
+            </h1>
+            <p className="mt-4 text-sm leading-8 text-ink/60">
+              {mode === "signup"
+                ? "ابدأ حساب منشأتك واضبط أول مكافأة حقيقية. كل زيارة تتسجل بعد تأكيد فريقك."
+                : "ادخل علشان تتابع الزيارات والذكريات والمكافآت من لوحة واحدة."}
+            </p>
+            <div
+              role="group"
+              aria-label="طريقة الدخول"
+              className="mt-8 grid grid-cols-2 rounded-2xl bg-sand/80 p-1"
+            >
+              <button
+                type="button"
+                aria-pressed={mode === "signin"}
+                className={`rounded-xl px-3 py-3 text-sm font-bold transition ${mode === "signin" ? "bg-white text-forest shadow-sm" : "text-ink/55 hover:text-ink"}`}
+                onClick={() => {
+                  setMode("signin");
+                  setNotice("");
+                }}
+              >
+                تسجيل الدخول
+              </button>
+              <button
+                type="button"
+                aria-pressed={mode === "signup"}
+                className={`rounded-xl px-3 py-3 text-sm font-bold transition ${mode === "signup" ? "bg-white text-forest shadow-sm" : "text-ink/55 hover:text-ink"}`}
+                onClick={() => {
+                  setMode("signup");
+                  setNotice("");
+                }}
+              >
+                منشأة جديدة
+              </button>
+            </div>
+            {!configured && (
+              <p
+                role="alert"
+                className="mt-5 rounded-xl border border-amber-600/30 bg-amber-50 p-4 text-sm leading-7 text-amber-900"
+              >
+                الحسابات الحقيقية غير متاحة حتى يُضبط مشروع Supabase. أضف
+                متغيرات البيئة من <code dir="ltr">.env.example</code> ثم أعد
+                تشغيل الخادم؛ لن نُنشئ حسابًا تجريبيًا.
+              </p>
+            )}
+            {setupError && (
+              <p
+                role="alert"
+                className="mt-5 rounded-xl border border-rust/30 bg-[#fff1ec] p-4 text-sm text-rust"
+              >
+                {setupError}
+              </p>
+            )}
+            {notice && (
+              <p
+                role="alert"
+                className="mt-5 rounded-xl border border-rust/30 bg-[#fff1ec] p-4 text-sm leading-7 text-rust"
+              >
+                {notice}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={google}
+              disabled={busy || !configured}
+              className="mt-7 flex min-h-13 w-full items-center justify-center gap-3 rounded-xl border border-ink/20 bg-white px-4 py-3 text-sm font-bold transition hover:border-forest hover:bg-[#f8faf5] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span
+                aria-hidden="true"
+                className="text-lg font-bold text-[#4285f4]"
+              >
+                G
+              </span>
+              {mode === "signup"
+                ? "البدء بحساب Google"
+                : "المتابعة بحساب Google"}
+            </button>
+            {mode === "signup" && (
+              <p className="mt-3 text-xs leading-6 text-ink/55">
+                بعد الدخول بـ Google تختار اسم المنشأة ورابطها في خطوة منفصلة.
+                الحقول أدناه للتسجيل بالبريد فقط.
+              </p>
+            )}
+            <div className="relative my-6 text-center text-xs text-ink/45">
+              <span className="absolute inset-x-0 top-1/2 border-t border-ink/15" />
+              <span className="relative bg-paper px-3">
+                أو بالبريد الإلكتروني
+              </span>
+            </div>
+            <form onSubmit={submit} className="space-y-4">
+              {mode === "signup" && (
+                <>
+                  <label className="block text-sm font-bold">
+                    اسم المنشأة
+                    <input
+                      required
+                      maxLength={100}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="اسم مكانك"
+                      className="field mt-2"
+                    />
+                  </label>
+                  <label className="block text-sm font-bold">
+                    رابط المنشأة
+                    <input
+                      required
+                      dir="ltr"
+                      value={slug}
+                      onChange={(e) => setSlug(slugify(e.target.value))}
+                      placeholder="my-cafe"
+                      className="field mt-2"
+                    />
+                  </label>
+                </>
+              )}
+              <label className="block text-sm font-bold">
+                البريد الإلكتروني
+                <input
+                  required
+                  type="email"
+                  dir="ltr"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="hello@example.com"
+                  className="field mt-2"
+                />
+              </label>
+              <label className="block text-sm font-bold">
+                كلمة المرور
+                <div className="relative mt-2">
+                  <input
+                    required
+                    type={showPassword ? "text" : "password"}
+                    dir="ltr"
+                    minLength={8}
+                    autoComplete={
+                      mode === "signup" ? "new-password" : "current-password"
+                    }
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="field pl-20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={
+                      showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
+                    }
+                    className="absolute inset-y-1 left-2 px-3 text-xs font-bold text-forest/65 hover:text-forest"
+                  >
+                    {showPassword ? "إخفاء" : "إظهار"}
+                  </button>
+                </div>
+              </label>
+              <button
+                type="submit"
+                disabled={busy || !configured}
+                className="action-primary mt-2 w-full"
+              >
+                {busy
+                  ? "لحظة واحدة…"
+                  : mode === "signup"
+                    ? "إنشاء حساب المنشأة"
+                    : "تسجيل الدخول"}{" "}
+                <span aria-hidden="true">↖</span>
+              </button>
+            </form>
+            <p className="mt-6 text-center text-xs leading-6 text-ink/50">
+              بتسجيلك توافق على{" "}
+              <Link href="/terms" className="font-bold text-forest underline">
+                الشروط
+              </Link>{" "}
+              و
+              <Link href="/privacy" className="font-bold text-forest underline">
+                الخصوصية
+              </Link>
+              . لن تُحفظ كلمة مرورك في المتصفح كنظام دخول محلي.
+            </p>
+          </div>
+        </section>
+        <aside className="relative hidden min-h-screen flex-col justify-between overflow-hidden bg-forest p-12 text-white lg:flex xl:p-18">
+          <div
+            aria-hidden="true"
+            className="absolute -left-20 -top-30 text-[28rem] leading-none text-white/5"
+          >
+            ✳
+          </div>
+          <div className="relative">
+            <p className="eyebrow text-[#f3c178]">للمكان اللي الناس بتحبه</p>
+            <h2 className="display-heading mt-5 max-w-lg text-5xl leading-[1.28]">
+              مشوار بسيط من أول زيارة لأجمل عادة.
+            </h2>
+            <p className="mt-7 max-w-md leading-9 text-white/70">
+              رابط فرعك، بطاقة ولاء واضحة، ومكافأة تخلي الضيف يرجع. أنت وفريقك
+              تتحكموا في كل ختم مؤكد.
+            </p>
+          </div>
+          <div className="relative space-y-4">
+            <div className="rounded-[1.75rem] border border-white/15 bg-white/10 p-6 backdrop-blur-sm">
+              <p className="eyebrow text-[#f3c178]">01 — 02 — 03</p>
+              <p className="mt-3 text-xl font-bold">
+                زيارة حقيقية ← ختم موثّق ← مكافأة مستحقة
+              </p>
+              <p className="mt-2 text-sm text-white/60">
+                من غير بيانات وهمية أو أختام بمجرد فتح الرابط.
+              </p>
+            </div>
+            <p className="text-xs text-white/45">
+              ✳ Café Memories · المصمم لضيوفك
+            </p>
+          </div>
+        </aside>
       </div>
-      <form onSubmit={submit} className="space-y-4">
-        {mode === 'signup' && <><label className="block text-sm">اسم المنشأة<input required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} className="mt-2 w-full rounded-lg bg-black/30 border border-white/20 p-3" /></label>
-          <label className="block text-sm">رابط المنشأة<input required value={slug} onChange={(e) => setSlug(slugify(e.target.value))} placeholder="my-cafe" className="mt-2 w-full rounded-lg bg-black/30 border border-white/20 p-3" /></label></>}
-        <label className="block text-sm">البريد الإلكتروني<input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-2 w-full rounded-lg bg-black/30 border border-white/20 p-3" /></label>
-        <label className="block text-sm">كلمة المرور<input required type="password" minLength={8} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-2 w-full rounded-lg bg-black/30 border border-white/20 p-3" /></label>
-        <button type="submit" disabled={busy || !configured} className="w-full rounded-lg bg-[#dd0200] p-3 font-bold disabled:opacity-50">{busy ? 'انتظر...' : mode === 'signup' ? 'إنشاء الحساب' : 'تسجيل الدخول'}</button>
-      </form>
-      <button type="button" onClick={google} disabled={busy || !configured} className="w-full rounded-lg border border-white/20 p-3 disabled:opacity-50">الدخول بواسطة Google</button>
-      {notice && <p role="alert" className="text-sm text-amber-300">{notice}</p>}
-      <p className="text-xs text-stone-400">لا تُخزَّن كلمات المرور أو بيانات دخول الموظفين في هذا المتصفح.</p>
-    </div>
-  </main>;
+    </main>
+  );
 }

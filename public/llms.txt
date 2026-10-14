@@ -1,7 +1,9 @@
 # Café Memories
 
-Café Memories is a Next.js / Supabase app for private customer photos, branch QR codes, merchant moderation and staff-verified visits. A display requires pairing and only receives approved photos with explicit customer consent.
+Café Memories is a Next.js / Supabase app for private customer photos, branch QR codes, merchant moderation, and staff-confirmed purchases and visits. A lounge display requires pairing and only receives approved photos with explicit customer consent.
 
-Merchants can register and confirm an email account. Guests use a Supabase anonymous account on a venue page; their browser session is required to access their memories. Wallet passes, real billing, live printing and photobooth strips are not available in the current product.
+Merchants can register with a confirmed email or sign in through configured Google OAuth; a new Google merchant chooses a business name and slug after authentication. Guests may use a Google account or a temporary Supabase anonymous session on a real venue page. The guest's current browser session is needed to access anonymous memories until the account is safely linked to Google.
+
+Scanning a QR link records a short-lived check-in request, not proof of physical presence or purchase. A staff member must check the purchase and confirm the visit. There is no NFC-reader verification, signed Apple/Google Wallet pass, billing, commercial printing, or photobooth strip in this version.
 
 Public pages: /, /privacy, /terms. Merchant registration: /login?mode=signup. Customer pages are tenant-specific and must not be treated as demo links.

@@ -1,18 +1,28 @@
-'use client';
+"use client";
+/* eslint-disable @next/next/no-img-element -- Device-scoped image requests must re-check consent through the private media proxy. */
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
-type Feed = { screen: { name: string; organizationName: string };
-  memories: { id: string; caption: string | null; customerName: string; imageUrl: string }[] };
+type Feed = {
+  screen: { name: string; organizationName: string };
+  memories: {
+    id: string;
+    caption: string | null;
+    customerName: string;
+    imageUrl: string;
+  }[];
+};
 
 export function WallClient({ screenId }: { screenId?: string }) {
   const router = useRouter();
-  const [pairingCode, setPairingCode] = useState('');
+  const [pairingCode, setPairingCode] = useState("");
   const [feed, setFeed] = useState<Feed | null>(null);
-  const [screenState, setScreenState] = useState<'loading' | 'pair' | 'offline' | 'ready'>(screenId ? 'loading' : 'pair');
+  const [screenState, setScreenState] = useState<
+    "loading" | "pair" | "offline" | "ready"
+  >(screenId ? "loading" : "pair");
   const [index, setIndex] = useState(0);
-  const [notice, setNotice] = useState('');
+  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -20,31 +30,59 @@ export function WallClient({ screenId }: { screenId?: string }) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
-      const response = await fetch(`/api/v1/screens/${encodeURIComponent(screenId)}/feed`,
-        { cache: 'no-store', signal: controller.signal });
+      const response = await fetch(
+        `/api/v1/screens/${encodeURIComponent(screenId)}/feed`,
+        { cache: "no-store", signal: controller.signal },
+      );
       if (response.status === 401) {
-        setFeed(null); setScreenState('pair');
-        setNotice('الشاشة غير مرتبطة أو تم إلغاء ارتباطها. أدخل رمز اقتران جديدًا.');
+        setFeed(null);
+        setScreenState("pair");
+        setNotice(
+          "الشاشة غير مرتبطة أو تم إلغاء ارتباطها. أدخل رمز اقتران جديدًا.",
+        );
         return;
       }
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? 'تعذر عرض الصور');
-      setFeed(body); setScreenState('ready'); setNotice('');
+      if (!response.ok) throw new Error(body.error ?? "تعذر عرض الصور");
+      setFeed(body);
+      setScreenState("ready");
+      setNotice("");
     } catch (error) {
       // Old frames must not survive a lost connection after consent can change.
-      setFeed(null); setScreenState('offline');
+      setFeed(null);
+      setScreenState("offline");
       throw error;
-    } finally { clearTimeout(timeout); }
+    } finally {
+      clearTimeout(timeout);
+    }
   }, [screenId]);
 
   useEffect(() => {
-    const initial = setTimeout(() => refresh().catch((error) => setNotice(error instanceof Error ? error.message : 'تعذر الاتصال')), 0);
-    const feedTimer = setInterval(() => refresh().catch((error) => setNotice(error.message)), 15_000);
-    const heartbeatTimer = screenId ? setInterval(() => {
-      fetch('/api/v1/screens/heartbeat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ screenId }) }).catch(() => {});
-    }, 45_000) : null;
-    return () => { clearTimeout(initial); clearInterval(feedTimer); if (heartbeatTimer) clearInterval(heartbeatTimer); };
+    const initial = setTimeout(
+      () =>
+        refresh().catch((error) =>
+          setNotice(error instanceof Error ? error.message : "تعذر الاتصال"),
+        ),
+      0,
+    );
+    const feedTimer = setInterval(
+      () => refresh().catch((error) => setNotice(error.message)),
+      15_000,
+    );
+    const heartbeatTimer = screenId
+      ? setInterval(() => {
+          fetch("/api/v1/screens/heartbeat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ screenId }),
+          }).catch(() => {});
+        }, 45_000)
+      : null;
+    return () => {
+      clearTimeout(initial);
+      clearInterval(feedTimer);
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+    };
   }, [refresh, screenId]);
 
   useEffect(() => {
@@ -53,59 +91,204 @@ export function WallClient({ screenId }: { screenId?: string }) {
   }, []);
 
   async function pair(event: FormEvent) {
-    event.preventDefault(); setBusy(true); setNotice('');
+    event.preventDefault();
+    setBusy(true);
+    setNotice("");
     try {
-      const response = await fetch('/api/v1/screens/pair', { method: 'POST',
-        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pairingCode }) });
+      const response = await fetch("/api/v1/screens/pair", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pairingCode }),
+      });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? 'تعذر الاقتران');
+      if (!response.ok) throw new Error(body.error ?? "تعذر الاقتران");
       router.replace(`/wall/${body.screenId}`);
-    } catch (error) { setNotice(error instanceof Error ? error.message : 'تعذر الاقتران'); }
-    finally { setBusy(false); }
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "تعذر الاقتران");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  if (!feed && screenId && screenState !== 'pair') return <main dir="rtl" className="min-h-screen bg-[#141313] text-white flex justify-center items-center p-6">
-    <div className="max-w-md rounded-xl border border-white/10 bg-[#211f1f] p-8 space-y-4 text-center">
-      <h1 className="text-2xl font-bold">شاشة الصالة</h1>
-      <p className="text-stone-300">{screenState === 'loading' ? 'جارٍ التحقق من اقتران الشاشة...' : 'تعذر التحقق من الإذن. أخفينا الصور حتى يعود الاتصال.'}</p>
-      {notice && <p role="alert" className="text-amber-300">{notice}</p>}
-      {screenState === 'offline' && <button className="rounded-lg bg-[#dd0200] px-5 py-3" onClick={() => refresh().catch((error) => setNotice(error.message))}>إعادة المحاولة</button>}
-    </div>
-  </main>;
+  if (!feed && screenId && screenState !== "pair")
+    return (
+      <main
+        dir="rtl"
+        className="grid min-h-screen place-items-center bg-forest p-6 text-white"
+      >
+        <div className="w-full max-w-md rounded-[2rem] border border-white/15 bg-white/5 p-8 text-center shadow-2xl">
+          <span aria-hidden="true" className="text-4xl text-[#f2c77f]">
+            ✳
+          </span>
+          <p className="eyebrow mt-4 text-[#f2c77f]">
+            Café Memories / شاشة الصالة
+          </p>
+          <h1 className="display-heading mt-3 text-3xl">
+            {screenState === "loading"
+              ? "بنتحقق من الشاشة…"
+              : "الصور مخفية لحمايتها."}
+          </h1>
+          <p className="mt-4 text-sm leading-8 text-white/65">
+            {screenState === "loading"
+              ? "بنراجع الاقتران والأذونات قبل عرض أي صورة."
+              : "تعذر التأكد من الإذن أو الاتصال. لن نعرض الذكريات حتى يرجع الاتصال ويتم التحقق من جديد."}
+          </p>
+          {notice && (
+            <p
+              role="alert"
+              className="mt-5 rounded-xl bg-[#f2c77f]/10 p-3 text-xs leading-6 text-[#f2c77f]"
+            >
+              {notice}
+            </p>
+          )}
+          {screenState === "offline" && (
+            <button
+              className="mt-6 rounded-full bg-[#f2c77f] px-6 py-3 text-sm font-bold text-forest"
+              onClick={() =>
+                refresh().catch((error) => setNotice(error.message))
+              }
+            >
+              إعادة المحاولة
+            </button>
+          )}
+        </div>
+      </main>
+    );
 
-  if (!feed) return <main dir="rtl" className="min-h-screen bg-[#141313] text-white flex justify-center items-center p-6">
-    <form onSubmit={pair} className="w-full max-w-md rounded-2xl border border-white/10 bg-[#211f1f] p-8 space-y-5 text-center">
-      <p className="text-red-400 font-bold tracking-wider">CAFÉ MEMORIES · SCREEN</p><h1 className="text-2xl font-bold">اقتران شاشة الصالة</h1>
-      <p className="text-stone-400 text-sm">أدخل الرمز المكوّن من 8 أرقام من لوحة التاجر. لا تُعرض صور تجريبية دون اقتران.</p>
-      <input inputMode="numeric" pattern="[0-9]{8}" maxLength={8} required dir="ltr" autoComplete="off"
-        value={pairingCode} onChange={(e) => setPairingCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
-        aria-label="رمز الاقتران" className="w-full text-center text-3xl tracking-[.2em] font-mono rounded-lg bg-black/30 border border-white/20 p-4" />
-      <button disabled={busy} className="w-full bg-[#dd0200] p-3 rounded-lg font-bold disabled:opacity-50">{busy ? 'جارٍ الاقتران...' : 'ربط الشاشة'}</button>
-      {notice && <p role="alert" className="text-amber-300 text-sm">{notice}</p>}
-    </form>
-  </main>;
+  if (!feed)
+    return (
+      <main
+        dir="rtl"
+        className="grid min-h-screen place-items-center bg-forest p-5 text-white"
+      >
+        <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+          <span className="absolute -right-25 -top-40 text-[30rem] text-white/5">
+            ✳
+          </span>
+        </div>
+        <form
+          onSubmit={pair}
+          className="relative w-full max-w-md rounded-[2rem] border border-white/15 bg-white/8 p-7 shadow-2xl sm:p-10"
+        >
+          <span
+            aria-hidden="true"
+            className="grid h-12 w-12 place-items-center rounded-2xl bg-[#f2c77f] text-2xl text-forest"
+          >
+            ✳
+          </span>
+          <p className="eyebrow mt-7 text-[#f2c77f]">أهلًا بالشاشة</p>
+          <h1 className="display-heading mt-2 text-3xl">اربط شاشة الصالة.</h1>
+          <p className="mt-4 text-sm leading-8 text-white/65">
+            أدخل الرمز المكوّن من 8 أرقام من لوحة المنشأة. الصور لن تظهر قبل
+            اقتران حقيقي وموافقة أصحابها.
+          </p>
+          <label className="mt-7 block text-sm font-bold">
+            رمز الاقتران
+            <input
+              inputMode="numeric"
+              pattern="[0-9]{8}"
+              maxLength={8}
+              required
+              dir="ltr"
+              autoComplete="off"
+              value={pairingCode}
+              onChange={(e) =>
+                setPairingCode(e.target.value.replace(/\D/g, "").slice(0, 8))
+              }
+              className="mt-2 w-full rounded-xl border border-white/25 bg-white/10 p-4 text-center font-mono text-2xl tracking-[.25em] text-white outline-none focus:border-[#f2c77f]"
+              placeholder="00000000"
+            />
+          </label>
+          <button
+            disabled={busy}
+            className="mt-5 w-full rounded-full bg-[#f2c77f] px-6 py-3 font-bold text-forest transition hover:bg-white disabled:opacity-50"
+          >
+            {busy ? "جارٍ الاقتران…" : "ربط الشاشة"}
+          </button>
+          {notice && (
+            <p role="alert" className="mt-5 text-sm leading-7 text-[#f2c77f]">
+              {notice}
+            </p>
+          )}
+        </form>
+      </main>
+    );
 
   const photo = feed.memories[index % feed.memories.length];
-  return <main dir="rtl" className="min-h-screen bg-[#141313] text-[#fbf9f5] flex flex-col">
-    <header className="p-6 flex justify-between items-center border-b border-white/10">
-      <div><p className="text-sm font-bold text-[#dd0200]">CAFÉ MEMORIES</p><h1 className="text-2xl font-bold">{feed.screen.organizationName || feed.screen.name}</h1></div>
-      <span className="text-stone-400 text-sm">{feed.screen.name}</span>
-    </header>
-    {notice && <div role="alert" className="bg-amber-950/40 text-amber-100 text-center p-3">
-      {notice} <button className="underline mr-3" onClick={() => refresh().catch((error) => setNotice(error.message))}>إعادة المحاولة</button>
-    </div>}
-    <section className="flex-1 flex items-center justify-center p-8">
-      {photo ? <div key={photo.id} className="max-w-5xl w-full text-center space-y-5">
-        {/* Browser image request carries the device cookie. Proxy checks consent on each fetch. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={photo.imageUrl} alt={photo.caption || 'ذكرى ضيف'}
-          onError={() => { setFeed(null); setScreenState('offline'); setNotice('تعذر التحقق من الصورة أو سُحب الإذن. أوقفنا العرض.'); }}
-          className="max-h-[68vh] max-w-full mx-auto object-contain rounded-2xl shadow-2xl" />
-        <p className="text-xl">{photo.caption || 'لحظات لا تُنسى'}</p>
-        <p className="text-stone-400 text-sm">{photo.customerName}</p>
-      </div> : <div className="text-center space-y-3"><p className="text-3xl font-bold">الذكريات تبدأ هنا ✨</p>
-        <p className="text-stone-400">ننتظر أول صورة معتمدة بموافقة صاحبها لهذا الفرع.</p></div>}
-    </section>
-    <footer className="text-center text-xs text-stone-500 p-4">تُحدّث الصور كل 15 ثانية · الخصوصية أولًا</footer>
-  </main>;
+  return (
+    <main dir="rtl" className="flex min-h-screen flex-col bg-forest text-white">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/15 px-6 py-5 md:px-12">
+        <div className="flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f2c77f] text-2xl text-forest"
+          >
+            ✳
+          </span>
+          <div>
+            <p className="eyebrow text-[#f2c77f]">لحظات من المكان</p>
+            <h1 className="text-xl font-bold">
+              {feed.screen.organizationName || feed.screen.name}
+            </h1>
+          </div>
+        </div>
+        <span className="rounded-full border border-white/20 px-4 py-2 text-xs text-white/65">
+          {feed.screen.name}
+        </span>
+      </header>
+      {notice && (
+        <div
+          role="alert"
+          className="bg-[#f2c77f]/10 p-3 text-center text-sm text-[#f2c77f]"
+        >
+          {notice}{" "}
+          <button
+            className="mr-3 underline"
+            onClick={() => refresh().catch((error) => setNotice(error.message))}
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      )}
+      <section className="flex flex-1 items-center justify-center p-6 md:p-10">
+        {photo ? (
+          <div key={photo.id} className="w-full max-w-5xl text-center">
+            <div className="flex min-h-[45vh] items-center justify-center rounded-[1.75rem] border border-white/10 bg-black/20 p-3 md:p-5">
+              <img
+                src={photo.imageUrl}
+                alt={photo.caption || "ذكرى ضيف"}
+                onError={() => {
+                  setFeed(null);
+                  setScreenState("offline");
+                  setNotice(
+                    "تعذر التحقق من الصورة أو سُحب الإذن. أوقفنا العرض.",
+                  );
+                }}
+                className="max-h-[64vh] max-w-full rounded-xl object-contain shadow-2xl"
+              />
+            </div>
+            <p className="mt-6 text-xl font-bold md:text-3xl">
+              {photo.caption || "لحظات تستاهل نفتكرها"}
+            </p>
+            <p className="mt-2 text-sm text-[#f2c77f]">{photo.customerName}</p>
+          </div>
+        ) : (
+          <div className="max-w-xl text-center">
+            <span aria-hidden="true" className="text-6xl text-[#f2c77f]">
+              ✳
+            </span>
+            <h2 className="display-heading mt-5 text-3xl md:text-5xl">
+              الذكريات تبدأ من هنا.
+            </h2>
+            <p className="mt-5 text-sm leading-8 text-white/65">
+              لسه مفيش صورة راجعها الفريق ووافق صاحبها على عرضها في الفرع ده.
+            </p>
+          </div>
+        )}
+      </section>
+      <footer className="border-t border-white/10 p-4 text-center text-xs text-white/45">
+        الصور تتحدّث كل 15 ثانية · خصوصية الضيف أولًا
+      </footer>
+    </main>
+  );
 }
