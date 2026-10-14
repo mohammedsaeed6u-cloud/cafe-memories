@@ -11,6 +11,8 @@ import {
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { KeepsakeStory } from "@/lib/keepsakes";
+import { instagramMention, socialPlatforms, type PublicBrand } from "@/lib/brand";
+import { CustomerWalletPanel } from '@/components/customer/CustomerWalletPanel';
 import { customerGoogleAction } from "@/lib/customer-google-flow";
 import { visibleStampCount } from "@/lib/loyalty-progress";
 
@@ -32,7 +34,8 @@ type Session = {
     googleLinked: boolean;
     hasSavedData: boolean;
   };
-  venue: { organizationName: string; branchName: string };
+  venue: { organizationName: string; branchName: string;
+    brand?: PublicBrand; mapsUrl?: string | null };
   verifiedVisits: number;
   memories: Memory[];
 };
@@ -335,6 +338,49 @@ export function CustomerClient({
     }
   }
 
+  const businessMention = instagramMention(session?.venue.brand?.socialLinks ?? {});
+  const platformHandle = process.env.NEXT_PUBLIC_CAFE_MEMORIES_INSTAGRAM;
+  const platformMention = platformHandle && /^@[A-Za-z0-9._]{1,30}$/.test(platformHandle)
+    ? platformHandle : null;
+  const mentionText = [businessMention, platformMention, '#CafeMemories'].filter(Boolean).join(' ');
+
+  async function copyMentions() {
+    try {
+      await navigator.clipboard.writeText(mentionText);
+      setNotice('اتنسخ المنشن. اختار الصورة والمنصة بنفسك؛ مش هننشر باسمك.');
+    } catch { setNotice(`انسخ المنشن بنفسك: ${mentionText}`); }
+  }
+
+  async function shareMemory(memory: Memory) {
+    if (!session) return;
+    setBusy(true); setNotice('');
+    try {
+      const response = await fetch(memory.imageUrl, { cache: 'no-store' });
+      if (!response.ok) throw new Error('الصورة الخاصة غير متاحة الآن. حاول تاني.');
+      const blob = await response.blob();
+      const image = new File([blob], 'cafe-memory.webp', { type: 'image/webp' });
+      const title = `ذكرياتي عند ${session.venue.organizationName}`;
+      const text = `${title} ✳ ${mentionText}`;
+      if (navigator.share && navigator.canShare?.({ files: [image] })) {
+        try {
+          await navigator.share({ files: [image], title, text });
+          setNotice('الصورة اتفتحت في قائمة المشاركة. اختيار النشر والمنشن عندك أنت.');
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === 'AbortError') return;
+          throw error;
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href = url; link.download = 'cafe-memory.webp';
+      document.body.appendChild(link); link.click(); link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+      setNotice('نزّلنا صورتك على جهازك. ارفعها بنفسك للمنصة اللي تحبها وأضف المنشن.');
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'تعذر مشاركة الصورة');
+    } finally { setBusy(false); }
+  }
+
   async function copyCustomerId() {
     if (!session) return;
     try {
@@ -599,7 +645,8 @@ export function CustomerClient({
             {tab === "card" && (
               <>
               <div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
-                <section className="relative overflow-hidden rounded-[2rem] bg-forest p-6 text-white shadow-[0_24px_60px_-32px_#183a32] sm:p-9">
+                <section className="relative overflow-hidden rounded-[2rem] bg-forest p-6 text-white shadow-[0_24px_60px_-32px_#183a32] sm:p-9"
+                  style={session.venue.brand ? { backgroundColor: session.venue.brand.primaryColor } : undefined}>
                   <span
                     aria-hidden="true"
                     className="absolute -left-10 -top-16 text-[13rem] leading-none text-white/5"
@@ -608,24 +655,25 @@ export function CustomerClient({
                   </span>
                   <div className="relative flex items-start justify-between gap-3">
                     <div>
-                      <p className="eyebrow text-[#efc68e]">بطاقة الولاء</p>
+                      <p className="eyebrow" style={{ color: session.venue.brand?.accentColor ?? '#efc68e' }}>بطاقة الولاء</p>
                       <h2 className="mt-2 text-2xl font-bold">
                         {session.venue.organizationName}
                       </h2>
                       <p className="mt-1 text-xs text-white/55">
-                        رصيدك واحد في كل فروع المكان
+                        {session.venue.brand?.tagline || 'رصيدك واحد في كل فروع المكان'}
                       </p>
                     </div>
-                    <span
-                      aria-hidden="true"
-                      className="text-3xl text-[#efc68e]"
-                    >
-                      ✳
-                    </span>
+                    <div className="flex shrink-0 items-center gap-2" aria-label={`Café Memories مع ${session.venue.organizationName}`}>
+                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-xl" aria-label="Café Memories">✳</span>
+                      <span aria-hidden="true" className="text-white/45">×</span>
+                      {session.venue.brand?.logoUrl ? <img src={session.venue.brand.logoUrl} alt={`لوجو ${session.venue.organizationName}`}
+                        className="h-10 w-10 rounded-xl bg-white object-contain p-1" />
+                        : <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/20 text-xs">{session.venue.organizationName.slice(0, 1)}</span>}
+                    </div>
                   </div>
                   <div className="relative mt-9">
                     <p className="text-sm text-white/65">زيارات مؤكدة</p>
-                    <p className="mt-1 text-5xl font-bold tabular-nums text-[#f2c77f]">
+                    <p className="mt-1 text-5xl font-bold tabular-nums" style={{ color: session.venue.brand?.accentColor ?? '#f2c77f' }}>
                       {progress?.verifiedVisits ?? session.verifiedVisits}
                     </p>
                   </div>
@@ -747,6 +795,21 @@ export function CustomerClient({
                   </section>
                 </div>
               </div>
+              <CustomerWalletPanel cafeSlug={cafeSlug} />
+              {(session.venue.mapsUrl || socialPlatforms.some((platform) => session.venue.brand?.socialLinks[platform])) &&
+                <section className="paper-card rounded-[1.75rem] p-6 sm:p-8" aria-label="روابط المكان">
+                  <p className="eyebrow text-rust">المكان على خريطتك</p>
+                  <h2 className="mt-2 text-lg font-bold">تواصل مع {session.venue.organizationName}.</h2>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {session.venue.mapsUrl && <a href={session.venue.mapsUrl} target="_blank" rel="noopener noreferrer" className="action-secondary text-xs">افتح Google Maps ↗</a>}
+                    {socialPlatforms.map((platform) => {
+                      const href = session.venue.brand?.socialLinks[platform];
+                      return href ? <a key={platform} href={href} target="_blank" rel="noopener noreferrer" className="action-secondary text-xs">
+                        {platform === 'x' ? 'X' : platform === 'website' ? 'الموقع' : platform.charAt(0).toUpperCase() + platform.slice(1)} ↗
+                      </a> : null;
+                    })}
+                  </div>
+                </section>}
               <section className="paper-card rounded-[2rem] p-6 sm:p-9">
                 <div className="flex flex-wrap items-end justify-between gap-5">
                   <div>
@@ -900,6 +963,7 @@ export function CustomerClient({
                     <div>
                       <p className="eyebrow text-rust">ألبومك الخاص</p>
                       <h2 className="mt-2 text-2xl font-bold">آخر ذكرياتك</h2>
+                      <p className="mt-1 text-xs text-ink/55">تقدر تشاركها بنفسك {businessMention ? `وتعمل منشن ${businessMention}` : 'وتضيف منشن المكان لو حدد حسابه'}؛ المشاركة لا تفعّل شاشة الصالة.</p>
                     </div>
                     <span className="rounded-full bg-sand px-3 py-1 text-xs font-bold text-ink/65">
                       {session.memories.length} صورة
@@ -942,21 +1006,31 @@ export function CustomerClient({
                                 ? "مسموح بالعرض"
                                 : "خاصة"}
                             </p>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() =>
-                                changeConsent(
-                                  memory.id,
-                                  memory.visibility !== "live_wall",
-                                )
-                              }
-                              className="mt-4 text-xs font-bold text-rust underline underline-offset-4 disabled:opacity-50"
-                            >
-                              {memory.visibility === "live_wall"
-                                ? "إلغاء العرض العام"
-                                : "السماح بالعرض بعد المراجعة"}
-                            </button>
+                            <div className="mt-4 flex flex-wrap items-center gap-4">
+                              <button type="button" disabled={busy} onClick={() => shareMemory(memory)}
+                                className="text-xs font-bold text-rust underline underline-offset-4 disabled:opacity-50">
+                                شارك صورتي ↗
+                              </button>
+                              <button type="button" disabled={busy} onClick={copyMentions}
+                                className="text-xs font-bold text-forest underline underline-offset-4 disabled:opacity-50">
+                                انسخ المنشن
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  changeConsent(
+                                    memory.id,
+                                    memory.visibility !== "live_wall",
+                                  )
+                                }
+                                className="text-xs font-bold text-rust underline underline-offset-4 disabled:opacity-50"
+                              >
+                                {memory.visibility === "live_wall"
+                                  ? "إلغاء العرض العام"
+                                  : "السماح بالعرض بعد المراجعة"}
+                              </button>
+                            </div>
                           </div>
                         </article>
                       ))}

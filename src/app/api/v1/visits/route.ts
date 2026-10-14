@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { apiError, requireMerchant } from '@/lib/server/context';
+import { syncCustomerWalletAfterTransaction } from '@/lib/server/wallet-service';
 
 const visitSchema = z.object({
   customerId: z.uuid(), branchId: z.uuid(), idempotencyKey: z.uuid(),
@@ -23,5 +24,8 @@ export async function POST(request: Request) {
     console.error('Visit transaction failed:', error);
     return apiError('Visit could not be recorded', 503);
   }
-  return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } });
+  const walletSync = await syncCustomerWalletAfterTransaction(
+    auth.context.membership.organizationId, parsed.data.customerId);
+  return NextResponse.json({ ...data as Record<string, unknown>, walletSync },
+    { headers: { 'Cache-Control': 'no-store' } });
 }

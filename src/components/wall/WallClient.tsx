@@ -3,9 +3,10 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import type { PublicBrand } from '@/lib/brand';
 
 type Feed = {
-  screen: { name: string; organizationName: string };
+  screen: { name: string; organizationName: string; brand: PublicBrand | null };
   memories: {
     id: string;
     caption: string | null;
@@ -216,7 +217,8 @@ export function WallClient({ screenId }: { screenId?: string }) {
 
   const photo = feed.memories[index % feed.memories.length];
   return (
-    <main dir="rtl" className="flex min-h-screen flex-col bg-forest text-white">
+    <main dir="rtl" className="flex min-h-screen flex-col bg-forest text-white"
+      style={feed.screen.brand ? { backgroundColor: feed.screen.brand.primaryColor } : undefined}>
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/15 px-6 py-5 md:px-12">
         <div className="flex items-center gap-3">
           <span
@@ -225,8 +227,11 @@ export function WallClient({ screenId }: { screenId?: string }) {
           >
             ✳
           </span>
+          <span className="text-white/50" aria-hidden="true">×</span>
+          {feed.screen.brand?.logoUrl && <img src={feed.screen.brand.logoUrl} alt={`شعار ${feed.screen.organizationName}`}
+            className="h-11 w-11 rounded-xl bg-white object-contain p-1" />}
           <div>
-            <p className="eyebrow text-[#f2c77f]">لحظات من المكان</p>
+            <p className="eyebrow text-[#f2c77f]">Café Memories × لحظات من المكان</p>
             <h1 className="text-xl font-bold">
               {feed.screen.organizationName || feed.screen.name}
             </h1>
@@ -281,7 +286,7 @@ export function WallClient({ screenId }: { screenId?: string }) {
               الذكريات تبدأ من هنا.
             </h2>
             <p className="mt-5 text-sm leading-8 text-white/65">
-              لسه مفيش صورة راجعها الفريق ووافق صاحبها على عرضها في الفرع ده.
+لما ضيف يختار يشارك ذكرى في الفرع ويتراجع العرض، هتظهر هنا. الصور الخاصة مش جزء من الشاشة.
             </p>
           </div>
         )}

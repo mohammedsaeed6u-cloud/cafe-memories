@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { apiError, requireMerchant } from '@/lib/server/context';
+import { queueOrganizationWalletSync } from '@/lib/server/wallet-service';
 
 const schema = z.object({ name: z.string().trim().min(2).max(100), threshold: z.number().int().min(2).max(30) });
 export async function POST(request: Request) {
@@ -16,5 +17,7 @@ export async function POST(request: Request) {
     console.error('Reward configuration failed:', error);
     return apiError('Could not save reward rule', 503);
   }
-  return NextResponse.json({ ruleId: data }, { headers: { 'Cache-Control': 'no-store' } });
+  try { await queueOrganizationWalletSync(auth.context.membership.organizationId); }
+  catch { return apiError('Reward saved, but Wallet updates could not be queued; contact support', 503); }
+  return NextResponse.json({ ruleId: data, walletUpdateQueued: true }, { headers: { 'Cache-Control': 'no-store' } });
 }

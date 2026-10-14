@@ -16,10 +16,12 @@ export function MerchantNav({
   organizationName,
   active,
   role,
+  organizationWide,
 }: {
   organizationName: string;
-  active: "dashboard" | "terminal";
+  active: "dashboard" | "terminal" | "brand" | "crm" | "campaigns";
   role?: string;
+  organizationWide?: boolean;
 }) {
   const router = useRouter();
   const [error, setError] = useState("");
@@ -39,6 +41,9 @@ export function MerchantNav({
   const links = [
     { href: "/dashboard", name: "لوحة التحكم", icon: "▦", key: "dashboard" },
     { href: "/terminal", name: "محطة الموظف", icon: "✳", key: "terminal" },
+    { href: "/crm", name: "علاقات الضيوف", icon: "◎", key: "crm" },
+    { href: "/campaigns", name: "الحملات", icon: "⌁", key: "campaigns" },
+    { href: "/brand", name: "الهوية والفريم", icon: "▧", key: "brand" },
   ] as const;
   return (
     <aside className="flex flex-col justify-between gap-5 bg-forest px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:min-h-screen lg:px-6 lg:py-9">
@@ -73,7 +78,8 @@ export function MerchantNav({
           aria-label="تنقل المنشأة"
           className="mt-5 flex gap-2 overflow-x-auto lg:mt-9 lg:flex-col"
         >
-          {links.map((link) => (
+          {links.filter((link) => !(role === 'staff' && ['crm','campaigns'].includes(link.key)) &&
+            !(link.key === 'campaigns' && organizationWide === false)).map((link) => (
             <Link
               key={link.key}
               href={link.href}

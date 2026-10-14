@@ -14,10 +14,13 @@ const slugify = (value: string) =>
     .replace(/^-|-$/g, "")
     .slice(0, 40);
 
-export function MerchantOnboardingClient({ email }: { email: string | null }) {
+export function MerchantOnboardingClient({ email, initialName = '', initialSlug = '' }: {
+  email: string | null; initialName?: string; initialSlug?: string;
+}) {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
+  const [name, setName] = useState(initialName);
+  const [slug, setSlug] = useState(initialSlug);
+  const [logo, setLogo] = useState<File | null>(null);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -32,6 +35,7 @@ export function MerchantOnboardingClient({ email }: { email: string | null }) {
           "اكتب اسم المنشأة ورابطًا إنجليزيًا من 3 أحرف على الأقل.",
         );
       }
+      if (!logo || logo.size > 5 * 1024 * 1024) throw new Error('ارفع لوجو للمكان بحجم أقل من ٥ MB.');
       const response = await fetch("/api/v1/merchant/onboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,7 +48,14 @@ export function MerchantOnboardingClient({ email }: { email: string | null }) {
           throw new Error("انتهت جلسة الدخول. سجّل الدخول من جديد.");
         throw new Error("تعذر إنشاء المنشأة الآن. حاول مرة أخرى.");
       }
-      router.replace("/dashboard");
+      const { organizationId } = await response.json() as { organizationId: string };
+      const form = new FormData();
+      form.set('organizationId', organizationId);
+      form.set('file', logo);
+      const uploaded = await fetch('/api/v1/merchant/brand/logo', { method: 'POST', body: form });
+      // Provisioning is committed before Storage. A failed upload is retried in
+      // Brand Studio; never repeat provisioning and silently create two venues.
+      router.replace(uploaded.ok ? '/brand' : '/brand?setup=logo');
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "تعذر إنشاء المنشأة");
       setBusy(false);
@@ -82,15 +93,14 @@ export function MerchantOnboardingClient({ email }: { email: string | null }) {
           </span>
         </Link>
         <div className="w-full max-w-md">
-          <p className="eyebrow text-rust">خطوة واحدة وتبدأ</p>
+          <p className="eyebrow text-rust">هوية منشأتك تبدأ هنا</p>
           <h1 className="display-heading mt-3 text-4xl sm:text-5xl">
             حسابك جاهز.
             <br />
-            سمّي مكانك.
+            اسمك ولوجوك.
           </h1>
           <p className="mt-5 text-sm leading-8 text-ink/60">
-            تم الدخول بحساب Google بنجاح. اختر اسم المنشأة ورابطها؛ لن ننشئ
-            بيانات منشأة افتراضية باسم حسابك الشخصي.
+            اختار اسم المكان ورابطه وارفع لوجوه من موبايلك. هتقدر بعد كده تعدّل الألوان والفريم وروابط السوشيال؛ مش هنستبدل ده باسم حسابك الشخصي.
           </p>
           {email && (
             <p className="mt-4 text-xs text-ink/55">
@@ -135,8 +145,15 @@ export function MerchantOnboardingClient({ email }: { email: string | null }) {
                 حروف إنجليزية صغيرة وأرقام وشرطة فقط · رابط ثابت لضيوفك.
               </span>
             </label>
+            <label className="block text-sm font-bold">
+              لوجو البيزنس
+              <input type="file" accept="image/jpeg,image/png,image/webp" required
+                onChange={(event) => setLogo(event.target.files?.[0] ?? null)}
+                className="field mt-2 text-sm" />
+              <span className="mt-2 block text-xs font-normal text-ink/55">صورة حقيقية JPG أو PNG أو WebP، بحد أقصى ٥ MB. بترجع تعدّلها في استوديو الهوية.</span>
+            </label>
             <button disabled={busy} className="action-primary w-full">
-              {busy ? "جارٍ إنشاء المنشأة…" : "إنشاء منشأتي"}{" "}
+              {busy ? "جارٍ إنشاء الهوية…" : "إنشاء منشأتي ولوجوها"}{" "}
               <span aria-hidden="true">↖</span>
             </button>
           </form>

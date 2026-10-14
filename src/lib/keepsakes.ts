@@ -1,3 +1,5 @@
+import type { PublicBrand } from '@/lib/brand';
+
 export type KeepsakeVisit = {
   id: string;
   branchName: string;
@@ -15,6 +17,7 @@ export type KeepsakeSummary = {
 
 export type KeepsakeStory = {
   organizationName: string;
+  brand: PublicBrand;
   eligibleVisits: KeepsakeVisit[];
   cards: KeepsakeSummary[];
   cardsTotal: number;

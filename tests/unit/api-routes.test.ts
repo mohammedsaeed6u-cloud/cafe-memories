@@ -8,7 +8,8 @@ import { POST as redeemPost } from '@/app/api/v1/rewards/redeem/route';
 import { POST as consentPost } from '@/app/api/v1/memories/consent/route';
 import { GET as qrGet } from '@/app/api/v1/qr/[slug]/route';
 
-const mocks = vi.hoisted(() => ({ merchant: vi.fn(), customer: vi.fn(), rpc: vi.fn() }));
+const mocks = vi.hoisted(() => ({ merchant: vi.fn(), customer: vi.fn(), rpc: vi.fn(), walletSync: vi.fn() }));
+vi.mock('@/lib/server/wallet-service', () => ({ syncCustomerWalletAfterTransaction: mocks.walletSync }));
 vi.mock('@/lib/server/context', async (importActual) => {
   const actual = await importActual<typeof import('@/lib/server/context')>();
   return { ...actual, requireMerchant: mocks.merchant, requireCustomer: mocks.customer };
@@ -30,6 +31,7 @@ beforeEach(() => {
   } } });
   mocks.customer.mockResolvedValue({ context: { db: { rpc: mocks.rpc }, customerId } });
   mocks.rpc.mockResolvedValue({ data: { visitId: 'safe-id', replayed: false }, error: null });
+  mocks.walletSync.mockResolvedValue('not-issued');
 });
 
 describe('public legacy operations fail closed', () => {

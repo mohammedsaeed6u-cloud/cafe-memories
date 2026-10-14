@@ -61,12 +61,12 @@ export async function GET(request: NextRequest) {
     // Email confirmations can arrive on another device (no intent cookie),
     // but still require a merchant signup with valid business metadata.
     if (!fromMerchantSignup) return redirect("/login?error=wrong-flow");
-    const { error: onboardingError } = await db.rpc("provision_merchant", {
-      p_name: metadataName.trim().slice(0, 100),
-      p_slug: metadataSlug,
-    });
-    if (onboardingError) throw onboardingError;
-    return redirect("/dashboard");
+    // Confirmed email establishes identity only. The owner chooses/uploads a
+    // real brand logo on /onboarding before provisioning the organization.
+    const { data: member, error: lookupError } = await db.from("organization_members")
+      .select("id").eq("user_id", user.id).limit(1).maybeSingle();
+    if (lookupError) throw lookupError;
+    return redirect(member ? "/dashboard" : "/onboarding");
   } catch (error) {
     console.error("Merchant auth callback failed:", error);
     return redirect("/login?error=setup-failed");

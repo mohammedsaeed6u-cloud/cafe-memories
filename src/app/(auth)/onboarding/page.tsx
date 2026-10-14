@@ -18,5 +18,11 @@ export default async function MerchantOnboardingPage() {
     .maybeSingle();
   if (error) throw error;
   if (member) redirect("/dashboard");
-  return <MerchantOnboardingClient email={user.email ?? null} />;
+  const initialName = typeof user.user_metadata?.cafe_name === 'string'
+    ? user.user_metadata.cafe_name.trim().slice(0, 100) : '';
+  const initialSlug = typeof user.user_metadata?.cafe_slug === 'string' &&
+    /^[a-z0-9][a-z0-9-]{2,39}$/.test(user.user_metadata.cafe_slug)
+    ? user.user_metadata.cafe_slug : '';
+  return <MerchantOnboardingClient email={user.email ?? null}
+    initialName={initialName} initialSlug={initialSlug} />;
 }

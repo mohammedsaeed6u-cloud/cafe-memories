@@ -63,12 +63,22 @@ export default function TermsPage() {
           </p>
         </section>
         <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
+          <h2 className="text-xl font-bold mb-2">بطاقة Wallet الاختيارية</h2>
+          <p className="text-sm leading-8 text-ink/70">
+            لا نصدر بطاقة Wallet بدون موافقتك وربط مزوّد WalletWallet الفعلي.
+            اختيار رسائل الحملات وقرب الفروع مستقل؛ لا يثبت صدور رابط الإضافة
+            أنك ثبتّ البطاقة أو أن هاتفك عرض إشعارًا. مشاركة البطاقة أو حذفها من
+            الجهاز تحت تحكمك؛ إلغاء الكارت عند المزوّد يعتمد على استجابة الخدمة،
+            وأي نتيجة غير مؤكدة تستوجب إزالة البطاقة من الجهاز ومراجعة الدعم.
+          </p>
+        </section>
+        <section className="paper-card rounded-[1.5rem] p-6 sm:p-8">
           <h2 className="text-xl font-bold mb-2">حدود النسخة الحالية</h2>
           <p className="text-sm leading-8 text-ink/70">
             تتطلب الخدمة خادم Next.js وتهيئة Supabase وترحيل قاعدة البيانات. لا
-            توجد فوترة فعلية أو إصدار Apple Wallet موقّع أو نظام طباعة تجاري
-            متصل في هذه النسخة. يجب اختبار التشغيل وخصوصية البيانات قبل النشر
-            العام.
+            توجد فوترة فعلية أو شهادات Apple/Google خاصة بنا أو نظام طباعة تجاري
+            متصل في هذه النسخة. إصدار Wallet الموقع يكون بواسطة WalletWallet عند
+            تفعيله، ويجب اختبار التشغيل وخصوصية البيانات قبل النشر العام.
           </p>
         </section>
         <p className="text-xs leading-7 text-ink/50">

@@ -83,20 +83,17 @@ describe("real merchant registration lifecycle", () => {
         .status,
     ).toBe(409);
   });
-  it("exchanges a declared email-confirmation code and provisions the merchant before dashboard redirect", async () => {
+  it("exchanges a declared email-confirmation code then requires brand/logo onboarding", async () => {
     const response = await callback(
       new NextRequest(
         "https://example.test/auth/callback?flow=email&code=real-code",
       ),
     );
     expect(mocks.exchange).toHaveBeenCalledWith("real-code");
-    expect(mocks.rpc).toHaveBeenCalledWith("provision_merchant", {
-      p_name: "بيت القهوة",
-      p_slug: "coffee-house",
-    });
+    expect(mocks.rpc).not.toHaveBeenCalled();
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://example.test/dashboard",
+      "https://example.test/onboarding",
     );
   });
   it("does not create a merchant from a customer Google identity without merchant intent", async () => {

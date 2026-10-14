@@ -230,6 +230,7 @@ export default function MerchantDashboard() {
           organizationName={context.organization.name}
           active="dashboard"
           role={context.role}
+          organizationWide={context.organizationWide}
         />
         <div className="min-w-0 space-y-8 px-5 py-8 md:px-9 md:py-11 xl:px-12">
           <header className="flex flex-wrap items-end justify-between gap-5">
@@ -323,8 +324,7 @@ export default function MerchantDashboard() {
                 </span>
               </div>
               <p className="mt-3 text-xs leading-6 text-ink/55">
-                قبول الذكرى الخاصة لا يجعلها عامة؛ شاشة الصالة لا تعرضها إلا بعد
-                موافقة الضيف الصريحة.
+                هنا تظهر فقط الصور التي اختار أصحابها تقديمها لشاشة الفرع. الصور الخاصة لا يراها الفريق أصلًا؛ وبعد موافقة الضيف تظل المراجعة مطلوبة قبل العرض.
               </p>
               {memories.length === 0 && (
                 <div className="mt-6 rounded-2xl border border-dashed border-forest/20 bg-sage/20 p-8 text-center">

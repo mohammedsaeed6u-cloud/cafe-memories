@@ -33,22 +33,6 @@ export default function MerchantLoginClient({
   const [notice, setNotice] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const onboard = async (businessName: string, businessSlug: string) => {
-    const result = await fetch("/api/v1/merchant/onboard", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: businessName, slug: businessSlug }),
-    });
-    if (!result.ok) {
-      if (result.status === 409)
-        throw new Error("رابط المنشأة مستخدم بالفعل. اختر رابطًا آخر.");
-      if (result.status === 401)
-        throw new Error("انتهت جلسة الدخول. سجّل الدخول من جديد.");
-      throw new Error("تعذر إنشاء المنشأة الآن. حاول مرة أخرى.");
-    }
-    router.replace("/dashboard");
-  };
-
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!configured) return;
@@ -73,32 +57,21 @@ export default function MerchantLoginClient({
         if (error) throw error;
         if (!data.session) {
           setNotice(
-            "تحقق من بريدك لتأكيد الحساب؛ بعد التأكيد ستُنشأ منشأتك في قاعدة البيانات تلقائيًا.",
+            "تحقق من بريدك أولًا؛ بعد التأكيد هتكمل الاسم وترفع لوجو منشأتك قبل إنشائها.",
           );
           return;
         }
-        await onboard(name.trim(), businessSlug);
+        router.replace("/onboarding");
       } else {
         const { data, error } = await db.auth.signInWithPassword({
           email,
           password,
         });
         if (error || !data.user) throw error ?? new Error("فشل تسجيل الدخول");
-        const metadataName = data.user.user_metadata?.cafe_name;
-        const metadataSlug = data.user.user_metadata?.cafe_slug;
-        const emailPrefix = data.user.email?.split("@")[0];
-        const businessName =
-          typeof metadataName === "string" && metadataName.trim().length >= 2
-            ? metadataName.trim().slice(0, 100)
-            : emailPrefix && emailPrefix.length >= 2
-              ? emailPrefix
-              : "منشأة جديدة";
-        const businessSlug =
-          typeof metadataSlug === "string" &&
-          /^[a-z0-9][a-z0-9-]{2,39}$/.test(metadataSlug)
-            ? metadataSlug
-            : `cafe-${data.user.id.slice(0, 8)}`;
-        await onboard(businessName, businessSlug);
+        const { data: member, error: membershipError } = await db.from("organization_members")
+          .select("id").eq("user_id", data.user.id).limit(1).maybeSingle();
+        if (membershipError) throw membershipError;
+        router.replace(member ? "/dashboard" : "/onboarding");
       }
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "تعذر تسجيل الدخول");

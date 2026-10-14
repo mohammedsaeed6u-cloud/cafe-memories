@@ -55,6 +55,7 @@ export type Database = {
           status: Database['public']['Enums']['branch_status'];
           created_at: string;
           updated_at: string;
+          google_maps_url: string | null;
         };
         Insert: {
           id?: string;
@@ -68,6 +69,7 @@ export type Database = {
           status?: Database['public']['Enums']['branch_status'];
           created_at?: string;
           updated_at?: string;
+          google_maps_url?: string | null;
         };
         Update: {
           id?: string;
@@ -81,6 +83,7 @@ export type Database = {
           status?: Database['public']['Enums']['branch_status'];
           created_at?: string;
           updated_at?: string;
+          google_maps_url?: string | null;
         };
         Relationships: [
           { foreignKeyName: 'branches_organization_id_fkey'; columns: ['organization_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] },
@@ -196,6 +199,36 @@ export type Database = {
         };
         Relationships: [
           { foreignKeyName: 'customer_identities_customer_id_fkey'; columns: ['customer_id']; isOneToOne: false; referencedRelation: 'customers'; referencedColumns: ['id'] },
+        ];
+      };
+      customer_wallet_preferences: {
+        Row: {
+          organization_id: string;
+          customer_id: string;
+          wallet_opt_in: boolean;
+          marketing_opt_in: boolean;
+          nearby_opt_in: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          customer_id: string;
+          wallet_opt_in?: boolean;
+          marketing_opt_in?: boolean;
+          nearby_opt_in?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          organization_id?: string;
+          customer_id?: string;
+          wallet_opt_in?: boolean;
+          marketing_opt_in?: boolean;
+          nearby_opt_in?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          { foreignKeyName: 'customer_wallet_preferences_customer_id_fkey'; columns: ['customer_id']; isOneToOne: false; referencedRelation: 'customers'; referencedColumns: ['id'] },
+          { foreignKeyName: 'customer_wallet_preferences_organization_id_fkey'; columns: ['organization_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] },
         ];
       };
       customers: {
@@ -538,6 +571,11 @@ export type Database = {
           status: Database['public']['Enums']['org_status'];
           created_at: string;
           updated_at: string;
+          social_links: Json;
+          brand_tagline: string | null;
+          frame_style: string;
+          wallet_color_preset: string;
+          wallet_connector_id: string | null;
         };
         Insert: {
           id?: string;
@@ -553,6 +591,11 @@ export type Database = {
           status?: Database['public']['Enums']['org_status'];
           created_at?: string;
           updated_at?: string;
+          social_links?: Json;
+          brand_tagline?: string | null;
+          frame_style?: string;
+          wallet_color_preset?: string;
+          wallet_connector_id?: string | null;
         };
         Update: {
           id?: string;
@@ -568,8 +611,14 @@ export type Database = {
           status?: Database['public']['Enums']['org_status'];
           created_at?: string;
           updated_at?: string;
+          social_links?: Json;
+          brand_tagline?: string | null;
+          frame_style?: string;
+          wallet_color_preset?: string;
+          wallet_connector_id?: string | null;
         };
         Relationships: [
+          { foreignKeyName: 'organizations_wallet_connector_id_fkey'; columns: ['wallet_connector_id']; isOneToOne: false; referencedRelation: 'wallet_connectors'; referencedColumns: ['id'] },
         ];
       };
       playlist_items: {
@@ -1104,31 +1153,183 @@ export type Database = {
           { foreignKeyName: 'visits_qr_code_id_fkey'; columns: ['qr_code_id']; isOneToOne: false; referencedRelation: 'qr_codes'; referencedColumns: ['id'] },
         ];
       };
+      wallet_campaign_deliveries: {
+        Row: {
+          id: string;
+          campaign_id: string;
+          wallet_pass_id: string;
+          status: string;
+          attempted_at: string;
+          sent_at: string | null;
+          sync_token: string;
+        };
+        Insert: {
+          id?: string;
+          campaign_id: string;
+          wallet_pass_id: string;
+          status?: string;
+          attempted_at?: string;
+          sent_at?: string | null;
+          sync_token: string;
+        };
+        Update: {
+          id?: string;
+          campaign_id?: string;
+          wallet_pass_id?: string;
+          status?: string;
+          attempted_at?: string;
+          sent_at?: string | null;
+          sync_token?: string;
+        };
+        Relationships: [
+          { foreignKeyName: 'wallet_campaign_deliveries_campaign_id_fkey'; columns: ['campaign_id']; isOneToOne: false; referencedRelation: 'campaigns'; referencedColumns: ['id'] },
+          { foreignKeyName: 'wallet_campaign_deliveries_wallet_pass_id_fkey'; columns: ['wallet_pass_id']; isOneToOne: false; referencedRelation: 'wallet_passes'; referencedColumns: ['id'] },
+        ];
+      };
+      wallet_connectors: {
+        Row: {
+          id: string;
+          provider: string;
+          label: string;
+          sealed_key: string;
+          plan: string;
+          enabled: boolean;
+          verified_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider?: string;
+          label: string;
+          sealed_key: string;
+          plan?: string;
+          enabled?: boolean;
+          verified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          provider?: string;
+          label?: string;
+          sealed_key?: string;
+          plan?: string;
+          enabled?: boolean;
+          verified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+        ];
+      };
+      wallet_passes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          customer_id: string;
+          connector_id: string;
+          status: string;
+          issued_plan: string;
+          serial_number: string | null;
+          share_url: string | null;
+          last_campaign_message: string;
+          last_campaign_at: string | null;
+          last_synced_at: string | null;
+          sync_error: string | null;
+          sync_revision: number;
+          synced_revision: number;
+          sync_token: string | null;
+          sync_claimed_at: string | null;
+          sync_retry_at: string | null;
+          sync_attempts: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          customer_id: string;
+          connector_id: string;
+          status?: string;
+          issued_plan?: string;
+          serial_number?: string | null;
+          share_url?: string | null;
+          last_campaign_message?: string;
+          last_campaign_at?: string | null;
+          last_synced_at?: string | null;
+          sync_error?: string | null;
+          sync_revision?: number;
+          synced_revision?: number;
+          sync_token?: string | null;
+          sync_claimed_at?: string | null;
+          sync_retry_at?: string | null;
+          sync_attempts?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          customer_id?: string;
+          connector_id?: string;
+          status?: string;
+          issued_plan?: string;
+          serial_number?: string | null;
+          share_url?: string | null;
+          last_campaign_message?: string;
+          last_campaign_at?: string | null;
+          last_synced_at?: string | null;
+          sync_error?: string | null;
+          sync_revision?: number;
+          synced_revision?: number;
+          sync_token?: string | null;
+          sync_claimed_at?: string | null;
+          sync_retry_at?: string | null;
+          sync_attempts?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          { foreignKeyName: 'wallet_passes_connector_id_fkey'; columns: ['connector_id']; isOneToOne: false; referencedRelation: 'wallet_connectors'; referencedColumns: ['id'] },
+          { foreignKeyName: 'wallet_passes_customer_id_fkey'; columns: ['customer_id']; isOneToOne: false; referencedRelation: 'customers'; referencedColumns: ['id'] },
+          { foreignKeyName: 'wallet_passes_organization_id_fkey'; columns: ['organization_id']; isOneToOne: false; referencedRelation: 'organizations'; referencedColumns: ['id'] },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
       attach_verified_visit_memory: { Args: { p_customer_id: string | null; p_visit_id: string | null; p_original_key: string | null; p_optimized_key: string | null; p_thumbnail_key: string | null; p_caption: string | null; p_live_wall_consent: boolean | null }; Returns: string };
       can_access_branch: { Args: { p_org: string | null; p_branch: string | null }; Returns: boolean };
       can_moderate_branch: { Args: { p_org: string | null; p_branch: string | null }; Returns: boolean };
+      can_review_wall_submission: { Args: { p_memory: string | null; p_org: string | null; p_branch: string | null }; Returns: boolean };
       can_view_customer: { Args: { p_customer: string | null; p_auth_user: string | null }; Returns: boolean };
       check_in_customer: { Args: { p_branch_id: string | null }; Returns: undefined };
+      claim_wallet_campaign_delivery: { Args: { p_campaign: string | null; p_limit: number | null }; Returns: { delivery_id: string; pass_id: string; token: string; revision: number }[] };
+      claim_wallet_sync: { Args: { p_pass_id: string | null }; Returns: { pass_id: string; revision: number; token: string }[] };
       configure_visit_reward: { Args: { p_organization_id: string | null; p_name: string | null; p_threshold: number | null }; Returns: string };
       consume_screen_pairing: { Args: { p_code: string | null; p_token_hash: string | null; p_ip_hash: string | null }; Returns: string };
       create_customer_memory: { Args: { p_customer_id: string | null; p_branch_id: string | null; p_original_key: string | null; p_optimized_key: string | null; p_thumbnail_key: string | null; p_caption: string | null; p_live_wall_consent: boolean | null }; Returns: string };
       customer_has_saved_data: { Args: Record<string, never>; Returns: boolean };
       ensure_keepsake_cards: { Args: { p_customer_id: string | null; p_organization_id: string | null }; Returns: undefined };
+      finish_wallet_campaign_delivery: { Args: { p_delivery: string | null; p_token: string | null; p_revision: number | null; p_success: boolean | null }; Returns: boolean };
+      finish_wallet_sync: { Args: { p_pass_id: string | null; p_token: string | null; p_revision: number | null; p_success: boolean | null; p_error: string | null }; Returns: boolean };
       get_keepsake_balance: { Args: { p_customer_id: string | null; p_organization_id: string | null }; Returns: Json };
       get_user_org_ids: { Args: { user_id: string | null }; Returns: string[] };
       get_user_org_role: { Args: { user_id: string | null; org_id: string | null }; Returns: Database['public']['Enums']['org_member_role'] };
       is_org_admin: { Args: { user_id: string | null; org_id: string | null }; Returns: boolean };
       list_unpictured_verified_visits: { Args: { p_customer_id: string | null; p_organization_id: string | null; p_limit: number | null }; Returns: { visit_id: string; branch_id: string; verified_at: string }[] };
+      merchant_crm_customers: { Args: { p_org: string | null; p_branch: string | null; p_limit: number | null; p_before: string | null; p_before_customer: string | null; p_search: string | null }; Returns: { customer_id: string; display_name: string; last_visit_at: string; verified_visits: number; rewards_redeemed: number; wallet_issued: boolean; wallet_marketing_opt_in: boolean }[] };
       merchant_overview: { Args: { p_organization_id: string | null; p_branch_id: string | null }; Returns: Json };
       provision_merchant: { Args: { p_name: string | null; p_slug: string | null }; Returns: string };
+      queue_wallet_sync: { Args: { p_org: string | null; p_customer: string | null }; Returns: number };
       record_qr_scan: { Args: { p_slug: string | null }; Returns: { qr_id: string; org_slug: string; branch_slug: string; qr_source: Database['public']['Enums']['qr_source'] }[] };
       record_verified_visit: { Args: { p_customer_id: string | null; p_branch_id: string | null; p_idempotency_key: string | null }; Returns: Json };
       redeem_customer_reward: { Args: { p_customer_id: string | null; p_branch_id: string | null; p_reward_rule_id: string | null; p_idempotency_key: string | null }; Returns: Json };
       set_customer_account: { Args: { p_display_name: string | null; p_phone: string | null }; Returns: undefined };
       set_customer_wall_consent: { Args: { p_memory_id: string | null; p_consent: boolean | null }; Returns: undefined };
+      wallet_campaign_delivery_counts: { Args: { p_org: string | null }; Returns: { campaign_id: string; accepted: number; unknown: number; processing: number }[] };
+      wallet_health_stats: { Args: Record<string, never>; Returns: Json };
     };
     Enums: {
       actor_type: 'merchant' | 'admin' | 'system';

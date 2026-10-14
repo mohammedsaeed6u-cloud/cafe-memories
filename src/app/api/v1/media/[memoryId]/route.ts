@@ -17,6 +17,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .select('id, customer_id, organization_id, branch_id, status, visibility, original_url, optimized_url, thumbnail_url')
     .eq('id', memoryId).is('deleted_at', null).maybeSingle();
   if (lookupError || !memory || memory.status === 'deleted') return apiError('Not found', 404);
+  const hasWallConsent = async () => {
+    if (memory.visibility !== 'live_wall') return false;
+    const { data, error } = await admin.from('memory_consents').select('memory_id')
+      .eq('memory_id', memoryId).eq('live_wall_consent', true).is('revoked_at', null).maybeSingle();
+    return !error && Boolean(data);
+  };
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   let allowed = false;
@@ -27,7 +33,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         .eq('user_id', user.id).maybeSingle(),
     ]);
     allowed = Boolean(customer);
-    if (!allowed && member && (!member.branch_id || member.branch_id === memory.branch_id)) {
+    if (!allowed && member && (!member.branch_id || member.branch_id === memory.branch_id) &&
+        await hasWallConsent()) {
       const [org, branch] = await Promise.all([
         db.from('organizations').select('id').eq('id', memory.organization_id).eq('status', 'active').maybeSingle(),
         db.from('branches').select('id').eq('id', memory.branch_id).eq('status', 'active').maybeSingle(),
@@ -39,11 +46,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!allowed && screenId) {
     const screen = await getPairedScreen(screenId);
     if (screen && screen.organization_id === memory.organization_id && screen.branch_id === memory.branch_id &&
-        memory.status === 'approved' && memory.visibility === 'live_wall') {
-      const { data: consent } = await admin.from('memory_consents').select('live_wall_consent')
-        .eq('memory_id', memoryId).eq('live_wall_consent', true).maybeSingle();
-      allowed = Boolean(consent);
-    }
+        memory.status === 'approved') allowed = await hasWallConsent();
   }
   if (!allowed) return apiError('Not found', 404);
 

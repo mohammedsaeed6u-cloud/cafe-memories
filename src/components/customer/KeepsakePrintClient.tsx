@@ -35,6 +35,8 @@ export function KeepsakePrintClient({ cafeSlug, cardId }: {
   }, [cafeSlug, cardId, attempt]);
 
   const card = story?.card;
+  const brand = story?.brand;
+  const lightFrame = brand?.frameStyle === 'polaroid' || brand?.frameStyle === 'editorial';
   const pages = card ? keepsakePages(card.visits) : [];
 
   async function printCard() {
@@ -100,20 +102,32 @@ export function KeepsakePrintClient({ cafeSlug, cardId }: {
         {pages.map((visits, pageIndex) => (
           <article key={pageIndex}
             aria-label={`كارت ذكرياتك، ورقة ${pageIndex + 1} من ${pages.length}`}
-            className="keepsake-sheet relative flex h-[148mm] w-[min(100%,105mm)] flex-col overflow-hidden rounded-[1.5rem] bg-[#183a32] p-[6mm] text-white shadow-[0_24px_75px_-35px_#183a32b3] print:rounded-none">
-            <div aria-hidden="true" className="pointer-events-none absolute -left-8 -top-10 text-[8rem] leading-none text-white/5">✳</div>
+            className={`keepsake-sheet relative flex h-[148mm] w-[min(100%,105mm)] flex-col overflow-hidden rounded-[1.5rem] p-[6mm] shadow-[0_24px_75px_-35px_#183a32b3] print:rounded-none ${lightFrame ? 'text-forest' : 'text-white'}`}
+            style={{ backgroundColor: !lightFrame ? brand?.primaryColor ?? '#183a32' :
+              brand?.frameStyle === 'editorial' ? '#f3e9d8' : '#fffdf8' }}>
+            <div aria-hidden="true" className={`pointer-events-none absolute -left-8 -top-10 text-[8rem] leading-none ${lightFrame ? 'text-forest/5' : 'text-white/5'}`}>✳</div>
             <header className="relative flex shrink-0 items-start justify-between gap-2 pb-[4mm]">
               <div className="min-w-0">
-                <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#f3cb8e]">café memories • PHOTO DAYS</p>
-                <h2 className="mt-1 text-[18px] font-bold leading-tight">{story.organizationName}</h2>
-                <p className="mt-1 text-[10px] text-white/60">ذكريات زيارة ورا زيارة · {card.threshold} أختام حقيقية</p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: lightFrame ? brand?.primaryColor : brand?.accentColor }}>
+                  CAFÉ MEMORIES × {story.organizationName}
+                </p>
+                <h2 className="mt-1 line-clamp-2 text-[18px] font-bold leading-tight">{story.organizationName}</h2>
+                <p className={`mt-1 text-[10px] ${lightFrame ? 'text-forest/65' : 'text-white/65'}`}>{brand?.tagline || 'ذكريات زيارة ورا زيارة'} · {card.threshold} أختام حقيقية</p>
               </div>
-              <span aria-hidden="true" className="text-3xl leading-none text-[#f3cb8e]">✳</span>
+              <div className="flex shrink-0 items-center gap-1.5" aria-label={`Café Memories مع ${story.organizationName}`}>
+                <img src="/icon.svg" alt="شعار Café Memories" className="h-9 w-9 rounded-lg" />
+                <span aria-hidden="true" className="text-xs">×</span>
+                {brand?.logoUrl ? <img src={brand.logoUrl} alt={`شعار ${story.organizationName}`}
+                  className="h-9 w-9 rounded-lg bg-white object-contain p-0.5" />
+                  : <span className="grid h-9 w-9 place-items-center rounded-lg border border-current/25 text-sm font-bold">{story.organizationName.slice(0, 1)}</span>}
+              </div>
             </header>
             <div className="relative grid min-h-0 flex-1 grid-cols-2 gap-[2mm]"
               style={{ gridTemplateRows: `repeat(${Math.ceil(visits.length / 2)}, minmax(0, 1fr))` }}>
               {visits.map((visit, index) => (
-                <div key={visit.id} className="relative min-h-0 overflow-hidden rounded-[2mm] border border-white/10 bg-[#ecdfc8] text-forest">
+                <div key={visit.id} className={`relative min-h-0 overflow-hidden text-forest ${brand?.frameStyle === 'polaroid'
+                  ? 'rounded-[1mm] border-[2mm] border-white bg-white shadow-sm' : brand?.frameStyle === 'editorial'
+                    ? 'rounded-none border border-forest/20 bg-[#ecdfc8]' : 'rounded-[2mm] border border-white/10 bg-[#ecdfc8]'}`}>
                   <div className="absolute inset-0 grid place-items-center bg-[#ecdfc8] text-center">
                     <div>
                       <span aria-hidden="true" className="text-3xl text-rust/55">✳</span>
@@ -133,13 +147,15 @@ export function KeepsakePrintClient({ cafeSlug, cardId }: {
               ))}
             </div>
             <footer className="relative shrink-0 pt-[3mm]">
-              <div className="flex items-end justify-between gap-2 border-t border-white/25 pt-[2mm]">
+              <div className={`flex items-end justify-between gap-2 border-t pt-[2mm] ${lightFrame ? 'border-forest/25' : 'border-white/25'}`}>
                 <div className="min-w-0">
-                  <p className="text-[9px] text-[#f3cb8e]">{card.redeemedAt ? "المكافأة اتسلّمت" : "المكافأة جاهزة للاستلام"}</p>
+                  <p className="text-[9px]" style={{ color: lightFrame ? brand?.primaryColor : brand?.accentColor }}>
+                    {card.redeemedAt ? "المكافأة اتسلّمت" : "المكافأة جاهزة للاستلام"}</p>
                   <p className="line-clamp-2 text-[11px] font-bold leading-tight">{card.rewardName}</p>
                 </div>
-                <p className="shrink-0 text-[9px] text-white/65">{pageIndex + 1} / {pages.length}</p>
+                <p className={`shrink-0 text-[9px] ${lightFrame ? 'text-forest/65' : 'text-white/65'}`}>{pageIndex + 1} / {pages.length}</p>
               </div>
+              <p className={`mt-[1mm] text-[8px] ${lightFrame ? 'text-forest/60' : 'text-white/55'}`} dir="ltr">Café Memories × {story.organizationName}</p>
             </footer>
           </article>
         ))}

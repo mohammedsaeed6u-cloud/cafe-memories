@@ -47,7 +47,7 @@ export default function HomePage() {
           </Link>
           <nav
             aria-label="القائمة الرئيسية"
-            className="hidden items-center gap-8 text-sm font-bold text-ink/70 md:flex"
+            className="hidden items-center gap-6 text-sm font-bold text-ink/70 lg:flex"
           >
             <a href="#how" className="hover:text-rust">
               كيف بتشتغل؟
@@ -57,6 +57,9 @@ export default function HomePage() {
             </a>
             <a href="#keepsake" className="hover:text-rust">
               كارت الذكريات
+            </a>
+            <a href="#merchant" className="hover:text-rust">
+              للمنشأة
             </a>
             <Link href="/privacy" className="hover:text-rust">
               الخصوصية
@@ -265,8 +268,8 @@ export default function HomePage() {
             </h2>
             <p className="mt-6 text-base leading-9 text-ink/65">
               الضيف يتابع رصيده ومكافآته الحقيقية في صفحة واضحة. صاحب المكان
-              يشوف الزيارات والصور بانتظار المراجعة ويدير فروعه من مكان واحد.
-              ولا زيارة تتحسب من مجرد فتح QR.
+              يشوف الزيارات والصور اللي الضيف قدّمها للصالة فقط، ويدير فروعه
+              من مكان واحد. ولا زيارة تتحسب من مجرد فتح QR.
             </p>
             <div className="mt-7 space-y-4 text-sm font-bold">
               <p className="flex gap-3">
@@ -314,7 +317,7 @@ export default function HomePage() {
           <div className="relative w-[min(84%,310px)] rotate-[5deg] rounded-[1.7rem] bg-forest p-5 text-white shadow-[0_32px_65px_-25px_#183a3280] sm:p-6" aria-label="تصور توضيحي لكارت الذكريات، بدون صور ضيوف حقيقية">
             <div className="flex items-start justify-between border-b border-white/20 pb-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#f2c77f]">PHOTO DAYS / café memories</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2c77f]">CAFÉ MEMORIES × اسم منشأتك</p>
                 <p className="mt-2 text-lg font-bold">كارت ذكرياتك</p>
               </div>
               <span aria-hidden="true" className="text-3xl text-[#f2c77f]">✳</span>
@@ -333,6 +336,32 @@ export default function HomePage() {
             <p className="mt-5 border-t border-white/20 pt-4 text-sm font-bold text-[#f2c77f]">مكافأتك + حكايتك مع المكان ↖</p>
           </div>
           <p className="absolute bottom-4 text-[11px] text-ink/50">شكل توضيحي فقط · لا توجد صور أو أختام تجريبية</p>
+        </div>
+      </section>
+
+      <section id="merchant" className="bg-[#f0e9db] px-5 py-20 md:px-10 md:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div><p className="eyebrow text-rust">منظومة منشأتك</p>
+              <h2 className="display-heading mt-4 max-w-2xl text-4xl sm:text-5xl">براندك قدّامهم.
+                <br /><span className="text-rust">خصوصيتهم في إيدهم.</span></h2></div>
+            <p className="max-w-sm text-sm leading-8 text-ink/65">هوية مشتركة تفضل مميّزة من أول ختم لآخر ذكرى، وأدوات علاقات تعرف الزيارة الحقيقية بدون ما تفتح صورة خاصة.</p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <div className="paper-card rounded-[1.75rem] p-7"><span aria-hidden="true" className="text-3xl text-rust">▧</span>
+              <p className="eyebrow mt-7 text-rust">01 / الهوية</p>
+              <h3 className="mt-3 text-xl font-bold">كارت فيه الاتنين.</h3>
+              <p className="mt-3 text-sm leading-8 text-ink/60">اسم ولوجو منشأتك جنب Café Memories على كارت الذكريات والفريم. الألوان وروابط التواصل وMaps بتتظبط من مساحة البراند.</p></div>
+            <div className="paper-card rounded-[1.75rem] p-7"><span aria-hidden="true" className="text-3xl text-rust">◎</span>
+              <p className="eyebrow mt-7 text-rust">02 / العلاقة</p>
+              <h3 className="mt-3 text-xl font-bold">CRM يعرف الزيارات.</h3>
+              <p className="mt-3 text-sm leading-8 text-ink/60">اعرف ضيوفك اللي رجعوا ومكافآتهم المؤكدة، من غير صورهم الخاصة أو رقم تليفونهم. شاشة الصالة ما تعرفش غير اللي اختاروه للعرض.</p></div>
+            <div className="rounded-[1.75rem] bg-forest p-7 text-white"><span aria-hidden="true" className="text-3xl text-[#f2c77f]">◈</span>
+              <p className="eyebrow mt-7 text-[#f2c77f]">03 / Wallet</p>
+              <h3 className="mt-3 text-xl font-bold">الكارت يروح معاهم.</h3>
+              <p className="mt-3 text-sm leading-8 text-white/70">Apple وGoogle Wallet عبر WalletWallet بعد ربط الحساب وموافقة الضيف. الحملات والقرب اختيارات منفصلة؛ ظهور الإشعار قرار الجهاز، مش وعد تلقائي.</p></div>
+          </div>
+          <p className="mt-6 text-xs leading-7 text-ink/50">خدمات Wallet تحتاج API فعلي وخطة مناسبة لدى المزوّد. ده وصف للميزة بعد تفعيلها، مش تجربة إشعارات وهمية.</p>
         </div>
       </section>
 

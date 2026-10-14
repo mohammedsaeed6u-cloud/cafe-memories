@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { WalletConnectorsPanel } from '@/components/admin/WalletConnectorsPanel';
 
 type AdminOverview = {
   organizationCount: number;
@@ -43,7 +44,7 @@ export default function AdminPage() {
       <div className="mx-auto max-w-5xl space-y-8">
         <header className="flex flex-wrap items-end justify-between gap-4 border-b border-forest/10 pb-7">
           <div>
-            <p className="eyebrow text-rust">إدارة المنصة / قراءة فقط</p>
+            <p className="eyebrow text-rust">إدارة المنصة / اتصالات المنشآت</p>
             <h1 className="display-heading mt-3 text-3xl sm:text-4xl">
               منشآت Café Memories.
             </h1>
@@ -141,6 +142,7 @@ export default function AdminPage() {
                 </div>
               )}
             </section>
+            <WalletConnectorsPanel />
           </>
         )}
       </div>

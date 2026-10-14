@@ -5,7 +5,8 @@ import Link from "next/link";
 import { MerchantNav } from "@/components/dashboard/MerchantNav";
 
 type Branch = { id: string; name: string };
-type Context = { organization: { name: string }; branches: Branch[] };
+type Context = { organization: { name: string }; branches: Branch[];
+  role: string; organizationWide: boolean };
 type Customer = {
   customer: { id: string; displayName: string };
   verifiedVisits: number;
@@ -97,10 +98,12 @@ export default function StaffTerminalPage() {
       if (path === "/api/v1/visits") setPurchaseConfirmed(false);
       else setRewardDelivered(false);
       const refreshed = await lookup(customer.customer.id);
+      const walletNote = result.walletSync === 'pending'
+        ? ' تحديث كارت Wallet لسه معلّق وسيُعاد المحاولة؛ الختم/المكافأة نفسها اتحفظت.' : '';
       setNotice(
         refreshed
-          ? success
-          : `${success}، لكن تعذر تحديث بيانات الضيف. ابحث عنه من جديد.`,
+          ? `${success}${walletNote}`
+          : `${success}، لكن تعذر تحديث بيانات الضيف. ابحث عنه من جديد.${walletNote}`,
       );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "تعذر إتمام العملية");
@@ -134,7 +137,7 @@ export default function StaffTerminalPage() {
       <div className="mx-auto max-w-[1600px] lg:grid lg:grid-cols-[245px_minmax(0,1fr)]">
         <MerchantNav
           organizationName={context?.organization.name ?? "مساحة المنشأة"}
-          active="terminal"
+          active="terminal" role={context?.role} organizationWide={context?.organizationWide}
         />
         <div className="min-w-0 px-5 py-8 md:px-9 md:py-11 xl:px-12">
           <div className="mx-auto max-w-4xl space-y-8">

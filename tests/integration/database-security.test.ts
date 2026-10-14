@@ -62,8 +62,14 @@ beforeAll(async () => {
   await db.exec(readFileSync(new URL('00003_secure_core.sql', sqlDir), 'utf8'));
   await db.exec(readFileSync(new URL('00004_customer_accounts.sql', sqlDir), 'utf8'));
   await db.exec(readFileSync(new URL('00005_visit_keepsakes.sql', sqlDir), 'utf8'));
-  // Mirrors Supabase default public-schema grants; RLS must still reject unsafe operations.
-  await db.exec('GRANT USAGE ON SCHEMA public, auth TO authenticated, service_role; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;');
+  await db.exec(readFileSync(new URL('00006_brand_wallet_privacy.sql', sqlDir), 'utf8'));
+  // Mirrors Supabase default public-schema grants while preserving explicit
+  // server-only secrets / validated-write restrictions from the migration.
+  await db.exec(`GRANT USAGE ON SCHEMA public, auth TO authenticated, service_role;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated, service_role;
+    REVOKE UPDATE ON public.organizations, public.branches FROM authenticated;
+    REVOKE ALL ON public.wallet_connectors, public.wallet_passes, public.wallet_campaign_deliveries FROM authenticated;
+    REVOKE INSERT, UPDATE, DELETE ON public.customer_wallet_preferences, public.campaigns FROM authenticated;`);
   for (const [name, id] of Object.entries(ids)) await db.query(
     'INSERT INTO auth.users(id,email_confirmed_at) VALUES($1,$2)',
     [id, name.startsWith('merchant') ? new Date().toISOString() : null]);
@@ -128,7 +134,7 @@ describe('migration security invariants (real PostgreSQL engine)', () => {
     });
     // Even merchants allowed to view the visited customer's public profile may
     // never fetch the optional phone number directly.
-    await db.query('INSERT INTO public.visits(customer_id,organization_id,branch_id) VALUES($1,$2,$3)',
+    await db.query("INSERT INTO public.visits(customer_id,organization_id,branch_id,source,verification_status,verified_at) VALUES($1,$2,$3,'staff','verified',now())",
       [owner, orgA, branchA]);
     await as('authenticated', ids.merchantA, async () => {
       expect((await db.query<{ id: string }>('SELECT id FROM public.customers WHERE id=$1', [owner])).rows).toHaveLength(1);
@@ -182,14 +188,16 @@ describe('migration security invariants (real PostgreSQL engine)', () => {
     await as('authenticated', ids.branchAdmin, async () => {
       expect((await db.query<{ allowed: boolean }>('SELECT public.is_org_admin($1,$2) allowed', [ids.branchAdmin, orgA])).rows[0].allowed).toBe(false);
       expect((await db.query("UPDATE public.organization_members SET role='owner' WHERE user_id=$1 RETURNING id", [ids.branchAdmin])).rows).toEqual([]);
-      expect((await db.query("UPDATE public.organizations SET status='active' WHERE id=$1 RETURNING id", [orgA])).rows).toEqual([]);
+      await expect(db.query("UPDATE public.organizations SET status='active' WHERE id=$1 RETURNING id", [orgA]))
+        .rejects.toThrow(/permission denied/);
       await expect(db.query("INSERT INTO public.qr_codes(organization_id,branch_id,slug,source) VALUES($1,$2,'forged-qr','table')", [orgA, branchA]))
         .rejects.toThrow();
       await expect(db.query("SELECT public.configure_visit_reward($1,'Free Tea',2)", [orgA]))
         .rejects.toThrow(/Not authorized/);
     });
     await as('authenticated', ids.merchantA, async () => {
-      expect((await db.query("UPDATE public.organizations SET status='suspended' WHERE id=$1 RETURNING id", [orgA])).rows).toEqual([]);
+      await expect(db.query("UPDATE public.organizations SET status='suspended' WHERE id=$1 RETURNING id", [orgA]))
+        .rejects.toThrow(/permission denied/);
       await expect(db.query("INSERT INTO public.reward_rules(organization_id,name,trigger_type,threshold,reward_type) VALUES($1,'Forged','visit_count',1,'free_item')", [orgA]))
         .rejects.toThrow();
     });
@@ -284,6 +292,19 @@ describe('migration security invariants (real PostgreSQL engine)', () => {
       'SELECT visit_id,status,visibility FROM public.memories WHERE id=$1', [memoryId])).rows[0];
     expect(initial).toMatchObject({ status: 'pending', visibility: 'private' });
     expect(initial.visit_id).toBeTruthy();
+    await as('authenticated', ids.merchantA, async () => {
+      expect((await db.query('SELECT id FROM public.memories WHERE id=$1', [memoryId])).rows).toEqual([]);
+      expect((await db.query('SELECT memory_id FROM public.memory_consents WHERE memory_id=$1', [memoryId])).rows).toEqual([]);
+      expect((await db.query('SELECT id FROM public.visits WHERE id=$1', [initial.visit_id])).rows).toEqual([]);
+      expect((await db.query('SELECT id FROM public.customers WHERE id=$1', [customer])).rows)
+        .toHaveLength(1); // Customer has another real verified visit; no photo metadata is exposed.
+      const overview = (await db.query<{ merchant_overview: { today: { newMemories: number }; attentionCenter: { pendingMemories: number } } }>(
+        'SELECT public.merchant_overview($1,$2)', [orgA, branchA])).rows[0].merchant_overview;
+      expect(overview.today.newMemories).toBe(0);
+      expect(overview.attentionCenter.pendingMemories).toBe(0);
+      expect((await db.query("UPDATE public.memories SET status='approved' WHERE id=$1 RETURNING id", [memoryId])).rows)
+        .toEqual([]);
+    });
     await as('authenticated', ids.merchantB, async () => {
       const rows = await db.query('SELECT id FROM public.memories WHERE id=$1', [memoryId]);
       expect(rows.rows).toEqual([]);
@@ -296,10 +317,24 @@ describe('migration security invariants (real PostgreSQL engine)', () => {
       await db.query('SELECT public.set_customer_wall_consent($1,true)', [memoryId]);
     });
     await as('authenticated', ids.merchantA, async () => {
+      expect((await db.query('SELECT id FROM public.memories WHERE id=$1', [memoryId])).rows)
+        .toHaveLength(1);
+      expect((await db.query('SELECT memory_id FROM public.memory_consents WHERE memory_id=$1', [memoryId])).rows)
+        .toHaveLength(1);
+      const overview = (await db.query<{ merchant_overview: { attentionCenter: { pendingMemories: number } } }>(
+        'SELECT public.merchant_overview($1,$2)', [orgA, branchA])).rows[0].merchant_overview;
+      expect(overview.attentionCenter.pendingMemories).toBe(1);
       await db.query("UPDATE public.memories SET status='approved' WHERE id=$1", [memoryId]);
     });
     await as('authenticated', ids.guest, async () => {
       await db.query('SELECT public.set_customer_wall_consent($1,false)', [memoryId]);
+    });
+    await as('authenticated', ids.merchantA, async () => {
+      expect((await db.query('SELECT id FROM public.memories WHERE id=$1', [memoryId])).rows).toEqual([]);
+      expect((await db.query('SELECT memory_id FROM public.memory_consents WHERE memory_id=$1', [memoryId])).rows).toEqual([]);
+      const overview = (await db.query<{ merchant_overview: { today: { newMemories: number } } }>(
+        'SELECT public.merchant_overview($1,$2)', [orgA, branchA])).rows[0].merchant_overview;
+      expect(overview.today.newMemories).toBe(0);
     });
     const revoked = (await db.query<{ visibility: string; live_wall_consent: boolean }>(
       'SELECT visibility, live_wall_consent FROM public.memories JOIN public.memory_consents ON memories.id=memory_consents.memory_id WHERE memories.id=$1',
@@ -484,6 +519,209 @@ describe('confirmed visit photobooth ledger', () => {
     expect(cards[0].threshold).toBe(2);
     expect(new Set(cards[0].visit_ids)).toEqual(new Set([first, secondVisitId]));
     expect((await db.query('SELECT id FROM public.memories WHERE customer_id=$1', [otherCustomer])).rows).toEqual([]);
+  });
+});
+
+describe('WalletWallet tenant permissions, CRM and outbox', () => {
+  let walletGuest: string;
+  let walletCustomer: string;
+  let connectorId: string;
+  let passId: string;
+  let campaignId: string;
+  beforeAll(async () => {
+    walletGuest = randomUUID();
+    await db.query('INSERT INTO auth.users(id) VALUES($1)', [walletGuest]);
+    walletCustomer = (await db.query<{ id: string }>(
+      "INSERT INTO public.customers(auth_user_id,display_name) VALUES($1,'Wallet Guest') RETURNING id",
+      [walletGuest])).rows[0].id;
+    await db.query("INSERT INTO public.visits(customer_id,organization_id,branch_id,source,verification_status,verified_at) VALUES($1,$2,$3,'staff','verified',now())",
+      [walletCustomer,orgA,branchA]);
+    connectorId = (await as('service_role',null,async () => (await db.query<{id:string}>(
+      "INSERT INTO public.wallet_connectors(label,sealed_key,plan,verified_at) VALUES('Team A','v1:sealed-only','pro',now()) RETURNING id")).rows[0].id));
+    await as('service_role',null,async () => {
+      await db.query('UPDATE public.organizations SET wallet_connector_id=$1 WHERE id=$2',[connectorId,orgA]);
+      await db.query('INSERT INTO public.customer_wallet_preferences(organization_id,customer_id,wallet_opt_in,marketing_opt_in,nearby_opt_in) VALUES($1,$2,true,true,false)',[orgA,walletCustomer]);
+      passId = (await db.query<{id:string}>(
+        "INSERT INTO public.wallet_passes(organization_id,customer_id,connector_id,status,issued_plan,serial_number,share_url) VALUES($1,$2,$3,'issued','pro','serial-test-123','https://pass.walletwallet.dev/p/serial-test-123') RETURNING id",
+        [orgA,walletCustomer,connectorId])).rows[0].id;
+    });
+  });
+
+  it('does not reveal credentials, other tenants or private photos through CRM', async () => {
+    await as('authenticated',ids.merchantA,async () => {
+      await expect(db.query('SELECT sealed_key FROM public.wallet_connectors')).rejects.toThrow(/permission denied/);
+      await expect(db.query('SELECT * FROM public.wallet_passes')).rejects.toThrow(/permission denied/);
+      expect((await db.query('SELECT * FROM public.customer_wallet_preferences')).rows).toHaveLength(0);
+      const {rows} = await db.query<{customer_id:string; verified_visits:number; wallet_issued:boolean; wallet_marketing_opt_in:boolean}>(
+        'SELECT * FROM public.merchant_crm_customers($1,$2,$3,$4,$5,$6)',
+        [orgA,null,30,null,null,'Wallet']);
+      expect(rows).toEqual([{customer_id:walletCustomer,display_name:'Wallet Guest',last_visit_at:expect.any(Date),
+        verified_visits:1,rewards_redeemed:0,wallet_issued:true,wallet_marketing_opt_in:true}]);
+      expect(Object.keys(rows[0])).not.toContain('photo');
+      const firstPage = (await db.query<{customer_id:string;last_visit_at:Date}>(
+        'SELECT * FROM public.merchant_crm_customers($1,$2,$3,$4,$5,$6)',
+        [orgA,null,1,null,null,null])).rows;
+      expect(firstPage).toHaveLength(2); // limit + 1 signals more results.
+      const nextPage = (await db.query<{customer_id:string}>(
+        'SELECT * FROM public.merchant_crm_customers($1,$2,$3,$4,$5,$6)',
+        [orgA,null,1,firstPage[0].last_visit_at,firstPage[0].customer_id,null])).rows;
+      expect(nextPage[0].customer_id).not.toBe(firstPage[0].customer_id);
+    });
+    await as('authenticated',ids.branchAdmin,async () => {
+      const {rows} = await db.query<{customer_id:string}>(
+        'SELECT * FROM public.merchant_crm_customers($1,$2,$3,$4,$5,$6)',
+        [orgA,branchA,30,null,null,'Wallet']);
+      expect(rows.map(row=>row.customer_id)).toEqual([walletCustomer]);
+      await expect(db.query('SELECT * FROM public.merchant_crm_customers($1)',[orgA]))
+        .rejects.toThrow(/CRM membership required/);
+    });
+    await as('authenticated',ids.staff,async () => {
+      await expect(db.query('SELECT * FROM public.merchant_crm_customers($1,$2,$3,$4,$5,$6)',
+        [orgA,branchA,30,null,null,'Wallet'])).rejects.toThrow(/CRM membership required/);
+    });
+    await as('authenticated',ids.merchantB,async () => {
+      await expect(db.query('SELECT * FROM public.merchant_crm_customers($1,$2,$3,$4,$5,$6)',
+        [orgA,null,30,null,null,'Wallet'])).rejects.toThrow(/CRM membership required/);
+    });
+    await as('authenticated',walletGuest,async () => {
+      expect((await db.query('SELECT * FROM public.customer_wallet_preferences')).rows).toHaveLength(1);
+      await expect(db.query('UPDATE public.customer_wallet_preferences SET marketing_opt_in=false'))
+        .rejects.toThrow(/permission denied/);
+      await expect(db.query('SELECT * FROM public.wallet_passes')).rejects.toThrow(/permission denied/);
+      await expect(db.query('SELECT * FROM public.claim_wallet_sync(NULL)')).rejects.toThrow(/permission denied|Server-only/);
+    });
+  });
+
+  it('atomically leases full-pass syncs and never reclaims the same campaign/guest', async () => {
+    const current = async () => (await db.query<{sync_revision:number;synced_revision:number;sync_token:string|null}>(
+      'SELECT sync_revision,synced_revision,sync_token FROM public.wallet_passes WHERE id=$1',[passId])).rows[0];
+    await as('service_role',null,async () => db.query('SELECT public.queue_wallet_sync($1,$2)',[orgA,walletCustomer]));
+    expect((await current()).sync_revision).toBe(1);
+    const claim = await as('service_role',null,async () => (await db.query<{pass_id:string;revision:number;token:string}>(
+      'SELECT * FROM public.claim_wallet_sync($1)',[passId])).rows[0]);
+    expect(claim).toMatchObject({pass_id:passId,revision:1});
+    await as('service_role',null,async () => {
+      expect((await db.query('SELECT * FROM public.claim_wallet_sync($1)',[passId])).rows).toHaveLength(0);
+      await db.query('SELECT public.queue_wallet_sync($1,$2)',[orgA,walletCustomer]);
+      const wrong = (await db.query<{finish_wallet_sync:boolean}>(
+        'SELECT public.finish_wallet_sync($1,$2,$3,true,NULL)',[passId,randomUUID(),1])).rows[0];
+      expect(wrong.finish_wallet_sync).toBe(false);
+      const done = (await db.query<{finish_wallet_sync:boolean}>(
+        'SELECT public.finish_wallet_sync($1,$2,$3,true,NULL)',[passId,claim.token,claim.revision])).rows[0];
+      expect(done.finish_wallet_sync).toBe(true);
+      expect(await current()).toMatchObject({sync_revision:2,synced_revision:1,sync_token:null});
+      const next = (await db.query<{pass_id:string;revision:number;token:string}>(
+        'SELECT * FROM public.claim_wallet_sync($1)',[passId])).rows[0];
+      expect(next.revision).toBe(2);
+      await db.query('SELECT public.finish_wallet_sync($1,$2,$3,true,NULL)',[passId,next.token,next.revision]);
+    });
+    // Real stamp trigger creates a new revision without the worker route.
+    await db.query("INSERT INTO public.visits(customer_id,organization_id,branch_id,source,verification_status,verified_at) VALUES($1,$2,$3,'staff','verified',now())",[walletCustomer,orgA,branchA]);
+    expect((await current()).sync_revision).toBe(3);
+    campaignId = (await as('service_role',null,async () => (await db.query<{id:string}>(
+      `INSERT INTO public.campaigns(organization_id,name,status,config) VALUES($1,'Welcome','active',
+       '{"channel":"wallet","audience":"all","message":"Welcome back"}'::jsonb) RETURNING id`,[orgA])).rows[0].id));
+    await as('authenticated',ids.merchantA,async () => {
+      await expect(db.query('INSERT INTO public.campaigns(organization_id,name) VALUES($1,$2)',[orgA,'Not allowed']))
+        .rejects.toThrow(/permission denied/);
+    });
+    await as('service_role',null,async () => {
+      const delivery = (await db.query<{delivery_id:string;pass_id:string;token:string;revision:number}>(
+        'SELECT * FROM public.claim_wallet_campaign_delivery($1,$2)',[campaignId,5])).rows;
+      expect(delivery).toHaveLength(1);
+      expect(delivery[0].pass_id).toBe(passId);
+      expect((await db.query('SELECT * FROM public.claim_wallet_sync($1)',[passId])).rows).toHaveLength(0);
+      expect((await db.query('SELECT * FROM public.claim_wallet_campaign_delivery($1,$2)',[campaignId,5])).rows).toHaveLength(0);
+      const done = (await db.query<{finish_wallet_campaign_delivery:boolean}>(
+        'SELECT public.finish_wallet_campaign_delivery($1,$2,$3,true)',
+        [delivery[0].delivery_id,delivery[0].token,delivery[0].revision])).rows[0];
+      expect(done.finish_wallet_campaign_delivery).toBe(true);
+      expect(await current()).toMatchObject({sync_revision:3,synced_revision:3,sync_token:null});
+      expect((await db.query('SELECT * FROM public.claim_wallet_campaign_delivery($1,$2)',[campaignId,5])).rows).toHaveLength(0);
+      const results = (await db.query<{accepted:number;unknown:number;processing:number}>(
+        'SELECT accepted,unknown,processing FROM public.wallet_campaign_delivery_counts($1)',[orgA])).rows[0];
+      expect(results).toEqual({accepted:1,unknown:0,processing:0});
+    });
+    await as('authenticated',ids.staff,async () => {
+      expect((await db.query('SELECT id FROM public.campaigns WHERE id=$1',[campaignId])).rows).toHaveLength(0);
+    });
+    await as('authenticated',walletGuest,async () => {
+      await expect(db.query('SELECT * FROM public.claim_wallet_campaign_delivery($1,$2)',[campaignId,5]))
+        .rejects.toThrow(/permission denied|Server-only/);
+    });
+  });
+
+  it('backs off failed functional updates and retries a full pass without blocking later work',async () => {
+    await as('service_role',null,async () => {
+      await db.query('SELECT public.queue_wallet_sync($1,$2)',[orgA,walletCustomer]);
+      const row = (await db.query<{pass_id:string;token:string;revision:number}>(
+        'SELECT * FROM public.claim_wallet_sync($1)',[passId])).rows[0];
+      const failed = (await db.query<{finish_wallet_sync:boolean}>(
+        "SELECT public.finish_wallet_sync($1,$2,$3,false,'Provider update unavailable')",
+        [passId,row.token,row.revision])).rows[0];
+      expect(failed.finish_wallet_sync).toBe(true);
+      const state = (await db.query<{sync_attempts:number;sync_retry_at:Date}>(
+        'SELECT sync_attempts,sync_retry_at FROM public.wallet_passes WHERE id=$1',[passId])).rows[0];
+      expect(state.sync_attempts).toBe(1);
+      expect(state.sync_retry_at.getTime()).toBeGreaterThan(Date.now());
+      expect((await db.query('SELECT * FROM public.claim_wallet_sync($1)',[passId])).rows).toHaveLength(0);
+      await db.query("UPDATE public.wallet_passes SET sync_retry_at=now()-interval '1 minute' WHERE id=$1",[passId]);
+      const retry = (await db.query<{token:string;revision:number}>(
+        'SELECT * FROM public.claim_wallet_sync($1)',[passId])).rows[0];
+      expect(retry.revision).toBe(row.revision);
+      await db.query('SELECT public.finish_wallet_sync($1,$2,$3,true,NULL)',[passId,retry.token,retry.revision]);
+      const recovered = (await db.query<{sync_attempts:number;sync_error:string|null;sync_retry_at:Date|null}>(
+        'SELECT sync_attempts,sync_error,sync_retry_at FROM public.wallet_passes WHERE id=$1',[passId])).rows[0];
+      expect(recovered).toEqual({sync_attempts:0,sync_error:null,sync_retry_at:null});
+    });
+  });
+
+  it('segments by real stamps, honors withdrawal, and never resends unknown campaign outcomes',async () => {
+    const returning = (await as('service_role',null,async () => (await db.query<{id:string}>(
+      `INSERT INTO public.campaigns(organization_id,name,status,config) VALUES($1,'Return','active',
+       '{"channel":"wallet","audience":"returning","message":"Third visit surprise"}'::jsonb) RETURNING id`,[orgA])).rows[0].id));
+    await as('service_role',null,async () => {
+      expect((await db.query('SELECT * FROM public.claim_wallet_campaign_delivery($1,$2)',[returning,5])).rows).toHaveLength(0);
+    });
+    await db.query("INSERT INTO public.visits(customer_id,organization_id,branch_id,source,verification_status,verified_at) VALUES($1,$2,$3,'staff','verified',now())",[walletCustomer,orgA,branchA]);
+    await as('service_role',null,async () => {
+      // Even a different campaign cannot blast the same phone again today.
+      expect((await db.query('SELECT * FROM public.claim_wallet_campaign_delivery($1,$2)',[returning,5])).rows).toHaveLength(0);
+      await db.query("UPDATE public.wallet_campaign_deliveries SET attempted_at=now()-interval '2 days' WHERE campaign_id=$1",[campaignId]);
+      const leased = (await db.query<{delivery_id:string;token:string;revision:number}>(
+        'SELECT * FROM public.claim_wallet_campaign_delivery($1,$2)',[returning,5])).rows;
+      expect(leased).toHaveLength(1);
+      const result = (await db.query<{finish_wallet_campaign_delivery:boolean}>(
+        'SELECT public.finish_wallet_campaign_delivery($1,$2,$3,false)',
+        [leased[0].delivery_id,leased[0].token,leased[0].revision])).rows[0];
+      expect(result.finish_wallet_campaign_delivery).toBe(true);
+      expect((await db.query('SELECT * FROM public.claim_wallet_campaign_delivery($1,$2)',[returning,5])).rows).toHaveLength(0);
+      const status = (await db.query<{status:string}>(
+        'SELECT status FROM public.wallet_campaign_deliveries WHERE id=$1',[leased[0].delivery_id])).rows[0];
+      expect(status.status).toBe('unknown');
+      const before = (await db.query<{sync_revision:number}>(
+        'SELECT sync_revision FROM public.wallet_passes WHERE id=$1',[passId])).rows[0].sync_revision;
+      await db.query('UPDATE public.customer_wallet_preferences SET marketing_opt_in=false WHERE organization_id=$1 AND customer_id=$2',
+        [orgA,walletCustomer]);
+      expect((await db.query<{sync_revision:number}>(
+        'SELECT sync_revision FROM public.wallet_passes WHERE id=$1',[passId])).rows[0].sync_revision).toBe(before+1);
+      const newCampaign = (await db.query<{id:string}>(
+        `INSERT INTO public.campaigns(organization_id,name,status,config) VALUES($1,'Another','active',
+         '{"channel":"wallet","audience":"all","message":"No direct marketing"}'::jsonb) RETURNING id`,[orgA])).rows[0].id;
+      expect((await db.query('SELECT * FROM public.claim_wallet_campaign_delivery($1,$2)',[newCampaign,5])).rows).toHaveLength(0);
+    });
+    await as('authenticated',ids.merchantA,async () => {
+      const {rows} = await db.query<{wallet_marketing_opt_in:boolean}>(
+        'SELECT * FROM public.merchant_crm_customers($1,$2,$3,$4,$5,$6)',
+        [orgA,null,30,null,null,'Wallet']);
+      expect(rows[0].wallet_marketing_opt_in).toBe(false);
+      await expect(db.query('SELECT public.wallet_health_stats()')).rejects.toThrow(/permission denied|Server-only/);
+    });
+    const { rows: stats } = await as('service_role',null,async () => db.query<{
+      wallet_health_stats: { pendingUpdates:number; manualReviews:number; unknownCampaigns:number; staleProcessing:number };
+    }>('SELECT public.wallet_health_stats()'));
+    expect(stats[0].wallet_health_stats.unknownCampaigns).toBeGreaterThanOrEqual(1);
+    expect(stats[0].wallet_health_stats.pendingUpdates).toBeGreaterThanOrEqual(1);
   });
 });
 

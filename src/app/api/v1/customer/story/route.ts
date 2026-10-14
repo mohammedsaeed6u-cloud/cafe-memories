@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { apiError, requireCustomer } from '@/lib/server/context';
+import { publicBrand } from '@/lib/brand';
 import type { KeepsakeVisit } from '@/lib/keepsakes';
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -50,7 +51,8 @@ export async function GET(request: NextRequest) {
     const admin = createAdminClient();
     // An already earned keepsake remains readable if the branch later closes.
     const { data: organization, error: orgError } = await admin.from('organizations')
-      .select('id, name').eq('slug', cafeSlug).maybeSingle();
+      .select('id,name,logo_url,brand_tagline,primary_color,secondary_color,frame_style,wallet_color_preset,social_links')
+      .eq('slug', cafeSlug).maybeSingle();
     if (orgError) return apiError('Could not load venue', 503);
     if (!organization) return apiError('Venue not found', 404);
     const organizationId = organization.id;
@@ -100,7 +102,7 @@ export async function GET(request: NextRequest) {
         visits: await withPhotos(admin, customerId, organizationId, ordered as VisitRow[]),
       };
     }
-    return NextResponse.json({ organizationName: organization.name,
+    return NextResponse.json({ organizationName: organization.name, brand: publicBrand(organization),
       eligibleVisits: recentVisits.filter((visit) => !visit.photo),
       cards: (cardList.data ?? []).map((saved) => ({ id: saved.id,
         rewardName: saved.reward_name, threshold: saved.threshold,

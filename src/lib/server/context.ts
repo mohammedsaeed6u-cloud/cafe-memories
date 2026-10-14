@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { publicBrand, validBrandLink } from '@/lib/brand';
 
 export type MerchantRole = 'owner' | 'admin' | 'manager' | 'staff';
 export interface Membership {
@@ -92,14 +93,19 @@ export async function requireCustomer(): Promise<AuthResult<{ db: UserDb; userId
 export async function resolveVenue(cafeSlug: string, branchSlug?: string | null) {
   const admin = createAdminClient();
   const { data: org, error: orgError } = await admin.from('organizations')
-    .select('id, name, slug').eq('slug', cafeSlug).eq('status', 'active').maybeSingle();
+    .select('id,name,slug,logo_url,brand_tagline,primary_color,secondary_color,frame_style,wallet_color_preset,social_links')
+    .eq('slug', cafeSlug).eq('status', 'active').maybeSingle();
   if (orgError || !org) return null;
-  let query = admin.from('branches').select('id, name, slug, organization_id')
+  let query = admin.from('branches').select('id,name,slug,organization_id,google_maps_url,latitude,longitude')
     .eq('organization_id', org.id).eq('status', 'active').order('created_at', { ascending: true }).limit(1);
   if (branchSlug) query = query.eq('slug', branchSlug);
   const { data: branch, error: branchError } = await query.maybeSingle();
   if (branchError || !branch) return null;
+  const mapsUrl = branch.google_maps_url && validBrandLink('maps', branch.google_maps_url);
+  const coordinatesUrl = branch.latitude !== null && branch.longitude !== null
+    ? `https://www.google.com/maps?q=${branch.latitude},${branch.longitude}` : null;
   return { organizationId: org.id as string, organizationName: org.name as string,
     organizationSlug: org.slug as string, branchId: branch.id as string,
-    branchName: branch.name as string, branchSlug: branch.slug as string };
+    branchName: branch.name as string, branchSlug: branch.slug as string,
+    brand: publicBrand(org), mapsUrl: mapsUrl || coordinatesUrl };
 }
