@@ -303,6 +303,28 @@ export function useTerminalCashier() {
     recordShiftStamp(addCount);
     SoundEffectsService.playStampChime();
 
+    // Synchronize authoritative visit proof with server visits API
+    if (typeof window !== 'undefined') {
+      try {
+        const branchId = (settings as any).branchId || (selectedCustomer as any).branchId || cafeSlug;
+        const customerId = (selectedCustomer as any).id || (selectedCustomer as any).customerId;
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (customerId && uuidRegex.test(customerId) && branchId && uuidRegex.test(branchId)) {
+          fetch('/api/v1/visits', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customerId,
+              branchId,
+              idempotencyKey: crypto.randomUUID(),
+            }),
+          }).catch((err) => reportIgnoredError('terminal/server_visit_sync', err));
+        }
+      } catch (err) {
+        reportIgnoredError('terminal/visit_fetch_err', err);
+      }
+    }
+
     try {
       const isComplete = updatedLoyalty.stampedCount >= requiredVisits;
       const stampLabel = addCount > 1 ? `${addCount} أختام جديدة` : 'ختم زيارة جديدة';

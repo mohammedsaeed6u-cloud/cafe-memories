@@ -119,14 +119,50 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient();
 
-    // 1. Insert memory record
+    // 1. Mandatory Confirmed Visit Verification (Fail-Closed)
+    // Guest cannot post memories or live-wall keepsakes without a verified visit
+    let confirmedVisitId = visitId;
+    if (confirmedVisitId) {
+      const { data: v } = await supabase
+        .from('visits')
+        .select('id')
+        .eq('id', confirmedVisitId)
+        .eq('customer_id', customerId)
+        .eq('organization_id', organizationId)
+        .eq('verification_status', 'verified')
+        .maybeSingle();
+
+      if (!v) {
+        return NextResponse.json({ error: 'Visit must be confirmed and verified by staff' }, { status: 403 });
+      }
+    } else {
+      const { data: v } = await supabase
+        .from('visits')
+        .select('id')
+        .eq('customer_id', customerId)
+        .eq('organization_id', organizationId)
+        .eq('verification_status', 'verified')
+        .order('verified_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!v) {
+        return NextResponse.json(
+          { error: 'A confirmed staff-verified purchase is required before publishing photobooth memories' },
+          { status: 403 }
+        );
+      }
+      confirmedVisitId = v.id;
+    }
+
+    // 2. Insert memory record
     const { data: memory, error: memoryError } = await supabase
       .from('memories')
       .insert({
         customer_id: customerId,
         organization_id: organizationId,
         branch_id: branchId,
-        visit_id: visitId || null,
+        visit_id: confirmedVisitId,
         original_url: originalUrl,
         optimized_url: optimizedUrl || originalUrl,
         thumbnail_url: thumbnailUrl || originalUrl,

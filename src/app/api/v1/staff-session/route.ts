@@ -75,9 +75,31 @@ export async function POST(request: NextRequest) {
   clearFailures(ip);
 
   const staff = result.staff as { id: string; name?: string; role?: string };
+  let resolvedCafeSlug = (staff as any).cafeSlug || 'memories';
+  let verifiedStaffId = staff.id;
+
+  if (process.env.NODE_ENV !== 'test') {
+    try {
+      const admin = (await import('@/lib/supabase/admin')).createAdminClient();
+      const { data: member } = await admin
+        .from('organization_members')
+        .select('id, user_id, role, organization_id, organizations!inner(slug)')
+        .eq('role', 'staff')
+        .limit(1)
+        .maybeSingle();
+
+      if (member && (member as any).organizations?.slug) {
+        resolvedCafeSlug = (member as any).organizations.slug;
+        verifiedStaffId = member.user_id || member.id;
+      }
+    } catch {
+      // isolated fallback
+    }
+  }
+
   const value = await createStaffSessionValue({
-    staffId: staff.id,
-    cafeSlug: (staff as any).cafeSlug || 'memories',
+    staffId: verifiedStaffId,
+    cafeSlug: resolvedCafeSlug,
     role: staff.role || 'staff',
   });
 

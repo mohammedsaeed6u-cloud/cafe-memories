@@ -16,17 +16,22 @@ export const dynamic = 'force-dynamic';
  * Apple always rejects.
  */
 export async function GET(request: NextRequest) {
+  // Fail-Closed: require authenticated customer or verified integration key in production
   if (process.env.NODE_ENV !== 'test') {
+    let authenticated = false;
     try {
       const { requireCustomer } = await import('@/lib/server/context');
       const auth = await requireCustomer();
-      if (auth.error) {
-        const { requireApiAuth, isAuthFailure } = await import('@/lib/api-guard');
-        const apiAuth = await requireApiAuth(request, 'any-auth');
-        if (isAuthFailure(apiAuth)) return auth.error;
-      }
+      if (!auth.error) authenticated = true;
     } catch {
-      // In isolated environments without Next.js requestStore, continue gracefully
+      authenticated = false;
+    }
+    if (!authenticated) {
+      const { requireApiAuth, isAuthFailure } = await import('@/lib/api-guard');
+      const apiAuth = await requireApiAuth(request, 'any-auth');
+      if (isAuthFailure(apiAuth)) {
+        return NextResponse.json({ error: 'Unauthorized: valid customer session or API key required' }, { status: 401 });
+      }
     }
   }
 

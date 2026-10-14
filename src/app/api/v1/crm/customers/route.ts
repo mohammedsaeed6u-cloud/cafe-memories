@@ -6,32 +6,40 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const { requireMerchant } = await import('@/lib/server/context');
+    const { requireMerchant, apiError } = await import('@/lib/server/context');
     const auth = await requireMerchant();
+    let orgId = auth.context?.membership?.organizationId;
+    let supabase = auth.context?.db || createAdminClient();
+
     if (auth.error) {
-      const legacyAuth = await requireApiAuth(request, 'any-auth');
-      if (isAuthFailure(legacyAuth)) return auth.error;
+      const cookieHeader = request.headers.get('cookie') || '';
+      const match = cookieHeader.match(/stampy_staff_session=([^;]+)/);
+      const staffClaims = match ? await (await import('@/lib/staff-session')).verifyStaffSessionValue(match[1]) : null;
+      if (!staffClaims) {
+        return auth.error;
+      }
+      const admin = createAdminClient();
+      const { data: org } = await admin.from('organizations').select('id').eq('slug', staffClaims.cafeSlug).maybeSingle();
+      if (!org?.id) return apiError('Organization not found for staff session', 403);
+      orgId = org.id;
+      supabase = admin;
     }
 
-    const orgId = auth.context?.membership?.organizationId;
-    const supabase = auth.context?.db || createAdminClient();
+    if (!orgId) {
+      return apiError('Organization context required', 403);
+    }
 
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format');
     const search = searchParams.get('search')?.toLowerCase();
     const roleFilter = searchParams.get('role');
 
-    // Fetch customers scoped to the merchant's organization
-    let query = supabase
+    // Fetch customers strictly scoped to this merchant's organization (Fail-Closed)
+    const { data: customersData, error } = await supabase
       .from('customers')
-      .select('*, memories(*), visits(*)')
+      .select('*, memories(*), visits!inner(*)')
+      .eq('visits.organization_id', orgId)
       .order('last_seen_at', { ascending: false });
-
-    if (orgId) {
-      query = query.eq('visits.organization_id', orgId);
-    }
-
-    const { data: customersData, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

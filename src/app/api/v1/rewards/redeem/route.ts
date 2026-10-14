@@ -129,51 +129,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Atomically record redemption event via authoritative RPC
-    if (branchId && uuidRegex.test(branchId) && uuidRegex.test(rule.id) && customerId && uuidRegex.test(customerId)) {
-      const { data: rpcData, error: rpcError } = await supabase.rpc('redeem_customer_reward', {
-        p_customer_id: customerId,
-        p_branch_id: branchId,
-        p_reward_rule_id: rule.id,
-        p_idempotency_key: idempotencyKey,
-      });
-
-      if (!rpcError && rpcData) {
-        return NextResponse.json({
-          success: true,
-          ...(rpcData as Record<string, unknown>),
-        });
-      }
-      if (rpcError && rpcError.code === '23514') {
-        return NextResponse.json({ error: 'العميل لا يمتلك زيارات كافية لصرف هذه المكافأة' }, { status: 403 });
-      }
+    // 4. Atomically record redemption event via authoritative RPC (Fail-Closed)
+    if (!branchId || !uuidRegex.test(branchId) || !uuidRegex.test(rule.id) || !customerId || !uuidRegex.test(customerId)) {
+      return NextResponse.json({ error: 'Valid branch, customer, and reward rule UUIDs required' }, { status: 400 });
     }
 
-    const { data: newEvent, error: insertError } = await supabase
-      .from('reward_events')
-      .insert({
-        customer_id: customerId,
-        organization_id: organizationId,
-        branch_id: branchId || null,
-        type: 'reward_redeemed',
-        value: 1,
-        reference_type: 'reward_rules',
-        reference_id: rule.id,
-        idempotency_key: idempotencyKey,
-      })
-      .select()
-      .single();
+    const { data: rpcData, error: rpcError } = await supabase.rpc('redeem_customer_reward', {
+      p_customer_id: customerId,
+      p_branch_id: branchId,
+      p_reward_rule_id: rule.id,
+      p_idempotency_key: idempotencyKey,
+    });
 
-    if (insertError) {
-      return NextResponse.json({ error: 'Redemption failed', details: insertError.message }, { status: 500 });
+    if (rpcError) {
+      if (rpcError.code === '23514') {
+        return NextResponse.json({ error: 'العميل لا يمتلك زيارات كافية لصرف هذه المكافأة' }, { status: 403 });
+      }
+      if (rpcError.code === '42501') {
+        return NextResponse.json({ error: 'غير مصرح لك بصرف المكافأة لهذا الفرع' }, { status: 403 });
+      }
+      return NextResponse.json({ error: 'Redemption failed', details: rpcError.message }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
-      rewardEventId: newEvent.id,
-      rewardName: rule.name,
-      rewardValue: rule.reward_value,
-      redeemedAt: newEvent.created_at,
+      ...(rpcData as Record<string, unknown>),
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
