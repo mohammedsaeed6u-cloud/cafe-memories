@@ -46,14 +46,14 @@ export async function GET(request: NextRequest) {
     }
 
     const customers = (customersData || []).map(c => {
-      // Privacy Guard: Only count and return approved non-private memories (public, shared, live_wall) belonging to this organization.
-      // Private guest photobooth memories, pending memories, or cross-tenant memories must NEVER be leaked to merchant CRM.
+      // Privacy Guard: Under database RLS (00010_brand_wallet_privacy), only approved live_wall memories
+      // submitted with guest consent for this organization are visible in merchant CRM.
+      // Private guest photobooth memories, unapproved memories, or cross-tenant memories are strictly excluded.
       const publicMemories = (c.memories || []).filter(
         (m: any) =>
           (!m.organization_id || m.organization_id === orgId) &&
           m.status === 'approved' &&
-          m.visibility !== 'private' &&
-          ['public', 'shared', 'live_wall'].includes(m.visibility)
+          m.visibility === 'live_wall'
       );
       const memoryCount = publicMemories.length;
       const visitCount = c.visits ? c.visits.length : 0;

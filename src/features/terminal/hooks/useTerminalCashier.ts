@@ -291,7 +291,9 @@ export function useTerminalCashier() {
       setErrorNotice('يجب تحديد العميل أولاً قبل إضافة الأختام.');
       return;
     }
-    const addCount = Math.max(1, count);
+    // Invariant: Exactly 1 stamp is granted per server-verified visit (anti-fraud cooldown policy).
+    // Multiple stamps without distinct verified visits are prohibited to maintain strict ledger parity.
+    const addCount = 1;
 
     // Synchronize authoritative visit proof with server visits API first (Fail-Closed)
     if (typeof window !== 'undefined') {

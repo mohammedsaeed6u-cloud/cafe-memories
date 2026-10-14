@@ -16,6 +16,11 @@ export const dynamic = 'force-dynamic';
  * Apple always rejects.
  */
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const cafeSlug = searchParams.get('cafe') || 'memories';
+  const cafeName = searchParams.get('name') || 'Memories Studio';
+  const customerIdParam = searchParams.get('customerId') || searchParams.get('customer_id');
+
   let customerContext: { customerId?: string } | null = null;
 
   // 1. Authenticate (Customer session or scoped API authorization)
@@ -29,18 +34,25 @@ export async function GET(request: NextRequest) {
     customerContext = null;
   }
 
+  if (customerContext && customerIdParam && customerContext.customerId !== customerIdParam) {
+    return NextResponse.json({ error: 'Forbidden: customer ID mismatch' }, { status: 403 });
+  }
+
   if (!customerContext && process.env.NODE_ENV !== 'test') {
     const { requireApiAuth, isAuthFailure } = await import('@/lib/api-guard');
     const apiAuth = await requireApiAuth(request, 'any-auth');
     if (isAuthFailure(apiAuth)) {
       return NextResponse.json({ error: 'Unauthorized: valid customer session or API key required' }, { status: 401 });
     }
-  }
 
-  const { searchParams } = new URL(request.url);
-  const cafeSlug = searchParams.get('cafe') || 'memories';
-  const cafeName = searchParams.get('name') || 'Memories Studio';
-  const customerIdParam = searchParams.get('customerId') || searchParams.get('customer_id');
+    // If caller is staff, enforce strict venue authorization: staff member cannot issue pass for another cafe
+    const { STAFF_SESSION_COOKIE, verifyStaffSessionValue } = await import('@/lib/staff-session');
+    const staffCookie = request.cookies.get(STAFF_SESSION_COOKIE)?.value;
+    const staffClaims = await verifyStaffSessionValue(staffCookie);
+    if (staffClaims && staffClaims.cafeSlug !== cafeSlug) {
+      return NextResponse.json({ error: 'Forbidden: staff is not authorized for this venue' }, { status: 403 });
+    }
+  }
 
   const targetCustomerId = customerContext?.customerId || customerIdParam;
   let resolvedPhone = searchParams.get('phone') || searchParams.get('customer') || '01000000000';
@@ -90,7 +102,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
       }
 
-      // Check customer_wallet_preferences (Fail-Closed if opted out)
+      // Check customer_wallet_preferences (Require positive opt-in: wallet_opt_in === true)
       const { data: pref, error: prefErr } = await admin
         .from('customer_wallet_preferences')
         .select('wallet_opt_in')
@@ -101,8 +113,8 @@ export async function GET(request: NextRequest) {
       if (prefErr) {
         return NextResponse.json({ error: 'Database error checking wallet preferences', details: prefErr.message }, { status: 500 });
       }
-      if (pref && pref.wallet_opt_in === false) {
-        return NextResponse.json({ error: 'Wallet pass generation declined: customer opted out' }, { status: 403 });
+      if (!pref || pref.wallet_opt_in !== true) {
+        return NextResponse.json({ error: 'Wallet pass generation declined: customer has not opted in' }, { status: 403 });
       }
 
       const { count, error: countErr } = await admin

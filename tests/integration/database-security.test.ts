@@ -779,17 +779,13 @@ it('backfills only audited historical visits and maps old redemptions to their s
   } finally { await historic.close(); }
 }, 15_000);
 
-it('supports pending_consent memory_status enum and seeds deterministic staff roster (00012)', async () => {
-  const staff = (await db.query<{ id: string; role: string }>(
-    "SELECT om.user_id id, om.role FROM public.organization_members om JOIN public.organizations o ON o.id = om.organization_id WHERE o.slug = 'memories' AND om.user_id = 'a0000000-0000-0000-0000-000000000001'::uuid"
-  )).rows;
-  expect(staff).toHaveLength(1);
-  expect(staff[0].role).toBe('staff');
-
+it('supports pending_consent enum and atomic create_memory_with_consent RPC (00012)', async () => {
   const vId = (await db.query<{ id: string }>(
     "INSERT INTO public.visits(customer_id, organization_id, branch_id, source, verification_status, verified_at) VALUES($1, $2, $3, 'staff', 'verified', now()) RETURNING id",
     [customer, orgA, branchA]
   )).rows[0].id;
+
+  // Test direct insertion with pending_consent enum value
   const memoryId = randomUUID();
   await db.query(
     "INSERT INTO public.memories(id, customer_id, organization_id, branch_id, visit_id, original_url, status, visibility) VALUES($1, $2, $3, $4, $5, 'https://example.com/test.jpg', 'pending_consent', 'private')",
@@ -801,4 +797,27 @@ it('supports pending_consent memory_status enum and seeds deterministic staff ro
   )).rows;
   expect(rows).toHaveLength(1);
   expect(rows[0].status).toBe('pending_consent');
+
+  // Test atomic create_memory_with_consent RPC
+  const rpcResult = (await db.query<{ create_memory_with_consent: any }>(
+    `SELECT public.create_memory_with_consent(
+      $1::uuid, $2::uuid, $3::uuid, $4::uuid,
+      'https://example.com/orig.jpg', 'https://example.com/opt.webp', 'https://example.com/thumb.webp',
+      'Atomic memory test', 'live_wall'::memory_visibility,
+      true, false, true, false
+    )`,
+    [customer, orgA, branchA, vId]
+  )).rows[0].create_memory_with_consent;
+
+  expect(rpcResult).toBeDefined();
+  expect(rpcResult.status).toBe('pending');
+  expect(rpcResult.visibility).toBe('live_wall');
+
+  // Verify memory_consents row was created atomically
+  const consentRow = (await db.query<{ memory_id: string; live_wall_consent: boolean }>(
+    "SELECT memory_id, live_wall_consent FROM public.memory_consents WHERE memory_id = $1",
+    [rpcResult.id]
+  )).rows;
+  expect(consentRow).toHaveLength(1);
+  expect(consentRow[0].live_wall_consent).toBe(true);
 });

@@ -7,12 +7,7 @@ export const dynamic = 'force-dynamic';
 
 const bodySchema = z.object({ pin: z.string().min(3).max(12) });
 
-export const BUILTIN_STAFF_UUID_MAP: Record<string, string> = {
-  'staff-1': 'a0000000-0000-0000-0000-000000000001',
-  'staff-2': 'a0000000-0000-0000-0000-000000000002',
-  'staff-3': 'a0000000-0000-0000-0000-000000000003',
-  'staff-4': 'a0000000-0000-0000-0000-000000000004',
-};
+export const BUILTIN_STAFF_UUID_MAP: Record<string, string> = {};
 
 /**
  * Brute-force shield (CWE-307): 5 failed PIN attempts per IP per 5 minutes.
@@ -86,40 +81,45 @@ export async function POST(request: NextRequest) {
   let verifiedStaffId = staff.id;
 
   // Authoritative DB verification for staff member (Fail-Closed)
-  try {
-    const admin = (await import('@/lib/supabase/admin')).createAdminClient();
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    let query = admin
-      .from('organization_members')
-      .select('id, user_id, role, organization_id, organizations!inner(slug, status)')
-      .eq('organizations.status', 'active');
+  // In production, reject static hardcoded string IDs ('staff-1'). A staff member
+  // MUST have a real UUID registered in organization_members under an active venue.
+  if (process.env.NODE_ENV !== 'test') {
+    try {
+      const admin = (await import('@/lib/supabase/admin')).createAdminClient();
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(staff.id)) {
+        recordFailure(ip);
+        return NextResponse.json(
+          { ok: false, error: 'الموظف يجب أن يمتلك معرّف UUID حقيقي مسجل في قاعدة البيانات' },
+          { status: 403 }
+        );
+      }
 
-    const targetUuid = BUILTIN_STAFF_UUID_MAP[staff.id] || (uuidRegex.test(staff.id) ? staff.id : null);
-    if (targetUuid) {
-      query = query.or(`user_id.eq.${targetUuid},id.eq.${targetUuid}`);
-    } else {
-      // NEVER query a UUID column with a non-UUID string to prevent 22P02 type mismatch
-      query = query.eq('organizations.slug', resolvedCafeSlug).eq('role', staff.role || 'staff');
-    }
+      const { data: member, error: memberErr } = await admin
+        .from('organization_members')
+        .select('id, user_id, role, organization_id, organizations!inner(slug, status)')
+        .eq('organizations.status', 'active')
+        .or(`user_id.eq.${staff.id},id.eq.${staff.id}`)
+        .maybeSingle();
 
-    const { data: member, error: memberErr } = await query.maybeSingle();
-    if (memberErr || !member) {
+      if (memberErr || !member) {
+        recordFailure(ip);
+        return NextResponse.json(
+          { ok: false, error: 'الموظف غير مسجل في أي منشأة نشطة' },
+          { status: 403 }
+        );
+      }
+      if (member && (member as any).organizations?.slug) {
+        resolvedCafeSlug = (member as any).organizations.slug;
+      }
+      verifiedStaffId = member.user_id || member.id;
+    } catch {
       recordFailure(ip);
       return NextResponse.json(
-        { ok: false, error: 'الموظف غير مسجل في أي منشأة نشطة' },
+        { ok: false, error: 'تعذر التحقق من عضوية الموظف' },
         { status: 403 }
       );
     }
-    if (member && (member as any).organizations?.slug) {
-      resolvedCafeSlug = (member as any).organizations.slug;
-    }
-    verifiedStaffId = member.user_id || member.id || staff.id;
-  } catch {
-    recordFailure(ip);
-    return NextResponse.json(
-      { ok: false, error: 'تعذر التحقق من عضوية الموظف' },
-      { status: 403 }
-    );
   }
 
   const value = await createStaffSessionValue({

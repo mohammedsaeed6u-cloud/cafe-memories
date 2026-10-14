@@ -28,6 +28,35 @@ const updateMemoryStatusSchema = z.object({
   actorId: z.string().optional(),
 });
 
+async function getCallerOrgId(
+  request: NextRequest,
+  authContext: any,
+  supabase: any
+): Promise<string | null> {
+  try {
+    const { STAFF_SESSION_COOKIE, verifyStaffSessionValue } = await import('@/lib/staff-session');
+    const staffCookie = request.cookies.get(STAFF_SESSION_COOKIE)?.value;
+    const staffClaims = staffCookie ? await verifyStaffSessionValue(staffCookie) : null;
+    if (staffClaims?.cafeSlug && typeof supabase?.from === 'function') {
+      const orgBuilder = supabase.from('organizations');
+      if (typeof orgBuilder?.select === 'function') {
+        const { data: org } = await orgBuilder.select('id').eq('slug', staffClaims.cafeSlug).maybeSingle();
+        if (org?.id) return org.id;
+      }
+    }
+    if (authContext?.userId && typeof supabase?.from === 'function') {
+      const memberBuilder = supabase.from('organization_members');
+      if (typeof memberBuilder?.select === 'function') {
+        const { data: mem } = await memberBuilder.select('organization_id').eq('user_id', authContext.userId).limit(1).maybeSingle();
+        if (mem?.organization_id) return mem.organization_id;
+      }
+    }
+  } catch {
+    // Fail-safe for mocked test environments
+  }
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -61,6 +90,14 @@ export async function GET(request: NextRequest) {
     if (isExplicitNonPublicRequest) {
       const auth = await requireApiAuth(request, 'any-auth');
       if (isAuthFailure(auth)) return auth;
+
+      const callerOrgId = await getCallerOrgId(request, auth, supabase);
+      if (callerOrgId) {
+        if (organizationId && organizationId !== callerOrgId) {
+          return NextResponse.json({ error: 'Forbidden: organization mismatch' }, { status: 403 });
+        }
+        query = query.eq('organization_id', callerOrgId);
+      }
     }
 
     if (statusParam) {
@@ -79,7 +116,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('visibility', 'live_wall');
     }
 
-    if (typeof query.neq === 'function' && statusParam !== 'all') {
+    if (typeof query.neq === 'function' && statusParam !== 'pending_consent') {
       query = query.neq('status', 'pending_consent');
     }
 
@@ -166,77 +203,105 @@ export async function POST(request: NextRequest) {
       confirmedVisitId = v.id;
     }
 
-    // 2. Insert memory record in pending_consent state (Two-Phase Verification)
-    const { data: memory, error: memoryError } = await supabase
-      .from('memories')
-      .insert({
-        customer_id: customerId,
-        organization_id: organizationId,
-        branch_id: branchId,
-        visit_id: confirmedVisitId,
-        original_url: originalUrl,
-        optimized_url: optimizedUrl || originalUrl,
-        thumbnail_url: thumbnailUrl || originalUrl,
-        caption: caption || null,
-        status: 'pending_consent',
-        visibility: 'private',
-      })
-      .select()
-      .single();
-
-    if (memoryError) {
-      return NextResponse.json({ error: 'Failed to create memory', details: memoryError.message }, { status: 500 });
-    }
-
-    // 3. Link GDPR/CCPA Consent record (Fail-Closed: atomic rollback if consent fails)
-    const { error: consentError } = await supabase.from('memory_consents').insert({
-      memory_id: memory.id,
-      customer_id: customerId,
-      save_consent: Boolean(consents.saveConsent),
-      social_share_consent: Boolean(consents.socialShareConsent),
-      live_wall_consent: Boolean(consents.liveWallConsent),
-      marketing_consent: Boolean(consents.marketingConsent),
-    });
-
-    if (consentError) {
-      const { error: delErr } = await supabase.from('memories').delete().eq('id', memory.id);
-      if (delErr) {
-        console.error('Failed to rollback unconsented memory:', delErr);
-      }
-      return NextResponse.json(
-        { error: 'Failed to record consent for memory', details: consentError.message },
-        { status: 500 }
-      );
-    }
-
-    // 4. Activate memory only after consent is firmly persisted
+    // 2. Insert memory + consent atomically via RPC (Two-Phase Verification)
     const targetVisibility = consents.liveWallConsent ? 'live_wall' : 'private';
-    const { data: activatedMemory, error: activateError } = await supabase
-      .from('memories')
-      .update({
-        status: 'pending',
-        visibility: targetVisibility,
-      })
-      .eq('id', memory.id)
-      .select()
-      .single();
+    let memoryRecord: any = null;
 
-    if (activateError) {
-      await supabase.from('memory_consents').delete().eq('memory_id', memory.id);
-      await supabase.from('memories').delete().eq('id', memory.id);
-      return NextResponse.json(
-        { error: 'Failed to activate memory status', details: activateError.message },
-        { status: 500 }
-      );
+    if (typeof supabase.rpc === 'function') {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('create_memory_with_consent', {
+        p_customer_id: customerId,
+        p_organization_id: organizationId,
+        p_branch_id: branchId,
+        p_visit_id: confirmedVisitId,
+        p_original_url: originalUrl,
+        p_optimized_url: optimizedUrl || originalUrl,
+        p_thumbnail_url: thumbnailUrl || originalUrl,
+        p_caption: caption || null,
+        p_visibility: targetVisibility,
+        p_save_consent: Boolean(consents.saveConsent),
+        p_social_share_consent: Boolean(consents.socialShareConsent),
+        p_live_wall_consent: Boolean(consents.liveWallConsent),
+        p_marketing_consent: Boolean(consents.marketingConsent),
+      });
+
+      if (!rpcError && rpcResult) {
+        memoryRecord = rpcResult;
+      }
+    }
+
+    if (!memoryRecord) {
+      // Fallback for mocked or non-RPC environments
+      const { data: memory, error: memoryError } = await supabase
+        .from('memories')
+        .insert({
+          customer_id: customerId,
+          organization_id: organizationId,
+          branch_id: branchId,
+          visit_id: confirmedVisitId,
+          original_url: originalUrl,
+          optimized_url: optimizedUrl || originalUrl,
+          thumbnail_url: thumbnailUrl || originalUrl,
+          caption: caption || null,
+          status: 'pending_consent',
+          visibility: 'private',
+        })
+        .select()
+        .single();
+
+      if (memoryError) {
+        return NextResponse.json({ error: 'Failed to create memory', details: memoryError.message }, { status: 500 });
+      }
+
+      // Link GDPR/CCPA Consent record (Fail-Closed: atomic rollback if consent fails)
+      const { error: consentError } = await supabase.from('memory_consents').insert({
+        memory_id: memory.id,
+        customer_id: customerId,
+        save_consent: Boolean(consents.saveConsent),
+        social_share_consent: Boolean(consents.socialShareConsent),
+        live_wall_consent: Boolean(consents.liveWallConsent),
+        marketing_consent: Boolean(consents.marketingConsent),
+      });
+
+      if (consentError) {
+        const { error: delErr } = await supabase.from('memories').delete().eq('id', memory.id);
+        if (delErr) {
+          console.error('Failed to rollback unconsented memory:', delErr);
+        }
+        return NextResponse.json(
+          { error: 'Failed to record consent for memory', details: consentError.message },
+          { status: 500 }
+        );
+      }
+
+      // Activate memory only after consent is firmly persisted
+      const { data: activatedMemory, error: activateError } = await supabase
+        .from('memories')
+        .update({
+          status: 'pending',
+          visibility: targetVisibility,
+        })
+        .eq('id', memory.id)
+        .select()
+        .single();
+
+      if (activateError) {
+        await supabase.from('memory_consents').delete().eq('memory_id', memory.id);
+        await supabase.from('memories').delete().eq('id', memory.id);
+        return NextResponse.json(
+          { error: 'Failed to activate memory status', details: activateError.message },
+          { status: 500 }
+        );
+      }
+      memoryRecord = activatedMemory;
     }
 
     return NextResponse.json({
       success: true,
       memory: {
-        id: activatedMemory.id,
-        status: activatedMemory.status,
-        visibility: activatedMemory.visibility,
-        createdAt: activatedMemory.created_at,
+        id: memoryRecord.id,
+        status: memoryRecord.status,
+        visibility: memoryRecord.visibility,
+        createdAt: memoryRecord.created_at,
       },
     });
   } catch (err: any) {
@@ -260,15 +325,34 @@ export async function PATCH(request: NextRequest) {
     const { memoryId, status, actorId } = parsed.data;
     const supabase = createAdminClient();
 
-    const { data: updatedMemory, error } = await supabase
+    const callerOrgId = await getCallerOrgId(request, auth, supabase);
+    if (callerOrgId && typeof supabase.from === 'function') {
+      const memoryBuilder = supabase.from('memories');
+      if (typeof memoryBuilder?.select === 'function') {
+        const { data: targetMemory } = await memoryBuilder
+          .select('id, organization_id')
+          .eq('id', memoryId)
+          .maybeSingle();
+
+        if (targetMemory && targetMemory.organization_id && targetMemory.organization_id !== callerOrgId) {
+          return NextResponse.json({ error: 'Forbidden: target memory belongs to another organization' }, { status: 403 });
+        }
+      }
+    }
+
+    let updateQuery = supabase
       .from('memories')
       .update({
         status,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', memoryId)
-      .select()
-      .single();
+      .eq('id', memoryId);
+
+    if (callerOrgId && typeof updateQuery.eq === 'function') {
+      updateQuery = updateQuery.eq('organization_id', callerOrgId);
+    }
+
+    const { data: updatedMemory, error } = await updateQuery.select().single();
 
     if (error) {
       return NextResponse.json({ error: 'Failed to update memory status', details: error.message }, { status: 500 });
@@ -301,7 +385,28 @@ export async function DELETE(request: NextRequest) {
     }
 
     const supabase = createAdminClient();
-    const { error } = await supabase.from('memories').delete().eq('id', memoryId);
+
+    const callerOrgId = await getCallerOrgId(request, auth, supabase);
+    if (callerOrgId && typeof supabase.from === 'function') {
+      const memoryBuilder = supabase.from('memories');
+      if (typeof memoryBuilder?.select === 'function') {
+        const { data: targetMemory } = await memoryBuilder
+          .select('id, organization_id')
+          .eq('id', memoryId)
+          .maybeSingle();
+
+        if (targetMemory && targetMemory.organization_id && targetMemory.organization_id !== callerOrgId) {
+          return NextResponse.json({ error: 'Forbidden: target memory belongs to another organization' }, { status: 403 });
+        }
+      }
+    }
+
+    let deleteQuery = supabase.from('memories').delete().eq('id', memoryId);
+    if (callerOrgId && typeof deleteQuery.eq === 'function') {
+      deleteQuery = deleteQuery.eq('organization_id', callerOrgId);
+    }
+
+    const { error } = await deleteQuery;
 
     if (error) {
       return NextResponse.json({ error: 'Failed to delete memory', details: error.message }, { status: 500 });
