@@ -49,30 +49,37 @@ export async function GET(request: NextRequest) {
     if (organizationId) query = query.eq('organization_id', organizationId);
 
     // Guest Privacy & Wall display verification:
-    // Strictly fetch memories where visibility === 'live_wall' AND status === 'approved'
-    // The 'all' bypass exposes pending/rejected/hidden moderation rows and is
-    // therefore merchant/staff-only (CWE-862) — anonymous callers stay pinned
-    // to approved+live_wall regardless of what they request.
-    const requestsModerationBypass =
-      statusParam === 'all' || visibilityParam === 'all';
-    if (requestsModerationBypass) {
+    // Only approved live-wall memories are public for anonymous guests.
+    // Querying non-public statuses ('all', 'pending', 'rejected', 'hidden', 'deleted')
+    // or non-public visibilities ('all', 'private', 'shared') requires staff/merchant authentication (CWE-862).
+    const isExplicitNonPublicRequest =
+      statusParam === 'all' ||
+      visibilityParam === 'all' ||
+      (statusParam !== null && statusParam !== 'approved') ||
+      (visibilityParam !== null && visibilityParam !== 'live_wall');
+
+    if (isExplicitNonPublicRequest) {
       const auth = await requireApiAuth(request, 'any-auth');
       if (isAuthFailure(auth)) return auth;
     }
 
-    if (statusParam && statusParam !== 'all') {
-      query = query.eq('status', statusParam);
-    } else if (!statusParam) {
+    if (statusParam) {
+      if (statusParam !== 'all') {
+        query = query.eq('status', statusParam);
+      }
+    } else {
       query = query.eq('status', 'approved');
     }
 
-    if (visibilityParam && visibilityParam !== 'all') {
-      query = query.eq('visibility', visibilityParam);
-    } else if (!visibilityParam) {
+    if (visibilityParam) {
+      if (visibilityParam !== 'all') {
+        query = query.eq('visibility', visibilityParam);
+      }
+    } else {
       query = query.eq('visibility', 'live_wall');
     }
 
-    if (typeof query.neq === 'function') {
+    if (typeof query.neq === 'function' && statusParam !== 'all') {
       query = query.neq('status', 'pending_consent');
     }
 

@@ -76,24 +76,42 @@ export async function GET(request: NextRequest) {
       resolvedName = c.display_name || 'ضيف مميز';
       resolvedPhone = c.anonymous_id || '01000000000';
 
-      // Scoped venue/organization lookup
-      const { data: org } = await admin
+      // Scoped venue/organization lookup (Fail-Closed)
+      const { data: org, error: orgErr } = await admin
         .from('organizations')
-        .select('id')
+        .select('id, name')
         .eq('slug', cafeSlug)
         .maybeSingle();
 
-      let visitQuery = admin
+      if (orgErr) {
+        return NextResponse.json({ error: 'Database error fetching organization', details: orgErr.message }, { status: 500 });
+      }
+      if (!org) {
+        return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      }
+
+      // Check customer_wallet_preferences (Fail-Closed if opted out)
+      const { data: pref, error: prefErr } = await admin
+        .from('customer_wallet_preferences')
+        .select('wallet_opt_in')
+        .eq('customer_id', targetCustomerId)
+        .eq('organization_id', org.id)
+        .maybeSingle();
+
+      if (prefErr) {
+        return NextResponse.json({ error: 'Database error checking wallet preferences', details: prefErr.message }, { status: 500 });
+      }
+      if (pref && pref.wallet_opt_in === false) {
+        return NextResponse.json({ error: 'Wallet pass generation declined: customer opted out' }, { status: 403 });
+      }
+
+      const { count, error: countErr } = await admin
         .from('visits')
         .select('id', { count: 'exact', head: true })
         .eq('customer_id', targetCustomerId)
+        .eq('organization_id', org.id)
         .eq('verification_status', 'verified');
 
-      if (org?.id) {
-        visitQuery = visitQuery.eq('organization_id', org.id);
-      }
-
-      const { count, error: countErr } = await visitQuery;
       if (countErr) {
         return NextResponse.json({ error: 'Database error counting verified visits', details: countErr.message }, { status: 500 });
       }

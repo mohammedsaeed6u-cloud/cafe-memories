@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // Fetch customers strictly scoped to this merchant's organization (Fail-Closed)
     const { data: customersData, error } = await supabase
       .from('customers')
-      .select('id, display_name, anonymous_id, email, created_at, last_seen_at, memories(id, visit_id, optimized_url, thumbnail_url, caption, visibility, status, created_at), visits!inner(id, created_at, source, organization_id)')
+      .select('id, display_name, anonymous_id, email, created_at, last_seen_at, memories(id, organization_id, visit_id, optimized_url, thumbnail_url, caption, visibility, status, created_at), visits!inner(id, created_at, source, organization_id)')
       .eq('visits.organization_id', orgId)
       .order('last_seen_at', { ascending: false });
 
@@ -46,14 +46,14 @@ export async function GET(request: NextRequest) {
     }
 
     const customers = (customersData || []).map(c => {
-      // Privacy Guard: Only count and return approved non-private memories (public, shared, live_wall).
-      // Private guest photobooth memories must NEVER be leaked to merchant CRM.
+      // Privacy Guard: Only count and return approved non-private memories (public, shared, live_wall) belonging to this organization.
+      // Private guest photobooth memories, pending memories, or cross-tenant memories must NEVER be leaked to merchant CRM.
       const publicMemories = (c.memories || []).filter(
         (m: any) =>
+          (!m.organization_id || m.organization_id === orgId) &&
+          m.status === 'approved' &&
           m.visibility !== 'private' &&
-          ['public', 'shared', 'live_wall'].includes(m.visibility) &&
-          m.status !== 'rejected' &&
-          m.status !== 'pending_consent'
+          ['public', 'shared', 'live_wall'].includes(m.visibility)
       );
       const memoryCount = publicMemories.length;
       const visitCount = c.visits ? c.visits.length : 0;

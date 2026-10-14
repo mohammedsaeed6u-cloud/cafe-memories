@@ -310,22 +310,26 @@ export function useTerminalCashier() {
       }
 
       try {
-        // Enforce 1 verified server visit record per stamp added
-        for (let i = 0; i < addCount; i++) {
-          const res = await fetch('/api/v1/visits', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              customerId,
-              branchId,
-              idempotencyKey: crypto.randomUUID(),
-            }),
-          });
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            setErrorNotice(err.error || `تعذر اعتماد الزيارة من الخادم (رمز ${res.status})`);
-            return;
-          }
+        // Synchronize 1 verified server visit transaction per cashier interaction (respecting 1-hour anti-fraud cooldown)
+        const res = await fetch('/api/v1/visits', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerId,
+            branchId,
+            idempotencyKey: crypto.randomUUID(),
+          }),
+        });
+
+        if (res.status === 409) {
+          setErrorNotice('تم تسجيل زيارة لهذا العميل مسبقاً خلال الساعة الحالية (فترة التهدئة نشطة)');
+          return;
+        }
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          setErrorNotice(err.error || `تعذر اعتماد الزيارة من الخادم (رمز ${res.status})`);
+          return;
         }
       } catch (err) {
         reportIgnoredError('terminal/server_visit_sync', err);

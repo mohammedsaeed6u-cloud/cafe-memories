@@ -47,6 +47,16 @@ describe('GET /api/v1/memories moderation bypass guard', () => {
     expect(res.status).toBe(401);
   });
 
+  it('rejects anonymous status=pending with 401', async () => {
+    const res = await memoriesGET(req('http://localhost/api/v1/memories?status=pending'));
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects anonymous visibility=private with 401', async () => {
+    const res = await memoriesGET(req('http://localhost/api/v1/memories?visibility=private'));
+    expect(res.status).toBe(401);
+  });
+
   it('keeps default (approved+live_wall) public for guests', async () => {
     const res = await memoriesGET(req('http://localhost/api/v1/memories'));
     expect(res.status).toBe(200);

@@ -71,6 +71,7 @@ beforeAll(async () => {
   await db.exec(readFileSync(new URL('00009_visit_keepsakes.sql', sqlDir), 'utf8'));
   await db.exec(readFileSync(new URL('00010_brand_wallet_privacy.sql', sqlDir), 'utf8'));
   await db.exec(readFileSync(new URL('00011_remediate_legacy_policies.sql', sqlDir), 'utf8'));
+  await db.exec(readFileSync(new URL('00012_memory_status_and_roster.sql', sqlDir), 'utf8'));
   // Mirrors Supabase default public-schema grants while preserving explicit
   // server-only secrets / validated-write restrictions from the migration.
   await db.exec(`GRANT USAGE ON SCHEMA public, auth TO authenticated, service_role;
@@ -777,3 +778,27 @@ it('backfills only audited historical visits and maps old redemptions to their s
     expect(cards[0].visit_ids).toHaveLength(2);
   } finally { await historic.close(); }
 }, 15_000);
+
+it('supports pending_consent memory_status enum and seeds deterministic staff roster (00012)', async () => {
+  const staff = (await db.query<{ id: string; role: string }>(
+    "SELECT om.user_id id, om.role FROM public.organization_members om JOIN public.organizations o ON o.id = om.organization_id WHERE o.slug = 'memories' AND om.user_id = 'a0000000-0000-0000-0000-000000000001'::uuid"
+  )).rows;
+  expect(staff).toHaveLength(1);
+  expect(staff[0].role).toBe('staff');
+
+  const vId = (await db.query<{ id: string }>(
+    "INSERT INTO public.visits(customer_id, organization_id, branch_id, source, verification_status, verified_at) VALUES($1, $2, $3, 'staff', 'verified', now()) RETURNING id",
+    [customer, orgA, branchA]
+  )).rows[0].id;
+  const memoryId = randomUUID();
+  await db.query(
+    "INSERT INTO public.memories(id, customer_id, organization_id, branch_id, visit_id, original_url, status, visibility) VALUES($1, $2, $3, $4, $5, 'https://example.com/test.jpg', 'pending_consent', 'private')",
+    [memoryId, customer, orgA, branchA, vId]
+  );
+  const rows = (await db.query<{ id: string; status: string }>(
+    "SELECT id, status FROM public.memories WHERE status = 'pending_consent' AND id = $1",
+    [memoryId]
+  )).rows;
+  expect(rows).toHaveLength(1);
+  expect(rows[0].status).toBe('pending_consent');
+});
