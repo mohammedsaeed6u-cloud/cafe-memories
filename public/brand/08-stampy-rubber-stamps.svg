@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 250" width="500" height="250">
+  <rect width="100%" height="100%" fill="#EDE4D3" />
+    <g class="rubber-stamp" transform="rotate(-8 140 125)">
+    <defs>
+      <path id="stamp-top-140-125" d="M 82.4 120 A 57.599999999999994 57.599999999999994 0 0 1 197.6 120" fill="none" />
+      <path id="stamp-bot-140-125" d="M 82.4 130 A 57.599999999999994 57.599999999999994 0 0 0 197.6 130" fill="none" />
+    </defs>
+    <circle cx="140" cy="125" r="80" fill="none" stroke="#44230D" stroke-width="2.5" />
+    <circle cx="140" cy="125" r="76" fill="none" stroke="#44230D" stroke-width="1.2" />
+
+    <line x1="56" y1="116" x2="224" y2="116" stroke="#44230D" stroke-width="2" />
+    <line x1="56" y1="134" x2="224" y2="134" stroke="#44230D" stroke-width="2" />
+
+    <text x="140" y="130.5" font-family="'Inter', 'Arial Black', sans-serif" font-size="17" font-weight="900" fill="#44230D" text-anchor="middle" letter-spacing="1.2">STAMPY</text>
+
+    <text font-family="'Inter', 'Arial', sans-serif" font-size="9" font-weight="800" fill="#44230D" letter-spacing="3">
+      <textPath href="#stamp-top-140-125" startOffset="50%" text-anchor="middle">STAMPY</textPath>
+    </text>
+
+    <text font-family="'Inter', 'Arial', sans-serif" font-size="8.5" font-weight="700" fill="#44230D" letter-spacing="2">
+      <textPath href="#stamp-bot-140-125" startOffset="50%" text-anchor="middle">EST. 1874</textPath>
+    </text>
+  </g>
+    <g class="rubber-stamp" transform="rotate(6 360 125)">
+    <defs>
+      <path id="stamp-top-360-125" d="M 302.4 120 A 57.599999999999994 57.599999999999994 0 0 1 417.6 120" fill="none" />
+      <path id="stamp-bot-360-125" d="M 302.4 130 A 57.599999999999994 57.599999999999994 0 0 0 417.6 130" fill="none" />
+    </defs>
+    <circle cx="360" cy="125" r="80" fill="none" stroke="#44230D" stroke-width="2.5" />
+    <circle cx="360" cy="125" r="76" fill="none" stroke="#44230D" stroke-width="1.2" />
+
+    <line x1="276" y1="116" x2="444" y2="116" stroke="#44230D" stroke-width="2" />
+    <line x1="276" y1="134" x2="444" y2="134" stroke="#44230D" stroke-width="2" />
+
+    <text x="360" y="130.5" font-family="'Inter', 'Arial Black', sans-serif" font-size="17" font-weight="900" fill="#44230D" text-anchor="middle" letter-spacing="1.2">STAMPY</text>
+
+    <text font-family="'Inter', 'Arial', sans-serif" font-size="9" font-weight="800" fill="#44230D" letter-spacing="3">
+      <textPath href="#stamp-top-360-125" startOffset="50%" text-anchor="middle">STAMPY</textPath>
+    </text>
+
+    <text font-family="'Inter', 'Arial', sans-serif" font-size="8.5" font-weight="700" fill="#44230D" letter-spacing="2">
+      <textPath href="#stamp-bot-360-125" startOffset="50%" text-anchor="middle">EST. 1874</textPath>
+    </text>
+  </g>
+</svg>

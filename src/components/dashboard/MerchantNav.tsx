@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { StampyLogo } from "@/components/brand/StampyLogo";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -51,17 +52,9 @@ export function MerchantNav({
         <Link
           href="/dashboard"
           className="flex w-fit items-center gap-3"
-          aria-label="Café Memories - لوحة التحكم"
+          aria-label="stampy. - لوحة التحكم"
         >
-          <span
-            aria-hidden="true"
-            className="grid h-10 w-10 place-items-center rounded-[14px] bg-[#f4cf97] text-2xl text-forest"
-          >
-            ✳
-          </span>
-          <span dir="ltr" className="text-lg font-bold">
-            café<span className="text-[#edbc87]">memories</span>
-          </span>
+          <StampyLogo size="sm" theme="dark" showTagline={false} />
         </Link>
         <div className="mt-7 hidden border-t border-white/15 pt-7 lg:block">
           <p className="eyebrow text-[#efc68e]">مساحة المنشأة</p>

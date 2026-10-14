@@ -9,6 +9,7 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
+import { StampyLogo, StampyApertureIcon } from "@/components/brand/StampyLogo";
 import { createClient } from "@/lib/supabase/client";
 import type { KeepsakeStory } from "@/lib/keepsakes";
 import { instagramMention, socialPlatforms, type PublicBrand } from "@/lib/brand";
@@ -492,16 +493,8 @@ export function CustomerClient({
       <header className="border-b border-forest/10 bg-white/80">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
           <div className="flex items-center gap-3">
-            <span
-              aria-hidden="true"
-              className="grid h-10 w-10 place-items-center rounded-[14px] bg-forest text-2xl text-[#f3c178]"
-            >
-              ✳
-            </span>
+            <StampyLogo size="xs" showTagline={false} />
             <div>
-              <p dir="ltr" className="text-sm font-bold">
-                café<span className="text-rust">memories</span>
-              </p>
               <p className="text-xs text-ink/55">
                 {session?.venue.organizationName ?? "مساحة الضيف"}
               </p>
@@ -645,7 +638,7 @@ export function CustomerClient({
             {tab === "card" && (
               <>
               <div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
-                <section className="relative overflow-hidden rounded-[2rem] bg-forest p-6 text-white shadow-[0_24px_60px_-32px_#183a32] sm:p-9"
+                <section className="stampy-ticket-card relative overflow-hidden rounded-[2rem] bg-forest p-6 text-white shadow-[0_24px_60px_-32px_#451215] sm:p-9"
                   style={session.venue.brand ? { backgroundColor: session.venue.brand.primaryColor } : undefined}>
                   <span
                     aria-hidden="true"
@@ -663,8 +656,8 @@ export function CustomerClient({
                         {session.venue.brand?.tagline || 'رصيدك واحد في كل فروع المكان'}
                       </p>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2" aria-label={`Café Memories مع ${session.venue.organizationName}`}>
-                      <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-xl" aria-label="Café Memories">✳</span>
+                    <div className="flex shrink-0 items-center gap-2" aria-label={`stampy. مع ${session.venue.organizationName}`}>
+                      <img src="/brand/stampy-app-icon-64.png" alt="شعار stampy." className="h-10 w-10 rounded-xl" />
                       <span aria-hidden="true" className="text-white/45">×</span>
                       {session.venue.brand?.logoUrl ? <img src={session.venue.brand.logoUrl} alt={`لوجو ${session.venue.organizationName}`}
                         className="h-10 w-10 rounded-xl bg-white object-contain p-1" />
@@ -704,9 +697,9 @@ export function CustomerClient({
                             <span
                               key={index}
                               aria-hidden="true"
-                              className={`grid aspect-square place-items-center rounded-full border text-xl ${index < visibleStamps ? "border-[#f2c77f] bg-[#f2c77f] text-forest" : "border-dashed border-white/40 text-white/30"}`}
+                              className={`stampy-stamp grid aspect-square place-items-center rounded-full border ${index < visibleStamps ? "border-[#DFAB56] bg-[#DFAB56]" : "border-dashed border-white/40 bg-white/5 opacity-60"}`}
                             >
-                              ✳
+                              <StampyApertureIcon size={25} color={index < visibleStamps ? "#682025" : "#DFAB56"} strokeColor={index < visibleStamps ? "#DFAB56" : "#682025"} />
                             </span>
                           ),
                         )}

@@ -1,420 +1,183 @@
 import Image from "next/image";
 import Link from "next/link";
+import { StampyLogo, StampyApertureIcon } from "@/components/brand/StampyLogo";
 
-const steps = [
+const journey = [
   {
     number: "01",
-    symbol: "⌁",
-    title: "زيارة تتوثّق، مش مجرد مسح",
-    detail:
-      "الضيف يفتح QR الفرع، والموظف يؤكد الشراء الحقيقي. ساعتها بس يتضاف الختم لبطاقته.",
+    title: "الزيارة الحقيقية أولًا",
+    description: "الضيف يفتح رابط المكان، والموظف يؤكد الزيارة من محطته. فتح QR وحده لا يمنح ختمًا.",
   },
   {
     number: "02",
-    symbol: "✳",
-    title: "الضيف يسيب صورة للزيارة",
-    detail:
-      "بعد التأكيد، يصوّر من موبايله أو يرفع صورة للختم. اختياري تمامًا؛ الصورة تفضل خاصة إلا بإذنه.",
+    title: "صورة تخص صاحبها",
+    description: "بعد تأكيد الزيارة، يقدر الضيف يصوّر أو يرفع من هاتفه. الخطوة اختيارية والصورة خاصة إلا لو طلب عرضها بنفسه.",
   },
   {
     number: "03",
-    symbol: "✦",
-    title: "مكافأة ومعاها ذكرياتهم",
-    detail:
-      "عند اكتمال الأختام يستلم المكافأة وكارت صور زياراته: رقمي في حسابه وجاهز للحفظ PDF أو الطباعة بالفرع.",
+    title: "مكافأة وذكرى تبقى",
+    description: "عند اكتمال الأختام، يستلم مكافأته ومعها كارت ذكريات دائم في حسابه، قابل للحفظ أو الطباعة في المكان.",
   },
 ];
 
 export default function HomePage() {
   return (
     <main dir="rtl" className="overflow-hidden bg-paper text-ink">
-      <header className="relative z-10 border-b border-ink/10 bg-paper/95">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 md:px-10">
-          <Link
-            href="/"
-            aria-label="Café Memories - الرئيسية"
-            className="flex items-center gap-3"
-          >
-            <span
-              aria-hidden="true"
-              className="grid h-10 w-10 place-items-center rounded-[14px] bg-forest text-2xl text-[#f3c178]"
-            >
-              ✳
-            </span>
-            <span className="text-lg font-bold tracking-tight" dir="ltr">
-              café<span className="text-rust">memories</span>
-            </span>
+      <a href="#content" className="sr-only focus:fixed focus:right-4 focus:top-4 focus:z-50 focus:not-sr-only focus:rounded-xl focus:bg-forest focus:p-3 focus:text-white">
+        تخطّى إلى المحتوى
+      </a>
+      <header className="relative z-20 border-b border-forest/10 bg-paper/95">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3 md:px-10">
+          <Link href="/" aria-label="stampy. الرئيسية" className="shrink-0">
+            <StampyLogo size="sm" showTagline={false} />
           </Link>
-          <nav
-            aria-label="القائمة الرئيسية"
-            className="hidden items-center gap-6 text-sm font-bold text-ink/70 lg:flex"
-          >
-            <a href="#how" className="hover:text-rust">
-              كيف بتشتغل؟
-            </a>
-            <a href="#experience" className="hover:text-rust">
-              التجربة
-            </a>
-            <a href="#keepsake" className="hover:text-rust">
-              كارت الذكريات
-            </a>
-            <a href="#merchant" className="hover:text-rust">
-              للمنشأة
-            </a>
-            <Link href="/privacy" className="hover:text-rust">
-              الخصوصية
-            </Link>
+          <nav aria-label="القائمة الرئيسية" className="hidden items-center gap-7 text-sm font-bold text-ink/75 md:flex">
+            <a href="#how" className="hover:text-rust">التجربة</a>
+            <a href="#keepsake" className="hover:text-rust">التذكار</a>
+            <a href="#venues" className="hover:text-rust">للأماكن</a>
+            <Link href="/privacy" className="hover:text-rust">الخصوصية</Link>
           </nav>
-          <Link
-            href="/login"
-            className="rounded-full border border-forest/20 px-4 py-2 text-sm font-bold text-forest transition hover:bg-forest hover:text-white sm:px-6"
-          >
-            دخول المنشأة <span aria-hidden="true">↖</span>
+          <Link href="/login" className="rounded-full border border-forest/20 px-4 py-2 text-sm font-bold text-forest transition hover:bg-forest hover:text-white sm:px-6">
+            دخول المكان <span aria-hidden="true">↖</span>
           </Link>
         </div>
       </header>
 
-      <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-18 pt-12 md:px-10 md:pb-28 md:pt-20 lg:grid-cols-[1fr_1.06fr] lg:gap-14">
-        <div className="relative z-10 max-w-xl">
-          <p className="eyebrow mb-6 inline-flex items-center gap-2 rounded-full border border-forest/15 bg-white/70 px-4 py-2 text-forest">
-            <span className="text-rust">✳</span> ذكريات تستحق العودة
-          </p>
-          <h1 className="display-heading text-[clamp(3.1rem,6vw,6rem)]">
-            كل زيارة
-            <br />
-            تسيب{" "}
-            <span className="relative inline-block text-rust">
-              أثرًا
-              <span
-                aria-hidden="true"
-                className="absolute -bottom-2 right-0 h-2 w-full rounded-full bg-[#edbe82]/70"
-              />
-            </span>
-            <br />
-            يخلّيهم يرجعوا.
-          </h1>
-          <p className="mt-8 max-w-lg text-base leading-9 text-ink/65 md:text-lg">
-            كل شراء مؤكد يضيف ختمًا. والضيف يقدر يحفظ صورة خاصة من الزيارة
-            بموبايله. عند المكافأة، يستلم معاها كارت ذكريات يجمع صوره؛ علاقة
-            ترجعهم للمكان، مش بس لخصم جديد.
-          </p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <Link href="/login?mode=signup" className="action-primary">
-              ابدأ بمنشأتك <span aria-hidden="true">↖</span>
-            </Link>
-            <a href="#how" className="action-secondary">
-              شوف الرحلة <span aria-hidden="true">↓</span>
-            </a>
-          </div>
-          <p className="mt-7 flex items-center gap-2 text-xs font-bold text-ink/50">
-            <span className="text-lg text-rust" aria-hidden="true">
-              ✦
-            </span>{" "}
-            من غير تنزيل تطبيق للضيف · الصور خاصة إلا بموافقته
-          </p>
-        </div>
-        <div className="relative min-h-[430px] sm:min-h-[560px]">
-          <div className="absolute inset-0 overflow-hidden rounded-[2rem] bg-[#382a20] shadow-[0_35px_85px_-35px_#182c2570] sm:rounded-[2.5rem]">
-            <Image
-              src="/cafe-counter.webp"
-              alt="ضيف يستلم قهوته في أحد المقاهي"
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover object-center"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#172b23]/55 via-transparent to-transparent" />
-            <div className="absolute bottom-6 right-6 left-6 flex items-center justify-between gap-3 text-white sm:bottom-9 sm:right-9 sm:left-9">
-              <p className="max-w-[13rem] text-lg font-bold leading-7 sm:text-xl">
-                من أول فنجان… لحد ما يبقوا من أهل المكان.
+      <div id="content">
+        <section className="relative border-b border-forest/10 px-5 pb-20 pt-14 md:px-10 md:pb-28 md:pt-20">
+          <div aria-hidden="true" className="pointer-events-none absolute -left-30 top-4 h-[35rem] w-[35rem] rounded-full bg-stampy-ochre/20 blur-3xl" />
+          <div className="relative mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div className="max-w-[610px]">
+              <p className="eyebrow mb-7 inline-flex items-center gap-2 rounded-full border border-stampy-ochre/60 bg-white/65 px-4 py-2 text-forest">
+                <StampyApertureIcon size={18} /> كل لحظة تترك أثرًا
               </p>
-              <span
-                aria-hidden="true"
-                className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/60 text-2xl"
-              >
-                ✳
-              </span>
-            </div>
-          </div>
-          <div
-            className="paper-card absolute -bottom-8 -left-2 w-[min(80%,260px)] rotate-[-5deg] rounded-[1.5rem] p-5 shadow-xl sm:-left-7 sm:p-6"
-            aria-label="مثال توضيحي لشكل بطاقة الولاء"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="eyebrow text-rust">بطاقة ولاء</p>
-                <p className="mt-1 font-bold">المكان اللي بتحبه</p>
-              </div>
-              <span aria-hidden="true" className="text-2xl text-rust">
-                ✳
-              </span>
-            </div>
-            <div aria-hidden="true" className="mt-7 grid grid-cols-6 gap-1.5">
-              {Array.from({ length: 6 }, (_, i) => (
-                <span
-                  key={i}
-                  className="grid aspect-square place-items-center rounded-full border border-dashed border-forest/35 text-lg text-forest/25"
-                >
-                  ✳
-                </span>
-              ))}
-            </div>
-            <p className="mt-5 border-t border-ink/10 pt-3 text-[11px] text-ink/55">
-              الشكل للتوضيح · الزيارات تظهر بعد تأكيدها
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <div className="border-y border-forest/15 bg-forest px-5 py-5 text-[#faf5e9]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-3 text-center text-sm font-bold md:justify-between md:px-5">
-          <span>✳ &nbsp; زيارة موثّقة</span>
-          <span>✳ &nbsp; بطاقة واحدة للمكان</span>
-          <span>✳ &nbsp; مكافأة واضحة</span>
-          <span>✳ &nbsp; ذكرى بإذن صاحبها</span>
-        </div>
-      </div>
-
-      <section
-        id="how"
-        className="mx-auto max-w-7xl px-5 py-22 md:px-10 md:py-30"
-      >
-        <div className="flex flex-wrap items-end justify-between gap-5">
-          <div>
-            <p className="eyebrow text-rust">بسيطة من أول مرة</p>
-            <h2 className="display-heading mt-4 max-w-xl text-4xl sm:text-5xl">
-              ثلاث خطوات.
-              <br />
-              وعلاقة بتفضل.
-            </h2>
-          </div>
-          <p className="max-w-md text-sm leading-8 text-ink/60">
-            بطاقة الختم سهلة، لكن اللي يفضل مع الضيف هو الصورة اللي اختارها.
-            كله يبدأ بزيارة فعلًا أكدها الموظف.
-          </p>
-        </div>
-        <div className="mt-11 grid gap-4 md:grid-cols-3">
-          {steps.map((step) => (
-            <article
-              key={step.number}
-              className="paper-card group relative flex min-h-64 flex-col rounded-[1.75rem] p-7 transition hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="flex items-start justify-between">
-                <span className="font-mono text-xs font-bold text-rust">
-                  {step.number} / 03
-                </span>
-                <span
-                  aria-hidden="true"
-                  className="grid h-12 w-12 place-items-center rounded-2xl bg-sage text-2xl text-forest"
-                >
-                  {step.symbol}
-                </span>
-              </div>
-              <h3 className="mt-8 text-xl font-bold">{step.title}</h3>
-              <p className="mt-3 text-sm leading-7 text-ink/60">
-                {step.detail}
+              <h1 className="display-heading text-[clamp(3.1rem,6vw,5.8rem)] leading-[1.16]">
+                مش بس زيارة.
+                <br />
+                <span className="text-forest">ذكرى تفضل</span>
+                <br />
+                وترجّعهم.
+              </h1>
+              <p className="mt-8 max-w-xl text-base leading-9 text-ink/75 md:text-lg">
+                stampy. تحول الزيارة المؤكدة لختم، وتسيب للضيف اختيار حفظ صورة خاصة من موبايله. مع المكافأة، يحصل على تذكار رقمي ومطبوع يحمل اسم مكانك وذكرياته.
               </p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section
-        id="experience"
-        className="bg-[#e8eee4] px-5 py-22 md:px-10 md:py-28"
-      >
-        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-20">
-          <div className="relative rounded-[2rem] bg-forest p-6 text-white shadow-xl sm:p-9">
-            <div className="flex items-center justify-between border-b border-white/15 pb-5">
-              <div>
-                <p className="eyebrow text-[#efc68e]">تجربة العميل</p>
-                <p className="mt-1 text-lg font-bold">بطاقتك دايمًا معاك</p>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Link href="/login?mode=signup" className="action-primary">ابدأ بمكانك <span aria-hidden="true">↖</span></Link>
+                <a href="#how" className="action-secondary">شوف الرحلة <span aria-hidden="true">↓</span></a>
               </div>
-              <span aria-hidden="true" className="text-3xl text-[#efc68e]">
-                ✳
-              </span>
+              <p className="mt-7 text-xs font-bold leading-6 text-ink/65">
+                بدون تطبيق للضيف · لا ختم قبل تأكيد الفريق · الصور لا تُعرض بدون إذن
+              </p>
             </div>
-            <div
-              className="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-6"
-              aria-hidden="true"
-            >
-              {Array.from({ length: 6 }, (_, i) => (
-                <div
-                  key={i}
-                  className="grid aspect-square place-items-center rounded-full border border-dashed border-[#e6d7ae]/60 text-2xl text-[#e6d7ae]/50"
-                >
-                  ✳
+            <div className="relative mx-auto w-full max-w-[610px]">
+              <div className="relative overflow-hidden rounded-[3rem] border border-[#b7853b] bg-stampy-ochre p-5 shadow-[0_35px_100px_-50px_#45121588] sm:p-9">
+                <div className="absolute inset-x-0 top-[42%] h-[7rem] bg-[linear-gradient(to_bottom,#3D2314_0_20%,#AC3E25_20%_40%,#EBA935_40%_60%,#B18944_60%_80%,#337482_80%_100%)] opacity-85" aria-hidden="true" />
+                <div className="relative flex min-h-[350px] items-center justify-center rounded-[2.3rem] border border-[#682025]/25 bg-[#FAF5EB]/95 p-6 shadow-[0_15px_55px_-30px_#451215] sm:min-h-[410px]">
+                  <Image src="/brand/01-stampy-hero-logo.svg" alt="شعار stampy. على تذكرة فيلم بعدسة سداسية وخطوط ملونة" width={600} height={420} priority className="w-full max-w-[500px]" />
                 </div>
-              ))}
-            </div>
-            <div className="mt-8 rounded-2xl bg-white/10 p-5">
-              <p className="text-sm font-bold">
-                زيارتك الجاية تقرّبك من مكافأتك.
-              </p>
-              <p className="mt-1 text-xs leading-6 text-white/60">
-                العدد والمكافأة يتحددوا من إعدادات المنشأة الفعلية.
-              </p>
-            </div>
-            <p className="mt-5 text-[11px] text-white/50">
-              تصوّر توضيحي للبطاقة · لا توجد زيارات تجريبية
-            </p>
-          </div>
-          <div>
-            <p className="eyebrow text-rust">للضيف ولصاحب المكان</p>
-            <h2 className="display-heading mt-4 text-4xl sm:text-5xl">
-              بطاقة يفهمها الضيف.
-              <br />
-              ونظام تثق فيه.
-            </h2>
-            <p className="mt-6 text-base leading-9 text-ink/65">
-              الضيف يتابع رصيده ومكافآته الحقيقية في صفحة واضحة. صاحب المكان
-              يشوف الزيارات والصور اللي الضيف قدّمها للصالة فقط، ويدير فروعه
-              من مكان واحد. ولا زيارة تتحسب من مجرد فتح QR.
-            </p>
-            <div className="mt-7 space-y-4 text-sm font-bold">
-              <p className="flex gap-3">
-                <span className="text-rust">✳</span> كل الفروع تشارك نفس رصيد
-                العلامة.
-              </p>
-              <p className="flex gap-3">
-                <span className="text-rust">✳</span> الموظف يؤكد الشراء قبل
-                الختم.
-              </p>
-              <p className="flex gap-3">
-                <span className="text-rust">✳</span> الصورة خاصة ما لم يوافق
-                الضيف على عرضها.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="keepsake" className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 md:px-10 md:py-28 lg:grid-cols-[.9fr_1.1fr] lg:gap-20">
-        <div>
-          <p className="eyebrow text-rust">الفرق الحقيقي في اللي بيفضل</p>
-          <h2 className="display-heading mt-4 text-4xl sm:text-5xl">
-            الهدية ليها لحظة.
-            <br />
-            <span className="text-rust">والذكرى ليها عمر.</span>
-          </h2>
-          <p className="mt-6 max-w-lg text-base leading-9 text-ink/65">
-            مع كل ختم مؤكد، ضيفك يقدر يضيف صورة من موبايله. لما تكتمل الأختام،
-            يلاقي مكافأته وكارت فوتوبوث يجمع صور زيارات الدورة دي — حتى لو
-            اختار ما يصوّرش بعض الزيارات، الأختام ما بتضيعش.
-          </p>
-          <div className="mt-8 space-y-4 text-sm font-bold">
-            <p className="flex gap-3"><span className="text-rust">01</span> صورة اختيارية ومربوطة بزيارة مؤكدة، مش ختم إضافي.</p>
-            <p className="flex gap-3"><span className="text-rust">02</span> كارت خاص بيه في حسابه، حتى لو اتغيرت المكافأة بعدين.</p>
-            <p className="flex gap-3"><span className="text-rust">03</span> يفتح الكارت ويختار طباعة الفرع أو حفظ PDF بنفسه.</p>
-          </div>
-          <p className="mt-8 max-w-md border-r-2 border-rust/35 pr-4 text-xs leading-7 text-ink/50">
-            ما فيش قارئ NFC أو طابعة متصلة تلقائيًا. التحقق عند الموظف، والطباعة من نافذة المتصفح.
-          </p>
-        </div>
-        <div className="relative flex min-h-[500px] items-center justify-center overflow-hidden rounded-[2.5rem] bg-[#e4e9df] px-8 py-12 sm:min-h-[610px]">
-          <div aria-hidden="true" className="absolute -right-8 -top-22 text-[20rem] leading-none text-forest/5">✳</div>
-          <div className="absolute left-[12%] top-[12%] h-[70%] w-[52%] rotate-[-11deg] rounded-3xl border border-white/80 bg-[#f2cfa5]/60 shadow-xl" aria-hidden="true" />
-          <div className="relative w-[min(84%,310px)] rotate-[5deg] rounded-[1.7rem] bg-forest p-5 text-white shadow-[0_32px_65px_-25px_#183a3280] sm:p-6" aria-label="تصور توضيحي لكارت الذكريات، بدون صور ضيوف حقيقية">
-            <div className="flex items-start justify-between border-b border-white/20 pb-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2c77f]">CAFÉ MEMORIES × اسم منشأتك</p>
-                <p className="mt-2 text-lg font-bold">كارت ذكرياتك</p>
+                <p className="relative mt-5 text-center text-xs font-bold uppercase tracking-[0.14em] text-[#3D2314]" dir="ltr">Every moment is a stamp in time.</p>
               </div>
-              <span aria-hidden="true" className="text-3xl text-[#f2c77f]">✳</span>
+              <div className="absolute -bottom-7 -right-2 max-w-[215px] rotate-[4deg] rounded-2xl border border-forest/15 bg-paper px-4 py-3 shadow-xl sm:-right-5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-rust" dir="ltr">YOUR KEEPSAKE</p>
+                <p className="mt-1 text-sm font-bold leading-6">صورة تختارها أنت، وكارت يبقى معاك.</p>
+              </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {Array.from({ length: 6 }, (_, index) => (
-                <div key={index} className="grid aspect-[1.25] place-items-center rounded-xl border border-dashed border-forest/25 bg-[#f5ecd8] text-center text-forest">
-                  <div>
-                    <span aria-hidden="true" className="text-2xl text-rust/60">✳</span>
-                    <p className="text-[10px] font-bold">صورة الزيارة</p>
-                    <p className="text-[9px] text-forest/55">#{index + 1} · بعد الختم</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="mt-5 border-t border-white/20 pt-4 text-sm font-bold text-[#f2c77f]">مكافأتك + حكايتك مع المكان ↖</p>
           </div>
-          <p className="absolute bottom-4 text-[11px] text-ink/50">شكل توضيحي فقط · لا توجد صور أو أختام تجريبية</p>
-        </div>
-      </section>
+        </section>
 
-      <section id="merchant" className="bg-[#f0e9db] px-5 py-20 md:px-10 md:py-28">
-        <div className="mx-auto max-w-7xl">
+        <div className="border-b border-[#451215] bg-forest px-5 py-5 text-paper">
+          <div className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-12 gap-y-3 text-center text-sm font-bold md:justify-between">
+            <span>زيارة موثقة</span><span>صورة باختيار الضيف</span><span>مكافأة ملموسة</span><span>ذكرى تدوم</span>
+          </div>
+        </div>
+
+        <section id="how" className="mx-auto max-w-7xl px-5 py-24 md:px-10 md:py-32">
           <div className="flex flex-wrap items-end justify-between gap-6">
-            <div><p className="eyebrow text-rust">منظومة منشأتك</p>
-              <h2 className="display-heading mt-4 max-w-2xl text-4xl sm:text-5xl">براندك قدّامهم.
-                <br /><span className="text-rust">خصوصيتهم في إيدهم.</span></h2></div>
-            <p className="max-w-sm text-sm leading-8 text-ink/65">هوية مشتركة تفضل مميّزة من أول ختم لآخر ذكرى، وأدوات علاقات تعرف الزيارة الحقيقية بدون ما تفتح صورة خاصة.</p>
-          </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            <div className="paper-card rounded-[1.75rem] p-7"><span aria-hidden="true" className="text-3xl text-rust">▧</span>
-              <p className="eyebrow mt-7 text-rust">01 / الهوية</p>
-              <h3 className="mt-3 text-xl font-bold">كارت فيه الاتنين.</h3>
-              <p className="mt-3 text-sm leading-8 text-ink/60">اسم ولوجو منشأتك جنب Café Memories على كارت الذكريات والفريم. الألوان وروابط التواصل وMaps بتتظبط من مساحة البراند.</p></div>
-            <div className="paper-card rounded-[1.75rem] p-7"><span aria-hidden="true" className="text-3xl text-rust">◎</span>
-              <p className="eyebrow mt-7 text-rust">02 / العلاقة</p>
-              <h3 className="mt-3 text-xl font-bold">CRM يعرف الزيارات.</h3>
-              <p className="mt-3 text-sm leading-8 text-ink/60">اعرف ضيوفك اللي رجعوا ومكافآتهم المؤكدة، من غير صورهم الخاصة أو رقم تليفونهم. شاشة الصالة ما تعرفش غير اللي اختاروه للعرض.</p></div>
-            <div className="rounded-[1.75rem] bg-forest p-7 text-white"><span aria-hidden="true" className="text-3xl text-[#f2c77f]">◈</span>
-              <p className="eyebrow mt-7 text-[#f2c77f]">03 / Wallet</p>
-              <h3 className="mt-3 text-xl font-bold">الكارت يروح معاهم.</h3>
-              <p className="mt-3 text-sm leading-8 text-white/70">Apple وGoogle Wallet عبر WalletWallet بعد ربط الحساب وموافقة الضيف. الحملات والقرب اختيارات منفصلة؛ ظهور الإشعار قرار الجهاز، مش وعد تلقائي.</p></div>
-          </div>
-          <p className="mt-6 text-xs leading-7 text-ink/50">خدمات Wallet تحتاج API فعلي وخطة مناسبة لدى المزوّد. ده وصف للميزة بعد تفعيلها، مش تجربة إشعارات وهمية.</p>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-20 md:px-10 md:py-28">
-        <div className="relative overflow-hidden rounded-[2.25rem] bg-[#b54735] px-7 py-12 text-white sm:px-12 md:px-18 md:py-16">
-          <span
-            aria-hidden="true"
-            className="absolute -top-30 left-10 text-[24rem] leading-none text-white/8"
-          >
-            ✳
-          </span>
-          <div className="relative flex flex-wrap items-end justify-between gap-8">
             <div>
-              <p className="eyebrow text-white/75">جاهز تبدأ؟</p>
-              <h2 className="display-heading mt-3 max-w-xl text-3xl sm:text-5xl">
-                خلّي كل زيارة بداية لحكاية جديدة.
-              </h2>
-              <p className="mt-5 max-w-lg text-sm leading-8 text-white/80">
-                أنشئ حساب منشأتك، واضبط مكافأة تناسب ضيوفك، وابدأ رحلتهم مع كل
-                زيارة مؤكدة في الفرع. من غير حسابات أو معاملات وهمية.
-              </p>
+              <p className="eyebrow text-rust">الرحلة / 01—03</p>
+              <h2 className="display-heading mt-3 max-w-2xl text-4xl sm:text-5xl">من لحظة عابرة،<br />لحكاية تفضل.</h2>
             </div>
-            <Link
-              href="/login?mode=signup"
-              className="inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-forest transition hover:bg-[#f1eadb]"
-            >
-              إنشاء حساب المنشأة <span aria-hidden="true">↖</span>
-            </Link>
+            <p className="max-w-md text-sm leading-8 text-ink/65">تجربة خفيفة لكل الأماكن التي تجمع الناس. الزيارة والخصوصية والمكافأة تتعامل معها أنظمة حقيقية، لا بيانات عرض وهمية.</p>
           </div>
-        </div>
-      </section>
+          <div className="mt-11 grid gap-5 md:grid-cols-3">
+            {journey.map((step) => (
+              <article key={step.number} className="relative flex min-h-[255px] flex-col rounded-[1.75rem] border border-[#D5C0A8] bg-white p-7 shadow-[0_14px_40px_-32px_#45121588]">
+                <div className="flex items-center justify-between border-b border-dashed border-[#D5C0A8] pb-4">
+                  <span className="font-mono text-xs font-bold tracking-widest text-rust" dir="ltr">STAMP {step.number}</span>
+                  <StampyApertureIcon size={27} />
+                </div>
+                <h3 className="mt-7 text-xl font-bold">{step.title}</h3>
+                <p className="mt-3 text-sm leading-8 text-ink/65">{step.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
 
-      <footer className="border-t border-ink/10 px-5 py-9 text-sm md:px-10">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5">
-          <div>
-            <span className="font-bold" dir="ltr">
-              ✳ café<span className="text-rust">memories</span>
-            </span>
-            <p className="mt-2 text-xs text-ink/55">
-              الذكريات لها مكان. والزيارة لها قيمة.
-            </p>
+        <section id="keepsake" className="bg-[#EADDC4] px-5 py-24 md:px-10 md:py-28">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="relative rounded-[2.5rem] bg-[#3D2314] p-8 text-paper shadow-[0_25px_80px_-35px_#451215] sm:p-12">
+              <div className="flex items-center justify-between border-b border-white/20 pb-5">
+                <span className="font-mono text-xs font-bold tracking-[0.15em] text-stampy-ochre" dir="ltr">STAMPY. × YOUR VENUE</span>
+                <StampyApertureIcon size={32} color="#DFAB56" strokeColor="#3D2314" />
+              </div>
+              <div className="mt-9 grid grid-cols-2 gap-3" aria-label="معاينة توضيحية لبطاقة الذكريات بدون صور أشخاص">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <div key={index} className="grid aspect-[4/3] place-items-center rounded-xl border border-dashed border-stampy-ochre/60 bg-white/5">
+                    <span className="font-mono text-[10px] tracking-widest text-paper/60" dir="ltr">MOMENT 0{index + 1}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-8 flex items-end justify-between gap-4 border-t border-white/20 pt-5">
+                <div><p className="text-xs text-stampy-ochre">اسم مكانك هنا</p><p className="mt-1 text-xl font-bold">الذكريات ملك الضيف.</p></div>
+                <p className="font-mono text-xs text-paper/60" dir="ltr">SERIAL 1874</p>
+              </div>
+              <p className="mt-5 text-[11px] text-paper/60">تصميم توضيحي، بلا صور أو زيارات حقيقية.</p>
+            </div>
+            <div>
+              <p className="eyebrow text-rust">التذكار / رقمي ومطبوع</p>
+              <h2 className="display-heading mt-4 text-4xl sm:text-5xl">الفرق هو اللي<br />بيفضل في إيدهم.</h2>
+              <p className="mt-6 max-w-lg text-base leading-9 text-ink/75">كل ختم يخلّي الضيف أقرب للمكافأة. ولو اختار يصوّر، تفضل الذكرى خاصة في حسابه لحد ما يشاركها هو. عند اكتمال الرحلة يظهر كارت قابل للطباعة بمقاس A6، جنب المكافأة — مش بدلها.</p>
+              <Link href="/privacy" className="mt-8 inline-flex items-center gap-2 font-bold text-forest underline underline-offset-4">اقرأ سياسة الخصوصية <span aria-hidden="true">↖</span></Link>
+            </div>
           </div>
-          <div className="flex gap-6 text-xs font-bold text-ink/70">
-            <Link href="/privacy" className="hover:text-rust">
-              الخصوصية
-            </Link>
-            <Link href="/terms" className="hover:text-rust">
-              الشروط
-            </Link>
-            <Link href="/login" className="hover:text-rust">
-              دخول المنشأة
-            </Link>
+        </section>
+
+        <section id="venues" className="mx-auto max-w-7xl px-5 py-24 md:px-10 md:py-32">
+          <div className="max-w-3xl">
+            <p className="eyebrow text-rust">لكل مكان يجمع الناس</p>
+            <h2 className="display-heading mt-4 text-4xl sm:text-5xl">براندك قدّامهم.<br /><span className="text-forest">خصوصيتهم في إيدهم.</span></h2>
+            <p className="mt-6 text-sm leading-8 text-ink/65">من الأماكن الصغيرة إلى الوجهات الكبيرة: كارت باسمك مع stampy. وروابطك، وعلاقات ضيوف مبنية على زيارات أكدها فريقك فقط. لا أحد يطّلع على صورة خاصة لمجرد أنه يدير المكان.</p>
           </div>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {[
+              ["01 / الهوية", "إطار يحكي حكايتك", "شعار المكان وألوانه وروابطه، مع هوية stampy. على بطاقة الزيارة والتذكار."],
+              ["02 / العلاقة", "اعرف الزيارة، مش الصورة", "CRM ومكافآت من رصيد الزيارات المؤكدة. شاشة العرض لا ترى إلا ما أرسله الضيف لها ووافق عليه المسؤول."],
+              ["03 / المحفظة", "كارتهم معاهم", "Apple وGoogle Wallet عبر WalletWallet بعد موافقة الضيف وربط المزوّد. الحملات والقرب يحتاجان خطة مناسبة واختبارًا على جهاز حقيقي."],
+            ].map(([label, title, detail]) => (
+              <article key={label} className="rounded-[1.75rem] border border-[#D5C0A8] bg-white p-7">
+                <p className="eyebrow text-rust">{label}</p>
+                <h3 className="mt-5 text-xl font-bold">{title}</h3>
+                <p className="mt-3 text-sm leading-8 text-ink/65">{detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="px-5 pb-24 md:px-10 md:pb-32">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-8 overflow-hidden rounded-[2.5rem] bg-forest px-8 py-12 text-paper shadow-[0_30px_70px_-40px_#451215] sm:px-12 md:py-16">
+            <div className="max-w-xl">
+              <p className="eyebrow text-stampy-ochre">جاهز تبدأ؟</p>
+              <h2 className="display-heading mt-4 text-3xl sm:text-5xl">سيب أثرًا في كل زيارة.</h2>
+              <p className="mt-5 text-sm leading-8 text-paper/75">أنشئ حساب مكانك، واضبط مكافأة تناسب ضيوفك. لن تُنشأ بيانات أو حسابات تجريبية حين لا تكون خدمة التسجيل مهيأة.</p>
+            </div>
+            <Link href="/login?mode=signup" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-stampy-ochre px-7 py-3 text-sm font-bold text-[#3D2314] transition hover:bg-[#efc57f]">إنشاء حساب المكان ↖</Link>
+          </div>
+        </section>
+      </div>
+      <footer className="border-t border-forest/10 px-5 py-8 text-sm md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6">
+          <div><StampyLogo size="sm" showTagline={false} /><p className="mt-2 text-xs text-ink/60">Every moment is a stamp in time.</p></div>
+          <div className="flex gap-6 text-xs font-bold text-ink/75"><Link href="/privacy" className="hover:text-rust">الخصوصية</Link><Link href="/terms" className="hover:text-rust">الشروط</Link><Link href="/login" className="hover:text-rust">دخول المكان</Link></div>
         </div>
       </footer>
     </main>

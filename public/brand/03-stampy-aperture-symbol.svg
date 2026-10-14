@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <g transform="translate(50, 50) scale(1.1764705882352942) translate(-350, -230)">
+    <path d="M 359.96 235.75 L 359.96 262.51 A 34 34 0 0 1 326.83 254.88 L 350.00 241.50 Z" fill="#3D2314" stroke="#FAF5EB" stroke-width="1.0" stroke-linejoin="round" />
+    <path d="M 350.00 241.50 L 326.83 254.88 A 34 34 0 0 1 316.87 222.37 L 340.04 235.75 Z" fill="#3D2314" stroke="#FAF5EB" stroke-width="1.0" stroke-linejoin="round" />
+    <path d="M 340.04 235.75 L 316.87 222.37 A 34 34 0 0 1 340.04 197.49 L 340.04 224.25 Z" fill="#3D2314" stroke="#FAF5EB" stroke-width="1.0" stroke-linejoin="round" />
+    <path d="M 340.04 224.25 L 340.04 197.49 A 34 34 0 0 1 373.17 205.12 L 350.00 218.50 Z" fill="#3D2314" stroke="#FAF5EB" stroke-width="1.0" stroke-linejoin="round" />
+    <path d="M 350.00 218.50 L 373.17 205.12 A 34 34 0 0 1 383.13 237.63 L 359.96 224.25 Z" fill="#3D2314" stroke="#FAF5EB" stroke-width="1.0" stroke-linejoin="round" />
+    <path d="M 359.96 224.25 L 383.13 237.63 A 34 34 0 0 1 359.96 262.51 L 359.96 235.75 Z" fill="#3D2314" stroke="#FAF5EB" stroke-width="1.0" stroke-linejoin="round" />
+    <circle cx="350" cy="230" r="34" fill="none" stroke="#3D2314" stroke-width="1.6" />
+  </g>
+</svg>

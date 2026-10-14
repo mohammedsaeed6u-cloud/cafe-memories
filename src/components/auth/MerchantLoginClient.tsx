@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { StampyLogo } from "@/components/brand/StampyLogo";
 
 const slugify = (value: string) =>
   value
@@ -111,17 +112,9 @@ export default function MerchantLoginClient({
           <Link
             href="/"
             className="mb-12 flex w-fit items-center gap-3"
-            aria-label="Café Memories - الرئيسية"
+            aria-label="stampy. - الرئيسية"
           >
-            <span
-              aria-hidden="true"
-              className="grid h-10 w-10 place-items-center rounded-[14px] bg-forest text-2xl text-[#f3c178]"
-            >
-              ✳
-            </span>
-            <span dir="ltr" className="text-lg font-bold">
-              café<span className="text-rust">memories</span>
-            </span>
+            <StampyLogo size="sm" showTagline={false} />
           </Link>
           <div className="w-full max-w-md">
             <p className="eyebrow text-rust">مساحة أصحاب الأماكن</p>
@@ -336,7 +329,7 @@ export default function MerchantLoginClient({
               </p>
             </div>
             <p className="text-xs text-white/45">
-              ✳ Café Memories · المصمم لضيوفك
+              stampy. · كل لحظة تترك أثرًا
             </p>
           </div>
         </aside>

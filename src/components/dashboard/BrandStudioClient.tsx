@@ -104,7 +104,7 @@ export function BrandStudioClient() {
         <header className="border-b border-forest/10 pb-7">
           <p className="eyebrow text-rust">مساحة المنشأة / الهوية</p>
           <h1 className="display-heading mt-2 text-3xl sm:text-4xl">شكل كارتك، وليه ضيوفك يرجعوا.</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-8 text-ink/60">ضيف لوجو المكان وألوانه وروابطه. اسم Café Memories ثابت جنب اسمك على كارت الولاء وفريم الذكريات؛ صور الضيوف الخاصة مش داخلة في المعاينة دي.</p>
+          <p className="mt-3 max-w-2xl text-sm leading-8 text-ink/60">ضيف لوجو المكان وألوانه وروابطه. اسم stampy. ثابت جنب اسمك على كارت الولاء وفريم الذكريات؛ صور الضيوف الخاصة مش داخلة في المعاينة دي.</p>
         </header>
         {notice && <p role="status" className="rounded-2xl border border-rust/20 bg-[#fff2e9] p-4 text-sm text-rust">{notice}</p>}
         <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -113,7 +113,7 @@ export function BrandStudioClient() {
               <p className="eyebrow text-rust">01 / شعار المكان</p>
               <h2 className="mt-2 text-2xl font-bold">اللوجو بتاعك، جنب لوجونا.</h2>
               <div className="mt-5 flex flex-wrap items-center gap-4">
-                <span className="grid h-16 w-16 place-items-center rounded-2xl bg-forest text-3xl text-[#f2c77f]" aria-label="لوجو Café Memories">✳</span>
+                <img src="/brand/stampy-app-icon-64.png" alt="شعار stampy." className="h-16 w-16 rounded-2xl" />
                 <span className="text-xl text-ink/35" aria-hidden="true">×</span>
                 {brand.logoUrl ? <img src={brand.logoUrl} alt={`لوجو ${brand.name}`}
                   className="h-16 w-16 rounded-2xl border border-ink/10 bg-white object-contain p-1" />
@@ -194,14 +194,14 @@ export function BrandStudioClient() {
             </section>
           </div>
           <aside className="space-y-5 xl:sticky xl:top-8">
-            <div className="overflow-hidden rounded-[1.75rem] p-6 text-white shadow-xl" style={{ backgroundColor: brand.primaryColor }}>
+            <div className="stampy-ticket-card relative overflow-hidden rounded-[1.75rem] p-6 text-white shadow-xl" style={{ backgroundColor: brand.primaryColor }}>
               <p className="eyebrow" style={{ color: brand.accentColor }}>معاينة الكارت الرقمي • بدون بيانات ضيوف</p>
               <div className="mt-6 flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-xl" style={{ color: brand.accentColor }}>✳</span>
+                <img src="/brand/stampy-app-icon-64.png" alt="شعار stampy." className="h-10 w-10 rounded-xl" />
                 <span className="text-lg text-white/50">×</span>
                 {brand.logoUrl ? <img src={brand.logoUrl} alt="لوجو المنشأة" className="h-10 w-10 rounded-xl bg-white object-contain p-1" />
                   : <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/30 text-[9px]">لوجوك</span>}
-                <span className="mr-auto text-[10px] font-bold text-white/70">Café Memories</span>
+                <span className="mr-auto text-[10px] font-bold text-white/70">stampy.</span>
               </div>
               <h3 className="mt-6 text-2xl font-bold">{brand.name}</h3>
               <p className="mt-2 text-sm text-white/65">{brand.tagline || 'مكافأة عند كل زيارة حقيقية.'}</p>
@@ -215,7 +215,7 @@ export function BrandStudioClient() {
               <div className={`mt-4 rounded-2xl p-4 ${brand.frameStyle === 'polaroid' ? 'bg-white shadow-lg' : brand.frameStyle === 'editorial' ? 'border-4 border-rust/20 bg-[#f6ebdb]' : 'bg-forest'}`}>
                 <div className="grid grid-cols-2 gap-2">{[1,2,3,4].map((number) => <div key={number}
                   className="grid h-24 place-items-center rounded-lg border border-dashed border-ink/15 bg-sand text-xs font-bold text-ink/50">مكان صورة زيارة {number}</div>)}</div>
-                <p className={`mt-4 text-xs font-bold ${brand.frameStyle === 'film' ? 'text-white' : 'text-forest'}`}>✳ Café Memories × {brand.name}</p>
+                <p className={`mt-4 text-xs font-bold ${brand.frameStyle === 'film' ? 'text-white' : 'text-forest'}`}>stampy. × {brand.name}</p>
               </div>
               <p className="mt-4 text-xs leading-6 text-ink/55">الكارت الحقيقي يستخدم صور الضيف الخاصة فقط من زياراته المؤكدة، ويطبع من حسابه بإذنه.</p>
             </div>

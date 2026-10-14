@@ -44,7 +44,9 @@ export const config = {
     "/dashboard/:path*",
     "/terminal/:path*",
     "/barista/:path*",
-    "/brand/:path*",
+    // /brand is the merchant page; /brand/* hosts the official public logo/PWA assets.
+    // The layout protects the page too. Never intercept its static descendants.
+    "/brand",
     "/crm/:path*",
     "/campaigns/:path*",
     "/admin/:path*",

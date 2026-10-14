@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { StampyLogo } from "@/components/brand/StampyLogo";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -82,15 +83,7 @@ export function MerchantOnboardingClient({ email, initialName = '', initialSlug 
     >
       <section className="flex flex-col justify-center px-5 py-10 sm:px-12 lg:px-18">
         <Link href="/" className="mb-12 flex w-fit items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="grid h-10 w-10 place-items-center rounded-[14px] bg-forest text-2xl text-[#f3c178]"
-          >
-            ✳
-          </span>
-          <span dir="ltr" className="text-lg font-bold">
-            café<span className="text-rust">memories</span>
-          </span>
+          <StampyLogo size="sm" showTagline={false} />
         </Link>
         <div className="w-full max-w-md">
           <p className="eyebrow text-rust">هوية منشأتك تبدأ هنا</p>

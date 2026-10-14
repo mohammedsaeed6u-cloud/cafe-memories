@@ -2,12 +2,33 @@
 
 @theme {
   --font-sans: "Cairo", "Plus Jakarta Sans", system-ui, sans-serif;
-  --color-paper: #f7f3eb;
-  --color-ink: #1c302b;
-  --color-forest: #183a32;
-  --color-rust: #b54735;
-  --color-sand: #ece4d6;
-  --color-sage: #d9e6da;
+  /* Official stampy. v1.1.0 palette. Legacy semantic aliases keep the secure
+     screens readable while their layouts are progressively brought across. */
+  --color-paper: #FAF5EB;
+  --color-ink: #3D2314;
+  --color-forest: #682025;
+  --color-rust: #AC3E25;
+  --color-sand: #EADDC4;
+  --color-sage: #F3E4CC;
+  --color-stampy-ochre: #DFAB56;
+  --color-stampy-burgundy: #682025;
+  --color-stampy-forest: #2D5240;
+  --color-stampy-navy: #20304E;
+  --color-stampy-denim: #4A6B82;
+  --color-stampy-parchment: #FAF5EB;
+  --color-stampy-charcoal: #1B1B1E;
+  --color-stampy-bevel: #451215;
+}
+
+:root {
+  --stampy-ochre: #DFAB56;
+  --stampy-burgundy: #682025;
+  --stampy-forest: #2D5240;
+  --stampy-navy: #20304E;
+  --stampy-denim: #4A6B82;
+  --stampy-parchment: #FAF5EB;
+  --stampy-charcoal: #1B1B1E;
+  --stampy-bevel: #451215;
 }
 
 @layer base {
@@ -15,8 +36,8 @@
     scroll-behavior: smooth;
   }
   body {
-    background: #f7f3eb;
-    color: #1c302b;
+    background: var(--stampy-parchment);
+    color: #3D2314;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
@@ -27,11 +48,11 @@
     cursor: pointer;
   }
   :focus-visible {
-    outline: 3px solid #d2704e;
+    outline: 3px solid #682025;
     outline-offset: 3px;
   }
   ::selection {
-    background: #b54735;
+    background: #682025;
     color: #fff;
   }
 }
@@ -50,13 +71,33 @@
   }
   .paper-card {
     background: #fffdf8;
-    border: 1px solid #e9e1d4;
-    box-shadow: 0 12px 42px -32px #1c302b45;
+    border: 1px solid #DECBAE;
+    box-shadow: 0 12px 42px -32px #3D231445;
   }
   .deep-card {
-    background: #1d302b;
+    background: #451215;
     border: 1px solid #ffffff20;
-    box-shadow: 0 20px 50px -35px #06110d;
+    box-shadow: 0 20px 50px -35px #451215;
+  }
+  /* Ticket-shaped pass, with visible concave side cuts. Purely presentational:
+     the number and state of stamps still come from verified server visits. */
+  .stampy-ticket-card::before,
+  .stampy-ticket-card::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--stampy-parchment);
+    transform: translateY(-50%);
+    box-shadow: inset 0 2px 5px #45121526;
+  }
+  .stampy-ticket-card::before { right: -13px; }
+  .stampy-ticket-card::after { left: -13px; }
+  .stampy-stamp {
+    box-shadow: inset 1px 2px 5px #45121566, inset -1px -2px 4px #ffffff55;
   }
   .action-primary {
     display: inline-flex;
@@ -64,8 +105,8 @@
     justify-content: center;
     gap: 0.65rem;
     border-radius: 999px;
-    background: #b54735;
-    color: #fffaf4;
+    background: #682025;
+    color: #FAF5EB;
     font-weight: 700;
     min-height: 3rem;
     padding: 0.7rem 1.5rem;
@@ -74,7 +115,7 @@
       transform 0.2s;
   }
   .action-primary:hover:not(:disabled) {
-    background: #913b2e;
+    background: #451215;
     transform: translateY(-2px);
   }
   .action-secondary {
@@ -82,9 +123,9 @@
     align-items: center;
     justify-content: center;
     gap: 0.65rem;
-    border: 1px solid #1c302b2e;
+    border: 1px solid #3D23142e;
     border-radius: 999px;
-    color: #1c302b;
+    color: #3D2314;
     font-weight: 700;
     min-height: 3rem;
     padding: 0.7rem 1.5rem;
@@ -93,7 +134,7 @@
       transform 0.2s;
   }
   .action-secondary:hover:not(:disabled) {
-    background: #e9e2d6;
+    background: #EADDC4;
     transform: translateY(-2px);
   }
   .action-primary:disabled,
@@ -103,10 +144,10 @@
   }
   .field {
     width: 100%;
-    border: 1px solid #d7d0c3;
+    border: 1px solid #D5C0A8;
     border-radius: 0.85rem;
     background: #fffdf8;
-    color: #1c302b;
+    color: #3D2314;
     padding: 0.85rem 1rem;
     outline: none;
     transition:
@@ -114,8 +155,8 @@
       box-shadow 0.2s;
   }
   .field:focus {
-    border-color: #b54735;
-    box-shadow: 0 0 0 3px #b5473529;
+    border-color: #682025;
+    box-shadow: 0 0 0 3px #68202529;
   }
 }
 
@@ -129,4 +170,18 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Slow, optional motion for photos that have passed the screen consent checks.
+   The feed still clears on any failed authorization or lost connection. */
+@keyframes stampy-wall-drift {
+  from { transform: scale(1); }
+  to { transform: scale(1.055); }
+}
+.stampy-wall-photo {
+  animation: stampy-wall-drift 7s ease-in-out both;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stampy-wall-photo { animation: none; }
 }

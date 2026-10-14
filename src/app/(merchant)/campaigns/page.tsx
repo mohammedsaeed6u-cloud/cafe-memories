@@ -90,7 +90,7 @@ export default function CampaignsPage() {
           </section>
           <aside className="rounded-[1.75rem] bg-forest p-6 text-white sm:p-8">
             <p className="eyebrow text-[#edbc87]">معاينة نصية · ليست إرسالاً</p>
-            <p dir="ltr" className="mt-5 text-xs font-bold tracking-widest text-white/65">CAFÉ MEMORIES × {context.organization.name}</p>
+            <p dir="ltr" className="mt-5 text-xs font-bold tracking-widest text-white/65">STAMPY. × {context.organization.name}</p>
             <p className="mt-6 rounded-2xl bg-white/10 p-5 text-base leading-8">{message || 'نصّك هيتشاف هنا قبل ما تبدأ الحملة.'}</p>
             <p className="mt-8 text-xs leading-7 text-white/60">قبول WalletWallet للتحديث مش ضمان إشعار على قفل الشاشة. لازم يكون الضيف ضاف البطاقة لجهازه والنظام يسمح. المواقع دي بتخلي البطاقة مناسبة قرب فرعك فقط بموافقته؛ مش خدمة بث بتعرف مكانه.</p>
           </aside>

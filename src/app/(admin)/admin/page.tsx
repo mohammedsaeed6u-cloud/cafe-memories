@@ -46,7 +46,7 @@ export default function AdminPage() {
           <div>
             <p className="eyebrow text-rust">إدارة المنصة / اتصالات المنشآت</p>
             <h1 className="display-heading mt-3 text-3xl sm:text-4xl">
-              منشآت Café Memories.
+              منشآت stampy..
             </h1>
             <p className="mt-3 text-sm text-ink/55">
               بيانات حقيقية للمنشآت والفروع؛ لا فوترة مفترضة.

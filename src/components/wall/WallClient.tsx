@@ -118,11 +118,9 @@ export function WallClient({ screenId }: { screenId?: string }) {
         className="grid min-h-screen place-items-center bg-forest p-6 text-white"
       >
         <div className="w-full max-w-md rounded-[2rem] border border-white/15 bg-white/5 p-8 text-center shadow-2xl">
-          <span aria-hidden="true" className="text-4xl text-[#f2c77f]">
-            ✳
-          </span>
+          <img src="/brand/stampy-app-icon-64.png" alt="" aria-hidden="true" className="mx-auto h-14 w-14 rounded-2xl" />
           <p className="eyebrow mt-4 text-[#f2c77f]">
-            Café Memories / شاشة الصالة
+            stampy. / شاشة الصالة
           </p>
           <h1 className="display-heading mt-3 text-3xl">
             {screenState === "loading"
@@ -171,12 +169,7 @@ export function WallClient({ screenId }: { screenId?: string }) {
           onSubmit={pair}
           className="relative w-full max-w-md rounded-[2rem] border border-white/15 bg-white/8 p-7 shadow-2xl sm:p-10"
         >
-          <span
-            aria-hidden="true"
-            className="grid h-12 w-12 place-items-center rounded-2xl bg-[#f2c77f] text-2xl text-forest"
-          >
-            ✳
-          </span>
+          <img src="/brand/stampy-app-icon-64.png" alt="" aria-hidden="true" className="h-12 w-12 rounded-2xl" />
           <p className="eyebrow mt-7 text-[#f2c77f]">أهلًا بالشاشة</p>
           <h1 className="display-heading mt-2 text-3xl">اربط شاشة الصالة.</h1>
           <p className="mt-4 text-sm leading-8 text-white/65">
@@ -221,17 +214,12 @@ export function WallClient({ screenId }: { screenId?: string }) {
       style={feed.screen.brand ? { backgroundColor: feed.screen.brand.primaryColor } : undefined}>
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/15 px-6 py-5 md:px-12">
         <div className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f2c77f] text-2xl text-forest"
-          >
-            ✳
-          </span>
+          <img src="/brand/stampy-app-icon-64.png" alt="شعار stampy." className="h-11 w-11 rounded-xl" />
           <span className="text-white/50" aria-hidden="true">×</span>
           {feed.screen.brand?.logoUrl && <img src={feed.screen.brand.logoUrl} alt={`شعار ${feed.screen.organizationName}`}
             className="h-11 w-11 rounded-xl bg-white object-contain p-1" />}
           <div>
-            <p className="eyebrow text-[#f2c77f]">Café Memories × لحظات من المكان</p>
+            <p className="eyebrow text-[#f2c77f]">stampy. × لحظات من المكان</p>
             <h1 className="text-xl font-bold">
               {feed.screen.organizationName || feed.screen.name}
             </h1>
@@ -269,7 +257,7 @@ export function WallClient({ screenId }: { screenId?: string }) {
                     "تعذر التحقق من الصورة أو سُحب الإذن. أوقفنا العرض.",
                   );
                 }}
-                className="max-h-[64vh] max-w-full rounded-xl object-contain shadow-2xl"
+                className="stampy-wall-photo max-h-[73vh] max-w-full rounded-xl object-contain shadow-2xl"
               />
             </div>
             <p className="mt-6 text-xl font-bold md:text-3xl">

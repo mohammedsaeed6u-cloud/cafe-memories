@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { KeepsakeArchiveClient } from '@/components/customer/KeepsakeArchiveClient';
 
 export const metadata: Metadata = {
-  title: 'أرشيف كروت الذكريات • Café Memories',
+  title: 'أرشيف كروت الذكريات • stampy.',
   robots: { index: false, follow: false },
 };
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export const DEFAULT_PRIMARY = '#183A32';
-export const DEFAULT_ACCENT = '#F2C77F';
+export const DEFAULT_PRIMARY = '#682025';
+export const DEFAULT_ACCENT = '#DFAB56';
 export const frameStyles = ['film', 'polaroid', 'editorial'] as const;
 export const walletPresets = ['dark', 'blue', 'green', 'red', 'purple', 'orange'] as const;
 export const socialPlatforms = ['instagram', 'facebook', 'tiktok', 'x', 'youtube', 'whatsapp', 'website'] as const;

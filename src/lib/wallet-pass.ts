@@ -12,7 +12,7 @@ export type WalletPassInput = {
 
 /** A provider sees loyalty basics only: never customer photos, phone, or email. */
 export function walletPassPayload(input: WalletPassInput) {
-  const brandedName = `Café Memories × ${input.brand.name}`.slice(0, 64);
+  const brandedName = `stampy. × ${input.brand.name}`.slice(0, 64);
   const stamps = input.threshold
     ? `${Math.min(input.threshold, Math.max(0, input.verifiedVisits - input.usedVisits))}/${input.threshold}`
     : 'البرنامج قيد الإعداد';
@@ -35,14 +35,14 @@ export function walletPassPayload(input: WalletPassInput) {
   return {
     barcodeValue: input.customerId, barcodeFormat: 'QR' as const, sharingProhibited: true,
     logoText: brandedName, organizationName: brandedName,
-    description: `بطاقة ولاء ${input.brand.name} من Café Memories`.slice(0, 128),
+    description: `بطاقة ولاء ${input.brand.name} من stampy.`.slice(0, 128),
     primaryFields: [{ label: 'بطاقة ولاء', value: input.brand.name.slice(0, 64) }],
     secondaryFields: [
       { label: 'الأختام', value: stamps },
       { label: 'المكافأة', value: input.rewardName?.slice(0, 72) ?? 'قيد الإعداد' },
     ],
     backFields: [
-      { label: 'البرنامج', value: 'Café Memories × ' + input.brand.name.slice(0, 50) },
+      { label: 'البرنامج', value: 'stampy. × ' + input.brand.name.slice(0, 50) },
       // Seed the notification anchor at creation on Pro+, even for guests who
       // haven't opted in yet. Only change its value with marketing permission.
       ...(pro ? [{ label: 'الإشعارات', value: input.marketingOptIn ? input.lastCampaignMessage : ' ', changeMessage: '%@' }] : []),

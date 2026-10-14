@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { StampyLogo } from "@/components/brand/StampyLogo";
 import { useEffect, useState } from "react";
 import type { KeepsakeStory } from "@/lib/keepsakes";
 
@@ -47,7 +48,7 @@ export function KeepsakeArchiveClient({ cafeSlug }: { cafeSlug: string }) {
     <main dir="rtl" className="min-h-screen bg-paper pb-20 text-ink">
       <header className="border-b border-forest/10 bg-white/80">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-5">
-          <Link href="/" dir="ltr" className="text-sm font-bold">✳ café<span className="text-rust">memories</span></Link>
+          <Link href="/" aria-label="stampy. الرئيسية"><StampyLogo size="xs" showTagline={false} /></Link>
           <Link href={`/c/${cafeSlug}`} className="text-sm font-bold text-rust underline underline-offset-4">
             → بطاقة الفرع
           </Link>

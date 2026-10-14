@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { KeepsakePrintClient } from '@/components/customer/KeepsakePrintClient';
 
 export const metadata: Metadata = {
-  title: 'كارت ذكرياتك • Café Memories',
+  title: 'كارت ذكرياتك • stampy.',
   robots: { index: false, follow: false },
 };
 

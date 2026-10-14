@@ -23,7 +23,7 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 describe('WalletWallet pass data minimization and plan gates',() => {
   it('co-brands without leaking photos, phone or guest contacts',() => {
     const pass = walletPassPayload(base);
-    expect(pass.organizationName).toContain('Café Memories × Mona Café');
+    expect(pass.organizationName).toContain('stampy. × Mona Café');
     expect(pass.secondaryFields).toEqual([{label:'الأختام',value:'2/5'},
       {label:'المكافأة',value:'One coffee'}]);
     expect(JSON.stringify(pass)).not.toMatch(/instagram|photo|email|phone|social/);
@@ -69,7 +69,7 @@ describe('connector encryption and fixed-host provider client',() => {
     const fetcher = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
       serialNumber:serial, shareUrl:`https://pass.walletwallet.dev/p/${serial}` }), {status:201}));
     vi.stubGlobal('fetch',fetcher);
-    expect(await issueWalletWalletPass(key,{logoText:'Café Memories × Café'}))
+    expect(await issueWalletWalletPass(key,{logoText:'stampy. × Café'}))
       .toEqual({serialNumber:serial,shareUrl:`https://pass.walletwallet.dev/p/${serial}`});
     expect(fetcher).toHaveBeenCalledWith('https://api.walletwallet.dev/api/passes',
       expect.objectContaining({method:'POST',redirect:'error',headers:expect.objectContaining({Authorization:`Bearer ${key}`})}));

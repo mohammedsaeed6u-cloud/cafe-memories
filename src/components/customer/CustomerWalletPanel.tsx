@@ -72,7 +72,7 @@ export function CustomerWalletPanel({ cafeSlug }: { cafeSlug: string }) {
   const issued = wallet?.pass?.status === 'issued';
   return <section className="paper-card rounded-[1.75rem] p-6 sm:p-8" aria-label="كارت Wallet">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><p className="eyebrow text-rust">Café Memories × WalletWallet</p>
+      <div><p className="eyebrow text-rust">stampy. × WalletWallet</p>
         <h2 className="mt-2 text-xl font-bold">كارت ولائك على Apple وGoogle Wallet.</h2></div>
       <span aria-hidden="true" className="text-3xl text-rust">◈</span>
     </div>

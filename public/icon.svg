@@ -1,12 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Café Memories">
-  <rect width="512" height="512" rx="112" fill="#183a32"/>
-  <rect x="24" y="24" width="464" height="464" rx="90" fill="none" stroke="#f2c77f" stroke-opacity=".28" stroke-width="4"/>
-  <g transform="translate(256 256)" fill="#f2c77f">
-    <rect x="-27" y="-158" width="54" height="316" rx="27"/>
-    <rect x="-27" y="-158" width="54" height="316" rx="27" transform="rotate(45)"/>
-    <rect x="-27" y="-158" width="54" height="316" rx="27" transform="rotate(90)"/>
-    <rect x="-27" y="-158" width="54" height="316" rx="27" transform="rotate(135)"/>
-    <circle r="52" fill="#183a32"/>
-    <circle r="25" fill="#b54735"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <clipPath id="app-icon-clip">
+      <rect width="1024" height="1024" rx="224" ry="224" />
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#app-icon-clip)">
+    <!-- Background: Solid Warm Gold Ochre (#DFAB56) -->
+    <rect width="1024" height="1024" fill="#DFAB56" />
+
+    <!-- 5 Spectral Emulsion Stripes -->
+
+    <rect x="0" y="392" width="1024" height="48" fill="#3D2314" />
+
+    <rect x="0" y="440" width="1024" height="48" fill="#AC3E25" />
+
+    <rect x="0" y="488" width="1024" height="48" fill="#EBA935" />
+
+    <rect x="0" y="536" width="1024" height="48" fill="#B18944" />
+
+    <rect x="0" y="584" width="1024" height="48" fill="#337482" />
+
+
+    <!-- Aperture Backing Mask (Prevents stripes from showing inside lens) -->
+    <circle cx="512" cy="512" r="196" fill="#DFAB56" />
+    <circle cx="512" cy="512" r="196" fill="none" stroke="#3D2314" stroke-width="10" />
+
+    <!-- 6-Blade Camera Iris Aperture Shutter -->
+    <g transform="translate(512, 512) scale(5.294117647058823) translate(-350, -230)">
+      <path d="M 359.96 235.75 L 359.96 262.51 A 34 34 0 0 1 326.83 254.88 L 350.00 241.50 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 350.00 241.50 L 326.83 254.88 A 34 34 0 0 1 316.87 222.37 L 340.04 235.75 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 340.04 235.75 L 316.87 222.37 A 34 34 0 0 1 340.04 197.49 L 340.04 224.25 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 340.04 224.25 L 340.04 197.49 A 34 34 0 0 1 373.17 205.12 L 350.00 218.50 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 350.00 218.50 L 373.17 205.12 A 34 34 0 0 1 383.13 237.63 L 359.96 224.25 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <path d="M 359.96 224.25 L 383.13 237.63 A 34 34 0 0 1 359.96 262.51 L 359.96 235.75 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="1.2" stroke-linejoin="round" />
+      <circle cx="350" cy="230" r="34" fill="none" stroke="#3D2314" stroke-width="1.6" />
+    </g>
   </g>
 </svg>

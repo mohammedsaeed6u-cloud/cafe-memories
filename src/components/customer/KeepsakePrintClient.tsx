@@ -71,7 +71,7 @@ export function KeepsakePrintClient({ cafeSlug, cardId }: {
           <Link href={`/c/${cafeSlug}/keepsakes`} className="text-sm font-bold text-rust underline underline-offset-4">
             → كل كروت ذكرياتي
           </Link>
-          <span className="eyebrow text-rust">café memories / YOUR KEEPSAKE</span>
+          <span className="eyebrow text-rust">stampy. / YOUR KEEPSAKE</span>
         </div>
         <h1 className="display-heading mt-5 text-3xl sm:text-4xl">كارت ذكرياتك، مع مكافأتك.</h1>
         <p className="mt-3 max-w-2xl text-sm leading-8 text-ink/65">
@@ -105,17 +105,17 @@ export function KeepsakePrintClient({ cafeSlug, cardId }: {
             className={`keepsake-sheet relative flex h-[148mm] w-[min(100%,105mm)] flex-col overflow-hidden rounded-[1.5rem] p-[6mm] shadow-[0_24px_75px_-35px_#183a32b3] print:rounded-none ${lightFrame ? 'text-forest' : 'text-white'}`}
             style={{ backgroundColor: !lightFrame ? brand?.primaryColor ?? '#183a32' :
               brand?.frameStyle === 'editorial' ? '#f3e9d8' : '#fffdf8' }}>
-            <div aria-hidden="true" className={`pointer-events-none absolute -left-8 -top-10 text-[8rem] leading-none ${lightFrame ? 'text-forest/5' : 'text-white/5'}`}>✳</div>
+            {brand?.frameStyle === 'film' && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[2mm] bg-[linear-gradient(to_bottom,#3D2314_0_20%,#AC3E25_20%_40%,#EBA935_40%_60%,#B18944_60%_80%,#337482_80%_100%)]" />}
             <header className="relative flex shrink-0 items-start justify-between gap-2 pb-[4mm]">
               <div className="min-w-0">
                 <p className="text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: lightFrame ? brand?.primaryColor : brand?.accentColor }}>
-                  CAFÉ MEMORIES × {story.organizationName}
+                  STAMPY. × {story.organizationName}
                 </p>
                 <h2 className="mt-1 line-clamp-2 text-[18px] font-bold leading-tight">{story.organizationName}</h2>
                 <p className={`mt-1 text-[10px] ${lightFrame ? 'text-forest/65' : 'text-white/65'}`}>{brand?.tagline || 'ذكريات زيارة ورا زيارة'} · {card.threshold} أختام حقيقية</p>
               </div>
-              <div className="flex shrink-0 items-center gap-1.5" aria-label={`Café Memories مع ${story.organizationName}`}>
-                <img src="/icon.svg" alt="شعار Café Memories" className="h-9 w-9 rounded-lg" />
+              <div className="flex shrink-0 items-center gap-1.5" aria-label={`stampy. مع ${story.organizationName}`}>
+                <img src="/brand/stampy-app-icon-64.png" alt="شعار stampy." className="h-9 w-9 rounded-lg" />
                 <span aria-hidden="true" className="text-xs">×</span>
                 {brand?.logoUrl ? <img src={brand.logoUrl} alt={`شعار ${story.organizationName}`}
                   className="h-9 w-9 rounded-lg bg-white object-contain p-0.5" />
@@ -130,7 +130,7 @@ export function KeepsakePrintClient({ cafeSlug, cardId }: {
                     ? 'rounded-none border border-forest/20 bg-[#ecdfc8]' : 'rounded-[2mm] border border-white/10 bg-[#ecdfc8]'}`}>
                   <div className="absolute inset-0 grid place-items-center bg-[#ecdfc8] text-center">
                     <div>
-                      <span aria-hidden="true" className="text-3xl text-rust/55">✳</span>
+                      <img src="/brand/03-stampy-aperture-symbol.svg" alt="" aria-hidden="true" className="mx-auto h-7 w-7 opacity-55" />
                       <p className="mt-1 text-[10px] font-bold">زيارة موثّقة</p>
                       {!visit.photo && <p className="text-[9px] text-forest/65">من غير صورة، والختم محفوظ</p>}
                     </div>
@@ -155,7 +155,7 @@ export function KeepsakePrintClient({ cafeSlug, cardId }: {
                 </div>
                 <p className={`shrink-0 text-[9px] ${lightFrame ? 'text-forest/65' : 'text-white/65'}`}>{pageIndex + 1} / {pages.length}</p>
               </div>
-              <p className={`mt-[1mm] text-[8px] ${lightFrame ? 'text-forest/60' : 'text-white/55'}`} dir="ltr">Café Memories × {story.organizationName}</p>
+              <p className={`mt-[1mm] text-[8px] ${lightFrame ? 'text-forest/60' : 'text-white/55'}`} dir="ltr">stampy. × {story.organizationName}</p>
             </footer>
           </article>
         ))}
