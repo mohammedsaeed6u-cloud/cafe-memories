@@ -28,7 +28,7 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
           <a href="#rules">الأنشطة والقواعد</a>
         </li>
         <li>
-          <a href="#dashboard">لوحة المارشنت</a>
+          <a href="#dashboard">لوحة المنشأة</a>
         </li>
         <li>
           <a href="#services">الفوتوبوث وشاشة الصالة</a>
@@ -81,7 +81,7 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
               <a onClick={() => setIsMobileMenuOpen(false)} href="#rules">الأنشطة والقواعد</a>
             </li>
             <li>
-              <a onClick={() => setIsMobileMenuOpen(false)} href="#dashboard">لوحة المارشنت</a>
+              <a onClick={() => setIsMobileMenuOpen(false)} href="#dashboard">لوحة المنشأة</a>
             </li>
             <li>
               <a onClick={() => setIsMobileMenuOpen(false)} href="#services">الفوتوبوث وشاشة الصالة</a>

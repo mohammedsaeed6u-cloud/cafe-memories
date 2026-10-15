@@ -27,18 +27,38 @@ export default function CRMPage() {
       if (needle) params.set('search',needle);
       if (before) { params.set('beforeAt',before.beforeAt); params.set('beforeCustomer',before.beforeCustomer); }
       const response = await fetch(`/api/v1/crm/customers?${params}`, { cache:'no-store' });
+      if (!response.ok) {
+        const text = await response.text();
+        let errMsg = 'تعذر تحميل علاقات الضيوف';
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed.error) errMsg = parsed.error;
+        } catch {
+          if (response.status === 401) errMsg = 'تسجيل الدخول مطلوب للوصول إلى علاقات الضيوف';
+        }
+        throw new Error(errMsg);
+      }
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? 'تعذر تحميل علاقات الضيوف');
-      setRows((current) => append ? [...current,...body.customers] : body.customers);
-      setCursor(body.nextCursor);
+      setRows((current) => append ? [...current,...(body.customers || [])] : (body.customers || []));
+      setCursor(body.nextCursor || null);
     } catch (error) { setNotice(error instanceof Error ? error.message : 'تعذر الاتصال'); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => {
     const timer = setTimeout(() => {
       fetch('/api/v1/merchant/context', { cache:'no-store' }).then(async (response) => {
+        if (!response.ok) {
+          const text = await response.text();
+          let errMsg = 'تعذر تحميل بيانات المنشأة';
+          try {
+            const parsed = JSON.parse(text);
+            if (parsed.error) errMsg = parsed.error;
+          } catch {
+            if (response.status === 401) errMsg = 'تسجيل الدخول مطلوب للوصول إلى بيانات المنشأة';
+          }
+          throw new Error(errMsg);
+        }
         const body = await response.json();
-        if (!response.ok) throw new Error(body.error ?? 'تعذر تحميل بيانات المنشأة');
         setContext(body);
         if (!['owner','admin','manager'].includes(body.role)) {
           setNotice('صفحة العلاقات متاحة للمدير فقط.'); return;

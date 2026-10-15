@@ -55,21 +55,22 @@ export function KeepsakeArchiveClient({ cafeSlug }: { cafeSlug: string }) {
         </div>
       </header>
       <div className="mx-auto max-w-5xl space-y-8 px-5 pt-10 sm:pt-16">
-        <div className="relative overflow-hidden rounded-[2rem] bg-forest p-7 text-white sm:p-10">
+        <div className="relative overflow-hidden rounded-[2rem] bg-[#1E3D30] border border-[#DFAB56]/30 p-7 text-[#FAF5EB] sm:p-10 shadow-xl">
           <span aria-hidden="true" className="absolute -left-8 -top-16 text-[12rem] leading-none text-white/5">✳</span>
-          <div className="relative">
-            <p className="eyebrow text-[#efc68e]">أرشيف الضيف الخاص</p>
-            <h1 className="display-heading mt-3 text-3xl sm:text-4xl">الذكريات اللي فضلت معاك.</h1>
-            <p className="mt-4 max-w-xl text-sm leading-8 text-white/70">
+          <div className="relative z-10">
+            <p className="eyebrow text-[#DFAB56] font-mono">أرشيف الضيف الخاص</p>
+            <h1 className="mt-3 text-3xl sm:text-4xl font-extrabold text-[#FAF5EB] tracking-tight">الذكريات اللي فضلت معاك.</h1>
+            <p className="mt-4 max-w-xl text-sm leading-8 text-[#FAF5EB]/80 font-medium">
               كروتك المكتملة محفوظة هنا في حسابك. تقدر تفتح أي كارت وتشوف صوره
               وتطبعه أو تحفظه PDF؛ حتى لو تغيّرت مكافأة المكان بعد استحقاقه.
             </p>
           </div>
         </div>
-        {error && <div role="alert" className="paper-card rounded-2xl p-6 text-sm text-rust">
-          {error}{" "}<button type="button" className="font-bold underline underline-offset-4"
+        {error && <div role="alert" className="paper-card rounded-2xl p-6 text-sm text-[#8B3A2B] shadow-sm">
+          <p className="font-bold">{error}</p>
+          <button type="button" className="mt-2 inline-flex items-center gap-1 font-bold text-[#682025] underline underline-offset-4 cursor-pointer"
             onClick={() => { setError(""); setAttempt((value) => value + 1); }}>إعادة المحاولة</button>
-          <p className="mt-3 text-xs text-ink/55">لو رابط الفرع مش متاح، ارجع للرئيسية. الكارت يفضل مرتبط بحسابك طالما البيانات محفوظة.</p>
+          <p className="mt-3 text-xs text-[#2D1F17]/60">لو رابط الفرع مش متاح، ارجع للرئيسية. الكارت يفضل مرتبط بحسابك طالما البيانات محفوظة.</p>
         </div>}
         {!story && !error && <p role="status" className="text-sm text-ink/55">بنحمّل كروتك الخاصة…</p>}
         {story && <section>

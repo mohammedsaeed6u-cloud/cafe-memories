@@ -58,11 +58,11 @@ export function MerchantNav({
         </Link>
         <div className="mt-7 hidden border-t border-white/15 pt-7 lg:block">
           <p className="eyebrow text-[#efc68e]">مساحة المنشأة</p>
-          <p className="mt-2 line-clamp-2 text-xl font-bold">
-            {organizationName}
+          <p className="mt-2 line-clamp-2 text-xl font-bold text-[#FAF5EB]">
+            {organizationName && organizationName !== 'مساحة المنشأة' ? organizationName : 'ستامبي كافيه'}
           </p>
           {role && (
-            <p className="mt-1 text-xs text-white/50">
+            <p className="mt-1 text-xs text-white/70">
               الصلاحية: {roleLabels[role] ?? role}
             </p>
           )}
@@ -77,7 +77,7 @@ export function MerchantNav({
               key={link.key}
               href={link.href}
               aria-current={active === link.key ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition ${active === link.key ? "bg-white text-forest" : "text-white/70 hover:bg-white/10 hover:text-white"}`}
+              className={`flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition ${active === link.key ? "bg-[#DFAB56] text-[#1E3D30] shadow-md" : "text-white/70 hover:bg-white/10 hover:text-white"}`}
             >
               <span aria-hidden="true" className="text-lg">
                 {link.icon}

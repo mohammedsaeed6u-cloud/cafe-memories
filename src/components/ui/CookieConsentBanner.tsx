@@ -28,24 +28,24 @@ export function CookieConsentBanner() {
       aria-label="إشعار ملفات تعريف الارتباط والخصوصية"
       className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 print:hidden apple-font text-right animate-in slide-in-from-bottom-5 duration-300"
     >
-      <div className="p-5 rounded-[26px] bg-white/95 border border-[rgba(255,255,255,0.1)] backdrop-blur-2xl shadow-xl space-y-3 text-[#FBF9F5]">
+      <div className="p-5 rounded-[26px] bg-[#FAF5EB] border border-[#2D1F17]/15 backdrop-blur-2xl shadow-2xl space-y-3 text-[#2D1F17]">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-amber-50 border border-amber-200 text-[#c92a54] flex items-center justify-center shrink-0">
-            <Cookie className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-full bg-[#DFAB56]/20 border border-[#DFAB56]/40 text-[#682025] flex items-center justify-center shrink-0">
+            <Cookie className="w-4 h-4 text-[#682025]" />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-[#FBF9F5]">
+            <h4 className="text-xs font-bold text-[#2D1F17]">
               خصوصيتك واحترام تجربتك أولويتنا •
             </h4>
-            <span className="text-[10px] text-stone-500 font-mono">GDPR & Privacy Compliant</span>
+            <span className="text-[10px] text-[#682025] font-mono font-bold">GDPR & Privacy Compliant</span>
           </div>
         </div>
 
-        <p className="text-[11px] text-stone-600 leading-relaxed">
+        <p className="text-[11px] text-[#2D1F17]/80 leading-relaxed font-medium">
           نستخدم ملفات تعريف الارتباط الضرورية لتشغيل جلسات المنشآت والمتاجر، حفظ تفضيلات المظهر، وتأمين التحقق السحابي بدون تتبع إعلاني خارجي.{' '}
           <Link
             href="/privacy"
-            className="text-[#c92a54] underline hover:text-amber-800 font-bold"
+            className="text-[#682025] underline hover:text-[#451215] font-bold"
           >
             سياسة الخصوصية
           </Link>
@@ -54,13 +54,13 @@ export function CookieConsentBanner() {
         <div className="flex items-center gap-2 pt-1">
           <button
             onClick={() => handleAccept('all')}
-            className="flex-1 py-2.5 px-4 rounded-full bg-[#FBF9F5] hover:bg-stone-800 text-white text-xs font-semibold shadow-xs transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            className="flex-1 py-2.5 px-4 rounded-full bg-[#682025] hover:bg-[#451215] text-[#FAF5EB] text-xs font-bold shadow-md transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             موافق على الكل
           </button>
           <button
             onClick={() => handleAccept('essential')}
-            className="py-2.5 px-4 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-[#D9D9D9] text-xs font-medium transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            className="py-2.5 px-4 rounded-full bg-[#DFAB56]/20 hover:bg-[#DFAB56]/30 border border-[#2D1F17]/15 text-[#2D1F17] text-xs font-bold transition hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             الضرورية فقط
           </button>

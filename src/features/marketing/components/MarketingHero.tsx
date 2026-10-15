@@ -40,7 +40,7 @@ export function MarketingHero() {
         </div>
 
         {/* Big Poster Typography: Every Moment is a Stamp in Time */}
-        <h1 className="poster">
+        <h1 className="poster" dir="ltr">
           <span className="line-1">EVERY MOMENT IS A</span>
           <span className="line-2">STAMP IN TIME.</span>
           <span className="tapping-word">stampy.</span>
@@ -55,7 +55,7 @@ export function MarketingHero() {
           <span className="psl-part">كل ختم يروي قصة.</span>
         </p>
 
-        <p className="text-xs sm:text-sm font-bold text-[#682025]/80 max-w-xl mx-auto -mt-4 mb-8 font-mono">
+        <p className="text-xs sm:text-sm font-semibold text-[#682025]/90 max-w-xl mx-auto -mt-4 mb-8 leading-relaxed">
           مثل شوبيفاي لمحافظ Apple & Google — تفعيل فوري سحابي في دقيقتين وبدون أي تطبيقات.
         </p>
 

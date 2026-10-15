@@ -145,16 +145,16 @@ export function TappyCustomerWebCard({
         <div className="flex items-center gap-3">
           <div
             style={{ backgroundColor: brandColor }}
-            className="w-11 h-11 rounded-xl border border-[#DFAB56]/50 flex items-center justify-center text-white text-lg font-black shadow-sm overflow-hidden"
+            className="w-11 h-11 rounded-xl border border-[#DFAB56]/50 flex items-center justify-center text-white text-lg font-black shadow-sm overflow-hidden bg-white/90"
           >
             {settings?.branding?.logoUrl ? (
               <img
                 src={settings.branding.logoUrl}
                 alt={brandName}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain p-1"
               />
             ) : (
-              <span className="font-serif">{brandName.charAt(0)}</span>
+              <span className="font-serif text-[#682025]">{brandName.charAt(0)}</span>
             )}
           </div>
           <div>
@@ -182,7 +182,7 @@ export function TappyCustomerWebCard({
       </div>
 
       {/* 2. THE AUTHENTIC STAMPY DIGITAL KEEPSAKE PASS */}
-      <div className="w-full relative bg-[#FAF5EB] border border-[#DFAB56]/40 rounded-3xl p-6 shadow-[0_12px_36px_-6px_rgba(61,35,20,0.08),0_2px_8px_-1px_rgba(61,35,20,0.04)] overflow-hidden transition-all duration-300">
+      <div className="w-full relative bg-[#FAF5EB] border border-[#DFAB56]/40 rounded-3xl p-6 shadow-[0_12px_36px_-6px_rgba(61,35,20,0.08),0_2px_8px_-1px_rgba(61,35,20,0.04)] overflow-hidden transition-all duration-300 stampy-ticket-card">
         {/* Subtle Archival Paper Texture Gradient */}
         <div className="absolute inset-0 bg-radial from-white/40 via-transparent to-[#DFAB56]/5 pointer-events-none" />
 
@@ -225,6 +225,7 @@ export function TappyCustomerWebCard({
 
         {/* 3. TACTILE STAMP GRID - Luxury Embossed Stamp Seals */}
         <div
+          dir="ltr"
           className={`relative z-10 grid gap-3 py-3 ${
             maxSlots <= 6 ? 'grid-cols-3' : maxSlots <= 8 ? 'grid-cols-4' : 'grid-cols-5'
           }`}
@@ -243,13 +244,13 @@ export function TappyCustomerWebCard({
                   // Stamped Slot with Realistic Physical Shutter Stamp Slam
                   <div
                     style={{
-                      transform: `rotate(${((idx * 7) % 12) - 6}deg)`,
+                      transform: `rotate(${((idx * 5) % 10) - 5}deg)`,
                     }}
-                    className={`w-full h-full rounded-2xl bg-gradient-to-br from-[#FFFDF9] to-[#F5ECDC] border border-[#DFAB56]/60 shadow-[0_4px_12px_rgba(61,35,20,0.08)] flex flex-col items-center justify-center transition-all ${
+                    className={`w-full h-full rounded-2xl bg-gradient-to-br from-[#FFFDF9] to-[#F5ECDC] border-2 border-[#DFAB56] shadow-[0_4px_12px_rgba(61,35,20,0.12)] flex flex-col items-center justify-center transition-all ${
                       isJustStamped ? 'animate-[bounce_0.4s_ease-out] ring-2 ring-[#DFAB56]' : ''
-                    }`}
+                    } stampy-stamp`}
                   >
-                    <span className="text-2xl filter drop-shadow-[0_2px_4px_rgba(61,35,20,0.15)]">
+                    <span className="text-2xl filter drop-shadow-[0_2px_4px_rgba(61,35,20,0.2)]">
                       {isFinalSlot ? '🎁' : stampIcon}
                     </span>
                     <span className="text-[9px] font-mono font-bold text-[#682025] mt-0.5">
@@ -257,9 +258,9 @@ export function TappyCustomerWebCard({
                     </span>
                   </div>
                 ) : (
-                  // Empty Stamp Slot with Delicate Dotted Gold Ring
-                  <div className="w-full h-full rounded-2xl border-2 border-dashed border-[#DFAB56]/40 bg-white/40 flex flex-col items-center justify-center transition-all hover:border-[#DFAB56]/80 hover:bg-white/60">
-                    <span className="text-xs font-mono font-bold text-[#DFAB56]/60">
+                  // Empty Stamp Slot with Delicate Archival Dotted Gold Ring
+                  <div className="w-full h-full rounded-2xl border-2 border-dashed border-[#DFAB56]/40 bg-white/50 shadow-inner flex flex-col items-center justify-center transition-all hover:border-[#DFAB56]/80 hover:bg-white/80">
+                    <span className="text-xs font-mono font-bold text-[#DFAB56]/70">
                       {isFinalSlot ? '🎁' : idx + 1}
                     </span>
                   </div>

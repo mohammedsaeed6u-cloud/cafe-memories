@@ -23,7 +23,7 @@ export function TerminalHeader({ cafeSlug, branding }: TerminalHeaderProps) {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-black text-sm sm:text-base tracking-wide text-[#FBF9F5]">
-                {branding?.name || 'محطة الكاشير'}
+                {(!branding?.name || branding.name === 'Memories') ? 'Stampy · كاونتر الكاشير' : branding.name}
               </h1>
               <span className="px-2.5 py-0.5 rounded-full bg-[#682025]/80 text-[#DFAB56] text-[10px] font-mono font-bold border border-[#DFAB56]/40">
                 STAFF POS TERMINAL

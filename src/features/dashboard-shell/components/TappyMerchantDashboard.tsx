@@ -634,7 +634,7 @@ export function TappyMerchantDashboard({
                     <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#8E879E]">
                       Active Wallet Passes Breakdown
                     </div>
-                    <div className="text-sm font-bold text-[#1B1B1E] mt-1 space-y-1">
+                    <div dir="ltr" className="text-sm font-bold text-[#1B1B1E] mt-1 space-y-1">
                       <div className="flex justify-between">
                         <span>Apple Wallet:</span>
                         <strong className="text-[#682025]">68% (1,040 passes)</strong>
