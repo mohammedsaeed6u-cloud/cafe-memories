@@ -104,6 +104,22 @@ interface TeamMember {
   pin: string;
 }
 
+
+const viewLabels: Record<TappyDashboardSubView, string> = {
+  insights: 'المؤشرات والتحليلات',
+  'card-designer': 'مصمم الكروت الرقمية',
+  programs: 'قواعد وبرامج الولاء',
+  rewards: 'سلّم المكافآت',
+  standees: 'ستاندات الطاولات و NFC',
+  promotions: 'الحملات الترويجية (2x, 3x)',
+  branches: 'الفروع ونقاط الخدمة',
+  profile: 'ملف وهوية المنشأة',
+  team: 'طاقم العمل ونقاط البيع',
+  settings: 'الأمان وإعدادات الحماية',
+  billing: 'الباقة وحصص المحفظة',
+  support: 'الدعم والمساعدة المباشرة',
+};
+
 export function TappyMerchantDashboard({
   settings,
   onOpenPhotoboothStudio,
@@ -318,20 +334,23 @@ export function TappyMerchantDashboard({
       {/* Tappy Authentic Desktop Browser Window Chrome */}
       <div className="border border-[#DFAB56]/40 rounded-3xl bg-white shadow-[0_12px_36px_-6px_rgba(61,35,20,0.08),0_2px_8px_-1px_rgba(61,35,20,0.04)] overflow-hidden">
         {/* Window Chrome Header */}
-        <div className="bg-[#FAF5EB] border-b border-[#DFAB56]/30 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-[#EF4444] border border-[#1B1B1E]/40" />
-            <span className="w-3 h-3 rounded-full bg-[#F59E0B] border border-[#1B1B1E]/40" />
-            <span className="w-3 h-3 rounded-full bg-[#10B981] border border-[#1B1B1E]/40" />
+        <div className="bg-[#FAF5EB] border-b border-[#DFAB56]/30 px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold text-[#1E3D30]">خوادم ستامبي السحابية متصلة</span>
+            <span className="text-[#8E879E]/40">|</span>
+            <span className="text-xs font-semibold text-[#8E879E]">Live Cloud Engine</span>
           </div>
-          <div className="bg-white border border-[#DFAB56]/40 px-5 py-1 rounded-full text-xs font-bold text-[#1B1B1E] font-mono shadow-xs flex items-center gap-2">
-            <span>https://dashboard.stampy.sa</span>
+          <div className="bg-white border border-[#DFAB56]/40 px-4 py-1 rounded-full text-xs font-bold text-[#1E3D30] shadow-xs flex items-center gap-2">
+            <span className="text-[#8B3A2B] font-serif">لوحة المنشأة</span>
+            <span className="text-[#DFAB56]">/</span>
+            <span>{viewLabels[activeView] || activeView}</span>
             <span className="sr-only">dashboard.runtappy.com</span>
-            <span className="text-[#8E879E]">/ {activeView}</span>
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-            <span>Live Cloud Engine</span>
+          <div className="flex items-center gap-2 text-xs font-bold text-[#1E3D30]">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#1E3D30]/10 text-[#1E3D30] border border-[#1E3D30]/20 text-[11px]">
+              محدّث لحظياً
+            </span>
           </div>
         </div>
 

@@ -20,18 +20,24 @@ export default function CampaignsPage() {
   const [notice,setNotice] = useState('');
   const [busy,setBusy] = useState(false);
   const load = useCallback(async () => {
-    const [venue,list] = await Promise.all([
-      fetch('/api/v1/merchant/context',{cache:'no-store'}),
-      fetch('/api/v1/campaigns',{cache:'no-store'}),
-    ]);
-    const [org,body] = await Promise.all([venue.json(),list.json()]);
-    if (!venue.ok || !list.ok) throw new Error(body.error ?? org.error ?? 'تعذر تحميل الحملات');
-    setContext(org); setCampaigns(body.campaigns); setReady(body.walletReady);
-  },[]);
+    try {
+      const [venue, list] = await Promise.all([
+        fetch('/api/v1/merchant/context', { cache: 'no-store' }),
+        fetch('/api/v1/campaigns', { cache: 'no-store' }),
+      ]);
+      const org = venue.ok ? await venue.json().catch(() => null) : null;
+      const body = list.ok ? await list.json().catch(() => null) : null;
+      if (org) setContext(org);
+      if (body?.campaigns) setCampaigns(body.campaigns);
+      if (body?.walletReady !== undefined) setReady(body.walletReady);
+    } catch {
+      setNotice('تعذر تحميل الحملات حالياً');
+    }
+  }, []);
   useEffect(() => {
-    const timer = setTimeout(() => load().catch((error) => setNotice(error.message)),0);
+    const timer = setTimeout(() => { void load(); }, 0);
     return () => clearTimeout(timer);
-  },[load]);
+  }, [load]);
   async function create(event:FormEvent) {
     event.preventDefault(); setBusy(true); setNotice('');
     try {
