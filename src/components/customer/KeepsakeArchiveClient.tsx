@@ -10,15 +10,22 @@ export function KeepsakeArchiveClient({ cafeSlug }: { cafeSlug: string }) {
   const [page, setPage] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [isAuthError, setIsAuthError] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
     fetch(`/api/v1/customer/story?${new URLSearchParams({ cafeSlug })}`, { cache: "no-store" })
       .then(async (response) => {
-        if (!response.ok) throw new Error(response.status === 401
-          ? "سجّل دخولك بنفس حساب الضيف علشان تفتح كروت ذكرياتك."
-          : "تعذر تحميل كروت الذكريات. حاول تاني.");
+        if (!response.ok) {
+          if (response.status === 401) {
+            if (active) setIsAuthError(true);
+            throw new Error("سجّل دخولك بنفس حساب الضيف علشان تفتح كروت ذكرياتك.");
+          }
+          if (active) setIsAuthError(false);
+          throw new Error("تعذر تحميل كروت الذكريات. حاول تاني.");
+        }
+        if (active) setIsAuthError(false);
         return response.json() as Promise<KeepsakeStory>;
       })
       .then((result) => { if (active) { setStory(result); setPage(0); setError(""); } })
@@ -69,12 +76,14 @@ export function KeepsakeArchiveClient({ cafeSlug }: { cafeSlug: string }) {
         {error && <div role="alert" className="paper-card rounded-2xl p-6 text-sm text-[#8B3A2B] shadow-sm">
           <p className="font-bold">{error}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Link
-              href={`/login?redirect=/c/${cafeSlug}/keepsakes`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#682025] hover:bg-[#52171B] text-[#FAF5EB] font-bold text-xs shadow-sm transition-colors"
-            >
-              تسجيل الدخول كضيف ←
-            </Link>
+            {isAuthError && (
+              <Link
+                href={`/login?redirect=/c/${cafeSlug}/keepsakes`}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#682025] hover:bg-[#52171B] text-[#FAF5EB] font-bold text-xs shadow-sm transition-colors"
+              >
+                تسجيل الدخول كضيف ←
+              </Link>
+            )}
             <button type="button" className="inline-flex items-center gap-1 font-bold text-[#682025] underline underline-offset-4 cursor-pointer text-xs"
               onClick={() => { setError(""); setAttempt((value) => value + 1); }}>إعادة المحاولة</button>
           </div>

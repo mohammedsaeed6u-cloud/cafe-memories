@@ -9,6 +9,17 @@ import { authClient, useSession } from '@/lib/auth/auth-client';
 
 export type AuthTab = 'signup' | 'signin' | 'pin' | '2fa';
 
+function getSafeRedirectTarget(defaultTarget: string): string {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+      return redirect;
+    }
+  }
+  return defaultTarget;
+}
+
 export function useAuthPage() {
   const [authTab, setAuthTab] = useState<AuthTab>('signup');
   const [loading, setLoading] = useState(false);
@@ -163,7 +174,7 @@ export function useAuthPage() {
 
         setSuccessMsg('تم إنشاء حسابك وتجهيز مساحة العمل بنجاح! جاري تحويلك...');
         setTimeout(() => {
-          window.location.href = `/dashboard?cafe=${effectiveSlug}`;
+          window.location.href = getSafeRedirectTarget(`/dashboard?cafe=${effectiveSlug}`);
         }, 1200);
       } else {
         // Sign In
@@ -219,7 +230,7 @@ export function useAuthPage() {
 
         setSuccessMsg('تم تسجيل الدخول بنجاح! جاري التحويل...');
         setTimeout(() => {
-          window.location.href = `/dashboard?cafe=${resolvedSlug}`;
+          window.location.href = getSafeRedirectTarget(`/dashboard?cafe=${resolvedSlug}`);
         }, 1000);
       }
     } catch (err: any) {
@@ -252,7 +263,7 @@ export function useAuthPage() {
       const resolvedSlug = localStorage.getItem('memories_active_merchant_slug') || 'memories';
       setSuccessMsg('تم تأكيد الهوية بنجاح! جاري تحويلك...');
       setTimeout(() => {
-        window.location.href = `/dashboard?cafe=${resolvedSlug}`;
+        window.location.href = getSafeRedirectTarget(`/dashboard?cafe=${resolvedSlug}`);
       }, 1000);
     } catch (err: any) {
       setErrorMsg(err.message || 'فشل التحقق من رمز 2FA.');
