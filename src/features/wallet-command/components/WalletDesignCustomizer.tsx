@@ -72,7 +72,7 @@ export function WalletDesignCustomizer({
           </label>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { id: 'dark', label: 'داكن فاخر', bg: 'bg-[#FBF9F5]', text: 'text-white', hex: '#FBF9F5' },
+              { id: 'dark', label: 'داكن فاخر', bg: 'bg-[#18181B]', text: 'text-white', hex: '#18181B' },
               { id: 'blue', label: 'أزرق كحلي', bg: 'bg-[#1E3A8A]', text: 'text-white', hex: '#1E3A8A' },
               { id: 'green', label: 'أخضر زمردي', bg: 'bg-[#064E3B]', text: 'text-white', hex: '#064E3B' },
               { id: 'red', label: 'عنابي دافئ', bg: 'bg-[#881337]', text: 'text-white', hex: '#881337' },
@@ -100,17 +100,17 @@ export function WalletDesignCustomizer({
               type="color"
               value={colorHex}
               onChange={(e) => setColorHex(e.target.value)}
-              className="w-10 h-10 rounded-xl border border-[rgba(255,255,255,0.1)] cursor-pointer"
+              className="w-10 h-10 rounded-xl border border-white/20 bg-stone-900 cursor-pointer"
             />
             <input
               type="text"
               dir="ltr"
               value={colorHex}
               onChange={(e) => setColorHex(e.target.value)}
-              className="w-32 px-3 py-2 text-xs rounded-xl border border-[rgba(255,255,255,0.1)] font-mono font-bold uppercase focus:border-[#c92a54] focus:outline-none"
-              placeholder="#FBF9F5"
+              className="w-32 px-3 py-2 text-xs rounded-xl bg-stone-900 text-white border border-white/20 font-mono font-bold uppercase focus:border-[#c92a54] focus:outline-none"
+              placeholder="#18181B"
             />
-            <span className="text-[11px] text-stone-500">كود اللون HEX المعتمد</span>
+            <span className="text-[11px] text-stone-400">كود اللون HEX المعتمد</span>
           </div>
         </div>
 
@@ -132,8 +132,8 @@ export function WalletDesignCustomizer({
                 onClick={() => setBarcodeFormat(fmt.id as WalletBarcodeFormat)}
                 className={`p-3 rounded-2xl border text-right transition cursor-pointer ${
                   barcodeFormat === fmt.id
-                    ? 'border-[#c92a54] bg-amber-50/50 shadow-xs'
-                    : 'border-[rgba(255,255,255,0.1)] hover:bg-[#0B0A0A]'
+                    ? 'border-[#c92a54] bg-[#c92a54]/15 ring-1 ring-[#c92a54] shadow-xs'
+                    : 'border-[rgba(255,255,255,0.1)] hover:bg-white/5'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -172,9 +172,9 @@ export function WalletDesignCustomizer({
             type="button"
             disabled={isProcessingImage}
             onClick={() => fileInputRef.current?.click()}
-            className="px-4 py-2.5 rounded-2xl bg-[#FBF9F5] hover:bg-[#382D27] text-white text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+            className="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
           >
-            <Upload className="w-4 h-4 text-amber-400" />
+            <Upload className="w-4 h-4 text-stone-950" />
             <span>{isProcessingImage ? 'جاري المعالجة والضغط...' : 'رفع صورة خلفية للبراند (690×1010)'}</span>
           </button>
 
@@ -206,7 +206,7 @@ export function WalletDesignCustomizer({
 
         {/* Curated Presets */}
         <div className="space-y-2">
-          <span className="text-xs font-bold text-stone-600 block">أو اختر من تصاميم ستامبي الجاهزة:</span>
+          <span className="text-xs font-bold text-stone-300 block">أو اختر من تصاميم ستامبي الجاهزة:</span>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {CURATED_CARD_PRESETS.map((preset) => (
               <button
@@ -219,8 +219,8 @@ export function WalletDesignCustomizer({
                 }}
                 className={`p-3 rounded-2xl border text-right transition cursor-pointer relative overflow-hidden ${
                   cardPresetId === preset.id
-                    ? 'border-[#c92a54] bg-amber-50/40 ring-2 ring-amber-500 shadow-xs'
-                    : 'border-[rgba(255,255,255,0.1)] hover:bg-[#0B0A0A]'
+                    ? 'border-[#c92a54] bg-stone-800/90 ring-2 ring-[#c92a54] shadow-xs'
+                    : 'border-[rgba(255,255,255,0.1)] hover:bg-white/5'
                 }`}
               >
                 <div
@@ -264,7 +264,7 @@ export function WalletDesignCustomizer({
 
       {/* Security & Anti-Fraud */}
       <div className="pt-4 border-t border-[rgba(255,255,255,0.1)]/60">
-        <label className="flex items-center justify-between cursor-pointer p-4 rounded-2xl bg-[#141212] border border-[rgba(255,255,255,0.1)] hover:bg-white transition">
+        <label className="flex items-center justify-between cursor-pointer p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
               <ShieldCheck className="w-5 h-5 text-emerald-600" />

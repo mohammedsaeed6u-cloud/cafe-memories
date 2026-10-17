@@ -163,7 +163,7 @@ export function WalletGeofenceSection({
             value={relevantText}
             onChange={(e) => onRelevantTextChange(e.target.value)}
             className="w-full px-4 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] focus:border-[#c92a54] focus:ring-1 focus:ring-[#c92a54]/30 focus:outline-none font-bold"
-            placeholder={`أهلاً بك في ${brandName}! كارت الولاء جاهز للختم ☕`}
+            placeholder={`أهلاً بك في ${brandName}! كارت الولاء جاهز للختم ✨`}
           />
 
           <div className="flex flex-wrap gap-2 pt-1">

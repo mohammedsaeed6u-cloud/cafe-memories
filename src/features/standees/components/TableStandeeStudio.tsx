@@ -48,7 +48,7 @@ export const TableStandeeStudio: React.FC<Props> = ({ settings, cafeSlug }) => {
   const [customTableNum, setCustomTableNum] = useState('');
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  const brandName = settings?.branding?.name || 'كافيه الذكريات';
+  const brandName = settings?.branding?.name || 'منشأة ستامبي';
   const effectiveTableNum = customTableNum.trim() || selectedTable.tableNum;
   
   // URL formats: Universal Direct Path vs Dedicated Platform Subdomain
@@ -89,7 +89,7 @@ export const TableStandeeStudio: React.FC<Props> = ({ settings, cafeSlug }) => {
             ستاندات الطاولات الفيزيائية وكروت الخيمة (A6 Ready)
           </h2>
           <p className="text-xs sm:text-sm text-[#A19E9B] max-w-xl">
-            صمّم واطبع ستاندات أكريليك أو خشبية أو كروت خيمة ورقية لكل طاولة في الكافيه. العميل يقرب هاتفه بالـ NFC أو يمسح الكاميرا لفتح كارت الولاء واستوديو الصور فورياً.
+            صمّم واطبع ستاندات أكريليك أو خشبية أو كروت خيمة ورقية لكل طاولة في منشأتك. العميل يقرب هاتفه بالـ NFC أو يمسح الكاميرا لفتح كارت الولاء واستوديو الصور فورياً.
           </p>
         </div>
 
@@ -133,7 +133,7 @@ export const TableStandeeStudio: React.FC<Props> = ({ settings, cafeSlug }) => {
                     <span>أكريليك أسود فاخر (Matte Black Acrylic)</span>
                   </div>
                   <p className="text-[11px] text-[#A19E9B] mt-1 leading-relaxed">
-                    لوح أسود غير لامع مع طباعة ذهبية وشعار NFC المعدني. مخصص للكافيهات الراقية والبوتيك.
+                    لوح أسود غير لامع مع طباعة ذهبية وشعار NFC المعدني. مخصص للمنشآت الراقية، المطاعم، والبوتيك.
                   </p>
                 </div>
                 {material === 'acrylic_black' && <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />}
@@ -155,7 +155,7 @@ export const TableStandeeStudio: React.FC<Props> = ({ settings, cafeSlug }) => {
                     <span>خشب البلوط الطبيعي (Nordic Oak Wood)</span>
                   </div>
                   <p className="text-[11px] text-[#A19E9B] mt-1 leading-relaxed">
-                    مظهر خشبي عضوي دافئ مع حفر ليزر غامق. مثالي للـ Specialty Coffee والمحامص.
+                    مظهر خشبي عضوي دافئ مع حفر ليزر غامق. مثالي للمقاهي المتخصصة، المخابز، والمحامص.
                   </p>
                 </div>
                 {material === 'nordic_wood' && <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />}

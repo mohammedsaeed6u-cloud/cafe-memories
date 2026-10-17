@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Camera, RefreshCw, CheckCircle2, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { SoundEffectsService } from '@/lib/services/sound-effects.service';
+import { StampyApertureMark } from '@/components/brand/StampyLogo';
 
 export type CameraFilterMode = 'natural' | 'espresso' | 'noir' | 'fade';
 
@@ -237,9 +238,14 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
           />
         )}
 
-        {/* White Xenon Studio Flash Overlay */}
+        {/* Mechanical Shutter Iris Wipe & Xenon Studio Flash */}
         {isFlashing && (
-          <div className="absolute inset-0 bg-white z-50 pointer-events-none transition-opacity duration-200 opacity-100" />
+          <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-hidden animate-in fade-in duration-75">
+            <div className="absolute inset-0 bg-white/95 transition-opacity duration-200" />
+            <div className="relative z-10 w-28 h-28 rounded-full border-4 border-[#3D2314] bg-[#141212] flex items-center justify-center animate-out zoom-out-50 duration-200 shadow-2xl">
+              <StampyApertureMark size={64} color="#DFAB56" strokeColor="#3D2314" />
+            </div>
+          </div>
         )}
 
         {/* Loading / Error */}

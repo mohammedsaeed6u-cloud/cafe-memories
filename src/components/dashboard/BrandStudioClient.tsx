@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { MerchantNav } from "@/components/dashboard/MerchantNav";
+import { StampyApertureMark } from "@/components/brand/StampyLogo";
 import { DEFAULT_ACCENT, DEFAULT_PRIMARY, frameStyles, socialPlatforms,
   type PublicBrand, type SocialLinks } from "@/lib/brand";
 
@@ -113,7 +114,9 @@ export function BrandStudioClient() {
               <p className="eyebrow text-rust">01 / شعار المكان</p>
               <h2 className="mt-2 text-2xl font-bold">اللوجو بتاعك، جنب لوجونا.</h2>
               <div className="mt-5 flex flex-wrap items-center gap-4">
-                <img src="/brand/stampy-app-icon-64.png" alt="شعار stampy." className="h-16 w-16 rounded-2xl" />
+                <div className="h-16 w-16 rounded-2xl bg-[#DFAB56] flex items-center justify-center p-2 shadow-sm border border-[#682025]/20 shrink-0">
+                  <StampyApertureMark size={36} color="#682025" strokeColor="#DFAB56" />
+                </div>
                 <span className="text-xl text-ink/35" aria-hidden="true">×</span>
                 {brand.logoUrl ? <img src={brand.logoUrl} alt={`لوجو ${brand.name}`}
                   className="h-16 w-16 rounded-2xl border border-ink/10 bg-white object-contain p-1" />
@@ -197,7 +200,9 @@ export function BrandStudioClient() {
             <div className="stampy-ticket-card relative overflow-hidden rounded-[1.75rem] p-6 text-white shadow-xl" style={{ backgroundColor: brand.primaryColor }}>
               <p className="eyebrow" style={{ color: brand.accentColor }}>معاينة الكارت الرقمي • بدون بيانات ضيوف</p>
               <div className="mt-6 flex items-center gap-3">
-                <img src="/brand/stampy-app-icon-64.png" alt="شعار stampy." className="h-10 w-10 rounded-xl" />
+                <div className="h-10 w-10 rounded-xl bg-[#DFAB56] flex items-center justify-center p-1.5 shadow-sm border border-[#682025]/20 shrink-0">
+                  <StampyApertureMark size={22} color="#682025" strokeColor="#DFAB56" />
+                </div>
                 <span className="text-lg text-white/50">×</span>
                 {brand.logoUrl ? <img src={brand.logoUrl} alt="لوجو المنشأة" className="h-10 w-10 rounded-xl bg-white object-contain p-1" />
                   : <span className="grid h-10 w-10 place-items-center rounded-xl border border-white/30 text-[9px]">لوجوك</span>}

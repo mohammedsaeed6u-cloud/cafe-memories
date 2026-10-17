@@ -31,7 +31,7 @@ export function WalletBroadcastModal({
           <h3 className="text-base font-black text-[#FBF9F5]">
             📢 بث إشعار فوري لكافة حاملي الكارت (Push Notification to Apple & Google Wallets)
           </h3>
-          <p className="text-xs text-stone-500">
+          <p className="text-xs text-stone-400">
             أرسل عروض حية، تذكيرات، أو إعلان مشروب جديد يظهر مباشرة على شاشة قفل كل الزبائن عبر Apple Push Notification service (APNs)
           </p>
         </div>
@@ -50,7 +50,7 @@ export function WalletBroadcastModal({
               className={`text-xs font-medium px-3 py-1.5 rounded-xl border transition cursor-pointer ${
                 broadcastMsg === tmpl
                   ? 'bg-[#c92a54] text-white border-[#c92a54]'
-                  : 'bg-[#0B0A0A] hover:bg-stone-100 text-stone-700 border-[rgba(255,255,255,0.1)]'
+                  : 'bg-white/5 hover:bg-white/10 text-stone-200 border-white/10'
               }`}
             >
               {tmpl.length > 40 ? tmpl.slice(0, 40) + '...' : tmpl}
@@ -73,7 +73,7 @@ export function WalletBroadcastModal({
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-          <p className="text-[11px] text-stone-500">
+          <p className="text-[11px] text-stone-400">
             💡 سيتم تحديث الكروت وإضاءة هواتف العملاء فوراً بدون الحاجة لأي تطبيق مثبت.
           </p>
 
@@ -92,14 +92,14 @@ export function WalletBroadcastModal({
           <div
             className={`p-4 rounded-2xl text-xs font-bold flex items-center gap-2.5 animate-in fade-in ${
               broadcastResult.success
-                ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-                : 'bg-rose-50 border border-rose-200 text-rose-800'
+                ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-300'
+                : 'bg-rose-950/60 border border-rose-500/40 text-rose-300'
             }`}
           >
             {broadcastResult.success ? (
-              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             )}
             <span>{broadcastResult.message}</span>
           </div>

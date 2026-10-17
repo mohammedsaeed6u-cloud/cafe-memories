@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Shield, Lock, Eye, FileText, ArrowRight } from 'lucide-react';
 import { LastUpdatedBadge } from '@/components/ui/LastUpdatedBadge';
+import { StampyLogo } from '@/components/brand/StampyLogo';
 
 export default function PrivacyPolicyPage() {
   return (
@@ -11,14 +12,11 @@ export default function PrivacyPolicyPage() {
       {/* Header */}
       <header className="bg-[#FAF5EB]/90 backdrop-blur-md border-b border-[#DFAB56]/30 sticky top-0 z-30 shadow-[0_2px_8px_rgba(61,35,20,0.04)]">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#1E3D30] text-[#FAF5EB] flex items-center justify-center font-serif text-base shadow-sm border border-[#DFAB56]/40">
-              ✦
-            </div>
-            <div>
-              <span className="font-bold text-[#1E3D30] text-base font-serif block leading-none">ستامبي · Stampy</span>
-              <span className="text-[10px] text-[#8B3A2B] font-bold">سياسة الخصوصية وحماية البيانات</span>
-            </div>
+          <Link href="/" className="flex items-center gap-3">
+            <StampyLogo variant="horizontal" size="sm" theme="light" showTagline={false} />
+            <span className="hidden sm:inline-block text-[11px] text-[#8B3A2B] font-bold border-r border-[#DFAB56]/40 pr-3">
+              سياسة الخصوصية وحماية البيانات
+            </span>
           </Link>
           <Link
             href="/"

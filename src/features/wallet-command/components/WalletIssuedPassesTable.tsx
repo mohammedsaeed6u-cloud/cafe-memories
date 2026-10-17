@@ -40,11 +40,11 @@ export function WalletIssuedPassesTable({
           <div>
             <h3 className="text-base font-black text-[#FBF9F5] flex items-center gap-2">
               <span>سجل الكروت المُصدرة حياً (Active Passes Registry)</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-stone-100 font-mono text-stone-700">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 border border-white/10 font-mono text-stone-200">
                 {passesList.length} كارت
               </span>
             </h3>
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-stone-400">
               مراقبة الكروت المضافة في Apple Wallet، رابط التنزيل، وميزة إلغاء الصلاحية الفورية
             </p>
           </div>
@@ -70,7 +70,7 @@ export function WalletIssuedPassesTable({
         <div className="overflow-x-auto">
           <table className="w-full text-right text-xs">
             <thead>
-              <tr className="border-b border-[rgba(255,255,255,0.1)] text-stone-500 font-bold">
+              <tr className="border-b border-[rgba(255,255,255,0.1)] text-stone-400 font-bold">
                 <th className="pb-3 px-2">الرقم التسلسلي (Serial)</th>
                 <th className="pb-3 px-2">العميل / العنوان</th>
                 <th className="pb-3 px-2">تاريخ الإصدار</th>
@@ -81,29 +81,29 @@ export function WalletIssuedPassesTable({
             </thead>
             <tbody className="divide-y divide-[rgba(255,255,255,0.1)]/60">
               {filteredPasses.map((pass) => (
-                <tr key={pass.serialNumber || pass.id} className="hover:bg-[#0B0A0A]/60 transition">
-                  <td className="py-3 px-2 font-mono text-stone-800 font-bold text-[11px]">
+                <tr key={pass.serialNumber || pass.id} className="hover:bg-white/5 transition">
+                  <td className="py-3 px-2 font-mono text-stone-200 font-bold text-[11px]">
                     {pass.serialNumber || 'N/A'}
                   </td>
                   <td className="py-3 px-2">
                     <span className="font-bold text-[#FBF9F5] block">{pass.title || 'كارت ولاء'}</span>
-                    <span className="text-[10px] text-stone-500 font-mono">{pass.detail || ''}</span>
+                    <span className="text-[10px] text-stone-400 font-mono">{pass.detail || ''}</span>
                   </td>
-                  <td className="py-3 px-2 text-stone-600 font-mono text-[11px]">
+                  <td className="py-3 px-2 text-stone-400 font-mono text-[11px]">
                     {pass.createdAt ? new Date(pass.createdAt).toLocaleDateString('ar-EG') : 'حديثاً'}
                   </td>
                   <td className="py-3 px-2">
-                    <span className="px-2 py-0.5 rounded-full bg-stone-100 font-mono text-[10px] text-stone-700">
+                    <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 font-mono text-[10px] text-stone-200">
                       {pass.barcodeFormat || 'QR'}
                     </span>
                   </td>
                   <td className="py-3 px-2">
                     {pass.revoked ? (
-                      <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full font-bold text-[10px]">
+                      <span className="text-rose-300 bg-rose-950/60 border border-rose-500/40 px-2 py-0.5 rounded-full font-bold text-[10px]">
                         ملغي
                       </span>
                     ) : (
-                      <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold text-[10px]">
+                      <span className="text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold text-[10px]">
                         نشط ومفعل
                       </span>
                     )}
@@ -116,7 +116,7 @@ export function WalletIssuedPassesTable({
                           target="_blank"
                           rel="noreferrer"
                           title="فتح ملف الكارت .pkpass"
-                          className="p-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 transition"
+                          className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-stone-200 transition"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
@@ -126,7 +126,7 @@ export function WalletIssuedPassesTable({
                         type="button"
                         onClick={() => onInspectPass(pass.serialNumber)}
                         title="فحص حقول JSON للكارت"
-                        className="p-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 transition cursor-pointer"
+                        className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-stone-200 transition cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
@@ -137,7 +137,7 @@ export function WalletIssuedPassesTable({
                           disabled={revokingSerial === pass.serialNumber}
                           onClick={() => onRevokePass(pass.serialNumber)}
                           title="إلغاء الكارت نهائياً"
-                          className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer disabled:opacity-50"
+                          className="p-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900/60 border border-rose-500/40 text-rose-300 transition cursor-pointer disabled:opacity-50"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -153,7 +153,7 @@ export function WalletIssuedPassesTable({
 
       {/* Inspect Pass Body Modal */}
       {inspectingPassBody && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-[#141212] rounded-3xl max-w-xl w-full p-6 space-y-4 shadow-xl border border-[rgba(255,255,255,0.1)] max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.1)]">
               <h4 className="text-sm font-black text-[#FBF9F5]">
@@ -162,7 +162,7 @@ export function WalletIssuedPassesTable({
               <button
                 type="button"
                 onClick={() => setInspectingPassBody(null)}
-                className="p-1.5 rounded-xl hover:bg-stone-100 text-stone-500 cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-white/10 text-stone-400 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -176,7 +176,7 @@ export function WalletIssuedPassesTable({
               <button
                 type="button"
                 onClick={() => setInspectingPassBody(null)}
-                className="px-4 py-2 rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 text-xs font-bold cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[#FBF9F5] text-xs font-bold cursor-pointer"
               >
                 إغلاق
               </button>

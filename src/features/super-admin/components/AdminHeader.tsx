@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Shield, ExternalLink } from 'lucide-react';
+import { StampyLogo } from '@/components/brand/StampyLogo';
 import { SaaSPlatformMetrics } from '@/types/subscription';
 
 interface AdminHeaderProps {
@@ -13,7 +15,9 @@ export function AdminHeader({ saasMetrics }: AdminHeaderProps) {
     <header className="bg-[#141212] text-[#FBF9F5] border-b border-white/10 sticky top-0 z-40 px-6 py-4 shadow-md">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <a href="/" className="transition hover:opacity-90"><img src="/brand/stampy-logo.svg" alt="Stampy SaaS" className="h-9 w-auto" /></a>
+          <Link href="/" className="transition hover:opacity-90">
+            <StampyLogo variant="horizontal" size="sm" theme="dark" showTagline={false} />
+          </Link>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-bold text-base tracking-tight text-white font-serif">
