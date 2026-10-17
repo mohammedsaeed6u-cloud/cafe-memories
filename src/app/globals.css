@@ -2,34 +2,34 @@
 @import "../styles/tappy.css";
 
 @theme {
-  --color-surface: #141313;
-  --color-surface-charcoal: #141212;
-  --color-surface-stone: #1F1D1D;
-  --color-surface-dim: #141313;
-  --color-surface-bright: #3b3939;
+  --color-surface: #FAF5EB;
+  --color-surface-charcoal: #1B1B1E;
+  --color-surface-stone: #2D1F17;
+  --color-surface-dim: #EADDC4;
+  --color-surface-bright: #FFFFFF;
 
-  --color-primary: #c92a54;
-  --color-primary-container: #c92a54;
-  --color-secondary: #98183c;
-  --color-secondary-container: #7a1230;
+  --color-primary: #B83A26;
+  --color-primary-container: #DFAB56;
+  --color-secondary: #682025;
+  --color-secondary-container: #451215;
 
-  --color-alabaster: #FBF9F5;
-  --color-alabaster-muted: #D9D9D9;
-  --color-coffee-bean: #1A0706;
+  --color-alabaster: #FAF5EB;
+  --color-alabaster-muted: #EADDC4;
+  --color-coffee-bean: #2D1F17;
 
-  --color-border-hairline: rgba(255, 255, 255, 0.08);
-  --color-border-accent: rgba(201, 42, 84, 0.35);
+  --color-border-hairline: rgba(45, 31, 23, 0.12);
+  --color-border-accent: rgba(184, 58, 38, 0.35);
 
   --font-playfair: var(--font-playfair), 'Playfair Display', Georgia, serif;
   --font-jakarta: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
   --font-cairo: var(--font-cairo), 'Cairo', sans-serif;
 
-  /* Atelier Nostalgia Palette & Fonts */
-  --color-matGreen: #1b4335;
-  --color-matDark: #123326;
-  --color-berry: #c92a54;
-  --color-berryLight: #e14974;
-  --color-berryDeep: #98183c;
+  /* STAMPY Heritage & Keepsake Palette */
+  --color-matGreen: #2D5240;
+  --color-matDark: #1E3D30;
+  --color-berry: #B83A26;
+  --color-berryLight: #DFAB56;
+  --color-berryDeep: #682025;
   --color-craftBg: #fbf7f2;
   --color-craftCard: #f5efe6;
   --color-craftMuted: #ede4d8;
@@ -88,8 +88,8 @@
 
 @layer base {
   :root {
-    --background: #141313;
-    --foreground: #e6e1e1;
+    --background: #FAF5EB;
+    --foreground: #1B1B1E;
     --font-cairo: 'Cairo', sans-serif;
     --font-playfair: 'Playfair Display', Georgia, serif;
         --font-jakarta: 'Plus Jakarta Sans', sans-serif;
@@ -152,8 +152,8 @@
   }
 
   body {
-    background-color: #141313;
-    color: #e6e1e1;
+    background-color: #FAF5EB;
+    color: #1B1B1E;
     font-family: var(--font-jakarta), var(--font-cairo), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

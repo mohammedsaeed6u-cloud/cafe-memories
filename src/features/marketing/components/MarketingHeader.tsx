@@ -45,7 +45,7 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
       <div className="flex items-center gap-3">
         <Link
           href="/login?tab=signin"
-          className="hidden sm:inline-flex text-xs font-bold text-[#1B1B1E] hover:text-[#f0456a] px-3 py-2 transition uppercase font-head tracking-wider"
+          className="hidden sm:inline-flex text-xs font-bold text-[#1B1B1E] hover:text-[#682025] px-3 py-2 transition uppercase font-head tracking-wider"
         >
           تسجيل الدخول
         </Link>

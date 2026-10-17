@@ -46,7 +46,7 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#141313',
+  themeColor: '#FAF5EB',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -111,7 +111,7 @@ export default function RootLayout({
         barlowCondensed.variable
       )}
     >
-      <body className="min-h-screen bg-[#141313] text-[#e6e1e1] font-sans antialiased selection:bg-[#DFAB56] selection:text-white">
+      <body className="min-h-screen bg-[#FAF5EB] text-[#1B1B1E] font-sans antialiased selection:bg-[#682025] selection:text-white">
         {children}
       </body>
     </html>
