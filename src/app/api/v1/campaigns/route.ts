@@ -103,16 +103,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const campaignConfig = {
+      channel: 'wallet' as const,
+      audience: (audience || 'all') as 'all' | 'returning' | 'inactive30',
+      message: String(message).slice(0, 110),
+    };
+
+    // Attempt to persist to database if authenticated
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: membership } = await supabase
+          .from('organization_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (membership?.organization_id) {
+          const admin = createAdminClient();
+          const { data: inserted, error } = await admin
+            .from('campaigns')
+            .insert({
+              organization_id: membership.organization_id,
+              name: String(name).slice(0, 60),
+              status: 'draft',
+              config: campaignConfig,
+            })
+            .select('id, name, status, created_at, config')
+            .maybeSingle();
+
+          if (!error && inserted) {
+            return NextResponse.json({
+              ok: true,
+              campaign: {
+                id: inserted.id,
+                name: inserted.name,
+                status: inserted.status,
+                createdAt: inserted.created_at,
+                config: inserted.config || campaignConfig,
+                counts: { accepted: 0, unknown: 0, processing: 0 },
+              },
+            });
+          }
+        }
+      }
+    } catch {
+      // Fallback to local draft if database insert fails or runs in local mock mode
+    }
+
     const newCampaign = {
       id: `camp-${Date.now()}`,
       name: String(name).slice(0, 60),
       status: 'draft',
       createdAt: new Date().toISOString(),
-      config: {
-        channel: 'wallet' as const,
-        audience: (audience || 'all') as 'all' | 'returning' | 'inactive30',
-        message: String(message).slice(0, 110),
-      },
+      config: campaignConfig,
       counts: {
         accepted: 0,
         unknown: 0,

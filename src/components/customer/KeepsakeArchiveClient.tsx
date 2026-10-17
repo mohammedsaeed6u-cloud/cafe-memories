@@ -68,8 +68,16 @@ export function KeepsakeArchiveClient({ cafeSlug }: { cafeSlug: string }) {
         </div>
         {error && <div role="alert" className="paper-card rounded-2xl p-6 text-sm text-[#8B3A2B] shadow-sm">
           <p className="font-bold">{error}</p>
-          <button type="button" className="mt-2 inline-flex items-center gap-1 font-bold text-[#682025] underline underline-offset-4 cursor-pointer"
-            onClick={() => { setError(""); setAttempt((value) => value + 1); }}>إعادة المحاولة</button>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Link
+              href={`/login?redirect=/c/${cafeSlug}/keepsakes`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#682025] hover:bg-[#52171B] text-[#FAF5EB] font-bold text-xs shadow-sm transition-colors"
+            >
+              تسجيل الدخول كضيف ←
+            </Link>
+            <button type="button" className="inline-flex items-center gap-1 font-bold text-[#682025] underline underline-offset-4 cursor-pointer text-xs"
+              onClick={() => { setError(""); setAttempt((value) => value + 1); }}>إعادة المحاولة</button>
+          </div>
           <p className="mt-3 text-xs text-[#2D1F17]/60">لو رابط الفرع مش متاح، ارجع للرئيسية. الكارت يفضل مرتبط بحسابك طالما البيانات محفوظة.</p>
         </div>}
         {!story && !error && <p role="status" className="text-sm text-ink/55">بنحمّل كروتك الخاصة…</p>}

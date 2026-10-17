@@ -33,13 +33,22 @@ export async function GET(request: NextRequest) {
     const format = searchParams.get('format');
     const search = searchParams.get('search')?.toLowerCase();
     const roleFilter = searchParams.get('role');
+    const branchId = searchParams.get('branchId');
+    const beforeAt = searchParams.get('beforeAt');
+    const beforeCustomer = searchParams.get('beforeCustomer');
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '25', 10)));
 
     // Fetch customers strictly scoped to this merchant's organization (Fail-Closed)
-    const { data: customersData, error } = await supabase
+    let query = supabase
       .from('customers')
-      .select('id, display_name, anonymous_id, email, created_at, last_seen_at, memories(id, organization_id, visit_id, optimized_url, thumbnail_url, caption, visibility, status, created_at), visits!inner(id, created_at, source, organization_id)')
-      .eq('visits.organization_id', orgId)
-      .order('last_seen_at', { ascending: false });
+      .select('id, display_name, anonymous_id, email, created_at, last_seen_at, memories(id, organization_id, visit_id, optimized_url, thumbnail_url, caption, visibility, status, created_at), visits!inner(id, created_at, source, organization_id, branch_id)')
+      .eq('visits.organization_id', orgId);
+
+    if (branchId) {
+      query = query.eq('visits.branch_id', branchId);
+    }
+
+    const { data: customersData, error } = await query.order('last_seen_at', { ascending: false });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -128,6 +137,10 @@ export async function GET(request: NextRequest) {
     if (roleFilter && roleFilter !== 'all') {
       filtered = filtered.filter(c => c.role.includes(roleFilter));
     }
+    if (beforeAt) {
+      const beforeTime = new Date(beforeAt).getTime();
+      filtered = filtered.filter(c => new Date(c.lastVisitAt).getTime() < beforeTime);
+    }
 
     // CSV format
     if (format === 'csv') {
@@ -152,6 +165,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const hasMore = filtered.length > limit;
+    const pageItems = filtered.slice(0, limit);
+    const nextCursor = hasMore && pageItems.length > 0 ? {
+      beforeAt: pageItems[pageItems.length - 1].lastVisitAt,
+      beforeCustomer: pageItems[pageItems.length - 1].id,
+    } : null;
+
     const stats = {
       totalCustomers: customers.length,
       totalStrips: customers.reduce((sum, c) => sum + c.memoryCount, 0),
@@ -161,7 +181,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      customers: filtered,
+      customers: pageItems,
+      nextCursor,
       stats,
     });
   } catch (err: any) {

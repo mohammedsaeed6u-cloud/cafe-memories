@@ -43,11 +43,19 @@ export async function POST(
     }
 
     if (campaign) {
-      await admin
+      if (campaign.status === 'ended') {
+        return NextResponse.json({ error: 'لا يمكن إعادة تفعيل حملة منتهية' }, { status: 400 });
+      }
+
+      const { error: updateErr } = await admin
         .from('campaigns')
         .update({ status: 'active', updated_at: new Date().toISOString() })
         .eq('id', id)
         .eq('organization_id', orgId);
+
+      if (updateErr) {
+        return NextResponse.json({ error: 'تعذر تحديث حالة الحملة' }, { status: 500 });
+      }
     }
 
     return NextResponse.json({
