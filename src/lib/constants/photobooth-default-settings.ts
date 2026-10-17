@@ -82,7 +82,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   stampConfig: {
     type: 'emoji',
     customEmoji: '⭐',
-    customText: 'M',
+    customText: 'S',
     knockoutLogo: true,
     inkColor: '#C89D7C',
     shape: 'circle',
@@ -91,7 +91,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
     enabled: true,
     latitude: 30.0444,
     longitude: 31.2357,
-    relevantText: 'أهلاً بك في ضيافتنا! كارت الولاء جاهز للختم والمكافأة بانتظارك ☕',
+    relevantText: 'أهلاً بك في ضيافتنا! كارت الولاء جاهز للختم والمكافأة بانتظارك ✨',
   },
   walletPassConfig: {
     colorPreset: 'dark',

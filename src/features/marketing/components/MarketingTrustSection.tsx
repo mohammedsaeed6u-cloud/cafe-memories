@@ -38,7 +38,7 @@ export function MarketingTrustSection() {
   ];
 
   return (
-    <section className="py-20 px-4 bg-[#F7F3EA] border-b-[2.5px] border-[#1B1B1E]" data-purpose="security-privacy">
+    <section className="py-20 px-4 bg-[#F7F3EA] border-b-[2.5px] border-[#1B1B1E]" data-purpose="security-privacy" id="security">
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="kicker">SECURITY & COMPLIANCE</span>

@@ -28,7 +28,7 @@ export function StampyRoiCalculator() {
   const roiMultiplier = Math.round((monthlyIncrementalRevenue / 390) * 10) / 10;
 
   return (
-    <section id="roi-calculator" className="py-20 md:py-28 px-4 bg-[#F7F3EA] border-b-[2.5px] border-[#1B1B1E] select-none">
+    <section id="roi" className="py-20 md:py-28 px-4 bg-[#F7F3EA] border-b-[2.5px] border-[#1B1B1E] select-none">
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="kicker">ROI & RETENTION CALCULATOR • حاسبة العائد التقديرية</span>

@@ -17,8 +17,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const cafeSlug = searchParams.get('cafe') || 'memories';
-  const cafeName = searchParams.get('name') || 'Memories Studio';
+  const cafeSlug = searchParams.get('cafe') || 'stampy';
+  const cafeName = searchParams.get('name') || 'Stampy Studio';
   const customerIdParam = searchParams.get('customerId') || searchParams.get('customer_id');
 
   let customerContext: { customerId?: string } | null = null;

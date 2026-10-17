@@ -562,7 +562,7 @@ export function useCustomerExperience(propCafeSlug: string): UseCustomerExperien
         role: 'ضيف مميز',
         originalUrl: photoToPublish,
         photos: accumulatedPhotos,
-        caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'Memories'} ✨☕`,
+        caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'stampy.'} ✨`,
         cafeSlug,
         liveWallConsent: consent,
       }),

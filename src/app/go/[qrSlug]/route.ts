@@ -12,7 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ qrSlug: string }> }
 ) {
   const { qrSlug } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://memories-c9w.pages.dev';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://stampy.app';
 
   try {
     const supabase = createAdminClient();

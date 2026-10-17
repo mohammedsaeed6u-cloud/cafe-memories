@@ -6,7 +6,7 @@ import { ArrowLeft, Check, Sparkles } from 'lucide-react';
 
 export function StampyContactSection() {
   return (
-    <section className="big-cta" id="get-started">
+    <section className="big-cta" id="contact">
       <div className="max-w-4xl mx-auto space-y-6">
         <span className="inline-block py-1.5 px-4 rounded-full bg-[#FAF5EB] text-[#682025] font-head text-xs font-bold uppercase tracking-wider border-2 border-[#1B1B1E] shadow-[3px_3px_0_#1B1B1E] mb-2">
           READY TO START TAPPING? • جاهز لبدء الختم؟

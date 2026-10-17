@@ -343,7 +343,7 @@ export const CustomerPhotoboothStudioTab: React.FC<Props> = ({ cx }) => {
 
       {/* Instagram Mention Prompt */}
       <InstagramMentionPrompt
-        instagramHandle={settings.branding.instagramHandle || '@memories_studio'}
+        instagramHandle={settings.branding.instagramHandle || '@stampy_studio'}
         businessName={settings.branding.name}
       />
 

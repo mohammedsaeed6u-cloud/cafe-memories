@@ -49,12 +49,11 @@ export const viewport: Viewport = {
   themeColor: '#FAF5EB',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://memories-c9w.pages.dev'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://stampy.app'),
   title: 'Stampy • منصة بطاقات الولاء ومحافظ Apple & Google للمتاجر والمقاهي',
   description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوري عبر الهاتف بدون تطبيق، شاشات عرض تفاعلية للصالة، وكروت ولاء رقمية في محفظة Apple و Google Wallet للمطاعم، الكافيهات، المتاجر، الصالونات، والفعاليات.',
   keywords: ['فوتوبوث رقمي', 'ولاء العملاء', 'استوديو تصوير للأنشطة التجارية', 'شاشات الصالة الذكية', 'بطاقات ولاء رقمية', 'تجربة العميل', 'Apple Wallet', 'Google Wallet'],
@@ -77,7 +76,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Stampy • بطاقات الولاء ومحافظ الهواتف الذكية',
     description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
-    url: 'https://memories-c9w.pages.dev',
+    url: 'https://stampy.app',
     siteName: 'Stampy',
     locale: 'ar_SA',
     type: 'website',
