@@ -6,7 +6,7 @@ import { CustomerClient } from '@/components/customer/CustomerClient';
 
 function CustomerQueryWrapper() {
   const searchParams = useSearchParams();
-  const cafeSlug = searchParams.get('cafe') || searchParams.get('slug') || 'memories';
+  const cafeSlug = searchParams.get('cafe') || searchParams.get('slug') || 'stampy';
 
   return <CustomerClient cafeSlug={cafeSlug} />;
 }

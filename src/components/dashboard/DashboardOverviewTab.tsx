@@ -125,7 +125,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                 <span>{copiedUrl ? 'تم النسخ' : 'نسخ الرابط'}</span>
               </button>
               <a
-                href={`/c?cafe=${cafeSlug}`}
+                href={`/c/${cafeSlug}`}
                 target="_blank"
                 rel="noreferrer"
                 className="px-3.5 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] text-xs font-bold border border-white/10 transition flex items-center gap-1.5"

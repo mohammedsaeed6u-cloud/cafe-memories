@@ -25,6 +25,8 @@ const SUPER_ADMIN_EMAILS = (process.env.SUPER_ADMIN_EMAILS || '')
   .filter(Boolean);
 
 const ALLOWED_ORIGINS = [
+  'https://stampy.app',
+  'https://stampy.sa',
   'https://memories-c9w.pages.dev',
   'http://localhost:3000',
   'http://localhost:3001',
@@ -32,10 +34,15 @@ const ALLOWED_ORIGINS = [
 
 function resolveAllowedOrigin(requestOrigin: string | null): string {
   if (!requestOrigin) return '*';
-  if (ALLOWED_ORIGINS.includes(requestOrigin) || requestOrigin.endsWith('.pages.dev')) {
+  if (
+    ALLOWED_ORIGINS.includes(requestOrigin) ||
+    requestOrigin.endsWith('.pages.dev') ||
+    requestOrigin.endsWith('.stampy.app') ||
+    requestOrigin.endsWith('.stampy.sa')
+  ) {
     return requestOrigin;
   }
-  return 'https://memories-c9w.pages.dev';
+  return 'https://stampy.app';
 }
 
 function applySecurityHeaders(res: NextResponse, isApi: boolean, requestOrigin?: string | null): NextResponse {

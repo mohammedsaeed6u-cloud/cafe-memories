@@ -9,6 +9,7 @@ import { AdminSubscriptionsTable } from './AdminSubscriptionsTable';
 import { AdminTelemetrySection } from './AdminTelemetrySection';
 import { AdminFeatureFlagsTable } from './AdminFeatureFlagsTable';
 import { AdminWalletQuotaModal } from './AdminWalletQuotaModal';
+import { WalletConnectorsPanel } from '@/components/admin/WalletConnectorsPanel';
 
 export function SuperAdminContent() {
   const {
@@ -55,6 +56,8 @@ export function SuperAdminContent() {
           tenants={tenants}
           onToggleFeature={handleToggleFeature}
         />
+
+        <WalletConnectorsPanel />
 
         <AdminWalletQuotaModal
           tenant={selectedWalletTenant}

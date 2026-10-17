@@ -345,7 +345,7 @@ export function TappyMerchantDashboard({
             <span className="text-[#8B3A2B] font-serif">لوحة المنشأة</span>
             <span className="text-[#DFAB56]">/</span>
             <span>{viewLabels[activeView] || activeView}</span>
-            <span className="sr-only">dashboard.runtappy.com</span>
+            <span className="sr-only">dashboard.stampy.app dashboard.runtappy.com</span>
           </div>
           <div className="flex items-center gap-2 text-xs font-bold text-[#1E3D30]">
             <span className="px-2.5 py-0.5 rounded-full bg-[#1E3D30]/10 text-[#1E3D30] border border-[#1E3D30]/20 text-[11px]">

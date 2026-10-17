@@ -123,7 +123,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
           </button>
 
           <a
-            href={`/wall/screen-1?cafe=${settings.cafeSlug || 'memories'}`}
+            href={`/wall/screen-1?cafe=${settings.cafeSlug || 'stampy'}`}
             target="_blank"
             rel="noreferrer"
             className="px-3.5 py-1.5 rounded-lg border border-white/10 hover:border-white/20 bg-[#1C1B1B] hover:bg-[#211F1F] text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition"
@@ -156,7 +156,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
           </button>
 
           <a
-            href={`/terminal?cafe=${settings.cafeSlug || 'memories'}`}
+            href={`/terminal?cafe=${settings.cafeSlug || 'stampy'}`}
             className="px-3.5 py-1.5 rounded-lg bg-[#682025]/60 hover:bg-[#682025]/80 border border-[#DFAB56]/40 text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition cursor-pointer shadow-xs"
             title="فتح محطة الكاونتر ونقاط الخدمة المستقلة"
           >
@@ -319,7 +319,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
               </button>
 
               <a
-                href={`/terminal?cafe=${settings.cafeSlug || 'memories'}`}
+                href={`/terminal?cafe=${settings.cafeSlug || 'stampy'}`}
                 className="p-2.5 rounded-lg bg-[#682025]/50 border border-[#DFAB56]/40 text-[#FBF9F5] text-xs font-bold flex items-center justify-center gap-1.5"
               >
                 <Store className="w-3.5 h-3.5 text-[#DFAB56]" />
@@ -327,7 +327,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
               </a>
 
               <a
-                href={`/wall/screen-1?cafe=${settings.cafeSlug || 'memories'}`}
+                href={`/wall/screen-1?cafe=${settings.cafeSlug || 'stampy'}`}
                 target="_blank"
                 rel="noreferrer"
                 className="p-2.5 rounded-lg bg-[#1C1B1B] border border-white/10 text-[#FBF9F5] text-xs font-bold flex items-center justify-center gap-1.5"
