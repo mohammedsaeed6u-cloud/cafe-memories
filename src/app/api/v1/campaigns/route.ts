@@ -13,7 +13,7 @@ const DEMO_CAMPAIGNS = [
     config: {
       channel: 'wallet' as const,
       audience: 'all' as const,
-      message: 'قهوتك المفضلة بانتظارك اليوم في ستامبي كافيه ☕',
+      message: 'أهلاً بك مجدداً! كارت الذكرى الخاص بك جاهز للتوثيق في زيارتك القادمة ✨',
     },
     counts: {
       accepted: 0,

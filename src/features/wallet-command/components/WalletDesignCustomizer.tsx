@@ -151,11 +151,11 @@ export function WalletDesignCustomizer({
       <div className="pt-4 border-t border-[rgba(255,255,255,0.1)]/60 space-y-4">
         <div>
           <h4 className="text-sm font-bold text-[#FBF9F5] flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#c92a54]" />
+            <Sparkles className="w-4 h-4 text-[#DFAB56]" />
             <span>خلفية الكارت الفاخرة (Card Background & Artwork)</span>
           </h4>
-          <p className="text-xs text-stone-500 mt-0.5">
-            ارفع صورة هوية المقهى أو اختر من تصاميم ستامبي الفاخرة لكروت Apple Wallet و Google Wallet بمقاس 690×1010
+          <p className="text-xs text-stone-400 mt-0.5">
+            ارفع شعار أو هوية المنشأة أو اختر من تصاميم ستامبي الفاخرة لكروت Apple Wallet و Google Wallet بمقاس 690×1010
           </p>
         </div>
 

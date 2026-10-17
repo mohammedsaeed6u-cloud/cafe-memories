@@ -37,7 +37,7 @@ export function useWalletCommandCenter(
     enabled: true,
     latitude: 30.0444,
     longitude: 31.2357,
-    relevantText: `أهلاً بك في ${settings.branding?.name || 'مقهى ولاء'}! كارت الولاء جاهز للختم ☕`,
+    relevantText: `أهلاً بك في ${settings.branding?.name || 'المكان'}! كارت الذكرى والولاء جاهز للتوثيق ✨`,
   };
 
   const [geofenceEnabled, setGeofenceEnabled] = useState<boolean>(initialLoc.enabled);
@@ -45,7 +45,7 @@ export function useWalletCommandCenter(
   const [longitude, setLongitude] = useState<number>(initialLoc.longitude || 31.2357);
   const [altitude, setAltitude] = useState<number | undefined>(initialLoc.altitude);
   const [relevantText, setRelevantText] = useState<string>(
-    initialLoc.relevantText || `أهلاً بك في ${settings.branding?.name || 'مقهى ولاء'}! كارت الولاء جاهز للختم ☕`
+    initialLoc.relevantText || `أهلاً بك في ${settings.branding?.name || 'المكان'}! كارت الذكرى والولاء جاهز للتوثيق ✨`
   );
   const [isDetectingGps, setIsDetectingGps] = useState<boolean>(false);
   const [gpsNotice, setGpsNotice] = useState<string | null>(null);

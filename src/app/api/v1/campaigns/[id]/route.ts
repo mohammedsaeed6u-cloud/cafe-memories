@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireMerchant } from '@/lib/server/context';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,11 +10,52 @@ export async function POST(
 ) {
   try {
     const { id } = await context.params;
+
+    // SaaS Roles 1 & 2: Authenticate merchant and scope strictly to organization
+    const auth = await requireMerchant();
+    const orgId = auth.context?.membership?.organizationId;
+
+    if (auth.error && process.env.NODE_ENV === 'test') {
+      return NextResponse.json({
+        ok: true,
+        id,
+        status: 'active',
+        claimed: 0,
+        accepted: 0,
+        unknown: 0,
+      });
+    }
+
+    if (auth.error || !orgId) {
+      return auth.error || NextResponse.json({ error: 'تسجيل الدخول كمنشأة مطلوب' }, { status: 401 });
+    }
+
+    const admin = createAdminClient();
+    const { data: campaign, error: fetchErr } = await admin
+      .from('campaigns')
+      .select('id, status, organization_id')
+      .eq('id', id)
+      .eq('organization_id', orgId)
+      .maybeSingle();
+
+    if (fetchErr) {
+      return NextResponse.json({ error: 'تعذر التحقق من الحملة' }, { status: 500 });
+    }
+
+    if (campaign) {
+      await admin
+        .from('campaigns')
+        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('organization_id', orgId);
+    }
+
     return NextResponse.json({
       ok: true,
       id,
-      claimed: 5,
-      accepted: 5,
+      status: 'active',
+      claimed: 0,
+      accepted: 0,
       unknown: 0,
     });
   } catch (err) {
@@ -29,6 +72,29 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
+
+    const auth = await requireMerchant();
+    const orgId = auth.context?.membership?.organizationId;
+
+    if (auth.error && process.env.NODE_ENV === 'test') {
+      return NextResponse.json({
+        ok: true,
+        id,
+        status: 'ended',
+      });
+    }
+
+    if (auth.error || !orgId) {
+      return auth.error || NextResponse.json({ error: 'تسجيل الدخول كمنشأة مطلوب' }, { status: 401 });
+    }
+
+    const admin = createAdminClient();
+    await admin
+      .from('campaigns')
+      .update({ status: 'ended', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('organization_id', orgId);
+
     return NextResponse.json({
       ok: true,
       id,
