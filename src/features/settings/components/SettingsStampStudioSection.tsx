@@ -31,7 +31,7 @@ export const SettingsStampStudioSection: React.FC<Props> = ({ vm }) => {
         <div>
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-amber-800" />
-            <h4 className="font-bold text-sm text-[#FBF9F5]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+            <h4 className="font-bold text-sm text-[#FBF9F5]" style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}>
               4. استوديو تخصيص الختم للمشروع (Bespoke Stamp Studio)
             </h4>
           </div>

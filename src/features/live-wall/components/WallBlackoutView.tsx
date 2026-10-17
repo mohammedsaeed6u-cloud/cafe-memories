@@ -37,7 +37,7 @@ export const WallBlackoutView: React.FC<Props> = ({ wall }) => {
         </div>
         <div className="space-y-2">
           <h2
-            style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+            style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}
             className="text-3xl font-bold text-[#FBF9F5] tracking-tight"
           >
             {brandName}

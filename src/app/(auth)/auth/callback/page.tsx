@@ -154,7 +154,7 @@ export default function AuthCallbackPage() {
             <AlertCircle className="w-6 h-6" />
           </div>
           <h2
-            style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+            style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}
             className="text-base sm:text-lg font-bold text-[#FBF9F5]"
           >
             تعذر إكمال تسجيل الدخول
@@ -180,7 +180,7 @@ export default function AuthCallbackPage() {
         <div className="max-w-sm w-full p-8 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl space-y-4 relative z-10 backdrop-blur-xl">
           <div className="w-12 h-12 rounded-full border-3 border-[#c92a54] border-t-transparent animate-spin mx-auto" />
           <h2
-            style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+            style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}
             className="text-base sm:text-lg font-bold text-[#FBF9F5] tracking-tight"
           >
             {isRedirecting ? 'تم التحقق بنجاح!' : 'جاري تأكيد حسابك...'}

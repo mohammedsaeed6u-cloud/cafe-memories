@@ -90,7 +90,7 @@ export function IosSaveImageModal({
             </div>
             <div>
               <h3
-                style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+                style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}
                 className="text-sm font-bold text-[#FBF9F5]"
               >
                 {title}

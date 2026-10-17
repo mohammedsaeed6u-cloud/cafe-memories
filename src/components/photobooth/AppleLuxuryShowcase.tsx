@@ -181,7 +181,7 @@ export function AppleLuxuryShowcase({
                   <div className="flex items-center gap-2.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#c92a54] animate-ping" />
                     <div>
-                      <h4 className="text-xs sm:text-sm font-bold text-[#FBF9F5]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+                      <h4 className="text-xs sm:text-sm font-bold text-[#FBF9F5]" style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}>
                         شاشة الصالة المباشرة • Memories Wall
                       </h4>
                       <p className="text-[10px] text-[#A19E9B] font-mono">LIVE GUEST MEMORIES IN SALON</p>

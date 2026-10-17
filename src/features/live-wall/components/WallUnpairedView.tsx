@@ -60,7 +60,7 @@ export const WallUnpairedView: React.FC<Props> = ({ wall }) => {
                 SMART TV LIVE SIGNAGE
               </span>
               <h1
-                style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+                style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}
                 className="text-2xl sm:text-3xl font-bold text-[#FBF9F5] tracking-tight"
               >
                 اقتران شاشة التلفزيون الذكية

@@ -87,7 +87,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
 
           <div className="space-y-1.5">
             <h2
-              style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+              style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}
               className="text-2xl sm:text-3xl font-bold text-[#FBF9F5] tracking-tight"
             >
               {brandName}
@@ -220,7 +220,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2
-                style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+                style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}
                 className="text-xl font-bold text-[#FBF9F5]"
               >
                 نشاط المنشأة اليوم (What Happened Today)

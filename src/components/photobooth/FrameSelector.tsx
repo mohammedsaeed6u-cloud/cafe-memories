@@ -20,7 +20,7 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
       <div className="flex items-center gap-2 mb-3">
         <Sparkles className="w-4 h-4 text-amber-600" />
         <h4
-          style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+          style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}
           className="text-xs font-bold text-[#FBF9F5] tracking-wide"
         >
           اختر إطار الفوتوبوث الخاص بك:

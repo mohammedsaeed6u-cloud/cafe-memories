@@ -24,7 +24,7 @@ export const SettingsBroadcastSection: React.FC<Props> = ({ vm }) => {
         <div className="flex items-center gap-2">
           <Bell className="w-5 h-5 text-amber-800" />
           <div>
-            <h4 className="font-bold text-sm text-[#FBF9F5]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+            <h4 className="font-bold text-sm text-[#FBF9F5]" style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}>
               5. مركز بث إشعارات المحفظة الرقمية (Wallet Push Broadcast Center)
             </h4>
             <p className="text-xs text-stone-500">

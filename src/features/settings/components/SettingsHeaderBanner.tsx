@@ -18,7 +18,7 @@ export const SettingsHeaderBanner: React.FC<Props> = ({
         <div>
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-[#c92a54]" />
-            <h3 className="font-bold text-base text-[#FBF9F5]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+            <h3 className="font-bold text-base text-[#FBF9F5]" style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}>
               إعدادات وهوية المنشأة والمشروع
             </h3>
             <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300 text-[10px] font-mono font-bold">

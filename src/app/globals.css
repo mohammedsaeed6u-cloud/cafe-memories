@@ -20,7 +20,7 @@
   --color-border-hairline: rgba(45, 31, 23, 0.12);
   --color-border-accent: rgba(184, 58, 38, 0.35);
 
-  --font-playfair: var(--font-playfair), 'Playfair Display', Georgia, serif;
+  --font-playfair: var(--font-jakarta), 'Plus Jakarta Sans', var(--font-cairo), sans-serif;
   --font-jakarta: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
   --font-cairo: var(--font-cairo), 'Cairo', sans-serif;
 
@@ -39,7 +39,7 @@
   --color-roseBorder: #f4c7d2;
 
   --font-script: var(--font-caveat, 'Caveat'), cursive;
-  --font-display: var(--font-playfair, 'Playfair Display'), Georgia, serif;
+  --font-display: var(--font-jakarta, 'Plus Jakarta Sans'), var(--font-cairo), sans-serif;
   --font-epilogue: 'Epilogue', sans-serif;
   --font-body: 'Work Sans', sans-serif;
   /* Stampy Official Design System Colors (DESIGN_SYSTEM.md v1.0.0) */

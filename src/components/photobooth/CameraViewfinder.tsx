@@ -303,7 +303,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
             <span
               key={countdown}
               className="text-8xl font-black text-[#c92a54] drop-shadow-[0_4px_30px_rgba(201, 42, 84,0.8)] scale-100 animate-in zoom-in-50 duration-200"
-              style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+              style={{ fontFamily: 'var(--font-jakarta), var(--font-cairo), sans-serif' }}
             >
               {countdown}
             </span>
