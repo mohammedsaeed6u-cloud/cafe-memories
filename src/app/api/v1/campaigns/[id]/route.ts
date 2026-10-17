@@ -15,17 +15,6 @@ export async function POST(
     const auth = await requireMerchant();
     const orgId = auth.context?.membership?.organizationId;
 
-    if (auth.error && process.env.NODE_ENV === 'test') {
-      return NextResponse.json({
-        ok: true,
-        id,
-        status: 'active',
-        claimed: 0,
-        accepted: 0,
-        unknown: 0,
-      });
-    }
-
     if (auth.error || !orgId) {
       return auth.error || NextResponse.json({ error: 'تسجيل الدخول كمنشأة مطلوب' }, { status: 401 });
     }
@@ -83,14 +72,6 @@ export async function PATCH(
 
     const auth = await requireMerchant();
     const orgId = auth.context?.membership?.organizationId;
-
-    if (auth.error && process.env.NODE_ENV === 'test') {
-      return NextResponse.json({
-        ok: true,
-        id,
-        status: 'ended',
-      });
-    }
 
     if (auth.error || !orgId) {
       return auth.error || NextResponse.json({ error: 'تسجيل الدخول كمنشأة مطلوب' }, { status: 401 });

@@ -113,19 +113,6 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      if (process.env.NODE_ENV === 'test') {
-        return NextResponse.json({
-          ok: true,
-          campaign: {
-            id: `camp-${Date.now()}`,
-            name: String(name).slice(0, 60),
-            status: 'draft',
-            createdAt: new Date().toISOString(),
-            config: campaignConfig,
-            counts: { accepted: 0, unknown: 0, processing: 0 },
-          },
-        });
-      }
       return NextResponse.json({ error: 'تسجيل الدخول كمنشأة مطلوب لحفظ مسودة الحملة' }, { status: 401 });
     }
 

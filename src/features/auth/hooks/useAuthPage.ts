@@ -13,7 +13,13 @@ function getSafeRedirectTarget(defaultTarget: string): string {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get('redirect');
-    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+    if (
+      redirect &&
+      redirect.startsWith('/') &&
+      !redirect.startsWith('//') &&
+      !redirect.includes('\\') &&
+      !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(redirect)
+    ) {
       return redirect;
     }
   }
