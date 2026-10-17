@@ -57,6 +57,7 @@ export function StampyApertureIcon({
     </svg>
   );
 }
+export const StampyApertureMark = StampyApertureIcon;
 
 /**
  * Authentic Ticket Stub Mark with 4 Corner Fillet Cutouts, 7 Scallops, 5 Spectral Stripes & 6-Blade Aperture
@@ -163,6 +164,7 @@ export function StampyIcon({
     </svg>
   );
 }
+export const StampyTicketStubMark = StampyIcon;
 
 /**
  * Full Stampy Brand Logo Component (DESIGN_SYSTEM.md)

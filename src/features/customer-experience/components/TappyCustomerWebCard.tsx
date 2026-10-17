@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Sparkles,
   Gift,
@@ -390,6 +391,27 @@ export function TappyCustomerWebCard({
           </button>
         </div>
       )}
+
+      {/* 5.1 KEEPSAKES ARCHIVE DIRECT LINK */}
+      <div className="w-full mt-2.5">
+        <Link
+          href={`/c/${cafeSlug || 'stampy'}/keepsakes`}
+          className="w-full p-3.5 bg-white/80 hover:bg-white border border-[#DFAB56]/40 rounded-2xl shadow-xs hover:shadow-sm flex items-center justify-between text-xs font-bold text-[#3D2314] transition-all group active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#DFAB56]/20 text-[#682025] flex items-center justify-center">
+              <Award className="w-4 h-4 text-[#682025]" />
+            </div>
+            <div className="text-right">
+              <span className="font-bold text-xs text-[#3D2314] block">ألبوم الذكريات والأختام السابقة</span>
+              <span className="text-[10px] text-[#6E4E38]">تصفح شرائط الصور المحفوظة والجوائز المستلمة</span>
+            </div>
+          </div>
+          <span className="text-[11px] font-mono text-[#682025] group-hover:translate-x-[-2px] transition-transform">
+            عرض الألبوم ←
+          </span>
+        </Link>
+      </div>
 
       {/* 6. INTERACTIVE TAP SIMULATOR (TESTER TOOLBAR) */}
       {(showSimulator ?? (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test')) && (
