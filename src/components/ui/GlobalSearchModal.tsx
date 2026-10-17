@@ -192,12 +192,12 @@ export function GlobalSearchModal({
       aria-label="البحث في المنظومة"
     >
       <div
-        className="w-full max-w-xl rounded-3xl bg-[#FAF6EE] dark:bg-[#142721] border border-[#E8DCC6] dark:border-[#2A4F44] shadow-2xl overflow-hidden font-cairo text-right animate-in zoom-in-95 duration-150"
+        className="w-full max-w-xl rounded-3xl bg-[#FAF5EB] dark:bg-[#20304E] border border-[#EADDC4] dark:border-[#3D2314]/30] shadow-2xl overflow-hidden font-cairo text-right animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="flex items-center px-4 py-3.5 border-b border-[#E8DCC6] dark:border-[#2A4F44] gap-3">
-          <Search className="w-5 h-5 text-[#8A9A7B] shrink-0" />
+        <div className="flex items-center px-4 py-3.5 border-b border-[#EADDC4] dark:border-[#3D2314]/30] gap-3">
+          <Search className="w-5 h-5 text-[#527E78] shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -207,17 +207,17 @@ export function GlobalSearchModal({
               setSelectedIndex(0);
             }}
             placeholder="ابحث في المنظومة (الباقات، الشاشة الحية، كارت العميل...)"
-            className="flex-1 bg-transparent border-none outline-none text-sm text-[#3B2F2A] dark:text-[#FAF6EE] placeholder-[#3B2F2A]/40 dark:placeholder-[#FAF6EE]/40 font-medium"
+            className="flex-1 bg-transparent border-none outline-none text-sm text-[#3D2314] dark:text-[#FAF5EB] placeholder-[#3D2314]/40 dark:placeholder-[#FAF5EB]/40 font-medium"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="p-1 text-[#3B2F2A]/60 dark:text-[#FAF6EE]/60 hover:text-[#3B2F2A] cursor-pointer"
+              className="p-1 text-[#3D2314]/60 dark:text-[#FAF5EB]/60 hover:text-[#3D2314] cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           )}
-          <span className="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#E8DCC6] dark:bg-[#1E3A32] text-[#3B2F2A] dark:text-[#FAF6EE]">
+          <span className="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#EADDC4] dark:bg-[#3D2314] text-[#3D2314] dark:text-[#FAF5EB]">
             ESC
           </span>
         </div>
@@ -225,7 +225,7 @@ export function GlobalSearchModal({
         {/* Results List */}
         <div className="max-h-80 overflow-y-auto p-2 space-y-1">
           {filtered.length === 0 ? (
-            <div className="py-12 text-center text-xs text-[#3B2F2A]/60 dark:text-[#FAF6EE]/60">
+            <div className="py-12 text-center text-xs text-[#3D2314]/60 dark:text-[#FAF5EB]/60">
               لم نجد أي نتائج مطابقة لـ &quot;{query}&quot;
             </div>
           ) : (
@@ -239,16 +239,16 @@ export function GlobalSearchModal({
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`w-full p-3 rounded-2xl flex items-center justify-between gap-3 text-right transition-colors cursor-pointer ${
                     isSelected
-                      ? 'bg-[#1E3A32] text-[#FAF6EE]'
-                      : 'hover:bg-[#E8DCC6]/40 dark:hover:bg-[#1E3A32]/40 text-[#3B2F2A] dark:text-[#FAF6EE]'
+                      ? 'bg-[#3D2314] text-[#FAF5EB]'
+                      : 'hover:bg-[#EADDC4]/40 dark:hover:bg-[#3D2314]/40 text-[#3D2314] dark:text-[#FAF5EB]'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                         isSelected
-                          ? 'bg-[#FAF6EE] text-[#1E3A32]'
-                          : 'bg-[#E8DCC6] dark:bg-[#1E3A32] text-[#1E3A32] dark:text-[#FAF6EE]'
+                          ? 'bg-[#FAF5EB] text-[#3D2314]'
+                          : 'bg-[#EADDC4] dark:bg-[#3D2314] text-[#3D2314] dark:text-[#FAF5EB]'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -259,8 +259,8 @@ export function GlobalSearchModal({
                         <span
                           className={`text-[9px] px-2 py-0.5 rounded-full font-mono ${
                             isSelected
-                              ? 'bg-white/20 text-[#FAF6EE]'
-                              : 'bg-[#8A9A7B]/15 text-[#8A9A7B]'
+                              ? 'bg-white/20 text-[#FAF5EB]'
+                              : 'bg-[#527E78]/15 text-[#527E78]'
                           }`}
                         >
                           {item.category}
@@ -268,7 +268,7 @@ export function GlobalSearchModal({
                       </div>
                       <p
                         className={`text-[11px] truncate mt-0.5 ${
-                          isSelected ? 'text-[#E8DCC6]' : 'text-[#3B2F2A]/70 dark:text-[#FAF6EE]/70'
+                          isSelected ? 'text-[#EADDC4]' : 'text-[#3D2314]/70 dark:text-[#FAF5EB]/70'
                         }`}
                       >
                         {item.description}
@@ -277,7 +277,7 @@ export function GlobalSearchModal({
                   </div>
                   <ArrowLeft
                     className={`w-4 h-4 shrink-0 transition-transform ${
-                      isSelected ? '-translate-x-1 text-[#B85C43]' : 'opacity-40'
+                      isSelected ? '-translate-x-1 text-[#B83A26]' : 'opacity-40'
                     }`}
                   />
                 </button>
@@ -287,12 +287,12 @@ export function GlobalSearchModal({
         </div>
 
         {/* Footer shortcuts */}
-        <div className="p-3 border-t border-[#E8DCC6] dark:border-[#2A4F44] bg-[#FAF6EE]/50 dark:bg-[#142721]/50 flex items-center justify-between text-[11px] text-[#3B2F2A]/60 dark:text-[#FAF6EE]/60 font-mono">
+        <div className="p-3 border-t border-[#EADDC4] dark:border-[#3D2314]/30] bg-[#FAF5EB]/50 dark:bg-[#20304E]/50 flex items-center justify-between text-[11px] text-[#3D2314]/60 dark:text-[#FAF5EB]/60 font-mono">
           <div className="flex items-center gap-3">
             <span>↑↓ للتنقل</span>
             <span>↵ للاختيار</span>
           </div>
-          <span>memories search </span>
+          <span>stampy. search </span>
         </div>
       </div>
     </div>

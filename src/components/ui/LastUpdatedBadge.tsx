@@ -16,11 +16,11 @@ export function LastUpdatedBadge({
 }: LastUpdatedBadgeProps) {
   return (
     <div
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8DCC6]/40 dark:bg-[#1E3A32]/60 border border-[#E8DCC6] dark:border-[#2A4F44] text-[11px] font-medium text-[#3B2F2A]/80 dark:text-[#FAF6EE]/80 font-cairo ${className}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EADDC4]/40 dark:bg-[#3D2314]/60 border border-[#EADDC4] dark:border-[#3D2314]/30] text-[11px] font-medium text-[#3D2314]/80 dark:text-[#FAF5EB]/80 font-cairo ${className}`}
     >
-      <Clock className="w-3 h-3 text-[#B85C43]" />
+      <Clock className="w-3 h-3 text-[#B83A26]" />
       <span>آخر تحديث:</span>
-      <time dateTime={isoDate} className="font-bold text-[#1E3A32] dark:text-[#FAF6EE]">
+      <time dateTime={isoDate} className="font-bold text-[#3D2314] dark:text-[#FAF5EB]">
         {dateString}
       </time>
     </div>

@@ -27,12 +27,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const variantStyles = {
-      primary: 'bg-[#B85C43] text-white hover:bg-[#A04F38] active:bg-[#8D442E] shadow-sm focus-visible:ring-[#B85C43]',
-      secondary: 'bg-[#1E3A32] text-white hover:bg-[#162B25] active:bg-[#0F1E19] shadow-sm focus-visible:ring-[#1E3A32]',
+      primary: 'bg-[#B83A26] text-white hover:bg-[#A0301F] active:bg-[#852315] shadow-sm focus-visible:ring-[#B83A26]',
+      secondary: 'bg-[#3D2314] text-white hover:bg-[#2A180E] active:bg-[#1F110A] shadow-sm focus-visible:ring-[#3D2314]',
       destructive: 'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 shadow-sm focus-visible:ring-rose-500',
-      outline: 'border border-[#E8DCC6] bg-transparent text-[#3B2F2A] hover:bg-[#FAF6EE] dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800 focus-visible:ring-stone-400',
-      ghost: 'bg-transparent text-[#3B2F2A] hover:bg-[#FAF6EE] dark:text-stone-200 dark:hover:bg-stone-800 focus-visible:ring-stone-400',
-      link: 'text-[#B85C43] underline-offset-4 hover:underline p-0 h-auto font-medium focus-visible:ring-offset-0',
+      outline: 'border border-[#EADDC4] bg-transparent text-[#3D2314] hover:bg-[#FAF5EB] dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800 focus-visible:ring-[#DFAB56]',
+      ghost: 'bg-transparent text-[#3D2314] hover:bg-[#FAF5EB] dark:text-stone-200 dark:hover:bg-stone-800 focus-visible:ring-[#DFAB56]',
+      link: 'text-[#B83A26] underline-offset-4 hover:underline p-0 h-auto font-medium focus-visible:ring-offset-0',
     }[variant];
 
     const sizeStyles = {

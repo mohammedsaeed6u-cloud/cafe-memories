@@ -43,7 +43,7 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
   }[size];
 
   // Clean fallback name
-  const displayName = cafeName?.replace(/•s*memoriess*studio/gi, '').trim() || 'متجر ولاء';
+  const displayName = cafeName?.replace(/•\s*(memories|stampy)\s*studio/gi, '').trim() || 'متجر ولاء';
 
   return (
     <div
@@ -101,7 +101,7 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
         >
           <StampyIcon size={12} color="#D97706" />
           <span className="text-[9px] font-semibold tracking-wide">
-            Powered by <strong className="font-extrabold text-stone-700 dark:text-stone-300">Stampy</strong>
+            Powered by <strong className="font-extrabold text-stone-700 dark:text-stone-300">stampy.</strong>
           </span>
         </div>
       )}

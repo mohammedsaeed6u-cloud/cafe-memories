@@ -672,7 +672,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             <div className="flex flex-col items-center mt-2 opacity-85">
               <TicketBarcodeSvg width={130} height={18} color="#4A121A" />
               <span className="text-[7px] font-mono tracking-widest text-[#4A121A] mt-0.5 font-bold">
-                #MEMORIES-HOSPITALITY • VERIFIED VISIT
+                #STAMPY-HOSPITALITY • VERIFIED VISIT
               </span>
             </div>
           </div>
@@ -724,7 +724,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             {/* Watermark branding */}
             <div className="text-center pt-1 border-t border-white/10">
               <span className="text-[7.5px] font-mono text-white/40 tracking-wider">
-                memories.cafe/playlist
+                stampy.app/playlist
               </span>
             </div>
           </div>
@@ -961,7 +961,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
                 className="mt-1 px-2.5 py-1 rounded-full text-[9px] font-mono font-bold border"
                 style={{ borderColor: effectiveAccent, color: effectiveAccent }}
               >
-                {widthCm}×{heightCm} CM • MEMORIES CLUB
+                {widthCm}×{heightCm} CM • STAMPY CLUB
               </div>
             </div>
           </div>

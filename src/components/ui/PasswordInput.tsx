@@ -24,7 +24,7 @@ export function PasswordInput({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-xs font-bold text-[#3B2F2A] dark:text-[#FAF6EE] mb-1.5 cursor-pointer"
+          className="block text-xs font-bold text-[#3D2314] dark:text-[#FAF5EB] mb-1.5 cursor-pointer"
         >
           {label}
         </label>
@@ -33,7 +33,7 @@ export function PasswordInput({
         <input
           id={inputId}
           type={showPassword ? 'text' : 'password'}
-          className={`w-full py-3 pr-4 pl-11 rounded-2xl bg-[#FAF6EE] dark:bg-[#1E3A32] border border-[#E8DCC6] dark:border-[#2A4F44] text-xs text-[#3B2F2A] dark:text-[#FAF6EE] placeholder-[#3B2F2A]/40 dark:placeholder-[#FAF6EE]/40 focus:outline-none focus:ring-2 focus:ring-[#B85C43] transition-all ${className}`}
+          className={`w-full py-3 pr-4 pl-11 rounded-2xl bg-[#FAF5EB] dark:bg-[#3D2314] border border-[#EADDC4] dark:border-[#3D2314]/30] text-xs text-[#3D2314] dark:text-[#FAF5EB] placeholder-[#3D2314]/40 dark:placeholder-[#FAF5EB]/40 focus:outline-none focus:ring-2 focus:ring-[#B83A26] transition-all ${className}`}
           {...props}
         />
         <button
@@ -41,7 +41,7 @@ export function PasswordInput({
           onClick={() => setShowPassword(!showPassword)}
           aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
           title={showPassword ? 'إخفاء' : 'إظهار'}
-          className="absolute left-3 p-1.5 rounded-lg text-[#3B2F2A]/60 dark:text-[#FAF6EE]/60 hover:text-[#1E3A32] dark:hover:text-[#FAF6EE] transition cursor-pointer"
+          className="absolute left-3 p-1.5 rounded-lg text-[#3D2314]/60 dark:text-[#FAF5EB]/60 hover:text-[#3D2314] dark:hover:text-[#FAF5EB] transition cursor-pointer"
         >
           {showPassword ? (
             <EyeOff className="w-4 h-4" />

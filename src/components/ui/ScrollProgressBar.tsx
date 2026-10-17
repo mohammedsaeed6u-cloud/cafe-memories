@@ -32,7 +32,7 @@ export function ScrollProgressBar() {
       aria-label="نسبة قراءة الصفحة"
     >
       <div
-        className="h-full bg-gradient-to-r from-[#B85C43] via-[#8A9A7B] to-[#1E3A32] transition-all duration-100 ease-out"
+        className="h-full bg-gradient-to-r from-[#B83A26] via-[#DFAB56] to-[#3D2314] transition-all duration-100 ease-out"
         style={{ width: `${scrollProgress}%` }}
       />
     </div>
