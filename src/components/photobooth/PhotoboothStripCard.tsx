@@ -415,22 +415,9 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     );
   };
 
-  return (
-    <div className={`flex flex-col items-center ${className}`}>
-      {isFlipped !== undefined && (
-        <div className="relative w-full flex justify-center" style={{ perspective: '1400px' }}>
-          <div
-            className="relative transition-transform duration-700 ease-in-out motion-reduce:transition-none"
-            style={{
-              transformStyle: 'preserve-3d',
-              transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            }}
-          >
-            {/* FRONT FACE */}
-            <div style={{ backfaceVisibility: 'hidden' }}>
-      {/* Printable Base Card with Dynamic Visual Themes */}
-      <div
-        id="printable-strip"
+  const cardFront = (
+    <div
+      id="printable-strip"
         ref={cardContainerRef}
         style={{
           backgroundColor: isLuxuryGlass ? undefined : effectiveBg,
@@ -887,11 +874,34 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
               <span className="flex-1 bg-blue-500" />
             </div>
             <div className="text-[9.5px] italic font-serif opacity-80 tracking-wider text-stone-700">
-              {frame.customText || branding.tagline || 'special coffee memory'}
+              {frame.customText || branding.tagline || 'special memory & keepsakes'}
             </div>
           </div>
         )}
       </div>
+    );
+
+    if (isFlipped === undefined) {
+      return (
+        <div className={`flex flex-col items-center ${className}`}>
+          {cardFront}
+        </div>
+      );
+    }
+
+    return (
+      <div className={`flex flex-col items-center ${className}`}>
+        <div className="relative w-full flex justify-center" style={{ perspective: '1400px' }}>
+          <div
+            className="relative transition-transform duration-700 ease-in-out motion-reduce:transition-none"
+            style={{
+              transformStyle: 'preserve-3d',
+              transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            }}
+          >
+            {/* FRONT FACE */}
+            <div style={{ backfaceVisibility: 'hidden' }}>
+              {cardFront}
             </div>
 
             {/* BACK FACE: themed business identity + gift terms (mirrors the front's effective theme) */}
@@ -956,7 +966,6 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
 };
