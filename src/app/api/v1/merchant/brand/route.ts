@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     if (isDevPreview) {
       return NextResponse.json({
         brand: {
-          name: 'ستامبي كافيه',
+          name: 'ستامبي',
           tagline: 'ذكريات كورية فاخرة مع كل زيارة',
           primaryColor: '#682025',
           accentColor: '#DFAB56',

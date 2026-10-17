@@ -31,7 +31,7 @@ export const CustomerExperienceContent: React.FC<Props> = ({ cx }) => {
           </div>
         ) : (
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF5EB] border border-[#DFAB56]/30 shadow-xs text-xs font-bold text-[#6E4E38]">
-            <span>☕ ضيف كافيه {cx.settings.branding?.name || 'الذكريات'}</span>
+            <span>✨ ضيف {cx.settings.branding?.name || 'المنشأة'}</span>
           </div>
         )}
 
@@ -63,7 +63,7 @@ export const CustomerExperienceContent: React.FC<Props> = ({ cx }) => {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#DFAB56] animate-pulse" />
                 <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#3D2314]">
-                  استوديو الذكريات الكورية (4-Cuts) • التقط وبث لشاشة الكافيه
+                  استوديو الذكريات الكورية (4-Cuts) • التقط واعرض في الصالة
                 </h3>
               </div>
               <span className="text-[10px] font-mono font-bold text-[#682025] bg-[#FAF5EB] px-2.5 py-0.5 rounded-full border border-[#DFAB56]/40 shadow-xs">

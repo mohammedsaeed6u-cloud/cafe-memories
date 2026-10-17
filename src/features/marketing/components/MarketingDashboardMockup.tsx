@@ -24,7 +24,7 @@ import {
 export function MarketingDashboardMockup() {
   const [activeTab, setActiveTab] = useState<'insights' | 'card' | 'promotions'>('insights');
   const [selectedColor, setSelectedColor] = useState<string>('#682025');
-  const [selectedIcon, setSelectedIcon] = useState<string>('☕');
+  const [selectedIcon, setSelectedIcon] = useState<string>('✦');
   const [stampsGoal, setStampsGoal] = useState<number>(10);
   const [doubleStampsActive, setDoubleStampsActive] = useState<boolean>(true);
   const [winBackActive, setWinBackActive] = useState<boolean>(true);
@@ -72,7 +72,7 @@ export function MarketingDashboardMockup() {
           SEE YOUR WHOLE SHOP <span className="purp">IN REAL TIME.</span>
         </h2>
         <p className="sub-poster center">
-          Who came in today. Who's two taps from a free coffee. Who hasn't visited in a month. All live, all yours.
+          Who came in today. Who's two taps from their free reward. Who hasn't visited in a month. All live, all yours.
           <br className="hidden sm:inline" />
           شاهد حركة عملائك لحظياً، صمم كارتك بضغطة زر، وبث عروضك لآلاف المحافظ في ثوانٍ.
         </p>
@@ -132,7 +132,7 @@ export function MarketingDashboardMockup() {
                 </div>
                 <div>
                   <h4 className="font-head text-sm font-bold text-[#1B1B1E] uppercase tracking-wide">
-                    Stampy Specialty Coffee
+                    Stampy Flagship Studio
                   </h4>
                   <span className="text-[10px] text-[#8b7aaa] block font-semibold">الفرع الرئيسي • الرياض</span>
                 </div>
@@ -523,7 +523,7 @@ export function MarketingDashboardMockup() {
                             <span className="text-[10px] font-mono text-white/70 block uppercase">
                               LOYALTY PASS
                             </span>
-                            <h4 className="font-bold text-sm tracking-tight">Espresso Lab</h4>
+                            <h4 className="font-bold text-sm tracking-tight">Stampy Flagship Studio</h4>
                           </div>
                         </div>
                         <span className="text-xs font-bold bg-[#f5c842] text-[#1B1B1E] px-2 py-0.5 rounded-full font-mono">

@@ -56,7 +56,7 @@ export const CustomerPhotoboothStudioTab: React.FC<Props> = ({ cx }) => {
     handleWallConsent(true);
     SoundEffectsService.playRewardCelebration();
     const tableText = cx.tableNumber ? ` من طاولة ${cx.tableNumber}` : '';
-    setCastSuccessMsg(`صورتك تبث الآن${tableText} على شاشة الكافيه الكبيرة! انظر إلى الشاشة 📺✨`);
+    setCastSuccessMsg(`صورتك تبث الآن${tableText} على شاشة الصالة الكبيرة! انظر إلى الشاشة 📺✨`);
     setTimeout(() => setCastSuccessMsg(null), 5000);
   };
 
@@ -148,10 +148,10 @@ export const CustomerPhotoboothStudioTab: React.FC<Props> = ({ cx }) => {
             <button
               type="button"
               onClick={handleCastToLiveWall}
-              className="w-full py-2.5 px-3 rounded-xl bg-[#682025] hover:bg-[#52171B] text-[#FAF5EB] font-bold text-xs flex items-center justify-center gap-2 border border-[#DFAB56]/40 shadow-xs cursor-pointer transition-all active:scale-95"
+              className="w-full py-2.5 px-3 rounded-xl bg-[#682025] hover:bg-[#52171B] text-[#FAF5EB] font-bold text-xs flex items-center justify-center gap-2 border border-[#DFAB56]/40 shadow-xs cursor-pointer transition-all active:scale-[0.98]"
             >
               <Tv className="w-4 h-4 text-[#DFAB56]" />
-              <span>بث على شاشة الكافيه الآن</span>
+              <span>بث على شاشة الصالة الآن</span>
             </button>
 
             {/* Claim Memory Stamp */}
@@ -162,7 +162,7 @@ export const CustomerPhotoboothStudioTab: React.FC<Props> = ({ cx }) => {
               className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all ${
                 memoryStampGranted
                   ? 'bg-emerald-50 text-emerald-900 border-emerald-300 cursor-default'
-                  : 'bg-[#DFAB56] hover:bg-[#C9933B] text-[#3D2314] border-[#DFAB56]/60 shadow-xs cursor-pointer active:scale-95'
+                  : 'bg-[#DFAB56] hover:bg-[#C9933B] text-[#3D2314] border-[#DFAB56]/60 shadow-xs cursor-pointer active:scale-[0.98]'
               }`}
             >
               {memoryStampGranted ? (
@@ -335,7 +335,7 @@ export const CustomerPhotoboothStudioTab: React.FC<Props> = ({ cx }) => {
       <button
         type="button"
         onClick={handlePrintOrDownload}
-        className="w-full max-w-md py-3 px-4 rounded-2xl bg-[#231C18] hover:bg-[#382D27] text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+        className="w-full max-w-md py-3 px-4 rounded-2xl bg-[#231C18] hover:bg-[#382D27] text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
       >
         <Download className="w-4 h-4 text-amber-300" />
         <span>تحميل شريط الذكريات عالي الدقة (300 DPI)</span>
@@ -361,7 +361,7 @@ export const CustomerPhotoboothStudioTab: React.FC<Props> = ({ cx }) => {
         <button
           type="button"
           onClick={() => setActiveTab('loyalty')}
-          className="px-4 py-2 rounded-xl bg-[#231C18] hover:bg-[#382D27] text-white font-bold text-xs shrink-0 transition-all shadow-xs cursor-pointer"
+          className="px-4 py-2 rounded-xl bg-[#231C18] hover:bg-[#382D27] text-white font-bold text-xs shrink-0 transition-all shadow-xs cursor-pointer active:scale-[0.98]"
         >
           عرض كارت الولاء
         </button>

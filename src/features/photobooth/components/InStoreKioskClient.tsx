@@ -47,7 +47,7 @@ export function InStoreKioskClient({ cafeSlug }: InStoreKioskClientProps) {
   const [isShutterFlashing, setIsShutterFlashing] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSoundMuted, setIsSoundMuted] = useState(false);
-  const [guestName, setGuestName] = useState('أصدقاء الكافيه');
+  const [guestName, setGuestName] = useState('أصدقاء المكان');
   const [resetTimer, setResetTimer] = useState<number>(45);
 
   const settings = BusinessSettingsService.getSettings(cafeSlug);
@@ -240,7 +240,7 @@ export function InStoreKioskClient({ cafeSlug }: InStoreKioskClientProps) {
                 التقط شريط ذكرياتك 4-Cuts
               </h2>
               <p className="text-sm sm:text-base text-stone-400 max-w-md mx-auto">
-                4 وضعيات مع أصدقائك، ثيمات سينمائية، بث فوري على شاشة الكافيه، وختم مجاني في Apple Wallet!
+                4 وضعيات مع أصدقائك، ثيمات سينمائية، بث فوري على شاشة الصالة، وختم مجاني في Apple Wallet!
               </p>
             </div>
 
@@ -348,7 +348,7 @@ export function InStoreKioskClient({ cafeSlug }: InStoreKioskClientProps) {
                   اختر طابع شريط الذكريات
                 </h3>
                 <p className="text-xs text-stone-400">
-                  حدد مظهر الكارت الذي سيبث على شاشة الكافيه الآن
+                  حدد مظهر الكارت الذي سيبث على شاشة الصالة الآن
                 </p>
               </div>
 
@@ -390,10 +390,10 @@ export function InStoreKioskClient({ cafeSlug }: InStoreKioskClientProps) {
               {/* Action Button: Broadcast to Wall */}
               <button
                 onClick={handleCastAndFinish}
-                className="w-full py-4 px-6 rounded-2xl bg-[#10B981] hover:bg-[#059669] active:scale-95 text-white font-black text-lg shadow-[0_10px_30px_rgba(16,185,129,0.4)] border border-white/20 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                className="w-full py-4 px-6 rounded-2xl bg-[#10B981] hover:bg-[#059669] active:scale-[0.98] text-white font-black text-lg shadow-[0_10px_30px_rgba(16,185,129,0.4)] border border-white/20 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
               >
                 <Tv className="w-5 h-5 text-white" />
-                <span>بث على شاشة الكافيه والحفظ ✨</span>
+                <span>بث على شاشة الصالة والحفظ ✨</span>
               </button>
             </div>
           </div>
@@ -411,7 +411,7 @@ export function InStoreKioskClient({ cafeSlug }: InStoreKioskClientProps) {
                 تم بث صورتك على الشاشة الكبيرة! 📺✨
               </h2>
               <p className="text-xs sm:text-sm text-stone-300">
-                انظر إلى شاشة الكافيه الآن! ولحفظ شريطك في هاتفك واكتساب ختمك المجاني في Apple Wallet:
+                انظر إلى شاشة الصالة الآن! ولحفظ شريطك في هاتفك واكتساب ختمك المجاني في Apple Wallet:
               </p>
             </div>
 

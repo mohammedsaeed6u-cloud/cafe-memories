@@ -54,10 +54,10 @@ export function TappyCustomerWebCard({
   const [redeemNonce, setRedeemNonce] = useState<string>('STP-8492');
   const [hasRedeemed, setHasRedeemed] = useState(false);
 
-  const brandName = settings?.branding?.name || 'ستامبي كافيه';
+  const brandName = settings?.branding?.name || 'ستامبي';
   const brandColor = settings?.walletPassConfig?.colorHex || '#DFAB56';
-  const stampIcon = settings?.stampConfig?.customEmoji || '☕';
-  const rewardTitle = settings?.freeGiftOffer?.title || 'قهوة مختصة مجانية ☕';
+  const stampIcon = settings?.stampConfig?.customEmoji || '✨';
+  const rewardTitle = settings?.freeGiftOffer?.title || 'مكافأة مميزة مجانية ✨';
   const activeBranch = settings?.locationConfig?.relevantText || 'الفرع الرئيسي - الرياض';
 
   const isCompleted = stamps >= maxSlots;
@@ -381,7 +381,7 @@ export function TappyCustomerWebCard({
                   </span>
                 </div>
                 <div className="text-[11px] text-[#6E4E38]">
-                  التقط شريط ذكرياتك وبثه على شاشة الكافيه الآن 📺
+                  التقط شريط ذكرياتك وبثه على شاشة الصالة الآن 📺
                 </div>
               </div>
             </div>

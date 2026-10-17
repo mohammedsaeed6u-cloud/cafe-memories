@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Clock, Pause, Play, Sparkles, Award } from 'lucide-react';
+import { Clock, Pause, Play, Sparkles } from 'lucide-react';
 import { UseLiveWallReturn } from '../types';
 
 interface Props {
@@ -17,7 +17,7 @@ export const WallFooter: React.FC<Props> = ({ wall }) => {
       <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
         <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
         <span className="text-amber-200 font-bold">
-          ☕ 142 ختماً معتمداً اليوم في الصالة • تهانينا لسارة على إكمال كارت الولاء!
+          ✨ 142 ختماً معتمداً اليوم في الصالة • تهانينا لسارة على إكمال كارت الولاء!
         </span>
       </div>
 

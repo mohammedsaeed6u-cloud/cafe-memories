@@ -278,7 +278,7 @@ describe('Tappy Full Experience & Architecture Test Suite', () => {
       render(<CustomerPhotoboothStudioTab cx={mockCx as any} />);
 
       // Verify the new Live Actions Bar
-      const castBtn = screen.getByText('بث على شاشة الكافيه الآن');
+      const castBtn = screen.getByText(/بث على شاشة (الكافيه|الصالة) الآن/i);
       const stampBtn = screen.getByText('+1 ختم الذكرى بكارتك');
 
       expect(castBtn).toBeDefined();
@@ -287,7 +287,7 @@ describe('Tappy Full Experience & Architecture Test Suite', () => {
       // Trigger Cast to TV Wall
       fireEvent.click(castBtn);
       expect(handleWallConsentMock).toHaveBeenCalledWith(true);
-      expect(screen.getByText(/صورتك تبث الآن على شاشة الكافيه/i)).toBeDefined();
+      expect(screen.getByText(/صورتك تبث الآن على شاشة (الكافيه|الصالة)/i)).toBeDefined();
 
       // Trigger Memory Stamp
       fireEvent.click(stampBtn);

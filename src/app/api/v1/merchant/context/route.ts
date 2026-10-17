@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         organization: {
           id: '00000000-0000-0000-0000-000000000001',
-          name: 'ستامبي كافيه · المركز الرئيسي',
+          name: 'ستامبي · المركز الرئيسي',
         },
         role: 'owner',
         organizationWide: true,

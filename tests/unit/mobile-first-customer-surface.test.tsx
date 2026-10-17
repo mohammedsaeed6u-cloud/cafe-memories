@@ -104,7 +104,7 @@ describe('Mobile-First BYOD Unified Customer Experience Suite', () => {
     // Unified surface: Both Loyalty Card and 4-Cuts Studio are present in default view
     expect(screen.getAllByText('Brew Specialty Roasters').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/استوديو الذكريات الكورية \(4-Cuts\)/i)).toBeDefined();
-    expect(screen.getByText('بث على شاشة الكافيه الآن')).toBeDefined();
+    expect(screen.getByText(/بث على شاشة (الكافيه|الصالة) الآن/i)).toBeDefined();
   });
 
   it('displays table number badge on 4K Live Wall when photo is cast from table', () => {

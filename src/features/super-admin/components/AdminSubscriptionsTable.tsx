@@ -78,12 +78,12 @@ export function AdminSubscriptionsTable({
                     <span
                       className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border ${
                         sub.planId === 'enterprise'
-                          ? 'bg-amber-100 text-[#FBF9F5] border-amber-200'
+                          ? 'bg-purple-950/60 text-purple-300 border-purple-500/40'
                           : sub.planId === 'multi_location'
-                          ? 'bg-[#141212] text-[#FBF9F5] border-[rgba(255,255,255,0.1)]'
+                          ? 'bg-amber-950/60 text-amber-300 border-amber-500/40'
                           : sub.planId === 'print'
-                          ? 'bg-amber-50 text-[#FBF9F5] border-amber-200'
-                          : 'bg-white text-stone-500 border-[rgba(255,255,255,0.1)]'
+                          ? 'bg-rose-950/60 text-rose-300 border-rose-500/40'
+                          : 'bg-white/10 text-stone-300 border-white/10'
                       }`}
                     >
                       {currentPlan.name}
@@ -126,8 +126,8 @@ export function AdminSubscriptionsTable({
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                             isCustom
-                              ? 'bg-purple-50 text-purple-900 border-purple-200'
-                              : 'bg-[#0B0A0A] text-stone-700 border-stone-200'
+                              ? 'bg-purple-950/60 text-purple-300 border-purple-500/40'
+                              : 'bg-white/5 text-stone-300 border-white/10'
                           }`}
                         >
                           <Key className="w-3 h-3 text-[#c92a54]" />
@@ -137,7 +137,7 @@ export function AdminSubscriptionsTable({
                     })()}
                   </td>
 
-                  <td className="py-4 px-5 text-xs text-stone-500 font-medium">
+                  <td className="py-4 px-5 text-xs text-stone-400 font-medium">
                     {sub.billingInterval === 'annually' ? 'سنوي (مخصوم 20%)' : 'شهري'}
                   </td>
 
@@ -151,7 +151,7 @@ export function AdminSubscriptionsTable({
                         sub.status === 'active'
                           ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/60'
                           : sub.status === 'trialing'
-                          ? 'bg-amber-50 text-[#FBF9F5] border border-amber-200'
+                          ? 'bg-amber-950/60 text-amber-300 border border-amber-500/40'
                           : 'bg-red-950/40 text-red-400 border border-red-800/60'
                       }`}
                     >
@@ -184,7 +184,7 @@ export function AdminSubscriptionsTable({
                     <button
                       type="button"
                       onClick={() => onOpenWalletModal(t)}
-                      className="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-[#FBF9F5] text-xs font-bold border border-[rgba(255,255,255,0.1)] shadow-2xs transition inline-flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[#FBF9F5] text-xs font-bold border border-white/10 shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer"
                     >
                       <Sliders className="w-3.5 h-3.5 text-[#c92a54]" />
                       <span>ضبط الكوتا</span>

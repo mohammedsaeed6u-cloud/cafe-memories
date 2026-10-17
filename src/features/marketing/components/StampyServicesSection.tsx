@@ -366,7 +366,7 @@ export function StampyServicesSection() {
                   <span className="text-3xl">📟</span>
                   <h4 className="text-sm font-bold text-[#F7F3EA]">كشك التصوير والولاء الذاتي</h4>
                   <p className="text-xs text-white/70 leading-relaxed">
-                    متاح دائماً على أي تابلت داخل الصالة لمن ليس معهم هاتف أو يفضلون تجربة شاشة الكافيه الكبيرة.
+                    متاح دائماً على أي تابلت داخل الصالة لمن ليس معهم هاتف أو يفضلون تجربة شاشة العرض الكبيرة.
                   </p>
                   <div className="flex items-center justify-center gap-2 text-[11px] font-mono text-emerald-300 bg-emerald-950/60 py-1.5 px-3 rounded-lg border border-emerald-500/30">
                     <span>📱 الموبايل أولاً • والتابلت جاهز كخيار</span>

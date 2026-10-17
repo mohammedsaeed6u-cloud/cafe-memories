@@ -30,35 +30,35 @@ export function AdminWalletQuotaModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.1)] pb-4">
           <div>
-            <span className="text-[10px] font-mono font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 uppercase tracking-wider">
+            <span className="text-[10px] font-mono font-bold text-amber-300 bg-amber-950/60 px-2.5 py-0.5 rounded-full border border-amber-500/40 uppercase tracking-wider">
               WALLETWALLET.DEV • QUOTA & KEY CONTROL
             </span>
             <h3 className="text-lg font-black text-[#FBF9F5] mt-1">
               إدارة كوتا ومفتاح المحفظة للفرع
             </h3>
-            <p className="text-xs text-stone-500 font-medium">{tenant.name} (/{tenant.slug})</p>
+            <p className="text-xs text-stone-400 font-medium">{tenant.name} (/{tenant.slug})</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 transition cursor-pointer"
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-stone-300 transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Usage Overview Box */}
-        <div className="p-4 rounded-2xl bg-[#141212] border border-[rgba(255,255,255,0.1)] space-y-3">
+        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
           <div className="flex justify-between items-center text-xs font-bold text-[#FBF9F5]">
             <span>الاستهلاك الحالي لهذا الشهر:</span>
-            <span className="font-mono text-sm text-amber-800 font-black">
+            <span className="font-mono text-sm text-amber-400 font-black">
               {tenant.walletConfig?.usedPassesThisMonth || 0} / {quotaEditData.monthlyPassQuota} كارت
             </span>
           </div>
           <button
             type="button"
             onClick={() => onResetUsage(tenant.id)}
-            className="text-[11px] font-bold text-amber-800 hover:text-amber-900 underline block cursor-pointer"
+            className="text-[11px] font-bold text-amber-400 hover:text-amber-300 underline block cursor-pointer"
           >
             🔄 تصفير عداد الاستهلاك للشهر الجديد
           </button>
@@ -77,8 +77,8 @@ export function AdminWalletQuotaModal({
                 onClick={() => onSetQuotaEditData((prev) => ({ ...prev, monthlyPassQuota: preset }))}
                 className={`py-2 px-1 rounded-xl text-xs font-bold border transition cursor-pointer text-center ${
                   quotaEditData.monthlyPassQuota === preset
-                    ? 'bg-[#FBF9F5] text-white border-[#FBF9F5]'
-                    : 'bg-white text-stone-600 border-[rgba(255,255,255,0.1)] hover:bg-[#0B0A0A]'
+                    ? 'bg-amber-500 text-stone-950 border-amber-500 shadow-xs'
+                    : 'bg-white/5 text-stone-300 border-white/10 hover:bg-white/10'
                 }`}
               >
                 {preset} كارت
@@ -108,90 +108,90 @@ export function AdminWalletQuotaModal({
           </label>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={() => onSetQuotaEditData((prev) => ({ ...prev, usePlatformKey: true }))}
-              className={`p-3 rounded-2xl border text-right transition cursor-pointer ${
-                quotaEditData.usePlatformKey
-                  ? 'bg-amber-50 border-amber-400 text-amber-950 ring-1 ring-amber-400'
-                  : 'bg-[#141212] border-[rgba(255,255,255,0.1)] text-stone-600 hover:bg-[#0B0A0A]'
-              }`}
-            >
-              <p className="text-xs font-bold">مفتاح المنصة المعتمد</p>
-              <p className="text-[10px] text-stone-500 mt-0.5">يتم خصم الكروت من كوتا ساس المركزية</p>
-            </button>
+              <button
+                type="button"
+                onClick={() => onSetQuotaEditData((prev) => ({ ...prev, usePlatformKey: true }))}
+                className={`p-3 rounded-2xl border text-right transition cursor-pointer ${
+                  quotaEditData.usePlatformKey
+                    ? 'bg-amber-950/60 border-amber-500/60 text-amber-200 ring-1 ring-amber-500/40'
+                    : 'bg-white/5 border-white/10 text-stone-400 hover:bg-white/10'
+                }`}
+              >
+                <p className="text-xs font-bold text-[#FBF9F5]">مفتاح المنصة المعتمد</p>
+                <p className="text-[10px] text-stone-400 mt-0.5">يتم خصم الكروت من كوتا ساس المركزية</p>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => onSetQuotaEditData((prev) => ({ ...prev, usePlatformKey: false }))}
-              className={`p-3 rounded-2xl border text-right transition cursor-pointer ${
-                !quotaEditData.usePlatformKey
-                  ? 'bg-purple-50 border-purple-400 text-purple-950 ring-1 ring-purple-400'
-                  : 'bg-[#141212] border-[rgba(255,255,255,0.1)] text-stone-600 hover:bg-[#0B0A0A]'
-              }`}
-            >
-              <p className="text-xs font-bold">مفتاح العميل الخاص (BYOK)</p>
-              <p className="text-[10px] text-stone-500 mt-0.5">كوتا غير محدودة على حساب العميل</p>
-            </button>
-          </div>
-
-          {!quotaEditData.usePlatformKey && (
-            <div className="space-y-1 animate-in fade-in">
-              <label className="text-[11px] font-bold text-stone-600 block">
-                أدخل مفتاح WalletWallet API الخاص بالعميل (ww_live_...):
-              </label>
-              <input
-                type="password"
-                value={quotaEditData.walletWalletApiKey}
-                onChange={(e) =>
-                  onSetQuotaEditData((prev) => ({ ...prev, walletWalletApiKey: e.target.value }))
-                }
-                placeholder="ww_live_xxxxxxxxxxxxxxxxxxxxxxxx"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-purple-200 bg-purple-50/40 text-xs font-mono font-bold text-[#FBF9F5] focus:outline-none focus:ring-2 focus:ring-purple-600 text-left"
-                dir="ltr"
-              />
+              <button
+                type="button"
+                onClick={() => onSetQuotaEditData((prev) => ({ ...prev, usePlatformKey: false }))}
+                className={`p-3 rounded-2xl border text-right transition cursor-pointer ${
+                  !quotaEditData.usePlatformKey
+                    ? 'bg-purple-950/60 border-purple-500/60 text-purple-200 ring-1 ring-purple-500/40'
+                    : 'bg-white/5 border-white/10 text-stone-400 hover:bg-white/10'
+                }`}
+              >
+                <p className="text-xs font-bold text-[#FBF9F5]">مفتاح العميل الخاص (BYOK)</p>
+                <p className="text-[10px] text-stone-400 mt-0.5">كوتا غير محدودة على حساب العميل</p>
+              </button>
             </div>
-          )}
-        </div>
 
-        {/* Field 3: Over-Quota Policy */}
-        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#0B0A0A] border border-[rgba(255,255,255,0.1)]">
-          <div>
-            <span className="text-xs font-bold text-[#FBF9F5] block">سياسة تجاوز الكوتا:</span>
-            <span className="text-[10px] text-stone-500">
-              {quotaEditData.allowOverQuota
-                ? 'السماح بإصدار الكروت مع تنبيه دون تعطيل خدمة العملاء'
-                : 'حظر إصدار وتحديث كروت المحفظة فور استهلاك الحد الشهري'}
-            </span>
+            {!quotaEditData.usePlatformKey && (
+              <div className="space-y-1 animate-in fade-in">
+                <label className="text-[11px] font-bold text-stone-300 block">
+                  أدخل مفتاح WalletWallet API الخاص بالعميل (ww_live_...):
+                </label>
+                <input
+                  type="password"
+                  value={quotaEditData.walletWalletApiKey}
+                  onChange={(e) =>
+                    onSetQuotaEditData((prev) => ({ ...prev, walletWalletApiKey: e.target.value }))
+                  }
+                  placeholder="ww_live_xxxxxxxxxxxxxxxxxxxxxxxx"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-purple-500/40 bg-purple-950/30 text-xs font-mono font-bold text-[#FBF9F5] focus:outline-none focus:ring-2 focus:ring-purple-500 text-left"
+                  dir="ltr"
+                />
+              </div>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => onSetQuotaEditData((prev) => ({ ...prev, allowOverQuota: !prev.allowOverQuota }))}
-            className={`w-12 h-6 rounded-full transition p-1 cursor-pointer flex items-center ${
-              quotaEditData.allowOverQuota ? 'bg-[#c92a54] justify-end' : 'bg-stone-300 justify-start'
-            }`}
-          >
-            <div className="w-4 h-4 rounded-full bg-white shadow-xs" />
-          </button>
-        </div>
 
-        {/* Modal Actions */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-[rgba(255,255,255,0.1)]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-100 transition cursor-pointer"
-          >
-            إلغاء
-          </button>
-          <button
-            type="button"
-            onClick={onSave}
-            className="px-6 py-2.5 rounded-xl bg-[#FBF9F5] hover:bg-[#382D27] text-white text-xs font-bold transition shadow-md cursor-pointer"
-          >
-            حفظ وتطبيق الكوتا فوراً
-          </button>
-        </div>
+          {/* Field 3: Over-Quota Policy */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#0B0A0A] border border-[rgba(255,255,255,0.1)]">
+            <div>
+              <span className="text-xs font-bold text-[#FBF9F5] block">سياسة تجاوز الكوتا:</span>
+              <span className="text-[10px] text-stone-400">
+                {quotaEditData.allowOverQuota
+                  ? 'السماح بإصدار الكروت مع تنبيه دون تعطيل خدمة العملاء'
+                  : 'حظر إصدار وتحديث كروت المحفظة فور استهلاك الحد الشهري'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onSetQuotaEditData((prev) => ({ ...prev, allowOverQuota: !prev.allowOverQuota }))}
+              className={`w-12 h-6 rounded-full transition p-1 cursor-pointer flex items-center ${
+                quotaEditData.allowOverQuota ? 'bg-[#c92a54] justify-end' : 'bg-white/20 justify-start'
+              }`}
+            >
+              <div className="w-4 h-4 rounded-full bg-white shadow-xs" />
+            </button>
+          </div>
+
+          {/* Modal Actions */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[rgba(255,255,255,0.1)]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 rounded-xl border border-white/10 text-xs font-bold text-stone-300 hover:bg-white/5 transition cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              type="button"
+              onClick={onSave}
+              className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold transition shadow-md cursor-pointer"
+            >
+              حفظ وتطبيق الكوتا فوراً
+            </button>
+          </div>
       </div>
     </div>
   );

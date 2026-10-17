@@ -142,7 +142,7 @@ export const WallStageView: React.FC<Props> = ({ wall }) => {
               كن أول من يضيء الشاشة اليوم!
             </h3>
             <p className="text-xs sm:text-sm text-[#D5C0A8] leading-relaxed max-w-sm mx-auto">
-              امسح الرمز بكاميرا هاتفك عند طاولتك، التقط شريط ذكرياتك 4-Cuts مع أصدقائك، واكسب ختماً مجانياً في {brandName || 'الكافيه'}.
+              امسح الرمز بكاميرا هاتفك عند طاولتك، التقط شريط ذكرياتك 4-Cuts مع أصدقائك، واكسب ختماً مجانياً في {brandName || 'المكان'}.
             </p>
           </div>
 

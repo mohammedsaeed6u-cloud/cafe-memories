@@ -269,7 +269,7 @@ export function TappyMerchantDashboard({
   });
 
   // Profile State
-  const [storeName, setStoreName] = useState(settings?.branding?.name || 'ستامبي كافيه');
+  const [storeName, setStoreName] = useState(settings?.branding?.name || 'ستامبي');
   const [storeCategory, setStoreCategory] = useState('مقهى مختص ومحمصة');
   const [instagramHandle, setInstagramHandle] = useState(settings?.branding?.instagramHandle || '@stampy_sa');
   const [supportPhone, setSupportPhone] = useState('+966 50 123 4567');
@@ -1789,7 +1789,7 @@ export function TappyMerchantDashboard({
                         </button>
                       </div>
                       <p className="text-[10px] text-[#8E879E]">
-                        يعمل تلقائياً بدون إعداد DNS، ويوجه العميل مباشرة إلى كارت الولاء واستوديو الصور لكافيهك.
+                        يعمل تلقائياً بدون إعداد DNS، ويوجه العميل مباشرة إلى كارت الولاء واستوديو الصور لمنشأتك.
                       </p>
                     </div>
 

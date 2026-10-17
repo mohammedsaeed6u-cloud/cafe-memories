@@ -394,7 +394,7 @@ export const MerchantCardCustomizerDrawer: React.FC<Props> = ({
           {/* 5. Brand Store Name */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-[#FBF9F5]">
-              ☕ اسم المتجر أو الكافيه:
+              ✨ اسم المنشأة أو العلامة التجارية:
             </label>
             <input
               type="text"

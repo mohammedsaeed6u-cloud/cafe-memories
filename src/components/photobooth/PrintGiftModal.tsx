@@ -216,7 +216,7 @@ export const PrintGiftModal: React.FC<PrintGiftModalProps> = ({
 
           <button
             onClick={onClose}
-            className="py-3.5 px-6 rounded-2xl bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold text-sm transition"
+            className="py-3.5 px-6 rounded-2xl bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold text-sm transition active:scale-[0.98] cursor-pointer"
           >
             تم ورجوع
           </button>

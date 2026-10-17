@@ -78,7 +78,7 @@ export function useAuthPage() {
     try {
       if (authTab === 'signup') {
         if (!cafeName.trim()) {
-          setErrorMsg('يرجى إدخال اسم المنشأة أو الكافيه لإنشاء حسابك.');
+          setErrorMsg('يرجى إدخال اسم المنشأة أو العلامة التجارية لإنشاء حسابك.');
           setLoading(false);
           return;
         }
