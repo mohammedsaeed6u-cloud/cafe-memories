@@ -55,7 +55,7 @@ const DEFAULT_FEATURED_MEMORIES: WallMemoryItem[] = [
     id: 'wall-mem-2',
     customerName: 'فيصل وبدر',
     photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=80',
-    caption: 'احتفال بانتهاء المشروع في مقهانا المفضل!',
+    caption: 'احتفال بانتهاء المشروع في مكاننا المفضل!',
     visitNumber: 7,
     timeFormatted: 'منذ ٢٥ دقيقة',
     createdAt: new Date().toISOString(),
@@ -306,7 +306,11 @@ export function WallClient({ screenId }: WallClientProps) {
     };
     window.addEventListener('storage', handleStorage);
 
+    // Periodic live sync from server every 8 seconds for cross-device memory updates
+    const liveSyncTimer = setInterval(fetchApprovedMemories, 8000);
+
     return () => {
+      clearInterval(liveSyncTimer);
       if (channel) channel.close();
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('memories-wall-updated', handleCustomWallUpdate);

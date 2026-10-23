@@ -1,5 +1,12 @@
+import React from 'react';
 import Link from 'next/link';
-import { Shield } from 'lucide-react';
+import type { Metadata } from 'next';
+import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
+
+export const metadata: Metadata = {
+  title: 'memories studio • بوابة الإدارة المركزية (Super Admin)',
+  description: 'إدارة الفروع المركزية، الاشتراكات المتكررة، ومؤشرات الـ SaaS.',
+};
 
 export default function AdminLayout({
   children,
@@ -11,8 +18,8 @@ export default function AdminLayout({
       <aside className="w-64 bg-[#0E0D0D] border-l border-white/10 text-[#FBF9F5] flex-shrink-0 flex flex-col justify-between">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-bold text-xs shadow-md border border-white/10">
-              <Shield className="w-4 h-4 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-bold text-xs shadow-md border border-white/10 shrink-0">
+              <MemoriesArchIcon size={20} color="#FBF9F5" />
             </div>
             <div>
               <h2 className="text-sm font-bold tracking-tight text-[#FBF9F5] font-serif">

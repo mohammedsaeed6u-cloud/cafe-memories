@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
-import { Coffee } from 'lucide-react';
+import { Store } from 'lucide-react';
 
 export interface CoBrandingLogosProps {
   cafeName: string;
@@ -138,7 +138,7 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
                 : 'bg-stone-100 text-stone-800 border border-stone-200'
             }`}
           >
-            <Coffee className="w-4 h-4 text-[#DD0200]" />
+            <Store className="w-4 h-4 text-[#DD0200]" />
           </div>
         )}
         <div className="text-left">

@@ -1,12 +1,12 @@
 {
-  "name": "Memories • استوديو ذكريات المقاهي المختصة",
+  "name": "Memories • استوديو الذكريات والولاء للأنشطة الفاخرة",
   "short_name": "Memories",
-  "description": "استوديو تصوير فوتوبوث تفاعلي، شاشات عرض الصالة الحية، وبطاقات ولاء رقمية لمحفظة Apple و Google Wallet",
+  "description": "استوديو تصوير فوتوبوث تفاعلي، شاشات عرض الصالة الحية، وبطاقات ولاء رقمية لمحفظة Apple و Google Wallet للمنشآت والعلامات التجارية",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FAF6EE",
-  "theme_color": "#FAF6EE",
+  "background_color": "#141313",
+  "theme_color": "#141313",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
@@ -45,7 +45,7 @@
     {
       "name": "لوحة تحكم التاجر",
       "short_name": "لوحة التحكم",
-      "description": "إدارة الفروع والباريستا والاشتراك",
+      "description": "إدارة الفروع وطاقم العمل والاشتراك",
       "url": "/dashboard",
       "icons": [
         {

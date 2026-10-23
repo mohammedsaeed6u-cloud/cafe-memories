@@ -52,7 +52,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
 
   // New Card State
-  const [cardHolder, setCardHolder] = useState('إدارة المقهى');
+  const [cardHolder, setCardHolder] = useState('إدارة المنشأة');
   const [cardNumber, setCardNumber] = useState('4820 1930 2840 9102');
   const [expiry, setExpiry] = useState('11/28');
   const [cardBrand, setCardBrand] = useState<'mada' | 'visa' | 'mastercard'>('mada');
@@ -754,7 +754,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                 <h3 className="text-base font-bold text-[#FBF9F5] font-serif">
                   {subscription.cancelAtPeriodEnd ? 'التراجع عن إيقاف الاشتراك' : 'تأكيد إيقاف التجديد التلقائي'}
                 </h3>
-                <p className="text-xs text-[#A19E9B]">حماية كاملة لبيانات المقهى وأختام العملاء</p>
+                <p className="text-xs text-[#A19E9B]">حماية كاملة لبيانات المنشأة وأختام العملاء</p>
               </div>
             </div>
 

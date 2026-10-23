@@ -115,7 +115,7 @@ export function AppleLuxuryShowcase({
                     }}
                     branding={{
                       name: 'Memories Studio',
-                      tagline: 'CAFÉ MOMENTS. LASTING LOYALTY.',
+                      tagline: 'CHERISHED MOMENTS. LASTING LOYALTY.',
                       instagramHandle: '@memories_studio',
                     }}
                     freeGiftOffer={{

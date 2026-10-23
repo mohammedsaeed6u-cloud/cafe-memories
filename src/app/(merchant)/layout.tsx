@@ -1,4 +1,10 @@
 import React from 'react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'memories studio • لوحة تحكم المنشأة',
+  description: 'لوحة إدارة استوديو الذكريات، محطة الطباعة الفورية، شاشات الصالة وكروت الولاء الرقمية.',
+};
 
 export default function MerchantLayout({
   children,

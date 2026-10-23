@@ -11,7 +11,7 @@ export function MarketingTrustSection() {
       icon: EyeOff,
     },
     {
-      title: 'عزل تام لبيانات كل مقهى (Tenant Isolation)',
+      title: 'عزل تام لبيانات كل منشأة وفرع (Tenant Isolation)',
       desc: 'بيانات نشاطك التجاري، سجلات عملائك، وصور روادك معزولة بالكامل في مسار سحابي مستقل مشفر، ولا يمكن لأي نشاط آخر الاطلاع عليها.',
       icon: Database,
     },

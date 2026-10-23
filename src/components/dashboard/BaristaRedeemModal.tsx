@@ -177,7 +177,7 @@ export function BaristaRedeemModal({
           {successNotice && (
             <div className="p-4 rounded-xl bg-[#141212] border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-3 animate-in zoom-in-95 duration-200">
               <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
-              <div><span className="block font-bold text-sm text-[#FBF9F5] font-serif">{successNotice}</span><span className="text-[11px] text-emerald-400 block font-normal">تم تسجيل صرف الهدية رسمياً في سجلات الكافيه وتحديث بطاقة العميل.</span></div>
+              <div><span className="block font-bold text-sm text-[#FBF9F5] font-serif">{successNotice}</span><span className="text-[11px] text-emerald-400 block font-normal">تم تسجيل صرف الهدية رسمياً في سجلات المنشأة وتحديث بطاقة العميل.</span></div>
             </div>
           )}
           {selectedCustomer && (

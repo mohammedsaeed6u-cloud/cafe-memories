@@ -470,10 +470,10 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
                 SPECIALTY STUDIO • PHOTO EXPERIENCE
               </div>
 
-              {/* Specialty Coffee Emblem & Arch */}
+              {/* Specialty Emblem & Arch */}
               <div className="flex items-center justify-center gap-2 mt-1 text-[#4A121A]">
                 <span className="text-[10px] text-[#8B2635] font-mono">EST</span>
-                <Coffee className="w-4 h-4 text-[#8B2635]" />
+                <Sparkles className="w-4 h-4 text-[#8B2635]" />
                 <span className="text-[10px] text-[#8B2635] font-mono">2026</span>
               </div>
             </div>
@@ -561,7 +561,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
         {!isLuxuryGlass && !isTicketExpress && !isSpotifyPlayer && !isIosGallery && !isIosCamera && !isIosIMessage && (
           <div className={`relative z-10 flex flex-col items-center justify-center text-center ${isKinfolkMinimal ? 'mb-3 pt-1' : 'mb-2'}`}>
             <CoBrandingLogos
-              cafeName={branding.name || 'Café Partner'}
+              cafeName={branding.name || 'Brand Partner'}
               cafeLogoUrl={branding.logoUrl}
               size="sm"
               theme={effectiveText === '#FFFFFF' ? 'dark' : 'light'}
@@ -690,7 +690,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             {/* Watermark branding */}
             <div className="text-center pt-1 border-t border-white/10">
               <span className="text-[7.5px] font-mono text-white/40 tracking-wider">
-                memories.cafe/playlist
+                memories.studio/playlist
               </span>
             </div>
           </div>
@@ -827,7 +827,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
               <span className="flex-1 bg-blue-500" />
             </div>
             <div className="text-[9.5px] italic font-serif opacity-80 tracking-wider text-stone-700">
-              {frame.customText || branding.tagline || 'special coffee memory'}
+              {frame.customText || branding.tagline || 'cherished memory'}
             </div>
           </div>
         )}

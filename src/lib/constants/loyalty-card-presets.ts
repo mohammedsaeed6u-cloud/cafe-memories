@@ -206,9 +206,9 @@ export const LOYALTY_CARD_PRESETS: Record<string, LoyaltyCardTemplate> = {
       'Show QR to barista when placing an order.',
     ],
     termsAndConditionsAr: [
-      'كل ختم يمثل زيارة وذكرى حقيقية في الكافيه.',
+      'كل ختم يمثل زيارة وذكرى حقيقية في المنشأة.',
       'المكافآت غير قابلة للتحويل إلى مبالغ نقدية.',
-      'أظهر كود الـ QR عند كاونتر الطلبات.',
+      'أظهر كود الـ QR عند كاونتر الخدمة.',
     ],
     milestones: [
       {

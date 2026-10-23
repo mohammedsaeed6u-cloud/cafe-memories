@@ -353,6 +353,27 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
         localStorage.setItem('memories_wall_cache_screen-1', JSON.stringify(newFeed));
         window.dispatchEvent(new CustomEvent('memories-wall-updated', { detail: newFeed }));
 
+        // Sync live memory directly to server database
+        try {
+          fetch('/api/v1/memories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              originalUrl: accumulatedPhotos[0] || '',
+              caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'Memories'} ✨`,
+              venueSlug: cafeSlug,
+              customerPhone: clean,
+              status: 'approved',
+              consents: {
+                saveConsent: true,
+                liveWallConsent: true,
+                socialShareConsent: true,
+                marketingConsent: false,
+              },
+            }),
+          }).catch(() => {});
+        } catch {}
+
         try {
           const channel = new BroadcastChannel('memories_screens_channel');
           channel.postMessage({ type: 'WALL_NEW_PHOTO', item: wallItem, feed: newFeed });
@@ -404,6 +425,18 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
         };
         localStorage.setItem(queueKey, JSON.stringify([newPrintJob, ...existingQueue].slice(0, 30)));
         window.dispatchEvent(new CustomEvent('memories-print-queue-updated'));
+
+        // Dispatch to real-time server print queue for staff terminal
+        try {
+          fetch('/api/v1/print/jobs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...newPrintJob,
+              venueSlug: cafeSlug,
+            }),
+          }).catch(() => {});
+        } catch {}
 
         try {
           const printChannel = new BroadcastChannel('memories_print_channel');

@@ -129,6 +129,18 @@ export class CustomerRegistryService {
         }
 
         localStorage.setItem(crmKey, JSON.stringify(list));
+
+        // Background sync to server customer session
+        try {
+          fetch('/api/v1/customer/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              anonymousId: clean,
+              displayName: cleanName,
+            }),
+          }).catch(() => {});
+        } catch {}
       } catch (err) {
         console.error('Failed to register customer', err);
       }

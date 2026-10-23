@@ -30,6 +30,7 @@ import {
   FileText,
   BadgeCheck,
 } from 'lucide-react';
+import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
 
 export default function SuperAdminPortalPage() {
   const [tenants, setTenants] = useState<TenantSummary[]>(() =>
@@ -102,8 +103,8 @@ export default function SuperAdminPortalPage() {
       <header className="bg-[#0E0D0D] text-[#FBF9F5] border-b border-white/10 sticky top-0 z-40 px-6 py-4 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-[#FBF9F5] flex items-center justify-center font-black text-lg shadow-lg border border-white/10">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-[#FBF9F5] flex items-center justify-center shadow-lg border border-white/10 shrink-0">
+              <MemoriesArchIcon size={22} color="#FBF9F5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -205,7 +206,7 @@ export default function SuperAdminPortalPage() {
             {/* Metric 4: ARPU */}
             <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
               <div className="flex items-center justify-between text-[#A19E9B] mb-1">
-                <span className="text-xs font-bold text-[#A19E9B]">متوسط العائد لكل مقهى (ARPU)</span>
+                <span className="text-xs font-bold text-[#A19E9B]">متوسط العائد لكل منشأة (ARPU)</span>
                 <CreditCard className="w-4 h-4 text-purple-400" />
               </div>
               <p className="text-2xl font-black text-[#FBF9F5]">

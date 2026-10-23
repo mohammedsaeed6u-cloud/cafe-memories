@@ -41,7 +41,7 @@ export function AtelierRoiCalculator() {
           احسب العائد الحقيقي على استثمار علامتك.
         </h2>
         <p className="text-sm sm:text-base text-[#A19E9B] mt-3.5 leading-relaxed">
-          شاهد كيف تتحول الذكريات الموثقة وكروت محفظة Apple إلى زيارات متكررة ومبيعات إضافية مباشرة لمقهىك أو متجرك.
+          شاهد كيف تتحول الذكريات الموثقة وكروت محفظة Apple إلى زيارات متكررة ومبيعات إضافية مباشرة لمنشأتك أو متجرك الفاخر.
         </p>
       </div>
 
@@ -75,7 +75,7 @@ export function AtelierRoiCalculator() {
                 aria-label="متوسط عدد زوار الصالة يومياً"
               />
               <div className="flex justify-between text-[10px] font-mono text-[#A19E9B]">
-                <span>30 زائر (مقهى صغير)</span>
+                <span>30 زائر (فرع بوتيك)</span>
                 <span>250 زائر (متوسط)</span>
                 <span>600 زائر (فرع مزدحم)</span>
               </div>

@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { FileCheck, ArrowRight } from 'lucide-react';
 import { LastUpdatedBadge } from '@/components/ui/LastUpdatedBadge';
+import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
 
 export default function TermsOfServicePage() {
   return (
@@ -15,8 +16,8 @@ export default function TermsOfServicePage() {
       <header className="bg-[#141212]/90 backdrop-blur-xl border-b border-white/10 sticky top-0 z-30 shadow-md">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-serif text-sm shadow-md border border-white/10">
-              ✦
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-md border border-white/10 shrink-0">
+              <MemoriesArchIcon size={18} color="#FBF9F5" />
             </div>
             <span className="font-bold text-[#FBF9F5] text-base font-serif">Memories • شروط الخدمة</span>
           </Link>
@@ -43,7 +44,7 @@ export default function TermsOfServicePage() {
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-[#FBF9F5] font-serif">1. قبول الشروط (Acceptance of Terms)</h2>
           <p className="text-sm text-[#A19E9B] leading-relaxed">
-            باستخدامك لمنصة <strong className="text-[#FBF9F5]">Memories</strong> سواء كمالك كافيه أو كزائر يلتقط الصور ويستخدم كروت الولاء، فإنك تقر وتوافق على الالتزام بجميع بنود هذه الاتفاقية وسياسة الخصوصية الملحقة بها.
+            باستخدامك لمنصة <strong className="text-[#FBF9F5]">Memories</strong> سواء كمالك منشأة أو كزائر يلتقط الصور ويستخدم كروت الولاء، فإنك تقر وتوافق على الالتزام بجميع بنود هذه الاتفاقية وسياسة الخصوصية الملحقة بها.
           </p>
         </section>
 
@@ -57,7 +58,7 @@ export default function TermsOfServicePage() {
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-[#FBF9F5] font-serif">3. مسؤوليات المستخدمين والمحتوى المقبول (Acceptable Content)</h2>
           <p className="text-sm text-[#A19E9B] leading-relaxed">
-            يلتزم الزوار وأصحاب المنشآت بعدم رفع أو بث أي صور أو نصوص مسيئة أو تنتهك الآداب العامة وحقوق الملكية الفكرية. يحتفظ فريق إدارة الكافيه وإدارة المنصة بالحق الكامل في إخفاء أو رفض أي ذكرى تخالف المعايير فوراً.
+            يلتزم الزوار وأصحاب المنشآت بعدم رفع أو بث أي صور أو نصوص مسيئة أو تنتهك الآداب العامة وحقوق الملكية الفكرية. يحتفظ فريق إدارة المنشأة وإدارة المنصة بالحق الكامل في إخفاء أو رفض أي ذكرى تخالف المعايير فوراً.
           </p>
         </section>
 

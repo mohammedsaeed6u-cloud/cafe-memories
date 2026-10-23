@@ -34,8 +34,8 @@ const FILTER_PRESETS = [
   },
   {
     id: 'latte',
-    name: 'Warm Latte',
-    nameAr: 'كافيه لاتيه',
+    name: 'Warm Editorial',
+    nameAr: 'ألوان دافئة',
     filterClass: 'contrast-105 brightness-105 saturate-90',
     tag: 'Soft Editorial Glow',
   },
@@ -296,7 +296,7 @@ export function MarketingVisualSteps() {
               </div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[11px] font-mono font-bold">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>تم الاعتماد بنجاح • Barista #02</span>
+                <span>تم الاعتماد بنجاح • Staff #02</span>
               </div>
             </div>
           </div>

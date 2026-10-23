@@ -182,7 +182,7 @@ export function MemoriesLogo({
               )}
               style={{ color: colors.tagline }}
             >
-              CAFÉ MOMENTS. LASTING LOYALTY.
+              CHERISHED MOMENTS. LASTING LOYALTY.
             </span>
           )}
         </div>
@@ -220,7 +220,7 @@ export function MemoriesLogo({
           )}
           style={{ color: colors.tagline }}
         >
-          CAFÉ MOMENTS. LASTING LOYALTY.
+          CHERISHED MOMENTS. LASTING LOYALTY.
         </p>
       )}
     </div>

@@ -33,6 +33,7 @@ import { SoundEffectsService } from '@/lib/services/sound-effects.service';
 import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
 import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-auth.service';
 import { PrintService } from '@/lib/services/print.service';
+import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
 
 export default function StaffTerminalPage() {
   const [cafeSlug, setCafeSlug] = useState(() => {
@@ -88,6 +89,31 @@ export default function StaffTerminalPage() {
 
   // Load Print Queue & Listen for new prints
   useEffect(() => {
+    const fetchServerQueue = async () => {
+      try {
+        const res = await fetch(`/api/v1/print/jobs?slug=${encodeURIComponent(cafeSlug)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.jobs)) {
+            const serverJobs = data.jobs;
+            setPrintQueue((prev) => {
+              const map = new Map();
+              serverJobs.forEach((j: any) => map.set(j.id, j));
+              prev.forEach((j: any) => {
+                if (!map.has(j.id)) map.set(j.id, j);
+              });
+              const combined = Array.from(map.values());
+              if (soundAlertEnabled && combined.length > prevQueueLengthRef.current) {
+                SoundEffectsService.playTerminalDing();
+              }
+              prevQueueLengthRef.current = combined.length;
+              return combined;
+            });
+          }
+        }
+      } catch {}
+    };
+
     const loadQueue = () => {
       try {
         const queueKey = `memories_print_queue_${cafeSlug}`;
@@ -104,11 +130,15 @@ export default function StaffTerminalPage() {
           prevQueueLengthRef.current = 0;
         }
       } catch {}
+      fetchServerQueue();
     };
 
     loadQueue();
     window.addEventListener('memories-print-queue-updated', loadQueue);
     window.addEventListener('storage', loadQueue);
+
+    // Periodic server polling every 4 seconds for cross-device table prints
+    const pollTimer = setInterval(fetchServerQueue, 4000);
 
     let channel: BroadcastChannel | null = null;
     try {
@@ -124,6 +154,7 @@ export default function StaffTerminalPage() {
     } catch {}
 
     return () => {
+      clearInterval(pollTimer);
       window.removeEventListener('memories-print-queue-updated', loadQueue);
       window.removeEventListener('storage', loadQueue);
       if (channel) {
@@ -191,6 +222,14 @@ export default function StaffTerminalPage() {
       localStorage.setItem(`memories_print_queue_${cafeSlug}`, JSON.stringify(updated));
       window.dispatchEvent(new CustomEvent('memories-print-queue-updated'));
     } catch {}
+
+    // Dismiss from server print queue
+    try {
+      fetch(`/api/v1/print/jobs?id=${encodeURIComponent(id)}&slug=${encodeURIComponent(cafeSlug)}`, {
+        method: 'DELETE',
+      }).catch(() => {});
+    } catch {}
+
     setSuccessNotice('تم تأكيد تسليم الشريط للعميل.');
     setTimeout(() => setSuccessNotice(null), 3000);
   };
@@ -278,9 +317,37 @@ export default function StaffTerminalPage() {
           setRedeemedCount(0);
         }
       } else {
-        setSelectedCustomer(null);
-        setLoyaltyData(null);
-        setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
+        // Query server CRM database for cross-device customer registration
+        fetch(`/api/v1/crm/customers?search=${encodeURIComponent(clean)}&format=json`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data && Array.isArray(data.customers) && data.customers.length > 0) {
+              const c = data.customers[0];
+              const cust: RegisteredCustomer = {
+                phone: clean,
+                name: c.name || 'ضيف مميز',
+                role: c.role || 'vip_guest',
+                registeredAt: c.createdAt || new Date().toISOString(),
+                lastVisit: new Date().toISOString(),
+                totalVisits: c.visitCount || c.memoryCount || 1,
+              };
+              setSelectedCustomer(cust);
+              const lData = LoyaltyPurseService.getData(clean, cafeSlug, requiredVisits);
+              setLoyaltyData(lData);
+              const vList = VoucherService.getCustomerVouchers(clean, cafeSlug);
+              setCustomerVouchers(vList);
+              setErrorNotice(null);
+            } else {
+              setSelectedCustomer(null);
+              setLoyaltyData(null);
+              setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
+            }
+          })
+          .catch(() => {
+            setSelectedCustomer(null);
+            setLoyaltyData(null);
+            setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
+          });
       }
     }
   };
@@ -388,8 +455,8 @@ export default function StaffTerminalPage() {
       <header className="bg-[#141212]/95 backdrop-blur-md text-white border-b border-white/10 px-4 sm:px-6 py-3.5 sticky top-0 z-40 shadow-xl relative z-10">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-black shadow-lg shadow-red-950/40 border border-white/10">
-              <Store className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/40 border border-white/10 shrink-0">
+              <MemoriesArchIcon size={22} color="#FBF9F5" />
             </div>
             <div>
               <div className="flex items-center gap-2">

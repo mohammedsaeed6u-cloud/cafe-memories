@@ -42,8 +42,8 @@ export function MarketingHeader({ onOpenSearch }: MarketingHeaderProps) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
         {/* Brand Logo & Monogram */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 group-hover:scale-105 transition-transform duration-200 border border-white/20">
-            <span className="text-sm font-serif">✦</span>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 group-hover:scale-105 transition-transform duration-200 border border-white/20">
+            <MemoriesArchIcon size={20} color="#FBF9F5" />
           </div>
           <div>
             <span

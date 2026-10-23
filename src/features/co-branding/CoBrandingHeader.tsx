@@ -2,9 +2,6 @@
 
 import React from 'react';
 import { BusinessBranding } from '@/types/photobooth';
-import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
-import { Coffee } from 'lucide-react';
-
 import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
 
 interface CoBrandingHeaderProps {

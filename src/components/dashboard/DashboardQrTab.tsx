@@ -142,7 +142,7 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
               </li>
               <li className="flex items-start gap-2">
                 <span className="w-5 h-5 rounded-md bg-[#55100D] border border-[#DD0200]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
-                <span><strong className="text-[#FBF9F5]">موقع التثبيت:</strong> ثبّت ستاند واحد على كل طاولة، كاونتر استقبال، أو نقطة دفع لتحقيق معدل مسح يتجاوز 65% من رواد الكافيه.</span>
+                <span><strong className="text-[#FBF9F5]">موقع التثبيت:</strong> ثبّت ستاند واحد على كل طاولة، كاونتر استقبال، أو نقطة دفع لتحقيق معدل مسح يتجاوز 65% من رواد وزوار المنشأة.</span>
               </li>
             </ul>
           </div>

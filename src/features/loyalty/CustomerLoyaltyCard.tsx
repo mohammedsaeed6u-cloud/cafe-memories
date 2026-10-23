@@ -43,7 +43,7 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
         cafeName: brandName,
         stampsCount: stampedCount,
         totalSlots: maxSlots,
-        theme: 'botanical_matcha',
+        theme: 'luxury_glass_cherry',
       });
       const res = await ImageSaveService.saveImage({
         dataUrl,

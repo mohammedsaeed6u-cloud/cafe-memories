@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
 
 export function MarketingFooter() {
   return (
@@ -9,7 +10,7 @@ export function MarketingFooter() {
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 border border-white/20">
-            <span className="text-sm font-serif">✦</span>
+            <MemoriesArchIcon size={18} color="#FBF9F5" />
           </div>
           <div>
             <span className="text-base font-bold tracking-tight text-white block leading-tight">

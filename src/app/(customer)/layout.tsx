@@ -1,4 +1,10 @@
 import React from 'react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'memories studio • استوديو تصوير الذكريات والولاء',
+  description: 'التقاط شريط الصور الفوري، تزيين الكارت بالملصقات، وحفظ كارت الولاء في Apple Wallet.',
+};
 
 export default function CustomerLayout({
   children,

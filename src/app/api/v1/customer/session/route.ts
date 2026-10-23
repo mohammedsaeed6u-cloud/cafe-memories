@@ -26,21 +26,24 @@ export async function POST(request: NextRequest) {
 
       if (existingCustomer) {
         customer = existingCustomer;
-        // Update last seen
+        const updates: any = { last_seen_at: new Date().toISOString() };
+        if (body.displayName && body.displayName.trim()) {
+          updates.display_name = body.displayName.trim();
+        }
         await supabase
           .from('customers')
-          .update({ last_seen_at: new Date().toISOString() })
+          .update(updates)
           .eq('id', customer.id);
       }
     }
 
     if (!customer) {
-      const newAnonId = 'anon_' + crypto.randomBytes(16).toString('hex');
+      const newAnonId = clientAnonId || ('anon_' + crypto.randomBytes(16).toString('hex'));
       const { data: newCustomer, error } = await supabase
         .from('customers')
         .insert({
           anonymous_id: newAnonId,
-          display_name: 'ضيف مميز',
+          display_name: body.displayName?.trim() || 'ضيف مميز',
         })
         .select()
         .single();

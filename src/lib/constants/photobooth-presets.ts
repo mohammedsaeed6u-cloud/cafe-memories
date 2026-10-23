@@ -92,7 +92,7 @@ export const PRESET_COLOR_PALETTES: {
   },
   {
     id: 'spotify-warm-taupe',
-    nameAr: 'سبوتيفاي زيتي كافيه (Warm Taupe)',
+    nameAr: 'سبوتيفاي زيتي دافئ (Warm Taupe)',
     bgColor: '#4E483E',
     borderColor: '#37322B',
     textColor: '#FFFFFF',
@@ -148,7 +148,7 @@ export const PRESET_COLOR_PALETTES: {
   },
   {
     id: 'classic-latte',
-    nameAr: 'كافيه لاتيه كلاسيك',
+    nameAr: 'لاتيه كلاسيك فاخر',
     bgColor: '#F5F0EB',
     borderColor: '#E6DCCF',
     textColor: '#2A1810',
@@ -535,7 +535,7 @@ export const DEFAULT_PHOTOBOOTH_FRAMES: PhotoboothFrame[] = [
   {
     id: 'classic-latte',
     name: 'Classic Latte',
-    nameAr: 'كافيه لاتيه كلاسيك',
+    nameAr: 'لاتيه كلاسيك فاخر',
     bgColor: '#F5F0EB',
     textColor: '#2A1810',
     borderColor: '#E6DCCF',
@@ -596,7 +596,7 @@ export const DEFAULT_PHOTOBOOTH_FRAMES: PhotoboothFrame[] = [
 export const BUSINESS_INDUSTRY_OPTIONS = [
   {
     id: 'cafe',
-    nameAr: 'كافيه ومحمصة مختصة',
+    nameAr: 'محمصة ومنشأة مختصة',
     nameEn: 'Cafe & Specialty Roastery',
     icon: 'coffee',
     defaultGiftTitle: 'مشروب سبيشالتي مجاني',
@@ -862,7 +862,7 @@ export const SHOT_COUNT_OPTIONS: ShotCountOption[] = [
     labelAr: '3 لقطات (Roastery Trio)',
     nameEn: 'Trio Classic',
     badge: '3-CUTS',
-    descriptionAr: 'الشريط الثلاثي الكلاسيكي المريح للعين في كروت ولاء الكافيهات',
+    descriptionAr: 'الشريط الثلاثي الكلاسيكي المريح للعين في بطاقات ولاء المنشآت الراقية',
   },
   {
     count: 4,
@@ -1055,7 +1055,7 @@ export const PHOTOBOOTH_CARD_MODES: PhotoboothModeInfo[] = [
     nameAr: '% أرابيكا ذهبي فاخر (Espresso & Gold Foil)',
     nameEn: '% Arabica Luxury Gold',
     icon: 'gold',
-    description: 'إسبريسو داكن غير لامع مع إطار ذهبي ميتاليك براق ولمسات فخامة كافيهات القهوة المختصة الفاخرة',
+    description: 'إسبريسو داكن غير لامع مع إطار ذهبي ميتاليك براق ولمسات فخامة المنشآت الراقية',
     defaultBg: '#14110F',
     defaultBorder: '#D4AF37',
     defaultText: '#F7F2E7',
@@ -1080,7 +1080,7 @@ export const PHOTOBOOTH_CARD_MODES: PhotoboothModeInfo[] = [
   },
   {
     id: 'cafe_latte',
-    nameAr: 'كافيه روستري بورسلين (Specialty Roastery)',
+    nameAr: 'روستري بورسلين راقي (Specialty Roastery)',
     nameEn: 'Cafe Specialty Roastery',
     icon: 'coffee',
     description: 'ورق بورسلين كريمي دافئ ملمسي، ترويسة روستري الحرفية، ونصوص بلون الإسبريسو',
@@ -1536,7 +1536,7 @@ export const PHOTOBOOTH_FRAME_TEMPLATES: PhotoboothFrameTemplate[] = [
     widthCm: 5,
     heightCm: 15.2,
     nameEn: 'Café Specialty Roastery (3 Cuts)',
-    nameAr: 'كافيه سبيشالتي روستري (3 لقطات - بورسلين دافئ)',
+    nameAr: 'سبيشالتي روستري راقي (3 لقطات - بورسلين دافئ)',
     dimensions: '2x6 in',
     dimensionsCm: '5 × 15.2 سم',
     orientation: 'vertical',

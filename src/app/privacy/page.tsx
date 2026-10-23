@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Shield, Lock, Eye, FileText, ArrowRight } from 'lucide-react';
 import { LastUpdatedBadge } from '@/components/ui/LastUpdatedBadge';
+import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
 
 export default function PrivacyPolicyPage() {
   return (
@@ -15,8 +16,8 @@ export default function PrivacyPolicyPage() {
       <header className="bg-[#141212]/90 backdrop-blur-xl border-b border-white/10 sticky top-0 z-30 shadow-md">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-serif text-sm shadow-md border border-white/10">
-              ✦
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-md border border-white/10 shrink-0">
+              <MemoriesArchIcon size={18} color="#FBF9F5" />
             </div>
             <span className="font-bold text-[#FBF9F5] text-base font-serif">Memories • سياسة الخصوصية</span>
           </Link>
@@ -51,7 +52,7 @@ export default function PrivacyPolicyPage() {
           <ul className="list-disc list-inside text-sm text-[#A19E9B] space-y-1.5 pr-2">
             <li><strong className="text-[#FBF9F5]">بيانات الحساب ومصادقة Google:</strong> الاسم، عنوان البريد الإلكتروني، ومعرف الحساب عند تسجيل الدخول كتاجر لإدارة كود الطاولات والتحليلات.</li>
             <li><strong className="text-[#FBF9F5]">بيانات بطاقة الولاء للعميل:</strong> رقم الهاتف المحمول (لتوثيق وحفظ عدد الزيارات واستحقاق المكافآت دون الحاجة لكلمة مرور).</li>
-            <li><strong className="text-[#FBF9F5]">الصور والذكريات الموثقة:</strong> الصور التي يلتقطها الزائر برغبته داخل الكافيه لحفظها في كارت الولاء أو عرضها على شاشات الصالة بموافقته الصريحة.</li>
+            <li><strong className="text-[#FBF9F5]">الصور والذكريات الموثقة:</strong> الصور التي يلتقطها الزائر برغبته داخل المنشأة لحفظها في كارت الولاء أو عرضها على شاشات الصالة بموافقته الصريحة.</li>
           </ul>
         </section>
 
@@ -64,10 +65,10 @@ export default function PrivacyPolicyPage() {
             نستخدم البيانات للأغراض التشغيلية المحددة التالية فقط:
           </p>
           <ul className="list-disc list-inside text-sm text-[#A19E9B] space-y-1.5 pr-2">
-            <li>التحقق من هوية أصحاب الكافيهات والمتاجر عبر Google OAuth.</li>
+            <li>التحقق من هوية أصحاب المنشآت والمتاجر عبر Google OAuth.</li>
             <li>احتساب عدد الزيارات وإصدار قسائم الهدايا والمكافآت التلقائية للعملاء.</li>
-            <li>بث الذكريات المعتمدة فقط على شاشات التلفزيون الذكية داخل صالة الكافيه.</li>
-            <li>تقديم تقارير تحليلية مجمعة لأصحاب الكافيهات حول معدل الزيارات دون بيع أي بيانات شخصية لأي طرف ثالث.</li>
+            <li>بث الذكريات المعتمدة فقط على شاشات التلفزيون الذكية داخل صالة المنشأة.</li>
+            <li>تقديم تقارير تحليلية مجمعة لأصحاب المنشآت حول معدل الزيارات دون بيع أي بيانات شخصية لأي طرف ثالث.</li>
           </ul>
         </section>
 

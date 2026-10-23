@@ -175,7 +175,7 @@ export interface BusinessSettings {
 }
 
 export type BusinessType =
-  | 'cafe'           // كافيهات ومحامص
+  | 'cafe'           // منشآت ومحامص مختصة
   | 'restaurant'     // مطاعم ومفاهيم طعام
   | 'retail'         // متاجر ملابس وأزياء وبوتيكات
   | 'salon'          // صالونات تجميل وحلاقة وعناية

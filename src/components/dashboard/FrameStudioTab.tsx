@@ -1458,7 +1458,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
 
           <p className="text-[11px] text-[#A19E9B] mt-4 text-center font-medium leading-relaxed">
             يملأ العميل صورة في كل زيارة، وتظهر هديته المحددة في الخانة الأخيرة لتحفيزه على إكمال الكارت.
-            {allowCustomerColors ? ' (العميل مخوّل لاختيار لونه المفضل من الألوان المحددة)' : ' (الكارت مقفول بلون الكافيه الموحد)'}
+            {allowCustomerColors ? ' (العميل مخوّل لاختيار لونه المفضل من الألوان المحددة)' : ' (الكارت مقفول بلون المنشأة الموحد)'}
           </p>
         </div>
       </div>

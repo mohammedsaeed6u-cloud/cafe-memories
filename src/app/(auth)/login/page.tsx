@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Coffee,
   Shield,
   AlertCircle,
   KeyRound,
@@ -67,12 +66,17 @@ export default function LoginPage() {
   const [selectedStaffId, setSelectedStaffId] = useState<string>(STAFF_ROSTER[0]?.id || 'staff-1');
   const [pin, setPin] = useState('');
 
-  // Auto-redirect if already logged in with valid session
+  // Auto-redirect if already logged in with valid session, and check tab query param
   useEffect(() => {
     try {
       const activeSlug = localStorage.getItem('memories_active_merchant_slug');
       if (activeSlug && document.cookie.includes('memories_staff_session=1')) {
         // Already active session
+      }
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      if (tabParam === 'signin' || tabParam === 'signup' || tabParam === 'pin') {
+        setAuthTab(tabParam);
       }
     } catch {}
   }, []);
@@ -106,7 +110,7 @@ export default function LoginPage() {
               .toLowerCase()
               .replace(/\s+/g, '-')
               .replace(/[^a-z0-9-]/g, '')
-              .slice(0, 40) || `cafe-${Math.floor(100 + Math.random() * 900)}`;
+              .slice(0, 40) || `brand-${Math.floor(100 + Math.random() * 900)}`;
         }
 
         // 1. Persist real merchant identity to localStorage
@@ -128,7 +132,7 @@ export default function LoginPage() {
           localStorage.setItem('memories_registered_merchants', JSON.stringify(registeredList));
         } catch {}
 
-        // 2. Initialize real business settings for this cafe (0 mock data)
+        // 2. Initialize real business settings for this brand (0 mock data)
         const existingSettings = BusinessSettingsService.getSettings(slug);
         BusinessSettingsService.saveSettings({
           ...existingSettings,
@@ -137,7 +141,7 @@ export default function LoginPage() {
           branding: {
             ...existingSettings.branding,
             name: rawName,
-            tagline: 'Specialty Coffee & Guest Memories',
+            tagline: 'Luxury Experience & Guest Memories',
             instagramHandle: `@${slug.replace(/[^a-z0-9_]/gi, '')}`,
           },
         });
@@ -304,7 +308,7 @@ export default function LoginPage() {
       <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Brand Back Link */}
-      <div className="w-full max-w-md mb-4 flex items-center justify-between relative z-10">
+      <div className="w-full max-w-lg mb-4 flex items-center justify-between relative z-10">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A19E9B] hover:text-[#FBF9F5] transition"
@@ -317,19 +321,19 @@ export default function LoginPage() {
         </span>
       </div>
 
-      <div className="w-full max-w-md bg-[#141212] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10">
+      <div className="w-full max-w-lg bg-[#141212] border border-white/10 rounded-2xl p-7 sm:p-10 shadow-2xl backdrop-blur-xl relative z-10">
         {/* Header */}
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center mx-auto mb-3 shadow-lg shadow-red-950/50 border border-white/20">
-            <span className="text-base font-serif">✦</span>
+        <div className="text-center mb-7">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center mx-auto mb-3.5 shadow-lg shadow-red-950/60 border border-white/20">
+            <MemoriesArchIcon size={30} color="#FBF9F5" />
           </div>
           <h1
             style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-            className="text-2xl font-semibold text-white tracking-tight"
+            className="text-2xl sm:text-3xl font-semibold text-white tracking-tight"
           >
             memories studio
           </h1>
-          <p className="text-xs text-[#A19E9B] mt-1 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#A19E9B] mt-1.5 leading-relaxed">
             بوابة أصحاب الأنشطة التجارية وإدارة تجارب الزوار والولاء التفاعلي
           </p>
         </div>
@@ -482,7 +486,7 @@ export default function LoginPage() {
                     <p className="text-[11px] text-[#A19E9B] mt-1.5 flex items-center gap-1 font-mono" dir="ltr">
                       <span className="text-[#DD0200] font-bold">Live URL:</span>
                       <span className="text-stone-300">
-                        memories-c9w.pages.dev/c/{cafeSlug || 'my-cafe'}
+                        memories-c9w.pages.dev/c/{cafeSlug || 'my-brand'}
                       </span>
                     </p>
                   </div>
@@ -497,7 +501,7 @@ export default function LoginPage() {
                   <input
                     type="email"
                     required
-                    placeholder="owner@yourcafe.com"
+                    placeholder="owner@yourbrand.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-[#A19E9B]/50 focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none transition font-mono"
