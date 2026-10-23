@@ -74,9 +74,9 @@ export default function TermsOfServicePage() {
           <p className="text-sm text-[#63574D] leading-relaxed">
             لأي استفسارات قانونية أو تنظيمية:
             <br />
-            البريد الإلكتروني: <strong className="font-mono text-[#3D2314]">legal@memories-c9w.pages.dev</strong>
+            البريد الإلكتروني: <strong className="font-mono text-[#3D2314]">legal@memories-d9l.pages.dev</strong>
             <br />
-            الموقع الرسمي: <strong className="font-mono text-[#3D2314]">https://memories-c9w.pages.dev</strong>
+            الموقع الرسمي: <strong className="font-mono text-[#3D2314]">https://memories-d9l.pages.dev</strong>
           </p>
         </section>
       </main>

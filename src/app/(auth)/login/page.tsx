@@ -66,7 +66,7 @@ export default function LoginPage() {
   // Staff PIN state
   const [selectedStaffId, setSelectedStaffId] = useState<string>(STAFF_ROSTER[0]?.id || 'staff-1');
   const [pin, setPin] = useState('');
-  const [hostDomain, setHostDomain] = useState('memories-c9w.pages.dev');
+  const [hostDomain, setHostDomain] = useState('memories-d9l.pages.dev');
 
   // Auto-redirect if already logged in with valid session, and check tab query param
   useEffect(() => {
@@ -280,7 +280,7 @@ export default function LoginPage() {
     setErrorMsg(null);
     try {
       const supabase = createClient();
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-c9w.pages.dev';
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-d9l.pages.dev';
       const redirectTo = `${origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

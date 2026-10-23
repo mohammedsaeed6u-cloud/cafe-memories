@@ -105,7 +105,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
   const customerUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/c/${cafeSlug}`
-    : `https://memories-c9w.pages.dev/c/${cafeSlug}`;
+    : `https://memories-d9l.pages.dev/c/${cafeSlug}`;
 
   // Generate QR code whenever cafeSlug changes or when reaching step 3
   useEffect(() => {

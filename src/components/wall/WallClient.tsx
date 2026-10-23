@@ -112,7 +112,7 @@ export function WallClient({ screenId }: WallClientProps) {
     return 'memories';
   });
 
-  const [origin, setOrigin] = useState('https://memories-c9w.pages.dev');
+  const [origin, setOrigin] = useState('https://memories-d9l.pages.dev');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

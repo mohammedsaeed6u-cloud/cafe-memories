@@ -99,9 +99,9 @@ export default function PrivacyPolicyPage() {
           <p className="text-sm text-[#63574D] leading-relaxed">
             لأي استفسارات حول سياسة الخصوصية أو ممارسة حقوقك في البيانات:
             <br />
-            البريد الإلكتروني: <strong className="font-mono text-[#3D2314]">privacy@memories-c9w.pages.dev</strong>
+            البريد الإلكتروني: <strong className="font-mono text-[#3D2314]">privacy@memories-d9l.pages.dev</strong>
             <br />
-            الموقع الإلكتروني: <strong className="font-mono text-[#3D2314]">https://memories-c9w.pages.dev</strong>
+            الموقع الإلكتروني: <strong className="font-mono text-[#3D2314]">https://memories-d9l.pages.dev</strong>
           </p>
         </section>
       </main>
