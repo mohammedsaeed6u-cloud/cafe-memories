@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-surface: #141313;
-  --color-surface-charcoal: #141212;
-  --color-surface-stone: #1F1D1D;
-  --color-surface-dim: #141313;
-  --color-surface-bright: #3b3939;
+  --color-surface: #FAF5EB;
+  --color-surface-charcoal: #F5EFE6;
+  --color-surface-stone: #EADDC4;
+  --color-surface-dim: #F5EFE6;
+  --color-surface-bright: #FFFFFF;
 
   --color-primary: #DFAB56;
   --color-primary-container: #DFAB56;
@@ -14,10 +14,10 @@
 
   --color-alabaster: #FAF5EB;
   --color-alabaster-muted: #D9D9D9;
-  --color-coffee-bean: #1A0706;
+  --color-coffee-bean: #3D2314;
 
-  --color-border-hairline: rgba(255, 255, 255, 0.08);
-  --color-border-accent: rgba(221, 2, 0, 0.35);
+  --color-border-hairline: #EADDC4;
+  --color-border-accent: #DFAB56;
 
   --font-playfair: var(--font-playfair), 'Playfair Display', Georgia, serif;
   --font-jakarta: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;

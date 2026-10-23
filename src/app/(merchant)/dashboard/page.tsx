@@ -444,7 +444,7 @@ export default function MerchantDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col font-sans selection:bg-[#DFAB56] selection:text-[#12100E]">
+    <div className="min-h-screen bg-[#FAF5EB] text-[#3D2314] flex flex-col font-sans selection:bg-[#DFAB56] selection:text-white">
       {/* Top Navbar Component */}
       <DashboardNavBar
         settings={settings}

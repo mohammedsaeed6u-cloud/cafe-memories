@@ -14,18 +14,18 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#141313] text-[#e6e1e1]">
-      <aside className="w-64 bg-[#0E0D0D] border-l border-white/10 text-[#FAF5EB] flex-shrink-0 flex flex-col justify-between">
+    <div className="flex min-h-screen bg-[#FAF5EB] text-[#3D2314]">
+      <aside className="w-64 bg-white border-l border-[#EADDC4] text-[#3D2314] flex-shrink-0 flex flex-col justify-between">
         <div className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center font-bold text-xs shadow-md border border-white/10 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center font-bold text-xs shadow-xs border border-[#EADDC4] shrink-0">
               <MemoriesArchIcon size={20} color="#FAF5EB" />
             </div>
             <div>
-              <h2 className="text-sm font-bold tracking-tight text-[#FAF5EB] font-serif">
+              <h2 className="text-sm font-bold tracking-tight text-[#3D2314] font-serif">
                 System Admin
               </h2>
-              <span className="text-[10px] font-mono text-[#A19E9B]">
+              <span className="text-[10px] font-mono text-[#63574D]">
                 SUPER ADMIN
               </span>
             </div>
@@ -34,24 +34,24 @@ export default function AdminLayout({
           <nav className="space-y-1">
             <Link
               href="/admin"
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#3D2314]/40 text-[#FAF5EB] border border-[#DFAB56]/30 text-xs font-bold transition"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#FAF5EB] text-[#3D2314] border border-[#DFAB56]/40 text-xs font-bold transition"
             >
               <span>لوحة الإدارة المركزية</span>
             </Link>
             <Link
               href="/dashboard"
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-white/[0.04] text-xs font-medium transition"
+              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#63574D] hover:text-[#3D2314] hover:bg-[#FAF5EB]/50 text-xs font-medium transition"
             >
               <span>لوحة التاجر</span>
             </Link>
           </nav>
         </div>
 
-        <div className="p-6 border-t border-white/10 text-[11px] text-[#A19E9B]">
-          <span>Memories Platform v2.4</span>
+        <div className="p-6 border-t border-[#EADDC4] text-[11px] text-[#63574D]">
+          <span>Stampy Platform v2.4</span>
         </div>
       </aside>
-      <main className="flex-1 p-6 md:p-8 bg-[#141313] overflow-y-auto">
+      <main className="flex-1 p-6 md:p-8 bg-[#FAF5EB] overflow-y-auto">
         {children}
       </main>
     </div>

@@ -103,9 +103,9 @@ export function AppleLuxuryShowcase({
                       widthCm: 5,
                       heightCm: 15.2,
                       orientation: 'vertical',
-                      bgColor: '#141313',
-                      textColor: '#FAF5EB',
-                      borderColor: 'rgba(255,255,255,0.1)',
+                      bgColor: '#FAF5EB',
+                      textColor: '#3D2314',
+                      borderColor: '#EADDC4',
                       accentColor: '#DFAB56',
                       cornerEmojis: {
                         topRight: '',
@@ -197,7 +197,7 @@ export function AppleLuxuryShowcase({
                   {SHOWCASE_PHOTOS.map((src, i) => (
                     <div
                       key={i}
-                      className="group relative aspect-[3/4] rounded-lg overflow-hidden border border-[#EADDC4] bg-[#141313] shadow-md"
+                      className="group relative aspect-[3/4] rounded-lg overflow-hidden border border-[#EADDC4] bg-[#FAF5EB] shadow-xs"
                     >
                       <img
                         src={src}
@@ -206,8 +206,8 @@ export function AppleLuxuryShowcase({
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                       <div className="absolute bottom-2 right-2 text-right">
-                        <span className="text-[10px] font-bold text-[#3D2314] block">طاولة 0{i + 2}</span>
-                        <span className="text-[8px] font-mono text-[#D9D9D9]">منذ {i * 7 + 3} دقيقة</span>
+                        <span className="text-[10px] font-bold text-white block">طاولة 0{i + 2}</span>
+                        <span className="text-[8px] font-mono text-white/80">منذ {i * 7 + 3} دقيقة</span>
                       </div>
                     </div>
                   ))}

@@ -111,49 +111,49 @@ export default function AuthCallbackPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col items-center justify-center font-sans p-6 text-center relative overflow-hidden">
+    <div className="min-h-screen bg-[#FAF5EB] text-[#3D2314] flex flex-col items-center justify-center font-sans p-6 text-center relative overflow-hidden">
       {/* Ambient background glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#3D2314]/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#DFAB56]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#3D2314]/5 rounded-full blur-[140px] pointer-events-none" />
 
       {errorMsg ? (
-        <div className="max-w-md w-full p-7 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl text-[#FAF5EB] space-y-4 relative z-10 backdrop-blur-xl">
-          <div className="w-12 h-12 rounded-xl bg-[#3D2314]/60 text-[#DFAB56] flex items-center justify-center mx-auto text-xl font-bold border border-[#DFAB56]/30 shadow-md">
+        <div className="max-w-md w-full p-7 rounded-2xl bg-white border border-[#EADDC4] shadow-xl text-[#3D2314] space-y-4 relative z-10 backdrop-blur-xl">
+          <div className="w-12 h-12 rounded-xl bg-[#FAF5EB] text-[#DFAB56] flex items-center justify-center mx-auto text-xl font-bold border border-[#DFAB56]/30 shadow-xs">
             <AlertCircle className="w-6 h-6" />
           </div>
           <h2
             style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-            className="text-base sm:text-lg font-bold text-[#FAF5EB]"
+            className="text-base sm:text-lg font-bold text-[#3D2314]"
           >
             تعذر إكمال تسجيل الدخول
           </h2>
-          <p className="text-xs text-[#A19E9B] leading-relaxed">{errorMsg}</p>
+          <p className="text-xs text-[#63574D] leading-relaxed">{errorMsg}</p>
           <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-center">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-xs font-bold transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>العودة لصفحة الدخول</span>
             </Link>
             <Link
               href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] text-xs font-bold transition border border-white/10"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#FAF5EB] hover:bg-[#F5EFE6] text-[#3D2314] text-xs font-bold transition border border-[#EADDC4]"
             >
               <span>متابعة للوحة التحكم مباشرة</span>
             </Link>
           </div>
         </div>
       ) : (
-        <div className="max-w-sm w-full p-8 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl space-y-4 relative z-10 backdrop-blur-xl">
+        <div className="max-w-sm w-full p-8 rounded-2xl bg-white border border-[#EADDC4] shadow-xl space-y-4 relative z-10 backdrop-blur-xl">
           <div className="w-12 h-12 rounded-full border-3 border-[#DFAB56] border-t-transparent animate-spin mx-auto" />
           <h2
             style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-            className="text-base sm:text-lg font-bold text-[#FAF5EB] tracking-tight"
+            className="text-base sm:text-lg font-bold text-[#3D2314] tracking-tight"
           >
             {isRedirecting ? 'تم التحقق بنجاح!' : 'جاري تأكيد حسابك...'}
           </h2>
-          <p className="text-xs text-[#A19E9B]">
+          <p className="text-xs text-[#63574D]">
             {isRedirecting
               ? 'يتم تحويلك إلى لوحة التحكم الآن...'
               : 'يرجى الانتظار لحظات للتحقق من بيانات الجلسة.'}

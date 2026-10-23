@@ -98,7 +98,7 @@ export default function SuperAdminPortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col selection:bg-[#DFAB56] selection:text-[#12100E] font-sans">
+    <div className="min-h-screen bg-[#FAF5EB] text-[#3D2314] flex flex-col selection:bg-[#DFAB56] selection:text-white font-sans">
       {/* Super Admin Navigation */}
       <header className="bg-[#0E0D0D] text-[#FAF5EB] border-b border-white/10 sticky top-0 z-40 px-6 py-4 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
