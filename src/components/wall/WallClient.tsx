@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
-import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
 import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
 import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
 
@@ -98,9 +97,9 @@ export function WallClient({ screenId }: WallClientProps) {
 
   const [brandName, setBrandName] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('memories_active_merchant_name') || 'Memories Studio';
+      return localStorage.getItem('memories_active_merchant_name') || 'stampy.';
     }
-    return 'Memories Studio';
+    return 'stampy.';
   });
   const [brandLogoUrl, setBrandLogoUrl] = useState<string | null>(null);
   const [cafeSlug, setCafeSlug] = useState(() => {
@@ -113,7 +112,7 @@ export function WallClient({ screenId }: WallClientProps) {
     return 'memories';
   });
 
-  const [origin, setOrigin] = useState('https://memories-7vr.pages.dev');
+  const [origin, setOrigin] = useState('https://memories-c9w.pages.dev');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -238,7 +237,7 @@ export function WallClient({ screenId }: WallClientProps) {
       channel.onmessage = (event) => {
         const data = event.data;
         if (data?.type === 'SCREEN_PAIRED' && (data.code === screenPairingCode || data.code === 'all')) {
-          handlePairedSuccess(data.cafeSlug || 'memories', data.cafeName || 'Memories Studio');
+          handlePairedSuccess(data.cafeSlug || 'memories', data.cafeName || 'stampy.');
         }
         if (data?.type === 'WALL_NEW_PHOTO' && data.item) {
           setMemories((prev) => [data.item, ...prev.filter((m) => m.id !== data.item.id)]);
@@ -280,7 +279,7 @@ export function WallClient({ screenId }: WallClientProps) {
       if (e.key === `memories_paired_screen_${screenPairingCode}` && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          handlePairedSuccess(parsed.cafeSlug || 'memories', parsed.cafeName || 'Memories Studio');
+          handlePairedSuccess(parsed.cafeSlug || 'memories', parsed.cafeName || 'stampy.');
         } catch {}
       }
       if (e.key === `memories_wall_feed_${cafeSlug}` && e.newValue) {
@@ -394,14 +393,14 @@ export function WallClient({ screenId }: WallClientProps) {
   const currentMemory = memories[currentIndex] || memories[0];
 
   // -------------------------------------------------------------
-  // 1. UNPAIRED STATE: Atelier Nostalgia Studio Vitrine TV Display
+  // 1. UNPAIRED STATE: استامبي • Stampy Studio Vitrine TV Display
   // -------------------------------------------------------------
   if (!isPaired) {
     return (
       <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col items-center justify-between p-6 sm:p-12 select-none font-sans relative overflow-hidden">
         {/* Subtle Archival Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#55100D]/20 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#3D2314]/20 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
 
         {/* Top Header Bar */}
         <div className="w-full max-w-5xl flex items-center justify-between z-10 border-b border-white/10 pb-5">
@@ -412,8 +411,8 @@ export function WallClient({ screenId }: WallClientProps) {
             theme="dark"
             showTagline={true}
           />
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#55100D]/50 border border-[#DD0200]/40 text-xs font-mono font-bold text-[#FBF9F5] shadow-sm">
-            <Radio className="w-3.5 h-3.5 text-[#DD0200] animate-pulse" />
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#3D2314]/50 border border-[#DFAB56]/40 text-xs font-mono font-bold text-[#FAF5EB] shadow-sm">
+            <Radio className="w-3.5 h-3.5 text-[#DFAB56] animate-pulse" />
             <span className="uppercase tracking-wider">بث الشاشة الذكية • جاهز للإقران</span>
           </div>
         </div>
@@ -428,22 +427,22 @@ export function WallClient({ screenId }: WallClientProps) {
             </div>
           ) : (
             <>
-              <div className="w-16 h-16 rounded-xl bg-[#55100D]/40 text-[#DD0200] flex items-center justify-center mx-auto border border-[#DD0200]/30 shadow-lg shadow-red-950/30">
+              <div className="w-16 h-16 rounded-xl bg-[#3D2314]/40 text-[#DFAB56] flex items-center justify-center mx-auto border border-[#DFAB56]/30 shadow-lg shadow-red-950/30">
                 <Tv className="w-8 h-8" />
               </div>
 
               <div className="space-y-2">
-                <span className="text-[11px] font-mono uppercase tracking-[0.08em] text-[#DD0200] font-bold block">
+                <span className="text-[11px] font-mono uppercase tracking-[0.08em] text-[#DFAB56] font-bold block">
                   SMART TV LIVE SIGNAGE
                 </span>
                 <h1
                   style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-                  className="text-2xl sm:text-3xl font-bold text-[#FBF9F5] tracking-tight"
+                  className="text-2xl sm:text-3xl font-bold text-[#FAF5EB] tracking-tight"
                 >
                   اقتران شاشة التلفزيون الذكية
                 </h1>
                 <p className="text-xs sm:text-sm text-[#A19E9B] max-w-lg mx-auto leading-relaxed">
-                  أدخل هذا الرقم المكون من 6 أرقام في <strong className="text-[#FBF9F5] font-bold underline decoration-[#DD0200]">لوحة تحكم التاجر</strong> لربط هذه الشاشة مع فرعك ونشاطك التجاري وبث ذكريات الصالة فوراً:
+                  أدخل هذا الرقم المكون من 6 أرقام في <strong className="text-[#FAF5EB] font-bold underline decoration-[#DFAB56]">لوحة تحكم التاجر</strong> لربط هذه الشاشة مع فرعك ونشاطك التجاري وبث ذكريات الصالة فوراً:
                 </p>
               </div>
 
@@ -453,7 +452,7 @@ export function WallClient({ screenId }: WallClientProps) {
                   {screenPairingCode.split('').map((digit, idx) => (
                     <div
                       key={idx}
-                      className="w-12 h-16 sm:w-20 sm:h-26 rounded-xl bg-[#0B0A0A] border-2 border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] font-mono"
+                      className="w-12 h-16 sm:w-20 sm:h-26 rounded-xl bg-[#0B0A0A] border-2 border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] font-mono"
                     >
                       {digit}
                     </div>
@@ -464,15 +463,15 @@ export function WallClient({ screenId }: WallClientProps) {
               {/* Step-by-Step Guide */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right pt-2">
                 <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-xs text-[#A19E9B]">
-                  <span className="font-mono font-black text-[#DD0200] block mb-1">الخطوة 1:</span>
+                  <span className="font-mono font-black text-[#DFAB56] block mb-1">الخطوة 1:</span>
                   افتح لوحة تحكم التاجر على هاتفك أو حاسوبك.
                 </div>
                 <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-xs text-[#A19E9B]">
-                  <span className="font-mono font-black text-[#DD0200] block mb-1">الخطوة 2:</span>
+                  <span className="font-mono font-black text-[#DFAB56] block mb-1">الخطوة 2:</span>
                   انتقل إلى تبويب «شاشات الصالة».
                 </div>
                 <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-xs text-[#A19E9B]">
-                  <span className="font-mono font-black text-[#DD0200] block mb-1">الخطوة 3:</span>
+                  <span className="font-mono font-black text-[#DFAB56] block mb-1">الخطوة 3:</span>
                   اكتب الرمز ({screenPairingCode}) واضغط «تأكيد وربط الشاشة».
                 </div>
               </div>
@@ -480,14 +479,14 @@ export function WallClient({ screenId }: WallClientProps) {
               {/* Listening Status & Actions */}
               <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-white/10 text-xs">
                 <div className="flex items-center gap-2 text-[#A19E9B] font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#DD0200] animate-ping" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#DFAB56] animate-ping" />
                   <span>بانتظار إدخال الكود من التاجر...</span>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleRegenerateCode}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] border border-white/10 transition font-bold text-xs cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] border border-white/10 transition font-bold text-xs cursor-pointer"
                 >
                   <RotateCw className="w-3.5 h-3.5 text-[#A19E9B]" />
                   <span>توليد كود جديد</span>
@@ -496,7 +495,7 @@ export function WallClient({ screenId }: WallClientProps) {
                 <button
                   type="button"
                   onClick={() => setIsPaired(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold transition text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold transition text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
                 >
                   <span>معاينة الشاشة مباشرة ←</span>
                 </button>
@@ -520,7 +519,7 @@ export function WallClient({ screenId }: WallClientProps) {
     return (
       <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col items-center justify-between p-8 select-none font-sans relative overflow-hidden">
         {/* Archival Ambient Glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#55100D]/20 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#3D2314]/20 rounded-full blur-[140px] pointer-events-none" />
 
         <div className="w-full max-w-5xl flex items-center justify-between z-10 border-b border-white/10 pb-5">
           <CoBrandingLogos
@@ -530,20 +529,20 @@ export function WallClient({ screenId }: WallClientProps) {
             theme="dark"
             showTagline={true}
           />
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#55100D]/60 border border-[#DD0200]/40 text-[#FBF9F5] text-xs font-bold font-mono">
-            <span className="w-2 h-2 rounded-full bg-[#DD0200] animate-ping" />
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#3D2314]/60 border border-[#DFAB56]/40 text-[#FAF5EB] text-xs font-bold font-mono">
+            <span className="w-2 h-2 rounded-full bg-[#DFAB56] animate-ping" />
             <span className="uppercase tracking-wider">استراحة مؤقتة • STANDBY</span>
           </div>
         </div>
 
         <div className="text-center space-y-5 max-w-md z-10">
-          <div className="w-24 h-24 rounded-2xl bg-[#141212] border border-white/10 text-[#DD0200] flex items-center justify-center mx-auto shadow-2xl animate-pulse">
-            <Sparkles className="w-12 h-12 text-[#DD0200]" />
+          <div className="w-24 h-24 rounded-2xl bg-[#141212] border border-white/10 text-[#DFAB56] flex items-center justify-center mx-auto shadow-2xl animate-pulse">
+            <Sparkles className="w-12 h-12 text-[#DFAB56]" />
           </div>
           <div className="space-y-2">
             <h2
               style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-              className="text-3xl font-bold text-[#FBF9F5] tracking-tight"
+              className="text-3xl font-bold text-[#FAF5EB] tracking-tight"
             >
               {brandName}
             </h2>
@@ -563,23 +562,23 @@ export function WallClient({ screenId }: WallClientProps) {
   }
 
   // -------------------------------------------------------------
-  // 2. PAIRED STATE: Atelier Nostalgia Live Wall Broadcast Display
+  // 2. PAIRED STATE: استامبي • Stampy Live Wall Broadcast Display
   // -------------------------------------------------------------
   return (
     <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col justify-between p-6 sm:p-10 select-none overflow-hidden font-sans relative">
       {/* Real-time Celebration Toast Banner */}
       {newMemoryToast && (
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#DD0200] to-[#55100D] text-[#FBF9F5] font-bold shadow-2xl border border-white/20 backdrop-blur-md">
-            <Sparkles className="w-5 h-5 text-[#FBF9F5] animate-spin" />
+          <div className="flex items-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#DFAB56] to-[#3D2314] text-[#FAF5EB] font-bold shadow-2xl border border-white/20 backdrop-blur-md">
+            <Sparkles className="w-5 h-5 text-[#FAF5EB] animate-spin" />
             <span className="text-sm sm:text-base tracking-wide drop-shadow-sm">{newMemoryToast}</span>
           </div>
         </div>
       )}
 
       {/* Background Ambient Archival Glows */}
-      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#55100D]/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#3D2314]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Top Header Bar: MEMORIES × BRAND Side-by-Side */}
       <header className="relative z-20 flex items-center justify-between border-b border-white/10 pb-5 max-w-6xl mx-auto w-full">
@@ -597,16 +596,16 @@ export function WallClient({ screenId }: WallClientProps) {
             {isOnline ? (
               <Wifi className="w-3.5 h-3.5 text-emerald-400" />
             ) : (
-              <WifiOff className="w-3.5 h-3.5 text-[#DD0200]" />
+              <WifiOff className="w-3.5 h-3.5 text-[#DFAB56]" />
             )}
-            <span className="text-[#FBF9F5] font-bold">
+            <span className="text-[#FAF5EB] font-bold">
               {isOnline ? 'LIVE 4K' : 'OFFLINE CACHE'}
             </span>
           </div>
 
           <button
             onClick={() => setIsPaired(false)}
-            className="px-3 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] text-xs transition cursor-pointer font-bold shadow-xs"
+            className="px-3 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] text-xs transition cursor-pointer font-bold shadow-xs"
             title="إعادة اقتران الشاشة"
           >
             كود الشاشة
@@ -614,7 +613,7 @@ export function WallClient({ screenId }: WallClientProps) {
 
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] transition cursor-pointer shadow-xs"
+            className="p-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] transition cursor-pointer shadow-xs"
             title="ملء الشاشة"
           >
             <Maximize2 className="w-4 h-4" />
@@ -636,9 +635,9 @@ export function WallClient({ screenId }: WallClientProps) {
               />
 
               {/* Bottom Memory Caption Overlay */}
-              <div className="absolute bottom-0 inset-x-0 p-6 text-right space-y-1 z-10 bg-gradient-to-t from-[#0E0D0D] via-[#0E0D0D]/75 to-transparent text-[#FBF9F5]">
+              <div className="absolute bottom-0 inset-x-0 p-6 text-right space-y-1 z-10 bg-gradient-to-t from-[#0E0D0D] via-[#0E0D0D]/75 to-transparent text-[#FAF5EB]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-[#FBF9F5] font-bold px-2.5 py-0.5 rounded-md bg-[#55100D]/70 backdrop-blur-sm border border-[#DD0200]/40">
+                  <span className="text-xs font-mono text-[#FAF5EB] font-bold px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 backdrop-blur-sm border border-[#DFAB56]/40">
                     الزيارة رقم #{currentMemory.visitNumber}
                   </span>
                   <span className="text-xs font-mono text-[#A19E9B]">
@@ -647,7 +646,7 @@ export function WallClient({ screenId }: WallClientProps) {
                 </div>
                 <h3
                   style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-                  className="text-xl font-bold text-[#FBF9F5] drop-shadow-md"
+                  className="text-xl font-bold text-[#FAF5EB] drop-shadow-md"
                 >
                   {currentMemory.customerName}
                 </h3>
@@ -662,12 +661,12 @@ export function WallClient({ screenId }: WallClientProps) {
             {/* Side Call-to-Action & Community QR */}
             <div className="flex flex-col items-center lg:items-start text-center lg:text-right space-y-6 max-w-sm">
               <div className="space-y-2">
-                <span className="px-3.5 py-1 rounded-md bg-[#55100D]/50 text-[#FBF9F5] font-mono text-xs font-bold border border-[#DD0200]/40 inline-block uppercase tracking-wider">
+                <span className="px-3.5 py-1 rounded-md bg-[#3D2314]/50 text-[#FAF5EB] font-mono text-xs font-bold border border-[#DFAB56]/40 inline-block uppercase tracking-wider">
                   لحظات وذكريات الصالة
                 </span>
                 <h2
                   style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-                  className="text-2xl sm:text-3xl font-bold text-[#FBF9F5] leading-tight"
+                  className="text-2xl sm:text-3xl font-bold text-[#FAF5EB] leading-tight"
                 >
                   شارك ذكرياتك لتظهر هنا على شاشة العرض الحية
                 </h2>
@@ -694,10 +693,10 @@ export function WallClient({ screenId }: WallClientProps) {
           </>
         ) : (
           <div className="text-center space-y-4 max-w-md p-8 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl">
-            <Sparkles className="w-12 h-12 text-[#DD0200] mx-auto animate-pulse" />
+            <Sparkles className="w-12 h-12 text-[#DFAB56] mx-auto animate-pulse" />
             <h3
               style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-              className="text-xl font-bold text-[#FBF9F5]"
+              className="text-xl font-bold text-[#FAF5EB]"
             >
               بانتظار اللقطة الأولى اليوم
             </h3>
@@ -725,7 +724,7 @@ export function WallClient({ screenId }: WallClientProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] transition text-[11px] cursor-pointer font-bold shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] transition text-[11px] cursor-pointer font-bold shadow-xs"
           >
             {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
             <span>{isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}</span>

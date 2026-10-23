@@ -75,7 +75,7 @@ export class BusinessSettingsService {
         const sanitizedBrandingName =
           rawBranding.name && rawBranding.name.trim()
             ? rawBranding.name.trim()
-            : 'Memories Studio';
+            : 'stampy.';
         const sanitizedBranding = {
           ...DEFAULT_BUSINESS_SETTINGS.branding,
           ...rawBranding,
@@ -113,7 +113,7 @@ export class BusinessSettingsService {
     }
 
     // Intelligently infer cafe name from slug or query param if not stored
-    let dynamicCafeName = 'Memories Studio';
+    let dynamicCafeName = 'stampy.';
     if (cafeSlug && cafeSlug !== 'memories' && cafeSlug !== 'studio') {
       if (typeof window !== 'undefined') {
         try {
@@ -124,7 +124,7 @@ export class BusinessSettingsService {
           }
         } catch {}
       }
-      if (dynamicCafeName === 'Memories Studio') {
+      if (dynamicCafeName === 'stampy.') {
         dynamicCafeName = cafeSlug
           .split('-')
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

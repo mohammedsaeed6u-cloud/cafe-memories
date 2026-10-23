@@ -61,7 +61,7 @@ export default function MerchantDashboardPage() {
       } catch {}
     }
     const base = BusinessSettingsService.getSettings(merchantSlug);
-    if (merchantName && (!base.branding?.name || base.branding.name === 'Memories Studio')) {
+    if (merchantName && (!base.branding?.name || base.branding.name === 'stampy.')) {
       base.branding = { ...base.branding, name: merchantName };
     }
     return base;
@@ -122,7 +122,7 @@ export default function MerchantDashboardPage() {
   const customerLiveUrl =
     typeof window !== 'undefined'
       ? `${window.location.origin}/c?cafe=${settings.cafeSlug || 'memories'}`
-      : `https://memories-7vr.pages.dev/c?cafe=${settings.cafeSlug || 'memories'}`;
+      : `https://memories-c9w.pages.dev/c?cafe=${settings.cafeSlug || 'memories'}`;
 
   const handleCopyUrl = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -444,7 +444,7 @@ export default function MerchantDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col font-sans selection:bg-[#DD0200] selection:text-white">
+    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col font-sans selection:bg-[#DFAB56] selection:text-[#12100E]">
       {/* Top Navbar Component */}
       <DashboardNavBar
         settings={settings}
@@ -560,13 +560,13 @@ export default function MerchantDashboardPage() {
 
         {activeTab === 'settings' && (
           <div className="p-8 bg-[#141212] rounded-2xl border border-white/10 text-center space-y-4 shadow-xl">
-            <h3 className="font-bold text-base text-[#FBF9F5]">إعدادات الهوية والعلامة التجارية</h3>
+            <h3 className="font-bold text-base text-[#FAF5EB]">إعدادات الهوية والعلامة التجارية</h3>
             <p className="text-xs text-[#A19E9B] max-w-md mx-auto">
               اضغط على الزر أدناه لفتح لوحة تخصيص الهوية والشعار ونمط التصوير وأبعاد الكروت.
             </p>
             <button
               onClick={() => setIsQuickSetupOpen(true)}
-              className="px-6 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
+              className="px-6 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
             >
               فتح لوحة تخصيص الهوية والـ QR
             </button>

@@ -50,12 +50,12 @@ export function MarketingRetentionLoop() {
   ];
 
   return (
-    <section id="business-operation" className="py-24 px-6 max-w-6xl mx-auto border-t border-white/10 apple-font">
+    <section id="business-operation" className="py-24 px-6 max-w-6xl mx-auto border-t border-[#EADDC4] apple-font">
       <div className="text-center max-w-3xl mx-auto mb-16">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase mb-3 backdrop-blur-xl">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#EADDC4] bg-white/[0.04] text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase mb-3 backdrop-blur-xl">
           <span>OPERATIONAL EXCELLENCE • تشغيل واستثمار البيزنس</span>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+        <h2 className="text-3xl sm:text-5xl font-semibold text-[#3D2314] tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
           هندسة تشغيلية تضاعف عودة الزوار.
         </h2>
         <p className="text-sm sm:text-base text-[#A19E9B] mt-3.5 leading-relaxed">
@@ -69,19 +69,19 @@ export function MarketingRetentionLoop() {
           return (
             <div
               key={p.num}
-              className="p-7 rounded-2xl bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 hover:border-[#DD0200]/30 shadow-xl flex flex-col justify-between hover:scale-[1.01] transition-all duration-300 backdrop-blur-xl group"
+              className="p-7 rounded-2xl bg-white hover:bg-[#1C1B1B] border border-[#EADDC4] hover:border-[#DFAB56]/30 shadow-xl flex flex-col justify-between hover:scale-[1.01] transition-all duration-300 backdrop-blur-xl group"
             >
               <div>
                 <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 border border-white/20 group-hover:scale-105 transition-transform">
-                    <Icon className="w-5 h-5 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-[#3D2314] flex items-center justify-center shadow-lg shadow-red-950/50 border border-white/20 group-hover:scale-105 transition-transform">
+                    <Icon className="w-5 h-5 text-[#3D2314]" />
                   </div>
                   <span className="text-xs font-mono font-bold text-[#A19E9B]">
                     PILLAR {p.num}
                   </span>
                 </div>
 
-                <h3 className="font-semibold text-lg text-white mb-2 leading-snug" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+                <h3 className="font-semibold text-lg text-[#3D2314] mb-2 leading-snug" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
                   {p.title}
                 </h3>
                 <p className="text-xs sm:text-sm text-[#A19E9B] leading-relaxed">
@@ -89,11 +89,11 @@ export function MarketingRetentionLoop() {
                 </p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-[#DD0200] flex items-center gap-1">
+              <div className="mt-6 pt-4 border-t border-[#EADDC4] flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[#DFAB56] flex items-center gap-1">
                   <span>{p.benefit}</span>
                 </span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-[#DD0200] opacity-50 group-hover:opacity-100 transition-opacity" />
+                <ArrowUpRight className="w-3.5 h-3.5 text-[#DFAB56] opacity-50 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
           );

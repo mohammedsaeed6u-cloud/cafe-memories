@@ -147,7 +147,7 @@ function getWalletBaseUrl(): string {
   if (typeof window !== 'undefined' && window.location.origin) {
     return window.location.origin;
   }
-  return 'https://memories-7vr.pages.dev';
+  return 'https://memories-c9w.pages.dev';
 }
 
 export class DigitalWalletService {

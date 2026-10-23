@@ -244,22 +244,22 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
 
         {/* Loading / Error */}
         {!isCameraReady && !cameraError && !capturedPhoto && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141212] text-[#FBF9F5] p-6 text-center">
-            <RefreshCw className="w-8 h-8 text-[#DD0200] animate-spin mb-3" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141212] text-[#FAF5EB] p-6 text-center">
+            <RefreshCw className="w-8 h-8 text-[#DFAB56] animate-spin mb-3" />
             <p className="font-semibold text-base">جاري تشغيل كاميرا الاستوديو...</p>
             <p className="text-[#A19E9B] text-xs mt-1">تأكد من إعطاء إذن الكاميرا</p>
           </div>
         )}
 
         {cameraError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141212] text-[#FBF9F5] p-6 text-center">
-            <Camera className="w-10 h-10 text-[#DD0200] mb-3" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141212] text-[#FAF5EB] p-6 text-center">
+            <Camera className="w-10 h-10 text-[#DFAB56] mb-3" />
             <p className="font-bold text-rose-400 text-sm leading-relaxed">{cameraError}</p>
             <button
               onClick={startCamera}
-              className="mt-4 px-5 py-2.5 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] rounded-lg border border-white/10 text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs"
+              className="mt-4 px-5 py-2.5 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] rounded-lg border border-white/10 text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-[#DD0200]" /> إعادة المحاولة
+              <RefreshCw className="w-3.5 h-3.5 text-[#DFAB56]" /> إعادة المحاولة
             </button>
           </div>
         )}
@@ -282,8 +282,8 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
             {/* Top Status Pill */}
             <div className="absolute top-4 inset-x-0 flex justify-center">
               <div className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-md flex items-center gap-2 border border-white/15">
-                <span className="w-2 h-2 rounded-full bg-[#DD0200] animate-pulse" />
-                <span className="text-[10px] font-mono font-bold text-[#FBF9F5] tracking-widest uppercase">
+                <span className="w-2 h-2 rounded-full bg-[#DFAB56] animate-pulse" />
+                <span className="text-[10px] font-mono font-bold text-[#FAF5EB] tracking-widest uppercase">
                   SHOT #{String(visitNumber).padStart(2, '0')} • ATELIER STUDIO
                 </span>
               </div>
@@ -296,12 +296,12 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px] z-40">
             <span
               key={countdown}
-              className="text-8xl font-black text-[#DD0200] drop-shadow-[0_4px_30px_rgba(221,2,0,0.8)] scale-100 animate-in zoom-in-50 duration-200"
+              className="text-8xl font-black text-[#DFAB56] drop-shadow-[0_4px_30px_rgba(221,2,0,0.8)] scale-100 animate-in zoom-in-50 duration-200"
               style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
             >
               {countdown}
             </span>
-            <div className="mt-4 px-4 py-1.5 bg-[#141212]/90 rounded-md text-[#FBF9F5] text-xs font-bold border border-white/20">
+            <div className="mt-4 px-4 py-1.5 bg-[#141212]/90 rounded-md text-[#FAF5EB] text-xs font-bold border border-white/20">
               استعد للقطة...
             </div>
           </div>
@@ -318,8 +318,8 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
                   onClick={() => setActiveFilter(filter.id)}
                   className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
                     activeFilter === filter.id
-                      ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                      : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                      ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                      : 'text-[#A19E9B] hover:text-[#FAF5EB]'
                   }`}
                 >
                   {filter.nameAr}
@@ -359,9 +359,9 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
             <button
               onClick={handleSnap}
               disabled={!isCameraReady || isShooting}
-              className="group relative w-18 h-18 rounded-full bg-[#1C1B1B] hover:bg-[#211F1F] flex items-center justify-center shadow-2xl active:scale-95 transition-all border-4 border-[#DD0200]/30 hover:border-[#DD0200] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              className="group relative w-18 h-18 rounded-full bg-[#1C1B1B] hover:bg-[#211F1F] flex items-center justify-center shadow-2xl active:scale-95 transition-all border-4 border-[#DFAB56]/30 hover:border-[#DFAB56] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-full bg-[#DD0200] flex items-center justify-center shadow-inner group-hover:bg-[#B50200] transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]">
+              <div className="w-12 h-12 rounded-full bg-[#DFAB56] flex items-center justify-center shadow-inner group-hover:bg-[#C99645] transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]">
                 <Camera className="w-5 h-5 text-white" />
               </div>
             </button>
@@ -373,16 +373,16 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
           <div className="flex gap-2.5">
             <button
               onClick={handleRetake}
-              className="flex-1 py-3 px-4 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 py-3 px-4 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] font-bold text-xs border border-white/10 transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <RotateCcw className="w-4 h-4 text-[#A19E9B]" />
               <span>إعادة اللقطة</span>
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-[2] py-3 px-5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] transition flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-[2] py-3 px-5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] transition flex items-center justify-center gap-2 cursor-pointer"
             >
-              <CheckCircle2 className="w-4 h-4 text-[#FBF9F5]" />
+              <CheckCircle2 className="w-4 h-4 text-[#FAF5EB]" />
               <span>اعتماد اللقطة وإضافتها للكارت</span>
             </button>
           </div>
@@ -390,7 +390,7 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
       </div>
 
       <p className="text-[10px] text-[#A19E9B] mt-3 font-mono text-center">
-        • ATELIER NOSTALGIA • {brandName}
+        • STAMPY BRAND SYSTEM • {brandName}
       </p>
     </div>
   );

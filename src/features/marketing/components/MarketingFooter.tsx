@@ -2,41 +2,37 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
+import { StampyLogo } from '@/components/brand/StampyLogo';
 
 export function MarketingFooter() {
   return (
-    <footer className="bg-[#0E0D0D] border-t border-white/10 py-14 px-6 text-xs text-[#D9D9D9]/70 apple-font select-none relative z-10">
+    <footer className="border-t border-[#EADDC4] bg-[#F2E8D5] py-14 px-6 text-[#63574D] text-xs font-sans">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/50 border border-white/20">
-            <MemoriesArchIcon size={18} color="#FBF9F5" />
-          </div>
-          <div>
-            <span className="text-base font-bold tracking-tight text-white block leading-tight">
-              memories studio
-            </span>
-            <span className="text-[9px] font-mono tracking-[0.18em] text-[#A19E9B] font-semibold uppercase block leading-none">
-              ATELIER NOSTALGIA EDITION • 2026
-            </span>
-          </div>
+          <StampyLogo size="sm" showTagline={false} />
+          <span className="text-[#7D6E63] text-[11px]">
+            منصة كروت التصوير التفاعلية وبرامج الولاء الذكية للمنشآت والعلامات التجارية
+          </span>
         </div>
 
-        <div className="flex items-center gap-6 text-[#D9D9D9]/80 font-medium">
-          <Link href="/privacy" className="hover:text-white transition-colors">
+        <div className="flex items-center gap-6 text-xs text-stone-400">
+          <Link href="/privacy" className="hover:text-[#3D2314] transition-colors">
             سياسة الخصوصية
           </Link>
-          <Link href="/terms" className="hover:text-white transition-colors">
-            الشروط والأحكام
+          <Link href="/terms" className="hover:text-[#3D2314] transition-colors">
+            شروط الخدمة
           </Link>
-          <Link href="/login" className="hover:text-white transition-colors">
-            لوحة تحكم التاجر
+          <Link href="/login" className="hover:text-[#3D2314] transition-colors">
+            دخول المنشأة
+          </Link>
+          <Link href="/c/stampy" className="hover:text-[#3D2314] transition-colors">
+            استوديو الزائر
           </Link>
         </div>
+      </div>
 
-        <div className="text-[11px] font-mono text-[#D9D9D9]/50">
-          All Rights Reserved © 2026 Memories Studio
-        </div>
+      <div className="max-w-6xl mx-auto mt-8 pt-6 border-t border-[#EADDC4] text-center text-[#7D6E63] text-[11px] font-mono">
+        © {new Date().getFullYear()} STAMPY (استامبي). جميع الحقوق محفوظة • مبني وفق الركائز المعمارية السحابية الـ 10.
       </div>
     </footer>
   );

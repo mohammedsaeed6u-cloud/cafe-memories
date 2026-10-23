@@ -22,12 +22,12 @@ export const LoyaltyCardWidget: React.FC<LoyaltyCardWidgetProps> = ({
   return (
     <div className="w-full bg-[#181212] text-white rounded-3xl p-5 shadow-xl border border-white/10 relative overflow-hidden select-none">
       {/* Subtle background glow */}
-      <div className="absolute top-0 right-0 w-36 h-36 bg-[#DD0200]/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-36 h-36 bg-[#DFAB56]/10 rounded-full blur-2xl pointer-events-none" />
 
       {/* Card Header */}
       <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#DD0200] flex items-center justify-center border border-[#DD0200]/40">
+          <div className="w-8 h-8 rounded-xl bg-[#3D2314] text-[#DFAB56] flex items-center justify-center border border-[#DFAB56]/40">
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
@@ -64,7 +64,7 @@ export const LoyaltyCardWidget: React.FC<LoyaltyCardWidgetProps> = ({
               {isStamped ? (
                 <Check className="w-5 h-5 stroke-[3]" />
               ) : isFinal ? (
-                <Gift className="w-5 h-5 text-[#DD0200] animate-pulse" />
+                <Gift className="w-5 h-5 text-[#DFAB56] animate-pulse" />
               ) : (
                 <Sparkles className="w-4 h-4 text-[#A19E9B]/50" />
               )}

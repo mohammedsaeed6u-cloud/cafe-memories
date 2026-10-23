@@ -25,7 +25,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#141313',
+  themeColor: '#FAF5EB',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -33,9 +33,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://memories-7vr.pages.dev'),
-  title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
-  description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوري عبر الهاتف بدون تطبيق، شاشات عرض تفاعلية للصالة، وكروت ولاء رقمية في محفظة Apple و Google Wallet للمطاعم، العلامات التجارية الفاخرة، المتاجر، الصالونات، والفعاليات.',
+  metadataBase: new URL('https://memories-c9w.pages.dev'),
+  title: 'استامبي (Stampy) • منصة كروت التصوير التفاعلية وبرامج الولاء الذكية',
+  description: 'تحويل كل زيارة في منشأتك إلى شريط ذكريات يدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوتوبوث تفاعلي عبر الهاتف، شاشات صالة حية، وأختام ولاء رقمية لمحفظة Apple و Google Wallet.',
   keywords: ['فوتوبوث رقمي', 'ولاء العملاء', 'استوديو تصوير للأنشطة التجارية', 'شاشات الصالة الذكية', 'بطاقات ولاء رقمية', 'تجربة العميل', 'Apple Wallet', 'Google Wallet'],
   manifest: '/manifest.webmanifest',
   icons: {
@@ -45,20 +45,20 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Memories',
+    title: 'Stampy استامبي',
   },
   openGraph: {
-    title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
-    description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
-    url: 'https://memories-7vr.pages.dev',
-    siteName: 'memories',
+    title: 'استامبي (Stampy) • منصة كروت التصوير التفاعلية وبرامج الولاء الذكية',
+    description: 'تحويل كل زيارة في منشأتك إلى شريط ذكريات يدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوتوبوث تفاعلي عبر الهاتف، شاشات صالة حية، وأختام ولاء رقمية لمحفظة Apple و Google Wallet.',
+    url: 'https://memories-c9w.pages.dev',
+    siteName: 'Stampy استامبي',
     locale: 'ar_SA',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
-    description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
+    title: 'استامبي (Stampy) • منصة كروت التصوير التفاعلية وبرامج الولاء الذكية',
+    description: 'تحويل كل زيارة في منشأتك إلى شريط ذكريات يدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوتوبوث تفاعلي عبر الهاتف، شاشات صالة حية، وأختام ولاء رقمية لمحفظة Apple و Google Wallet.',
   },
   verification: {
     google: 'fjoLJpquhynVk0PmXH6VssgvRRrhiuynBz8G4PDHiME',
@@ -77,7 +77,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn(cairo.variable, playfair.variable, jakarta.variable)}
     >
-      <body className="min-h-screen bg-[#141313] text-[#e6e1e1] font-sans antialiased selection:bg-[#DD0200] selection:text-white">
+      <body className="min-h-screen bg-[#FAF5EB] text-[#3D2314] font-sans antialiased selection:bg-[#DFAB56] selection:text-[#3D2314]">
         {children}
       </body>
     </html>

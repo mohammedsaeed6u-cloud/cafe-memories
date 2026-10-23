@@ -25,10 +25,10 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
     <div className={`w-full bg-[#141212]/90 backdrop-blur-md p-4 rounded-2xl border border-white/10 shadow-2xl ${className}`}>
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2 text-xs font-semibold text-[#e6e1e1]">
-          <Palette className="w-3.5 h-3.5 text-[#DD0200]" />
+          <Palette className="w-3.5 h-3.5 text-[#DFAB56]" />
           <span>اختر لون الكارت المفضل:</span>
         </div>
-        <span className="text-[10px] font-mono font-bold text-[#FBF9F5] bg-[#55100D]/60 px-2 py-0.5 rounded-md border border-[#DD0200]/40 uppercase tracking-wider">
+        <span className="text-[10px] font-mono font-bold text-[#FAF5EB] bg-[#3D2314]/60 px-2 py-0.5 rounded-md border border-[#DFAB56]/40 uppercase tracking-wider">
           ATELIER PALETTES
         </span>
       </div>
@@ -43,7 +43,7 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
               onClick={() => onSelectPalette(palette)}
               className={`p-2.5 rounded-lg border text-right transition-all duration-200 flex items-center justify-between gap-2 cursor-pointer ${
                 isSelected
-                  ? 'border-[#DD0200] bg-[#55100D]/30 shadow-[0_0_15px_-3px_rgba(221,2,0,0.35)] ring-1 ring-[#DD0200]/40'
+                  ? 'border-[#DFAB56] bg-[#3D2314]/30 shadow-[0_0_15px_-3px_rgba(221,2,0,0.35)] ring-1 ring-[#DFAB56]/40'
                   : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#211F1F]'
               }`}
             >
@@ -56,13 +56,13 @@ export const CardColorPicker: React.FC<CardColorPickerProps> = ({
                   }}
                   className="w-4 h-4 rounded-full border border-white/20 shadow-xs shrink-0"
                 />
-                <span className="text-xs font-medium text-[#FBF9F5] truncate">
+                <span className="text-xs font-medium text-[#FAF5EB] truncate">
                   {palette.nameAr}
                 </span>
               </div>
 
               {isSelected && (
-                <div className="w-4 h-4 rounded-md bg-[#DD0200] text-white flex items-center justify-center shrink-0">
+                <div className="w-4 h-4 rounded-md bg-[#DFAB56] text-[#12100E] flex items-center justify-center shrink-0">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </div>
               )}

@@ -35,7 +35,7 @@ import {
 import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
 import { DraggableStickerLayer } from './DraggableStickerLayer';
 import { PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
-import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
+import { StampyApertureIcon } from '@/components/brand/StampyLogo';
 import {
   LocomotiveTrainSvg,
   TicketBarcodeSvg,
@@ -209,7 +209,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
     : frame.textColor || template?.defaultText || modeInfo.defaultText;
 
   const effectiveAccent = isLuxuryGlass
-    ? '#DD0200'
+    ? '#DFAB56'
     : isTicketExpress
     ? '#8B2635'
     : isSpotifyPlayer
@@ -444,12 +444,12 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           <div className="relative z-10 mb-2.5 pt-1 px-1 text-center apple-font">
             <div className="flex items-center justify-between text-[#1A0706]">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-[#DD0200]">✦</span>
+                <span className="text-xs text-[#DFAB56]">✦</span>
                 <span className="text-[10px] font-mono tracking-[0.2em] font-black uppercase text-[#1A0706]">
-                  {branding.name || 'MEMORIES'}
+                  {branding.name || 'STAMPY'}
                 </span>
               </div>
-              <span className="text-[8px] font-mono tracking-widest uppercase font-bold text-[#55100D] opacity-80">
+              <span className="text-[8px] font-mono tracking-widest uppercase font-bold text-[#3D2314] opacity-80">
                 STUDIO
               </span>
             </div>
@@ -464,7 +464,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
               <div className="absolute inset-1 border border-[#4A121A]/30 rounded-lg pointer-events-none" />
               {/* Arched Title */}
               <div className="text-center font-serif font-black tracking-[0.18em] text-[#4A121A] text-sm uppercase leading-tight drop-shadow-2xs">
-                MEMORIES STUDIO
+                stampy.
               </div>
               <div className="text-[8px] font-mono uppercase tracking-[0.25em] text-[#8B2635] font-bold mt-0.5">
                 SPECIALTY STUDIO • PHOTO EXPERIENCE
@@ -638,7 +638,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             <div className="flex flex-col items-center mt-2 opacity-85">
               <TicketBarcodeSvg width={130} height={18} color="#4A121A" />
               <span className="text-[7px] font-mono tracking-widest text-[#4A121A] mt-0.5 font-bold">
-                #MEMORIES-HOSPITALITY • VERIFIED VISIT
+                #STAMPY-EXPERIENCE • VERIFIED VISIT
               </span>
             </div>
           </div>
@@ -690,7 +690,7 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
             {/* Watermark branding */}
             <div className="text-center pt-1 border-t border-white/10">
               <span className="text-[7.5px] font-mono text-white/40 tracking-wider">
-                memories.studio/playlist
+                stampy.app/playlist
               </span>
             </div>
           </div>
@@ -777,14 +777,14 @@ export const PhotoboothStripCard: React.FC<PhotoboothStripCardProps> = ({
           </div>
         )}
 
-        {/* ATELIER NOSTALGIA LUXURY FOOTER */}
+        {/* STAMPY BRAND SYSTEM LUXURY FOOTER */}
         {isLuxuryGlass && (
           <div className="relative z-10 mt-3 pt-2 border-t border-[#1A0706]/15 flex items-center justify-between px-1 text-[8.5px] font-mono text-[#1A0706]/80">
             <div className="flex items-center gap-1.5 font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#DD0200]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#DFAB56]" />
               <span>{dateFormatted}</span>
             </div>
-            <span className="tracking-[0.2em] uppercase font-bold text-[#55100D]">
+            <span className="tracking-[0.2em] uppercase font-bold text-[#3D2314]">
               ATELIER • NOSTALGIA
             </span>
           </div>

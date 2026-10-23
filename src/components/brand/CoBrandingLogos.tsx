@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
+import { StampyLogo, StampyTicketIcon, StampyApertureIcon } from '@/components/brand/StampyLogo';
 import { Store } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface CoBrandingLogosProps {
   cafeName: string;
@@ -14,10 +15,9 @@ export interface CoBrandingLogosProps {
 }
 
 /**
- * CoBrandingLogos Component
- * 
- * Displays the platform brand (Memories) and the client brand (Cafe)
- * directly side-by-side with a prominent multiplication/collaboration cross `×`.
+ * CoBrandingLogos Component for Stampy (استامبي)
+ * Displays the platform brand (Stampy) and the merchant brand
+ * side-by-side with a clean collaboration cross `×`.
  */
 export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
   cafeName,
@@ -30,132 +30,119 @@ export const CoBrandingLogos: React.FC<CoBrandingLogosProps> = ({
   const isDark = theme === 'dark';
 
   const iconSizes = {
-    sm: { box: 'w-7 h-7 rounded-lg', icon: 16, text: 'text-xs', cross: 'text-sm' },
-    md: { box: 'w-9 h-9 rounded-xl', icon: 20, text: 'text-sm sm:text-base', cross: 'text-lg' },
-    lg: { box: 'w-11 h-11 rounded-2xl', icon: 26, text: 'text-base sm:text-lg', cross: 'text-2xl' },
+    sm: { box: 'w-7 h-7 rounded-lg', ticketW: 56, ticketH: 28, text: 'text-xs', cross: 'text-sm' },
+    md: { box: 'w-9 h-9 rounded-xl', ticketW: 72, ticketH: 36, text: 'text-sm sm:text-base', cross: 'text-lg' },
+    lg: { box: 'w-11 h-11 rounded-2xl', ticketW: 96, ticketH: 48, text: 'text-base sm:text-lg', cross: 'text-2xl' },
   }[size];
 
   const isFlagshipSolo =
     !cafeName ||
+    cafeName.trim().toLowerCase() === 'stampy' ||
+    cafeName.trim().toLowerCase() === 'استامبي' ||
     cafeName.trim().toLowerCase() === 'memories' ||
-    cafeName.trim().toLowerCase() === 'memories studio' ||
-    cafeName.trim().toLowerCase() === 'استوديو الذكريات' ||
-    cafeName.trim().toLowerCase() === 'استوديو الذكريات • memories studio';
+    cafeName.trim().toLowerCase() === 'stampy.';
 
   if (isFlagshipSolo) {
     return (
-      <div
-        className={`inline-flex items-center justify-center gap-2.5 select-none ${className}`}
-        dir="ltr"
-      >
-        <div
-          className={`${iconSizes.box} bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-xs border border-[#DD0200]/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] shrink-0`}
-        >
-          <MemoriesArchIcon size={iconSizes.icon} color="#FBF9F5" />
-        </div>
-        <div className="text-left">
-          <span
-            style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-            className={`font-black tracking-tight block leading-tight lowercase ${
-              isDark ? 'text-[#FBF9F5]' : 'text-[#141313]'
-            } ${iconSizes.text}`}
-          >
-            memories
-          </span>
-          {showTagline && (
-            <span
-              className={`text-[8px] font-mono tracking-widest font-bold uppercase block leading-none ${
-                isDark ? 'text-[#DD0200]' : 'text-[#55100D]'
-              }`}
-            >
-              HOSPITALITY PHOTOBOOTH STUDIO
-            </span>
-          )}
-        </div>
+      <div className={cn('inline-flex items-center justify-center select-none', className)}>
+        <StampyLogo size={size} showTagline={showTagline} />
       </div>
     );
   }
 
   return (
     <div
-      className={`inline-flex items-center justify-center gap-3 sm:gap-4 select-none ${className}`}
+      className={cn('inline-flex items-center gap-2 sm:gap-3 select-none flex-wrap', className)}
       dir="ltr"
     >
-      {/* 1. OUR BRAND: MEMORIES */}
+      {/* 1. Client Business Brand */}
       <div className="flex items-center gap-2">
-        <div
-          className={`${iconSizes.box} bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-xs border border-[#DD0200]/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] shrink-0`}
-        >
-          <MemoriesArchIcon size={iconSizes.icon} color="#FBF9F5" />
-        </div>
+        {cafeLogoUrl ? (
+          <img
+            src={cafeLogoUrl}
+            alt={cafeName}
+            className={cn(
+              iconSizes.box,
+              'object-cover border border-white/20 shadow-xs'
+            )}
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div
+            className={cn(
+              iconSizes.box,
+              'bg-[#3D2314] text-[#DFAB56] flex items-center justify-center font-bold shadow-xs border border-[#DFAB56]/30'
+            )}
+          >
+            <Store className="w-4 h-4" />
+          </div>
+        )}
         <div className="text-left">
           <span
-            style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-            className={`font-black tracking-tight block leading-tight lowercase ${
-              isDark ? 'text-[#FBF9F5]' : 'text-[#141313]'
-            } ${iconSizes.text}`}
+            className={cn(
+              'font-bold tracking-tight block leading-tight',
+              iconSizes.text,
+              isDark ? 'text-white' : 'text-[#12100E]'
+            )}
           >
-            memories
+            {cafeName}
           </span>
           {showTagline && (
             <span
-              className={`text-[8px] font-mono tracking-widest font-bold uppercase block leading-none ${
-                isDark ? 'text-[#A19E9B]' : 'text-stone-500'
-              }`}
+              className={cn(
+                'text-[8px] font-mono tracking-wider uppercase block font-semibold',
+                isDark ? 'text-[#DFAB56]/80' : 'text-[#AC3E25]'
+              )}
             >
-              STUDIO
+              الفرع المعتمد
             </span>
           )}
         </div>
       </div>
 
-      {/* 2. THE COLLABORATION CROSS `×` */}
-      <div className="flex items-center justify-center px-0.5">
-        <span
-          className={`font-black text-[#DD0200] font-sans ${iconSizes.cross} leading-none`}
-          aria-hidden="true"
-        >
-          ×
-        </span>
-      </div>
-
-      {/* 3. CLIENT BRAND: CAFE / RESTAURANT */}
-      <div className="flex items-center gap-2">
-        {cafeLogoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cafeLogoUrl}
-            alt={cafeName}
-            className={`${iconSizes.box} object-contain border p-0.5 shadow-xs shrink-0 ${
-              isDark ? 'bg-[#141212] border-white/10' : 'bg-white border-stone-200'
-            }`}
-          />
-        ) : (
-          <div
-            className={`${iconSizes.box} flex items-center justify-center font-bold text-xs uppercase shadow-xs shrink-0 ${
-              isDark
-                ? 'bg-[#55100D]/40 text-[#FBF9F5] border border-[#DD0200]/30'
-                : 'bg-stone-100 text-stone-800 border border-stone-200'
-            }`}
-          >
-            <Store className="w-4 h-4 text-[#DD0200]" />
-          </div>
+      {/* Collaboration multiplication cross */}
+      <span
+        className={cn(
+          'font-light select-none px-0.5',
+          iconSizes.cross,
+          isDark ? 'text-white/40' : 'text-[#3D2314]/40'
         )}
+        aria-hidden="true"
+      >
+        ×
+      </span>
+
+      {/* 2. Platform Brand: Stampy */}
+      <div className="flex items-center gap-2">
+        <div className="shrink-0">
+          <StampyTicketIcon width={iconSizes.ticketW} height={iconSizes.ticketH} />
+        </div>
         <div className="text-left">
-          <span
-            className={`font-extrabold tracking-tight block leading-tight ${
-              isDark ? 'text-[#FBF9F5]' : 'text-[#141313]'
-            } ${iconSizes.text}`}
-          >
-            {cafeName || 'Specialty Partner'}
-          </span>
+          <div className="flex items-baseline gap-1">
+            <span
+              style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              className={cn(
+                'font-black tracking-tight leading-none',
+                iconSizes.text,
+                isDark ? 'text-white' : 'text-[#12100E]'
+              )}
+            >
+              stampy<span className="text-[#DFAB56]">.</span>
+            </span>
+            <span className="text-[9px] font-bold text-[#DFAB56] font-mono">
+              استامبي
+            </span>
+          </div>
           {showTagline && (
             <span
-              className={`text-[8px] font-mono tracking-widest font-bold uppercase block leading-none ${
-                isDark ? 'text-[#DD0200]' : 'text-[#55100D]'
-              }`}
+              className={cn(
+                'text-[7.5px] font-mono tracking-widest uppercase block font-bold mt-0.5',
+                isDark ? 'text-[#D9D9D9]/60' : 'text-stone-500'
+              )}
             >
-              PARTNER
+              LOYALTY STUDIO
             </span>
           )}
         </div>

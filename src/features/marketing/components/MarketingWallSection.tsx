@@ -6,34 +6,34 @@ import { Tv, Shield, Wifi, ExternalLink } from 'lucide-react';
 
 export function MarketingWallSection() {
   return (
-    <section id="live-wall" className="py-24 px-6 max-w-6xl mx-auto border-t border-white/10 apple-font">
-      <div className="p-8 sm:p-12 rounded-2xl bg-[#141212] text-white shadow-2xl relative overflow-hidden border border-white/10 backdrop-blur-2xl">
+    <section id="live-wall" className="py-24 px-6 max-w-6xl mx-auto border-t border-[#EADDC4] apple-font">
+      <div className="p-8 sm:p-12 rounded-2xl bg-white text-[#3D2314] shadow-2xl relative overflow-hidden border border-[#EADDC4] backdrop-blur-2xl">
         {/* Subtle Ambient Red Glow */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#55100D]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#3D2314]/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#1A0706]/30 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="space-y-5 text-right">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/[0.04] border border-white/10 text-[11px] font-mono text-[#D9D9D9] font-bold backdrop-blur-md">
-              <Tv className="w-3.5 h-3.5 text-[#DD0200]" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-white/[0.04] border border-[#EADDC4] text-[11px] font-mono text-[#D9D9D9] font-bold backdrop-blur-md">
+              <Tv className="w-3.5 h-3.5 text-[#DFAB56]" />
               <span className="tracking-[0.15em] uppercase">SMART SCREEN • LIVE WALL</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+            <h2 className="text-3xl sm:text-4xl font-semibold text-[#3D2314] tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
               نشاطك التجاري يحصل على جدار ذكريات حي خاص به.
             </h2>
 
-            <p className="text-xs sm:text-sm text-[#A19E9B] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#63574D] leading-relaxed">
               حوّل أي شاشة تلفزيون ذكية داخل الصالة أو المتجر إلى بورد ذكريات تفاعلي يعرض لحظات رواد المكان المعتمدة بدقة 4K. بمجرد موافقة الزائر الصريحة واعتماد طاقم الخدمة السريع، تنضم لقطته للجدار في تدفق بصري راقٍ دون الكشف عن أي بيانات شخصية خاصة.
             </p>
 
-            <div className="space-y-2.5 pt-2 text-xs text-[#e6e1e1] font-medium">
+            <div className="space-y-2.5 pt-2 text-xs text-[#3D2314] font-medium">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-[#34C759] shrink-0" />
                 <span>موافقة مسبقة واعتماد إداري: لا تظهر أي صورة دون موافقة الزائر ومراجعة الطاقم.</span>
               </div>
               <div className="flex items-center gap-2">
-                <Wifi className="w-4 h-4 text-[#DD0200] shrink-0" />
+                <Wifi className="w-4 h-4 text-[#DFAB56] shrink-0" />
                 <span>وضع ملء الشاشة الكامل (Fullscreen Mode) متوافق مع أي متصفح شاشة ذكية.</span>
               </div>
             </div>
@@ -41,7 +41,7 @@ export function MarketingWallSection() {
             <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
               <Link
                 href="/wall/screen-1"
-                className="w-full sm:w-auto text-xs font-bold py-3 px-6 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_12px_25px_-6px_rgba(221,2,0,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01] active:scale-[0.98]"
+                className="w-full sm:w-auto text-xs font-bold py-3 px-6 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#3D2314] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_12px_25px_-6px_rgba(221,2,0,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01] active:scale-[0.98]"
               >
                 <span>معاينة شاشة الصالة الحية (Live Wall)</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -51,16 +51,16 @@ export function MarketingWallSection() {
 
           {/* Wall Mockup Visual: Apple 4K OLED Screen */}
           <div className="p-4 sm:p-5 bg-[#0E0D0D] rounded-xl border border-white/15 shadow-2xl space-y-3 backdrop-blur-xl">
-            <div className="flex items-center justify-between pb-2.5 border-b border-white/10 text-[10px] font-mono text-[#D9D9D9]/80">
+            <div className="flex items-center justify-between pb-2.5 border-b border-[#EADDC4] text-[10px] font-mono text-[#D9D9D9]/80">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
-                <span className="text-[#DD0200] font-bold">LIVE BROADCAST • 4K OLED</span>
+                <span className="text-[#DFAB56] font-bold">LIVE BROADCAST • 4K OLED</span>
               </div>
               <span>MEMORIES TV // SCREEN-01</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="aspect-[4/3] rounded-lg bg-white/[0.05] border border-white/10 overflow-hidden relative group">
+              <div className="aspect-[4/3] rounded-lg bg-white/[0.05] border border-[#EADDC4] overflow-hidden relative group">
                 <img
                   src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80"
                   alt="Guest memory"
@@ -70,7 +70,7 @@ export function MarketingWallSection() {
                   #01 • منذ دقيقتين
                 </div>
               </div>
-              <div className="aspect-[4/3] rounded-2xl bg-white/[0.05] border border-white/10 overflow-hidden relative group">
+              <div className="aspect-[4/3] rounded-2xl bg-white/[0.05] border border-[#EADDC4] overflow-hidden relative group">
                 <img
                   src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=80"
                   alt="Guest memory"
@@ -82,9 +82,9 @@ export function MarketingWallSection() {
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between text-xs text-[#D9D9D9]/90">
+            <div className="p-3 rounded-2xl bg-white/[0.04] border border-[#EADDC4] flex items-center justify-between text-xs text-[#D9D9D9]/90">
               <span className="font-medium">بث فوري متواصل مع كل زيارة معتمدة</span>
-              <span className="text-[#DD0200] font-mono font-bold">60 FPS</span>
+              <span className="text-[#DFAB56] font-mono font-bold">60 FPS</span>
             </div>
           </div>
         </div>

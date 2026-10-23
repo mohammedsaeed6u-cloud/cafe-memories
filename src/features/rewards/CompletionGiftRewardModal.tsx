@@ -35,18 +35,18 @@ export const CompletionGiftRewardModal: React.FC<CompletionGiftRewardModalProps>
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 left-4 w-8 h-8 rounded-lg bg-[#1C1B1B] hover:bg-[#DD0200] flex items-center justify-center text-[#A19E9B] hover:text-white transition cursor-pointer border border-white/10"
+          className="absolute top-4 left-4 w-8 h-8 rounded-lg bg-[#1C1B1B] hover:bg-[#DFAB56] flex items-center justify-center text-[#A19E9B] hover:text-[#12100E] transition cursor-pointer border border-white/10"
         >
           <X className="w-4 h-4" />
         </button>
-        <div className="w-16 h-16 rounded-xl bg-[#55100D] text-[#DD0200] flex items-center justify-center border border-[#DD0200]/40 mx-auto shadow-lg">
-          <Gift className="w-8 h-8 text-[#FBF9F5]" />
+        <div className="w-16 h-16 rounded-xl bg-[#3D2314] text-[#DFAB56] flex items-center justify-center border border-[#DFAB56]/40 mx-auto shadow-lg">
+          <Gift className="w-8 h-8 text-[#FAF5EB]" />
         </div>
         <div>
-          <span className="text-[10px] font-mono font-bold text-[#FBF9F5] bg-[#55100D]/60 px-2.5 py-0.5 rounded-md border border-[#DD0200]/40 uppercase tracking-wider">
+          <span className="text-[10px] font-mono font-bold text-[#FAF5EB] bg-[#3D2314]/60 px-2.5 py-0.5 rounded-md border border-[#DFAB56]/40 uppercase tracking-wider">
             ATELIER REWARD UNLOCKED
           </span>
-          <h3 className="text-xl font-bold text-[#FBF9F5] mt-2" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>{giftTitle}</h3>
+          <h3 className="text-xl font-bold text-[#FAF5EB] mt-2" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>{giftTitle}</h3>
           <p className="text-xs text-[#A19E9B] mt-1 max-w-xs mx-auto">{giftSubtitle}</p>
         </div>
         <div className="p-4 bg-[#0B0A0A] rounded-xl border border-white/10 space-y-2">
@@ -54,13 +54,13 @@ export const CompletionGiftRewardModal: React.FC<CompletionGiftRewardModalProps>
             كود استلام الهدية المعتمد:
           </span>
           <div className="flex items-center justify-center gap-3">
-            <span className="font-mono text-xl sm:text-2xl font-black tracking-widest text-[#DD0200]">
+            <span className="font-mono text-xl sm:text-2xl font-black tracking-widest text-[#DFAB56]">
               {giftCode}
             </span>
             <button
               type="button"
               onClick={handleCopy}
-              className="p-1.5 rounded-lg bg-[#1C1B1B] border border-white/10 hover:bg-[#211F1F] text-[#FBF9F5] transition cursor-pointer"
+              className="p-1.5 rounded-lg bg-[#1C1B1B] border border-white/10 hover:bg-[#211F1F] text-[#FAF5EB] transition cursor-pointer"
               title="نسخ الكود"
             >
               {copied ? <Check className="w-4 h-4 text-[#34C759]" /> : <Copy className="w-4 h-4" />}
@@ -75,16 +75,16 @@ export const CompletionGiftRewardModal: React.FC<CompletionGiftRewardModalProps>
                 onPrintStrip();
                 onClose();
               }}
-              className="w-full py-3.5 px-4 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+              className="w-full py-3.5 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
             >
-              <Printer className="w-4 h-4 text-[#FBF9F5]" />
+              <Printer className="w-4 h-4 text-[#FAF5EB]" />
               <span>طباعة وتحميل الكارت فوراً (300 DPI)</span>
             </button>
           )}
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2.5 text-xs text-[#A19E9B] hover:text-[#FBF9F5] font-medium transition cursor-pointer"
+            className="w-full py-2.5 text-xs text-[#A19E9B] hover:text-[#FAF5EB] font-medium transition cursor-pointer"
           >
             إغلاق
           </button>

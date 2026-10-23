@@ -19,11 +19,12 @@ export async function GET() {
     checks.database = { status: 'degraded', latencyMs: 0 };
   }
 
-  const isHealthy = Object.values(checks).every(c => c.status === 'healthy');
+  const isHealthy = Object.values(checks).every((c) => c.status === 'healthy');
 
   return NextResponse.json(
     {
       status: isHealthy ? 'healthy' : 'degraded',
+      brand: 'Stampy',
       version: '2.0.0',
       timestamp: new Date().toISOString(),
       uptimeSeconds: process.uptime ? Math.floor(process.uptime()) : 0,

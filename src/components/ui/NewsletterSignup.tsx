@@ -93,7 +93,7 @@ export function NewsletterSignup() {
                   setEmail(e.target.value);
                   if (error) setError('');
                 }}
-                placeholder="أدخل بريدك الإلكتروني (e.g. barista@cafe.com)"
+                placeholder="أدخل بريدك الإلكتروني (e.g. hello@yourbrand.com)"
                 className="w-full py-3.5 pr-11 pl-4 rounded-2xl bg-[#FAF6EE] dark:bg-[#1E3A32] border border-[#E8DCC6] dark:border-[#2A4F44] text-xs text-[#3B2F2A] dark:text-[#FAF6EE] placeholder-[#3B2F2A]/40 dark:placeholder-[#FAF6EE]/40 focus:outline-none focus:ring-2 focus:ring-[#B85C43]"
               />
             </div>

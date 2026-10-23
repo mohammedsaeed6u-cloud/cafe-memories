@@ -2,7 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'memories studio • تسجيل الدخول وبوابة المنشأة',
+  title: 'stampy. • تسجيل الدخول وبوابة المنشأة',
   description: 'بوابة أصحاب الأنشطة التجارية لإدارة كروت الولاء، شاشات الصالة، واستوديو الذكريات التفاعلي.',
 };
 

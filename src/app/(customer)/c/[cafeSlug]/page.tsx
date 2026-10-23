@@ -2,6 +2,9 @@ import { CustomerClient } from '@/components/customer/CustomerClient';
 
 export function generateStaticParams() {
   return [
+    { cafeSlug: 'stampy' },
+    { cafeSlug: 'demo' },
+    { cafeSlug: 'default' },
     { cafeSlug: 'memories' },
     { cafeSlug: 'studio' },
     { cafeSlug: 'flagship' },

@@ -6,9 +6,9 @@ describe('Multi-Tenant Data Isolation Rules', () => {
 
   it('verifies that tenant scoping function restricts queries to caller organization', () => {
     const mockMemories = [
-      { id: 'mem-1', organization_id: orgA, caption: 'Coffee A' },
-      { id: 'mem-2', organization_id: orgB, caption: 'Coffee B' },
-      { id: 'mem-3', organization_id: orgA, caption: 'Latte A' },
+      { id: 'mem-1', organization_id: orgA, caption: 'Memory A' },
+      { id: 'mem-2', organization_id: orgB, caption: 'Memory B' },
+      { id: 'mem-3', organization_id: orgA, caption: 'Moment A' },
     ];
 
     // Simulating RLS policy evaluation: organization_id = current_org_id

@@ -39,11 +39,11 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
       <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <QrCode className="w-5 h-5 text-[#DD0200]" />
+            <h3 className="text-base font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+              <QrCode className="w-5 h-5 text-[#DFAB56]" />
               <span>أكواد وتصاميم ستاندات الطاولات (Table QR &amp; Coasters)</span>
             </h3>
-            <span className="px-2.5 py-0.5 rounded-md bg-[#55100D]/70 text-[#FBF9F5] border border-[#DD0200]/40 font-mono text-[10px] font-bold">
+            <span className="px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 text-[#FAF5EB] border border-[#DFAB56]/40 font-mono text-[10px] font-bold">
               300 DPI VECTOR
             </span>
           </div>
@@ -58,7 +58,7 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
             download={`memories-qr-${settings.cafeSlug}.svg`}
             target="_blank"
             rel="noreferrer"
-            className="px-4 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-4 h-4" />
             <span>تحميل فيكتور للطباعة (SVG)</span>
@@ -69,7 +69,7 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
             download={`memories-qr-${settings.cafeSlug}.png`}
             target="_blank"
             rel="noreferrer"
-            className="px-4 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-4 h-4 text-[#A19E9B]" />
             <span>تحميل صورة عالية الدقة (PNG)</span>
@@ -78,9 +78,9 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
           <button
             type="button"
             onClick={onOpenQuickSetup}
-            className="px-4 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
           >
-            <Printer className="w-4 h-4 text-[#DD0200]" />
+            <Printer className="w-4 h-4 text-[#DFAB56]" />
             <span>معاينة ستاند الأكريليك</span>
           </button>
         </div>
@@ -92,7 +92,7 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
           <div className="w-full max-w-sm p-8 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl space-y-6 text-center relative overflow-hidden">
             <div className="w-full flex justify-center">
               <CoBrandingLogos
-                cafeName={settings.branding?.name || 'Memories Studio'}
+                cafeName={settings.branding?.name || 'stampy.'}
                 cafeLogoUrl={settings.branding?.logoUrl}
                 size="md"
                 showTagline={false}
@@ -101,7 +101,7 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-[#FBF9F5] font-serif">
+              <h4 className="text-base font-bold text-[#FAF5EB] font-serif">
                 وثّق لحظاتك واحصل على هديتك الترحيبية
               </h4>
               <p className="text-xs text-[#A19E9B]">
@@ -127,29 +127,29 @@ export const DashboardQrTab: React.FC<DashboardQrTabProps> = ({
 
         <div className="lg:col-span-6 space-y-4">
           <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-3">
-            <h4 className="font-bold text-sm text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <Sparkles className="w-4 h-4 text-[#DD0200]" />
+            <h4 className="font-bold text-sm text-[#FAF5EB] flex items-center gap-2 font-serif">
+              <Sparkles className="w-4 h-4 text-[#DFAB56]" />
               <span>إرشادات طباعة ستاندات الطاولات لضمان أفضل تفاعل:</span>
             </h4>
             <ul className="text-xs text-[#A19E9B] space-y-2.5 leading-relaxed">
               <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-md bg-[#55100D] border border-[#DD0200]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
-                <span><strong className="text-[#FBF9F5]">المقاس الموصى به:</strong> ستاند أكريليك عمودي مقاس 10×15 سم (A6) أو كوستر خشبي 9×9 سم.</span>
+                <span className="w-5 h-5 rounded-md bg-[#3D2314] border border-[#DFAB56]/30 text-[#FAF5EB] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+                <span><strong className="text-[#FAF5EB]">المقاس الموصى به:</strong> ستاند أكريليك عمودي مقاس 10×15 سم (A6) أو كوستر خشبي 9×9 سم.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-md bg-[#55100D] border border-[#DD0200]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
-                <span><strong className="text-[#FBF9F5]">جودة الفيكتور:</strong> استخدم ملف الـ SVG المرفق عند إرسال التصميم للمطبعة لضمان دقة لا متناهية عند المسح.</span>
+                <span className="w-5 h-5 rounded-md bg-[#3D2314] border border-[#DFAB56]/30 text-[#FAF5EB] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+                <span><strong className="text-[#FAF5EB]">جودة الفيكتور:</strong> استخدم ملف الـ SVG المرفق عند إرسال التصميم للمطبعة لضمان دقة لا متناهية عند المسح.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-5 h-5 rounded-md bg-[#55100D] border border-[#DD0200]/30 text-[#FBF9F5] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
-                <span><strong className="text-[#FBF9F5]">موقع التثبيت:</strong> ثبّت ستاند واحد على كل طاولة، كاونتر استقبال، أو نقطة دفع لتحقيق معدل مسح يتجاوز 65% من رواد وزوار المنشأة.</span>
+                <span className="w-5 h-5 rounded-md bg-[#3D2314] border border-[#DFAB56]/30 text-[#FAF5EB] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+                <span><strong className="text-[#FAF5EB]">موقع التثبيت:</strong> ثبّت ستاند واحد على كل طاولة، كاونتر استقبال، أو نقطة دفع لتحقيق معدل مسح يتجاوز 65% من رواد وزوار المنشأة.</span>
               </li>
             </ul>
           </div>
 
           <div className="p-4 rounded-xl bg-[#0B0A0A] border border-white/10 text-xs font-mono text-[#A19E9B] flex items-center justify-between">
             <span>الرابط المشفر في الـ QR:</span>
-            <span className="font-bold text-[#DD0200] truncate max-w-xs">{customerLiveUrl}</span>
+            <span className="font-bold text-[#DFAB56] truncate max-w-xs">{customerLiveUrl}</span>
           </div>
         </div>
       </div>

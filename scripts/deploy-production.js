@@ -47,7 +47,7 @@ try {
   }
 }
 
-console.log('☁️  [4/4] Deploying to Cloudflare Pages (memories-7vr.pages.dev)...');
+console.log('☁️  [4/4] Deploying to Cloudflare Pages (memories-c9w.pages.dev)...');
 try {
   execSync('npx wrangler pages deploy out --project-name=memories --commit-dirty=true', {
     cwd: rootDir,

@@ -194,13 +194,13 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
       <div className="bg-[#141212] rounded-2xl p-5 border border-white/10 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-bold shadow-md border border-white/10">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center font-bold shadow-md border border-white/10">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
+              <h2 className="text-lg font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
                 <span>استوديو بطاقات الولاء الرقمية</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#55100D] text-[#FBF9F5] font-bold border border-[#DD0200]/30 font-mono">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#3D2314] text-[#FAF5EB] font-bold border border-[#DFAB56]/30 font-mono">
                   Milestone Engine
                 </span>
               </h2>
@@ -215,7 +215,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
           <button
             type="button"
             onClick={handleCopyCustomerLink}
-            className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl bg-[#1C1B1B] hover:bg-[#252424] text-[#FBF9F5] text-xs font-bold flex items-center justify-center gap-1.5 transition border border-white/10 cursor-pointer"
+            className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl bg-[#1C1B1B] hover:bg-[#252424] text-[#FAF5EB] text-xs font-bold flex items-center justify-center gap-1.5 transition border border-white/10 cursor-pointer"
           >
             {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-[#A19E9B]" />}
             <span>{copiedLink ? 'تم نسخ الرابط!' : 'رابط كارت العميل'}</span>
@@ -224,7 +224,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 md:flex-initial px-5 py-2 rounded-xl bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold flex items-center justify-center gap-2 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
+            className="flex-1 md:flex-initial px-5 py-2 rounded-xl bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-xs font-bold flex items-center justify-center gap-2 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
           >
             {saveSuccess ? <Check className="w-4 h-4 text-white" /> : <Save className="w-4 h-4" />}
             <span>{saveSuccess ? 'تم الحفظ بنجاح!' : 'حفظ إعدادات البطاقة'}</span>
@@ -245,8 +245,8 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
               onClick={() => setActiveSubTab('presets')}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeSubTab === 'presets'
-                  ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                  ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-[#A19E9B] hover:text-[#FAF5EB]'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -258,8 +258,8 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
               onClick={() => setActiveSubTab('dimensions')}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeSubTab === 'dimensions'
-                  ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                  ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-[#A19E9B] hover:text-[#FAF5EB]'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -271,8 +271,8 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
               onClick={() => setActiveSubTab('milestones')}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeSubTab === 'milestones'
-                  ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                  ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-[#A19E9B] hover:text-[#FAF5EB]'
               }`}
             >
               <Gift className="w-3.5 h-3.5" />
@@ -284,8 +284,8 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
               onClick={() => setActiveSubTab('styling')}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeSubTab === 'styling'
-                  ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                  ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-[#A19E9B] hover:text-[#FAF5EB]'
               }`}
             >
               <Palette className="w-3.5 h-3.5" />
@@ -297,7 +297,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
           {activeSubTab === 'presets' && (
             <div className="bg-[#141212] rounded-2xl p-5 border border-white/10 shadow-xl space-y-4">
               <div>
-                <h3 className="text-sm font-bold text-[#FBF9F5] font-serif">اختر قالباً أصيلاً لعلامتك التجارية</h3>
+                <h3 className="text-sm font-bold text-[#FAF5EB] font-serif">اختر قالباً أصيلاً لعلامتك التجارية</h3>
                 <p className="text-xs text-[#A19E9B]">
                   4+ قوالب متقنة بأبعاد المحفظة أو البطاقة المربعة أو شريط التصوير
                 </p>
@@ -312,22 +312,22 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       onClick={() => handleSelectPreset(preset.id)}
                       className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                         isSelected
-                          ? 'border-[#DD0200] bg-[#55100D]/30 shadow-lg ring-1 ring-[#DD0200]'
+                          ? 'border-[#DFAB56] bg-[#3D2314]/30 shadow-lg ring-1 ring-[#DFAB56]'
                           : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70'
                       }`}
                     >
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#0B0A0A] text-[#FBF9F5] border border-white/10">
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#0B0A0A] text-[#FAF5EB] border border-white/10">
                             {preset.dimensions.nameAr.split(' ')[0]}
                           </span>
                           {isSelected && (
-                            <span className="w-5 h-5 rounded-full bg-[#DD0200] text-white flex items-center justify-center text-xs font-black shadow-sm">
+                            <span className="w-5 h-5 rounded-full bg-[#DFAB56] text-[#12100E] flex items-center justify-center text-xs font-black shadow-sm">
                               •
                             </span>
                           )}
                         </div>
-                        <h4 className="font-bold text-sm text-[#FBF9F5] font-serif">{preset.nameAr}</h4>
+                        <h4 className="font-bold text-sm text-[#FAF5EB] font-serif">{preset.nameAr}</h4>
                         <p className="text-[11px] text-[#A19E9B] mt-1 leading-relaxed">
                           {preset.descriptionAr}
                         </p>
@@ -349,7 +349,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
             <div className="bg-[#141212] rounded-2xl p-5 border border-white/10 shadow-xl space-y-6">
               {/* Dimensions Section */}
               <div>
-                <h3 className="text-sm font-bold text-[#FBF9F5] font-serif mb-1">
+                <h3 className="text-sm font-bold text-[#FAF5EB] font-serif mb-1">
                   1. مقاس وأبعاد البطاقة (Card Dimensions)
                 </h3>
                 <p className="text-xs text-[#A19E9B] mb-3">
@@ -366,17 +366,17 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                         onClick={() => handleSelectDimension(dimKey)}
                         className={`p-3.5 rounded-xl border transition cursor-pointer ${
                           isSelected
-                            ? 'border-[#DD0200] bg-[#55100D]/30 shadow-md ring-1 ring-[#DD0200]'
+                            ? 'border-[#DFAB56] bg-[#3D2314]/30 shadow-md ring-1 ring-[#DFAB56]'
                             : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="font-mono text-xs font-bold text-[#FBF9F5]">
+                          <span className="font-mono text-xs font-bold text-[#FAF5EB]">
                             {dim.widthMm} × {dim.heightMm} mm
                           </span>
-                          {isSelected && <Check className="w-4 h-4 text-[#DD0200]" />}
+                          {isSelected && <Check className="w-4 h-4 text-[#DFAB56]" />}
                         </div>
-                        <h4 className="font-bold text-xs text-[#FBF9F5] font-serif">{dim.nameAr}</h4>
+                        <h4 className="font-bold text-xs text-[#FAF5EB] font-serif">{dim.nameAr}</h4>
                         <p className="text-[10px] text-[#A19E9B] mt-1 leading-snug">
                           {dim.descriptionAr}
                         </p>
@@ -388,7 +388,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
 
               {/* Slot Count Section */}
               <div className="border-t border-white/10 pt-5">
-                <h3 className="text-sm font-bold text-[#FBF9F5] font-serif mb-1">
+                <h3 className="text-sm font-bold text-[#FAF5EB] font-serif mb-1">
                   2. عدد خانات الأختام (Total Stamp Slots)
                 </h3>
                 <p className="text-xs text-[#A19E9B] mb-3">
@@ -405,8 +405,8 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                         onClick={() => handleSelectSlotCount(slots)}
                         className={`py-3 px-2 rounded-xl border font-bold transition flex flex-col items-center justify-center cursor-pointer ${
                           isSelected
-                            ? 'border-[#DD0200] bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                            : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-[#252424]'
+                            ? 'border-[#DFAB56] bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                            : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-[#252424]'
                         }`}
                       >
                         <span className="text-base font-mono">{slots}</span>
@@ -415,7 +415,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                     );
                   })}
                 </div>
-                <p className="text-[11px] text-[#FBF9F5] bg-[#55100D]/40 p-2.5 rounded-xl mt-3 font-medium border border-[#DD0200]/30">
+                <p className="text-[11px] text-[#FAF5EB] bg-[#3D2314]/40 p-2.5 rounded-xl mt-3 font-medium border border-[#DFAB56]/30">
                   ملاحظة: 6 خانات تمنح العميل حافزاً سريعاً، بينما 10 خانات هي المعيار الذهبي لبرامج المكافآت الدورية.
                 </p>
               </div>
@@ -437,7 +437,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       }))
                     }
                     placeholder="مثال: عضوية VIP"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50 focus:outline-none focus:ring-1 focus:ring-[#DD0200]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FAF5EB] placeholder-[#A19E9B]/50 focus:outline-none focus:ring-1 focus:ring-[#DFAB56]"
                   />
                 </div>
 
@@ -456,7 +456,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       }))
                     }
                     placeholder="مثال: برنامج الولاء والمكافآت الحصرية"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50 focus:outline-none focus:ring-1 focus:ring-[#DD0200]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FAF5EB] placeholder-[#A19E9B]/50 focus:outline-none focus:ring-1 focus:ring-[#DFAB56]"
                   />
                 </div>
               </div>
@@ -467,7 +467,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
           {activeSubTab === 'milestones' && (
             <div className="bg-[#141212] rounded-2xl p-5 border border-white/10 shadow-xl space-y-5">
               <div>
-                <h3 className="text-sm font-bold text-[#FBF9F5] font-serif">
+                <h3 className="text-sm font-bold text-[#FAF5EB] font-serif">
                   محرك المكافآت المرحلية (Milestones Engine)
                 </h3>
                 <p className="text-xs text-[#A19E9B]">
@@ -483,14 +483,14 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                     className="p-3 rounded-xl border border-white/10 bg-[#1C1B1B] flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-[#55100D] border border-[#DD0200]/30 text-[#FBF9F5] flex items-center justify-center font-mono font-bold text-xs">
+                      <div className="w-8 h-8 rounded-xl bg-[#3D2314] border border-[#DFAB56]/30 text-[#FAF5EB] flex items-center justify-center font-mono font-bold text-xs">
                         #{m.slot}
                       </div>
                       <div>
-                        <h5 className="font-bold text-xs text-[#FBF9F5] flex items-center gap-1.5 font-serif">
+                        <h5 className="font-bold text-xs text-[#FAF5EB] flex items-center gap-1.5 font-serif">
                           <span>{m.rewardTitle}</span>
                           {m.isGrandPrize && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#DD0200] text-white font-bold">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#DFAB56] text-[#12100E] font-bold">
                               الجائزة الكبرى
                             </span>
                           )}
@@ -515,8 +515,8 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
 
               {/* Add New Milestone Card */}
               <div className="bg-[#1C1B1B]/70 rounded-xl p-4 border border-white/10 space-y-3">
-                <h4 className="font-bold text-xs text-[#FBF9F5] flex items-center gap-1.5 font-serif">
-                  <Plus className="w-3.5 h-3.5 text-[#DD0200]" />
+                <h4 className="font-bold text-xs text-[#FAF5EB] flex items-center gap-1.5 font-serif">
+                  <Plus className="w-3.5 h-3.5 text-[#DFAB56]" />
                   <span>إضافة مكافأة مرحلية جديدة</span>
                 </h4>
 
@@ -528,7 +528,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                     <select
                       value={newMilestoneSlot}
                       onChange={(e) => setNewMilestoneSlot(Number(e.target.value))}
-                      className="w-full px-3 py-1.5 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] focus:outline-none focus:ring-1 focus:ring-[#DD0200]"
+                      className="w-full px-3 py-1.5 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FAF5EB] focus:outline-none focus:ring-1 focus:ring-[#DFAB56]"
                     >
                       {Array.from({ length: template.slotCount }).map((_, i) => (
                         <option key={i + 1} value={i + 1}>
@@ -547,7 +547,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       value={newMilestoneTitle}
                       onChange={(e) => setNewMilestoneTitle(e.target.value)}
                       placeholder="مثال: قطعة دونات مجانية أو خصم 50%"
-                      className="w-full px-3 py-1.5 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50 focus:outline-none focus:ring-1 focus:ring-[#DD0200]"
+                      className="w-full px-3 py-1.5 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FAF5EB] placeholder-[#A19E9B]/50 focus:outline-none focus:ring-1 focus:ring-[#DFAB56]"
                     />
                   </div>
                 </div>
@@ -558,7 +558,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       type="checkbox"
                       checked={newMilestoneIsGrand}
                       onChange={(e) => setNewMilestoneIsGrand(e.target.checked)}
-                      className="rounded accent-[#DD0200]"
+                      className="rounded accent-[#DFAB56]"
                     />
                     <span>تمييز كـ (الجائزة الكبرى للبطاقة)</span>
                   </label>
@@ -567,7 +567,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                     type="button"
                     onClick={handleAddMilestone}
                     disabled={!newMilestoneTitle.trim()}
-                    className="px-4 py-1.5 bg-[#DD0200] hover:bg-[#B50200] disabled:opacity-40 text-[#FBF9F5] rounded-xl text-xs font-bold transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
+                    className="px-4 py-1.5 bg-[#DFAB56] hover:bg-[#C99645] disabled:opacity-40 text-[#12100E] rounded-xl text-xs font-bold transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
                   >
                     حفظ المكافأة
                   </button>
@@ -580,7 +580,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
           {activeSubTab === 'styling' && (
             <div className="bg-[#141212] rounded-2xl p-5 border border-white/10 shadow-xl space-y-5">
               <div>
-                <h3 className="text-sm font-bold text-[#FBF9F5] font-serif">
+                <h3 className="text-sm font-bold text-[#FAF5EB] font-serif">
                   تخصيص المظهر، الخامات ورقائق المعادن
                 </h3>
                 <p className="text-xs text-[#A19E9B]">
@@ -601,8 +601,8 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       onClick={() => handleThemeUpdate('texture', tex)}
                       className={`py-2 px-3 rounded-xl border text-xs font-bold transition capitalize cursor-pointer ${
                         template.theme.texture === tex
-                          ? 'border-[#DD0200] bg-[#55100D]/40 text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                          : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FBF9F5]'
+                          ? 'border-[#DFAB56] bg-[#3D2314]/40 text-[#FAF5EB] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                          : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FAF5EB]'
                       }`}
                     >
                       {tex === 'leather'
@@ -630,8 +630,8 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       onClick={() => handleThemeUpdate('foilEffect', foil)}
                       className={`py-2 px-3 rounded-xl border text-xs font-bold transition capitalize cursor-pointer ${
                         template.theme.foilEffect === foil
-                          ? 'border-[#DD0200] bg-[#55100D]/40 text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                          : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FBF9F5]'
+                          ? 'border-[#DFAB56] bg-[#3D2314]/40 text-[#FAF5EB] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                          : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FAF5EB]'
                       }`}
                     >
                       {foil === 'bronze'
@@ -659,7 +659,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       onChange={(e) => handleThemeUpdate('textColor', e.target.value)}
                       className="w-8 h-8 rounded-lg border border-white/20 bg-transparent cursor-pointer"
                     />
-                    <span className="font-mono text-xs text-[#FBF9F5]">{template.theme.textColor}</span>
+                    <span className="font-mono text-xs text-[#FAF5EB]">{template.theme.textColor}</span>
                   </div>
                 </div>
 
@@ -674,7 +674,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       onChange={(e) => handleThemeUpdate('accentColor', e.target.value)}
                       className="w-8 h-8 rounded-lg border border-white/20 bg-transparent cursor-pointer"
                     />
-                    <span className="font-mono text-xs text-[#FBF9F5]">{template.theme.accentColor}</span>
+                    <span className="font-mono text-xs text-[#FAF5EB]">{template.theme.accentColor}</span>
                   </div>
                 </div>
 
@@ -689,7 +689,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                       onChange={(e) => handleThemeUpdate('stampBorderColor', e.target.value)}
                       className="w-8 h-8 rounded-lg border border-white/20 bg-transparent cursor-pointer"
                     />
-                    <span className="font-mono text-xs text-[#FBF9F5]">{template.theme.stampBorderColor}</span>
+                    <span className="font-mono text-xs text-[#FAF5EB]">{template.theme.stampBorderColor}</span>
                   </div>
                 </div>
 
@@ -700,7 +700,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
                   <select
                     value={template.theme.fontFamily}
                     onChange={(e) => handleThemeUpdate('fontFamily', e.target.value)}
-                    className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FBF9F5]"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-white/10 bg-[#0B0A0A] text-[#FAF5EB]"
                   >
                     <option value="cairo">Cairo (عصري)</option>
                     <option value="tajawal">Tajawal (أنيق)</option>
@@ -719,8 +719,8 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
           <div className="bg-[#141212] rounded-2xl p-5 border border-white/10 shadow-xl flex flex-col items-center">
             {/* Dimension Badge Header */}
             <div className="w-full flex items-center justify-between mb-4 border-b border-white/10 pb-3">
-              <span className="text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 font-serif">
-                <Sparkles className="w-4 h-4 text-[#DD0200]" />
+              <span className="text-xs font-bold text-[#FAF5EB] flex items-center gap-1.5 font-serif">
+                <Sparkles className="w-4 h-4 text-[#DFAB56]" />
                 <span>معاينة حية تفاعلية</span>
               </span>
 

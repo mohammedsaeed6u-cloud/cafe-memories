@@ -165,7 +165,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed bottom-6 left-6 z-50 p-4 bg-[#141212] text-[#FBF9F5] rounded-xl shadow-2xl flex items-center gap-3 border border-[#DD0200]/40 animate-in slide-in-from-bottom">
+        <div className="fixed bottom-6 left-6 z-50 p-4 bg-[#141212] text-[#FAF5EB] rounded-xl shadow-2xl flex items-center gap-3 border border-[#DFAB56]/40 animate-in slide-in-from-bottom">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
           <p className="text-xs font-bold">{notification}</p>
         </div>
@@ -176,7 +176,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#55100D]/60 text-emerald-400 border border-emerald-500/30 text-xs font-bold font-mono">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#3D2314]/60 text-emerald-400 border border-emerald-500/30 text-xs font-bold font-mono">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 {subscription.status === 'active'
                   ? 'الاشتراك نشط • Active'
@@ -186,7 +186,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
               </span>
 
               {subscription.cancelAtPeriodEnd && (
-                <span className="px-2.5 py-1 rounded-md bg-[#55100D]/70 text-[#FBF9F5] border border-[#DD0200]/40 text-xs font-bold font-mono">
+                <span className="px-2.5 py-1 rounded-md bg-[#3D2314]/70 text-[#FAF5EB] border border-[#DFAB56]/40 text-xs font-bold font-mono">
                   ينتهي عند نهاية الدورة
                 </span>
               )}
@@ -196,7 +196,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#FBF9F5] font-serif">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#FAF5EB] font-serif">
               {activePlan.name}{' '}
               <span className="text-base font-normal text-[#A19E9B]">({activePlan.nameEn})</span>
             </h2>
@@ -209,7 +209,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
             {/* Price badge */}
             <div className="p-4 rounded-xl bg-[#1C1B1B] border border-white/10 text-center min-w-[160px]">
-              <div className="text-2xl font-bold font-mono text-[#FBF9F5]">
+              <div className="text-2xl font-bold font-mono text-[#FAF5EB]">
                 {isAnnual ? activePlan.annualPricePerMonth : activePlan.monthlyPrice}{' '}
                 <span className="text-xs font-bold text-[#A19E9B]">ر.س / شهر</span>
               </div>
@@ -221,7 +221,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
             {/* Toggle Billing Interval */}
             <button
               onClick={handleToggleInterval}
-              className="px-4 py-3 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center justify-center gap-2 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
+              className="px-4 py-3 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs flex items-center justify-center gap-2 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>{isAnnual ? 'التحويل للدفع الشهري' : 'وفر 20% بالتحويل للسنوي'}</span>
@@ -232,11 +232,11 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
         {/* Payment Method Bar */}
         <div className="mt-6 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-3 text-[#e6e1e1]">
-            <div className="w-10 h-7 rounded-lg bg-[#1C1B1B] border border-white/10 flex items-center justify-center font-black text-[10px] text-[#FBF9F5] uppercase tracking-wider font-mono">
+            <div className="w-10 h-7 rounded-lg bg-[#1C1B1B] border border-white/10 flex items-center justify-center font-black text-[10px] text-[#FAF5EB] uppercase tracking-wider font-mono">
               {subscription.paymentMethod.brand}
             </div>
             <div>
-              <p className="font-bold text-[#FBF9F5]">
+              <p className="font-bold text-[#FAF5EB]">
                 بطاقة الدفع المعتمدة: •••• {subscription.paymentMethod.last4}
               </p>
               <p className="text-[11px] text-[#A19E9B] font-mono">
@@ -249,7 +249,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsChangingCard(true)}
-              className="px-3.5 py-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold transition text-xs cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] font-bold transition text-xs cursor-pointer"
             >
               تحديث البطاقة
             </button>
@@ -268,8 +268,8 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <Zap className="w-4 h-4 text-[#DD0200]" />
+            <h3 className="text-base font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+              <Zap className="w-4 h-4 text-[#DFAB56]" />
               <span>استهلاك الحصص والموارد الشهرية (Resource Quotas)</span>
             </h3>
             <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -282,11 +282,11 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
           {/* Metric 1: Visits */}
           <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-3">
             <div className="flex items-center justify-between text-[#A19E9B]">
-              <span className="text-xs font-bold text-[#FBF9F5]">زيارات وتفاعلات العملاء</span>
-              <Users className="w-4 h-4 text-[#DD0200]" />
+              <span className="text-xs font-bold text-[#FAF5EB]">زيارات وتفاعلات العملاء</span>
+              <Users className="w-4 h-4 text-[#DFAB56]" />
             </div>
             <div>
-              <div className="text-2xl font-bold font-mono text-[#FBF9F5]">
+              <div className="text-2xl font-bold font-mono text-[#FAF5EB]">
                 {visitsUsed.toLocaleString()}{' '}
                 <span className="text-xs font-normal text-[#A19E9B]">
                   / {visitsLimit === 'unlimited' ? 'غير محدود' : visitsLimit.toLocaleString()}
@@ -294,7 +294,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
               </div>
               <div className="w-full h-2 rounded-full bg-[#0B0A0A] mt-2 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[#55100D] to-[#DD0200] rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#3D2314] to-[#DFAB56] rounded-full transition-all duration-500"
                   style={{ width: `${visitsPercent}%` }}
                 />
               </div>
@@ -307,11 +307,11 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
           {/* Metric 2: TV Screens */}
           <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-3">
             <div className="flex items-center justify-between text-[#A19E9B]">
-              <span className="text-xs font-bold text-[#FBF9F5]">شاشات العرض بالصالة (TV Wall)</span>
-              <Tv className="w-4 h-4 text-[#DD0200]" />
+              <span className="text-xs font-bold text-[#FAF5EB]">شاشات العرض بالصالة (TV Wall)</span>
+              <Tv className="w-4 h-4 text-[#DFAB56]" />
             </div>
             <div>
-              <div className="text-2xl font-bold font-mono text-[#FBF9F5]">
+              <div className="text-2xl font-bold font-mono text-[#FAF5EB]">
                 {screensUsed}{' '}
                 <span className="text-xs font-normal text-[#A19E9B]">
                   / {screensLimit === 'unlimited' ? 'غير محدود' : `${screensLimit} شاشات`}
@@ -319,7 +319,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
               </div>
               <div className="w-full h-2 rounded-full bg-[#0B0A0A] mt-2 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[#55100D] to-[#DD0200] rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#3D2314] to-[#DFAB56] rounded-full transition-all duration-500"
                   style={{
                     width: screensLimit === 'unlimited' ? '20%' : `${(screensUsed / (screensLimit as number)) * 100}%`,
                   }}
@@ -334,11 +334,11 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
           {/* Metric 3: Prints */}
           <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-3">
             <div className="flex items-center justify-between text-[#A19E9B]">
-              <span className="text-xs font-bold text-[#FBF9F5]">كروت الصور المطبوعة 2×6</span>
-              <Printer className="w-4 h-4 text-[#DD0200]" />
+              <span className="text-xs font-bold text-[#FAF5EB]">كروت الصور المطبوعة 2×6</span>
+              <Printer className="w-4 h-4 text-[#DFAB56]" />
             </div>
             <div>
-              <div className="text-2xl font-bold font-mono text-[#FBF9F5]">
+              <div className="text-2xl font-bold font-mono text-[#FAF5EB]">
                 {printsUsed}{' '}
                 <span className="text-xs font-normal text-[#A19E9B]">
                   / {printsLimit === 'unlimited' ? 'غير محدود' : printsLimit === 0 ? 'غير مشمولة' : `${printsLimit} كارت`}
@@ -346,7 +346,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
               </div>
               <div className="w-full h-2 rounded-full bg-[#0B0A0A] mt-2 overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[#55100D] to-[#DD0200] rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#3D2314] to-[#DFAB56] rounded-full transition-all duration-500"
                   style={{ width: `${printsPercent}%` }}
                 />
               </div>
@@ -362,8 +362,8 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <Sparkles className="w-4 h-4 text-[#DD0200]" />
+            <h3 className="text-base font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+              <Sparkles className="w-4 h-4 text-[#DFAB56]" />
               <span>ترقية أو تغيير باقة الاشتراك (Plans & Upgrades)</span>
             </h3>
             <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -382,14 +382,14 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                 key={p.id}
                 className={`p-6 rounded-2xl bg-[#141212] border flex flex-col justify-between transition-all duration-200 relative ${
                   isCurrent
-                    ? 'border-[#DD0200] shadow-[0_0_25px_-5px_rgba(221,2,0,0.25)]'
+                    ? 'border-[#DFAB56] shadow-[0_0_25px_-5px_rgba(221,2,0,0.25)]'
                     : 'border-white/10 hover:border-white/25 shadow-xl'
                 }`}
               >
                 {/* Badges */}
                 <div className="flex items-center justify-between mb-4">
                   {p.badge ? (
-                    <span className="px-2.5 py-0.5 rounded-md bg-[#55100D]/70 text-[#FBF9F5] text-[10px] font-bold border border-[#DD0200]/40 font-mono">
+                    <span className="px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 text-[#FAF5EB] text-[10px] font-bold border border-[#DFAB56]/40 font-mono">
                       {p.badge}
                     </span>
                   ) : (
@@ -397,7 +397,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                   )}
 
                   {isCurrent && (
-                    <span className="px-2.5 py-0.5 rounded-md bg-[#55100D] text-[#FBF9F5] text-[10px] font-bold border border-[#DD0200]/50 font-mono">
+                    <span className="px-2.5 py-0.5 rounded-md bg-[#3D2314] text-[#FAF5EB] text-[10px] font-bold border border-[#DFAB56]/50 font-mono">
                       باقتك الحالية
                     </span>
                   )}
@@ -405,12 +405,12 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
 
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-lg font-bold text-[#FBF9F5] leading-tight font-serif">{p.name}</h4>
+                    <h4 className="text-lg font-bold text-[#FAF5EB] leading-tight font-serif">{p.name}</h4>
                     <p className="text-xs text-[#A19E9B] mt-0.5 font-sans">{p.nameEn}</p>
                   </div>
 
                   <div className="pt-2 pb-3 border-y border-white/10">
-                    <div className="text-2xl font-bold font-mono text-[#FBF9F5]">
+                    <div className="text-2xl font-bold font-mono text-[#FAF5EB]">
                       {price}{' '}
                       <span className="text-xs font-bold text-[#A19E9B]">ر.س / شهرياً</span>
                     </div>
@@ -425,7 +425,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                   <ul className="space-y-2 text-xs text-[#e6e1e1]">
                     {p.features.map((feat, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-[#DD0200] mt-0.5 shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-[#DFAB56] mt-0.5 shrink-0" />
                         <span className="leading-snug">{feat}</span>
                       </li>
                     ))}
@@ -439,7 +439,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                     className={`w-full py-2.5 px-4 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       isCurrent
                         ? 'bg-[#1C1B1B] text-[#A19E9B]/50 cursor-not-allowed border border-white/5'
-                        : 'bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                        : 'bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
                     }`}
                   >
                     {isCurrent ? (
@@ -462,8 +462,8 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
       <div className="bg-[#141212] rounded-2xl border border-white/10 shadow-xl overflow-hidden">
         <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <FileText className="w-4 h-4 text-[#DD0200]" />
+            <h3 className="text-base font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+              <FileText className="w-4 h-4 text-[#DFAB56]" />
               <span>الفواتير الضريبية وسجل السداد (ZATCA Tax Invoices)</span>
             </h3>
             <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -496,7 +496,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
               <tbody className="divide-y divide-white/5 text-xs text-[#e6e1e1]">
                 {invoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-[#1C1B1B]/50 transition">
-                    <td className="py-3.5 px-5 font-mono font-bold text-[#FBF9F5]">
+                    <td className="py-3.5 px-5 font-mono font-bold text-[#FAF5EB]">
                       {inv.invoiceNumber}
                     </td>
                     <td className="py-3.5 px-5 text-[#A19E9B]">{formatDate(inv.date)}</td>
@@ -504,11 +504,11 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                       {new Date(inv.periodStart).toLocaleDateString('en-GB')} -{' '}
                       {new Date(inv.periodEnd).toLocaleDateString('en-GB')}
                     </td>
-                    <td className="py-3.5 px-5 text-[#FBF9F5] font-bold font-mono">{inv.amount} ر.س</td>
+                    <td className="py-3.5 px-5 text-[#FAF5EB] font-bold font-mono">{inv.amount} ر.س</td>
                     <td className="py-3.5 px-5 text-[#A19E9B] font-mono">{inv.taxAmount} ر.س</td>
-                    <td className="py-3.5 px-5 font-bold font-mono text-[#FBF9F5]">{inv.totalAmount} ر.س</td>
+                    <td className="py-3.5 px-5 font-bold font-mono text-[#FAF5EB]">{inv.totalAmount} ر.س</td>
                     <td className="py-3.5 px-5">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#55100D]/70 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold font-mono">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold font-mono">
                         <Check className="w-3 h-3 text-emerald-400" />
                         <span>مدفوعة</span>
                       </span>
@@ -516,7 +516,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                     <td className="py-3.5 px-5 text-center">
                       <button
                         onClick={() => setSelectedInvoice(inv)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold transition shadow-sm text-xs cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] font-bold transition shadow-sm text-xs cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>عرض الفاتورة</span>
@@ -536,7 +536,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
           <div className="bg-[#141212] rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-white/10 space-y-6 relative max-h-[90vh] overflow-y-auto text-[#e6e1e1]">
             <button
               onClick={() => setSelectedInvoice(null)}
-              className="absolute top-6 left-6 p-2 rounded-lg text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-[#1C1B1B] transition"
+              className="absolute top-6 left-6 p-2 rounded-lg text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-[#1C1B1B] transition"
             >
               <X className="w-5 h-5" />
             </button>
@@ -547,11 +547,11 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#1C1B1B] text-[#A19E9B] border border-white/10">
                   فاتورة ضريبية مبسطة • Simplified Tax Invoice
                 </span>
-                <h3 className="text-xl font-bold text-[#FBF9F5] mt-1 font-mono">
+                <h3 className="text-xl font-bold text-[#FAF5EB] mt-1 font-mono">
                   {selectedInvoice.invoiceNumber}
                 </h3>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] flex items-center justify-center font-serif font-bold text-xl shadow-md">
+              <div className="w-12 h-12 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center font-serif font-bold text-xl shadow-md">
                 M
               </div>
             </div>
@@ -560,13 +560,13 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
             <div className="grid grid-cols-2 gap-4 text-xs bg-[#1C1B1B] p-4 rounded-xl border border-white/10">
               <div>
                 <p className="font-bold text-[#A19E9B]">المورد (Seller):</p>
-                <p className="font-bold text-[#FBF9F5] mt-0.5">منصة ذكريات المحدودة (Memories SaaS)</p>
+                <p className="font-bold text-[#FAF5EB] mt-0.5">منصة ذكريات المحدودة (Memories SaaS)</p>
                 <p className="text-[11px] text-[#A19E9B] font-mono">الرقم الضريبي: 310294850200003</p>
                 <p className="text-[11px] text-[#A19E9B]">الرياض، المملكة العربية السعودية</p>
               </div>
               <div>
                 <p className="font-bold text-[#A19E9B]">العميل (Buyer):</p>
-                <p className="font-bold text-[#FBF9F5] mt-0.5 font-mono">{cafeSlug}</p>
+                <p className="font-bold text-[#FAF5EB] mt-0.5 font-mono">{cafeSlug}</p>
                 <p className="text-[11px] text-[#A19E9B]">
                   التاريخ: {formatDate(selectedInvoice.date)}
                 </p>
@@ -588,14 +588,14 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                 </thead>
                 <tbody className="divide-y divide-white/5 text-[#e6e1e1]">
                   <tr>
-                    <td className="p-3 font-bold text-[#FBF9F5]">
+                    <td className="p-3 font-bold text-[#FAF5EB]">
                       اشتراك منصة ذكريات - باقة {selectedInvoice.planId} (
                       {selectedInvoice.billingInterval === 'annually' ? 'سنوي' : 'شهري'})
                     </td>
-                    <td className="p-3 text-[#FBF9F5] font-mono">{selectedInvoice.amount} ر.س</td>
+                    <td className="p-3 text-[#FAF5EB] font-mono">{selectedInvoice.amount} ر.س</td>
                     <td className="p-3 text-[#A19E9B] font-mono">15%</td>
                     <td className="p-3 text-[#A19E9B] font-mono">{selectedInvoice.taxAmount} ر.س</td>
-                    <td className="p-3 font-bold text-[#FBF9F5] font-mono">{selectedInvoice.totalAmount} ر.س</td>
+                    <td className="p-3 font-bold text-[#FAF5EB] font-mono">{selectedInvoice.totalAmount} ر.س</td>
                   </tr>
                 </tbody>
               </table>
@@ -614,10 +614,10 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
 
               <div className="text-left space-y-1">
                 <p className="text-xs text-[#A19E9B]">المبلغ الإجمالي المستحق:</p>
-                <p className="text-2xl font-bold font-mono text-[#DD0200]">
+                <p className="text-2xl font-bold font-mono text-[#DFAB56]">
                   {selectedInvoice.totalAmount} ر.س
                 </p>
-                <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#55100D]/70 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold font-mono">
+                <span className="inline-block px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold font-mono">
                   مدفوعة بالكامل
                 </span>
               </div>
@@ -626,7 +626,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
             <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
               <button
                 onClick={() => window.print()}
-                className="px-4 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center gap-1.5 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
+                className="px-4 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs flex items-center gap-1.5 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>طباعة / تحميل الفاتورة PDF</span>
@@ -642,12 +642,12 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
           <div className="bg-[#141212] rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-white/10 space-y-5 text-[#e6e1e1]">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
-                <h3 className="text-lg font-bold text-[#FBF9F5] font-serif">تحديث بطاقة الدفع المعتمدة</h3>
+                <h3 className="text-lg font-bold text-[#FAF5EB] font-serif">تحديث بطاقة الدفع المعتمدة</h3>
                 <p className="text-xs text-[#A19E9B] mt-0.5">ربط آمن عبر بوابة الدفع المعتمدة</p>
               </div>
               <button
                 onClick={() => setIsChangingCard(false)}
-                className="p-1.5 rounded-lg text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-[#1C1B1B]"
+                className="p-1.5 rounded-lg text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-[#1C1B1B]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -664,7 +664,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                       onClick={() => setCardBrand(b)}
                       className={`py-2 rounded-lg text-xs font-bold uppercase border transition cursor-pointer ${
                         cardBrand === b
-                          ? 'border-[#DD0200] bg-[#55100D]/50 text-[#FBF9F5] shadow-xs'
+                          ? 'border-[#DFAB56] bg-[#3D2314]/50 text-[#FAF5EB] shadow-xs'
                           : 'border-white/10 text-[#A19E9B] bg-[#1C1B1B] hover:bg-[#211F1F]'
                       }`}
                     >
@@ -681,7 +681,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                   required
                   value={cardHolder}
                   onChange={(e) => setCardHolder(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs font-medium focus:border-[#DD0200] outline-none text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs font-medium focus:border-[#DFAB56] outline-none text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
                 />
               </div>
 
@@ -692,7 +692,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                   required
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs font-mono font-medium focus:border-[#DD0200] outline-none text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs font-mono font-medium focus:border-[#DFAB56] outline-none text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
                   placeholder="0000 0000 0000 0000"
                 />
               </div>
@@ -707,7 +707,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                     required
                     value={expiry}
                     onChange={(e) => setExpiry(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs font-mono text-center focus:border-[#DD0200] outline-none text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs font-mono text-center focus:border-[#DFAB56] outline-none text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
                     placeholder="MM/YY"
                   />
                 </div>
@@ -717,7 +717,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                     type="password"
                     maxLength={4}
                     defaultValue="***"
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs font-mono text-center focus:border-[#DD0200] outline-none text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs font-mono text-center focus:border-[#DFAB56] outline-none text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
                   />
                 </div>
               </div>
@@ -732,7 +732,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
+                  className="px-5 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-xs font-bold transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
                 >
                   حفظ وتأكيد البطاقة
                 </button>
@@ -747,11 +747,11 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#141212] rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-white/10 space-y-5 text-[#e6e1e1]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#55100D] text-[#DD0200] border border-[#DD0200]/40 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[#3D2314] text-[#DFAB56] border border-[#DFAB56]/40 flex items-center justify-center">
                 <AlertCircle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#FBF9F5] font-serif">
+                <h3 className="text-base font-bold text-[#FAF5EB] font-serif">
                   {subscription.cancelAtPeriodEnd ? 'التراجع عن إيقاف الاشتراك' : 'تأكيد إيقاف التجديد التلقائي'}
                 </h3>
                 <p className="text-xs text-[#A19E9B]">حماية كاملة لبيانات المنشأة وأختام العملاء</p>
@@ -776,7 +776,7 @@ export function SubscriptionBillingTab({ cafeSlug }: Props) {
                 className={`px-5 py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
                   subscription.cancelAtPeriodEnd
                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                    : 'bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5]'
+                    : 'bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E]'
                 }`}
               >
                 {subscription.cancelAtPeriodEnd ? 'تأكيد استمرار الاشتراك' : 'تأكيد جدولة الإيقاف'}

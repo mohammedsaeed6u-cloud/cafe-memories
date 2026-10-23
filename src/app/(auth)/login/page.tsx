@@ -22,7 +22,8 @@ import { PasswordInput } from '@/components/ui/PasswordInput';
 import { STAFF_ROSTER } from '@/types/staff';
 import { verifyStaffPin, verifyPinOnly, setActiveStaffMember } from '@/lib/services/staff-auth.service';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
-import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
+import { StampyLogo, StampyApertureIcon } from '@/components/brand/StampyLogo';
+import { SlidingRateLimiter } from '@/lib/services/sliding-rate-limiter.service';
 
 function GoogleIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
@@ -65,7 +66,7 @@ export default function LoginPage() {
   // Staff PIN state
   const [selectedStaffId, setSelectedStaffId] = useState<string>(STAFF_ROSTER[0]?.id || 'staff-1');
   const [pin, setPin] = useState('');
-  const [hostDomain, setHostDomain] = useState('memories-7vr.pages.dev');
+  const [hostDomain, setHostDomain] = useState('memories-c9w.pages.dev');
 
   // Auto-redirect if already logged in with valid session, and check tab query param
   useEffect(() => {
@@ -279,7 +280,7 @@ export default function LoginPage() {
     setErrorMsg(null);
     try {
       const supabase = createClient();
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-7vr.pages.dev';
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-c9w.pages.dev';
       const redirectTo = `${origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -306,38 +307,38 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col justify-center items-center p-4 selection:bg-[#DD0200] selection:text-white font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-[#12100E] text-[#e6e1e1] flex flex-col justify-center items-center p-4 selection:bg-[#DFAB56] selection:text-[#12100E] selection:text-[#12100E] font-sans relative overflow-hidden">
       {/* Ambient background glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#55100D]/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#3D2314]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Brand Back Link */}
       <div className="w-full max-w-lg mb-4 flex items-center justify-between relative z-10">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A19E9B] hover:text-[#FBF9F5] transition"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-300 hover:text-[#FAF5EB] transition"
         >
           <ChevronLeft className="w-4 h-4 rotate-180" />
           <span>العودة للموقع الرئيسي</span>
         </Link>
-        <span className="text-[10px] font-mono font-bold text-[#FBF9F5] bg-[#55100D]/50 px-2.5 py-0.5 rounded-md border border-[#DD0200]/40 tracking-wider uppercase">
+        <span className="text-[10px] font-mono font-bold text-[#FAF5EB] bg-[#3D2314]/50 px-2.5 py-0.5 rounded-md border border-[#DFAB56]/40 tracking-wider uppercase">
           SECURE PORTAL
         </span>
       </div>
 
-      <div className="w-full max-w-lg bg-[#141212] border border-white/10 rounded-2xl p-7 sm:p-10 shadow-2xl backdrop-blur-xl relative z-10">
+      <div className="w-full max-w-lg bg-[#181513] border border-white/10 rounded-2xl p-7 sm:p-10 shadow-2xl backdrop-blur-xl relative z-10">
         {/* Header */}
         <div className="text-center mb-7">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center mx-auto mb-3.5 shadow-lg shadow-red-950/60 border border-white/20">
-            <MemoriesArchIcon size={30} color="#FBF9F5" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center mx-auto mb-3.5 shadow-lg shadow-red-950/60 border border-white/20">
+            <StampyApertureIcon size={30} color="#FAF5EB" />
           </div>
           <h1
             style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
             className="text-2xl sm:text-3xl font-semibold text-white tracking-tight"
           >
-            memories studio
+            stampy.
           </h1>
-          <p className="text-xs sm:text-sm text-[#A19E9B] mt-1.5 leading-relaxed">
+          <p className="text-xs sm:text-sm text-stone-300 mt-1.5 leading-relaxed">
             بوابة أصحاب الأنشطة التجارية وإدارة تجارب الزوار والولاء التفاعلي
           </p>
         </div>
@@ -352,8 +353,8 @@ export default function LoginPage() {
             }}
             className={`py-2 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
               authTab === 'signup'
-                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                : 'text-[#A19E9B] hover:text-white'
+                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'text-stone-300 hover:text-white'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
@@ -368,8 +369,8 @@ export default function LoginPage() {
             }}
             className={`py-2 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
               authTab === 'signin'
-                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                : 'text-[#A19E9B] hover:text-white'
+                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'text-stone-300 hover:text-white'
             }`}
           >
             <LogIn className="w-3.5 h-3.5" />
@@ -384,8 +385,8 @@ export default function LoginPage() {
             }}
             className={`py-2 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
               authTab === 'pin'
-                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                : 'text-[#A19E9B] hover:text-white'
+                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                : 'text-stone-300 hover:text-white'
             }`}
           >
             <KeyRound className="w-3.5 h-3.5" />
@@ -416,7 +417,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleGoogleAuth}
               disabled={loading}
-              className="w-full py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#DD0200]/30 text-[#FBF9F5] font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 backdrop-blur-md"
+              className="w-full py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#DFAB56]/30 text-[#FAF5EB] font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 backdrop-blur-md"
             >
               <GoogleIcon className="w-4 h-4 shrink-0" />
               <span>
@@ -429,7 +430,7 @@ export default function LoginPage() {
             {/* Modern Subtle Divider */}
             <div className="relative flex items-center justify-center my-1">
               <div className="w-full border-t border-white/10" />
-              <span className="absolute bg-[#141212] px-3 text-[10px] font-bold text-[#A19E9B] select-none uppercase tracking-wider">
+              <span className="absolute bg-[#181513] px-3 text-[10px] font-bold text-stone-300 select-none uppercase tracking-wider">
                 أو عبر البريد الإلكتروني
               </span>
             </div>
@@ -460,9 +461,9 @@ export default function LoginPage() {
                             setCafeSlug(clean || '');
                           }
                         }}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-[#A19E9B]/50 focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none transition"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-stone-300/50 focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none transition"
                       />
-                      <Store className="w-4 h-4 text-[#A19E9B] absolute left-3 top-3 pointer-events-none" />
+                      <Store className="w-4 h-4 text-stone-300 absolute left-3 top-3 pointer-events-none" />
                     </div>
                   </div>
 
@@ -471,7 +472,7 @@ export default function LoginPage() {
                       <label className="text-xs font-semibold text-[#e6e1e1]">
                         معرف رابط المنشأة المخصص (Slug):
                       </label>
-                      <span className="text-[10px] text-[#A19E9B] font-mono">CUSTOM URL</span>
+                      <span className="text-[10px] text-stone-300 font-mono">CUSTOM URL</span>
                     </div>
                     <div className="relative">
                       <input
@@ -484,11 +485,11 @@ export default function LoginPage() {
                           setIsSlugManuallyEdited(true);
                           setCafeSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
                         }}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-[#A19E9B]/50 focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none transition font-mono"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-stone-300/50 focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none transition font-mono"
                       />
                     </div>
-                    <p className="text-[11px] text-[#A19E9B] mt-1.5 flex items-center gap-1 font-mono" dir="ltr">
-                      <span className="text-[#DD0200] font-bold">Live URL:</span>
+                    <p className="text-[11px] text-stone-300 mt-1.5 flex items-center gap-1 font-mono" dir="ltr">
+                      <span className="text-[#DFAB56] font-bold">Live URL:</span>
                       <span className="text-stone-300">
                         {hostDomain}/c/{cafeSlug || 'my-brand'}
                       </span>
@@ -508,10 +509,10 @@ export default function LoginPage() {
                     placeholder="owner@yourbrand.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-[#A19E9B]/50 focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none transition font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-stone-300/50 focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none transition font-mono"
                     dir="ltr"
                   />
-                  <Mail className="w-4 h-4 text-[#A19E9B] absolute left-3 top-3 pointer-events-none" />
+                  <Mail className="w-4 h-4 text-stone-300 absolute left-3 top-3 pointer-events-none" />
                 </div>
               </div>
 
@@ -531,7 +532,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
+                className="w-full py-3 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
               >
                 {loading ? (
                   <span>جاري المعالجة...</span>
@@ -565,10 +566,10 @@ export default function LoginPage() {
                 placeholder="••••"
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-full px-3.5 py-3.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-center text-2xl font-mono font-black tracking-[0.4em] text-white focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none transition shadow-inner"
+                className="w-full px-3.5 py-3.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-center text-2xl font-mono font-black tracking-[0.4em] text-white focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none transition shadow-inner"
                 autoFocus
               />
-              <p className="text-[11px] text-[#A19E9B] mt-2 text-center font-medium">
+              <p className="text-[11px] text-stone-300 mt-2 text-center font-medium">
                 دخول سريع لطاقم العمل والكاونتر بدون الحاجة لإدخال البريد الإلكتروني
               </p>
             </div>
@@ -576,7 +577,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
+              className="w-full py-3 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
             >
               {loading ? (
                 <span>جاري التحقق...</span>
@@ -591,9 +592,9 @@ export default function LoginPage() {
         )}
 
         {/* Footer info */}
-        <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between text-[11px] text-[#A19E9B]">
+        <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between text-[11px] text-stone-300">
           <span>حماية وتشفير البيانات 256-bit</span>
-          <span className="font-mono text-[#DD0200]">ATELIER • NOSTALGIA</span>
+          <span className="font-mono text-[#DFAB56]">ATELIER • NOSTALGIA</span>
         </div>
       </div>
     </div>

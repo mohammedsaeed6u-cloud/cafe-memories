@@ -11,18 +11,24 @@ export interface IssuedVoucher {
   status: 'ACTIVE' | 'REDEEMED' | 'EXPIRED';
   redeemedAt?: string;
   redeemedByStaffName?: string;
+  version: number;
 }
 
-const STORAGE_PREFIX = 'memories_vouchers_';
-const AUDIT_PREFIX = 'memories_redemption_audit_';
+const STORAGE_PREFIX = 'stampy_vouchers_';
+const AUDIT_PREFIX = 'stampy_redemption_audit_';
 
 export class VoucherService {
   private static inMemoryStore = new Map<string, string>();
+  // In-memory Mutex to prevent Race Conditions (Pillar 01)
+  private static activeLocks = new Set<string>();
 
   private static getItem(key: string): string | null {
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
-        return localStorage.getItem(key);
+        const val = localStorage.getItem(key);
+        if (val) return val;
+        const legacy = localStorage.getItem(key.replace('stampy_', 'memories_'));
+        if (legacy) return legacy;
       } catch {
         return this.inMemoryStore.get(key) || null;
       }
@@ -40,7 +46,7 @@ export class VoucherService {
   }
 
   private static getStorageKey(cafeSlug: string): string {
-    return `${STORAGE_PREFIX}${cafeSlug || 'memories'}`;
+    return `${STORAGE_PREFIX}${cafeSlug || 'stampy'}`;
   }
 
   public static generateCode(): string {
@@ -70,7 +76,6 @@ export class VoucherService {
     const cleanPhone = (customerPhone || 'guest').trim().replace(/[^0-9]/g, '') || 'guest';
     const vouchers = this.getAllVouchers(cafeSlug);
 
-    // Check if an ACTIVE voucher already exists for this phone with same title to prevent redundant duplicates
     const existingActive = vouchers.find(
       (v) => v.customerPhone === cleanPhone && v.status === 'ACTIVE' && v.giftTitle === giftTitle
     );
@@ -81,17 +86,18 @@ export class VoucherService {
     const code = forceCode || this.generateCode();
     const newVoucher: IssuedVoucher = {
       code,
-      cafeSlug: cafeSlug || 'memories',
+      cafeSlug: cafeSlug || 'stampy',
       customerPhone: cleanPhone,
-      customerName: customerName || 'ضيف مميز',
+      customerName: customerName || 'عميل استامبي المميز',
       giftTitle: giftTitle || 'مكافأة وهدية خاصة',
       giftSubtitle,
       issuedAt: new Date().toISOString(),
       status: 'ACTIVE',
+      version: 1,
     };
 
     vouchers.unshift(newVoucher);
-    this.setItem(this.getStorageKey(cafeSlug), JSON.stringify(vouchers.slice(0, 200)));
+    this.setItem(this.getStorageKey(cafeSlug), JSON.stringify(vouchers.slice(0, 250)));
     return newVoucher;
   }
 
@@ -114,15 +120,10 @@ export class VoucherService {
     const normalized = this.normalizeCode(codeOrQuery);
     const vouchers = this.getAllVouchers(cafeSlug);
 
-    // 1. Direct code match
     let match = vouchers.find((v) => v.code.toUpperCase() === normalized);
-
-    // 2. Fallback: match by last 4 digits
     if (!match && normalized.length >= 4) {
       match = vouchers.find((v) => v.code.endsWith(normalized.replace(/[^0-9]/g, '')));
     }
-
-    // 3. Fallback: match by phone
     if (!match) {
       const cleanPhone = codeOrQuery.replace(/[^0-9]/g, '');
       if (cleanPhone.length >= 6) {
@@ -142,53 +143,69 @@ export class VoucherService {
     cafeSlug: string,
     staffName?: string
   ): { success: boolean; voucher?: IssuedVoucher; error?: string } {
-    const lookup = this.lookupVoucher(code, cafeSlug);
-    if (!lookup.found || !lookup.voucher) {
-      return { success: false, error: lookup.error || 'الرمز غير موجود.' };
-    }
+    const normalized = this.normalizeCode(code);
+    const lockKey = `${cafeSlug}:${normalized}`;
 
-    const v = lookup.voucher;
-    if (v.status === 'REDEEMED') {
+    // Concurrency Mutex Lock (Pillar 01: Race Conditions)
+    if (this.activeLocks.has(lockKey)) {
       return {
         success: false,
-        voucher: v,
-        error: `تم استبدال هذه الهدية مسبقاً بتاريخ ${new Date(v.redeemedAt || '').toLocaleDateString('ar-EG')} بواسطة (${v.redeemedByStaffName || 'طاقم العمل'}).`,
+        error: 'عذراً! يوجد طلب استبدال قيد المعالجة حالياً لنفس الرمز. يرجى الانتظار لتفادي الصرف المزدوج.',
       };
     }
 
-    // Mark as redeemed
-    v.status = 'REDEEMED';
-    v.redeemedAt = new Date().toISOString();
-    v.redeemedByStaffName = staffName || 'طاقم الخدمة المناوب';
+    this.activeLocks.add(lockKey);
 
-    const vouchers = this.getAllVouchers(cafeSlug);
-    const idx = vouchers.findIndex((item) => item.code === v.code);
-    if (idx !== -1) {
-      vouchers[idx] = v;
-      this.setItem(this.getStorageKey(cafeSlug), JSON.stringify(vouchers));
+    try {
+      const lookup = this.lookupVoucher(normalized, cafeSlug);
+      if (!lookup.found || !lookup.voucher) {
+        return { success: false, error: lookup.error || 'الرمز غير موجود.' };
+      }
+
+      const v = lookup.voucher;
+      if (v.status === 'REDEEMED') {
+        return {
+          success: false,
+          voucher: v,
+          error: `تم استبدال هذه الهدية مسبقاً بتاريخ ${new Date(v.redeemedAt || '').toLocaleDateString('ar-EG')} بواسطة (${v.redeemedByStaffName || 'طاقم العمل'}).`,
+        };
+      }
+
+      v.status = 'REDEEMED';
+      v.redeemedAt = new Date().toISOString();
+      v.redeemedByStaffName = staffName || 'طاقم الخدمة المناوب';
+      v.version = (v.version || 1) + 1;
+
+      const vouchers = this.getAllVouchers(cafeSlug);
+      const idx = vouchers.findIndex((item) => item.code === v.code);
+      if (idx !== -1) {
+        vouchers[idx] = v;
+        this.setItem(this.getStorageKey(cafeSlug), JSON.stringify(vouchers));
+      }
+
+      const redKey = `stampy_redemptions_${cafeSlug}_${v.customerPhone}`;
+      const prevCount = Number(this.getItem(redKey) || '0');
+      this.setItem(redKey, String(prevCount + 1));
+
+      const auditKey = `${AUDIT_PREFIX}${cafeSlug}`;
+      const rawAudit = this.getItem(auditKey);
+      const audits = rawAudit ? JSON.parse(rawAudit) : [];
+      audits.unshift({
+        id: `audit_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        voucherCode: v.code,
+        phone: v.customerPhone,
+        customerName: v.customerName,
+        rewardTitle: v.giftTitle,
+        redeemedAt: v.redeemedAt,
+        staffName: v.redeemedByStaffName,
+        version: v.version,
+      });
+      this.setItem(auditKey, JSON.stringify(audits.slice(0, 100)));
+
+      return { success: true, voucher: v };
+    } finally {
+      this.activeLocks.delete(lockKey);
     }
-
-    // Update customer redemptions counter for backwards compatibility
-    const redKey = `memories_redemptions_${cafeSlug}_${v.customerPhone}`;
-    const prevCount = Number(this.getItem(redKey) || '0');
-    this.setItem(redKey, String(prevCount + 1));
-
-    // Audit log
-    const auditKey = `${AUDIT_PREFIX}${cafeSlug}`;
-    const rawAudit = this.getItem(auditKey);
-    const audits = rawAudit ? JSON.parse(rawAudit) : [];
-    audits.unshift({
-      id: `audit_${Date.now()}`,
-      voucherCode: v.code,
-      phone: v.customerPhone,
-      customerName: v.customerName,
-      rewardTitle: v.giftTitle,
-      redeemedAt: v.redeemedAt,
-      staffName: v.redeemedByStaffName,
-    });
-    this.setItem(auditKey, JSON.stringify(audits.slice(0, 100)));
-
-    return { success: true, voucher: v };
   }
 
   public static getCustomerVouchers(customerPhone: string, cafeSlug: string): IssuedVoucher[] {

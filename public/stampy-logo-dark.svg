@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 180" width="680" height="180">
+  <defs>
+    <clipPath id="ticket-clip-horiz">
+      <path d="M 43.0 29.0 L 267.0 29.0 A 13 13 0 0 0 280.0 42.0 C 277.2 45.8 277.2 51.9 280.0 55.7 C 277.2 59.6 277.2 65.6 280.0 69.4 C 277.2 73.3 277.2 79.3 280.0 83.1 C 277.2 87.0 277.2 93.0 280.0 96.9 C 277.2 100.7 277.2 106.7 280.0 110.6 C 277.2 114.4 277.2 120.4 280.0 124.3 C 277.2 128.1 277.2 134.2 280.0 138.0 A 13 13 0 0 0 267.0 151.0 L 43.0 151.0 A 13 13 0 0 0 30.0 138.0 C 32.8 134.2 32.8 128.1 30.0 124.3 C 32.8 120.4 32.8 114.4 30.0 110.6 C 32.8 106.7 32.8 100.7 30.0 96.9 C 32.8 93.0 32.8 87.0 30.0 83.1 C 32.8 79.3 32.8 73.3 30.0 69.4 C 32.8 65.6 32.8 59.6 30.0 55.7 C 32.8 51.9 32.8 45.8 30.0 42.0 A 13 13 0 0 0 43.0 29.0 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Ticket Body: Warm Gold Ochre (#DFAB56) -->
+  <path d="M 43.0 29.0 L 267.0 29.0 A 13 13 0 0 0 280.0 42.0 C 277.2 45.8 277.2 51.9 280.0 55.7 C 277.2 59.6 277.2 65.6 280.0 69.4 C 277.2 73.3 277.2 79.3 280.0 83.1 C 277.2 87.0 277.2 93.0 280.0 96.9 C 277.2 100.7 277.2 106.7 280.0 110.6 C 277.2 114.4 277.2 120.4 280.0 124.3 C 277.2 128.1 277.2 134.2 280.0 138.0 A 13 13 0 0 0 267.0 151.0 L 43.0 151.0 A 13 13 0 0 0 30.0 138.0 C 32.8 134.2 32.8 128.1 30.0 124.3 C 32.8 120.4 32.8 114.4 30.0 110.6 C 32.8 106.7 32.8 100.7 30.0 96.9 C 32.8 93.0 32.8 87.0 30.0 83.1 C 32.8 79.3 32.8 73.3 30.0 69.4 C 32.8 65.6 32.8 59.6 30.0 55.7 C 32.8 51.9 32.8 45.8 30.0 42.0 A 13 13 0 0 0 43.0 29.0 Z" fill="#DFAB56" />
+
+  <!-- 5 Spectral Stripes -->
+  <g clip-path="url(#ticket-clip-horiz)">
+    
+    <rect x="30" y="78" width="250" height="4.8" fill="#3D2314" />
+    
+    <rect x="30" y="82.8" width="250" height="4.8" fill="#AC3E25" />
+    
+    <rect x="30" y="87.6" width="250" height="4.8" fill="#EBA935" />
+    
+    <rect x="30" y="92.4" width="250" height="4.8" fill="#B18944" />
+    
+    <rect x="30" y="97.2" width="250" height="4.8" fill="#337482" />
+    
+  </g>
+
+  <!-- Chamfered Solid Border -->
+  <path d="M 49 37 L 261 37 L 272 48 L 272 132 L 261 143 L 49 143 L 38 132 L 38 48 Z" fill="none" stroke="#3D2314" stroke-width="1.6" />
+
+  <!-- Dashed Stitch Line -->
+  <path d="M 50 40 L 260 40 L 269 49 L 269 131 L 260 140 L 50 140 L 41 131 L 41 49 Z" fill="none" stroke="#3D2314" stroke-width="1.0" stroke-dasharray="3, 2.5" opacity="0.9" />
+
+  <!-- Aperture Backing Mask & Outer Moat Ring -->
+  <circle cx="155" cy="90" r="24" fill="#DFAB56" />
+  <circle cx="155" cy="90" r="24" fill="none" stroke="#3D2314" stroke-width="1.4" />
+
+  <!-- 6-Blade Camera Iris Aperture Shutter -->
+  <g transform="translate(155, 90) scale(0.65) translate(-350, -230)">
+    <path d="M 359.96 235.75 L 359.96 262.51 A 34 34 0 0 1 326.83 254.88 L 350.00 241.50 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+    <path d="M 350.00 241.50 L 326.83 254.88 A 34 34 0 0 1 316.87 222.37 L 340.04 235.75 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+    <path d="M 340.04 235.75 L 316.87 222.37 A 34 34 0 0 1 340.04 197.49 L 340.04 224.25 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+    <path d="M 340.04 224.25 L 340.04 197.49 A 34 34 0 0 1 373.17 205.12 L 350.00 218.50 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+    <path d="M 350.00 218.50 L 373.17 205.12 A 34 34 0 0 1 383.13 237.63 L 359.96 224.25 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+    <path d="M 359.96 224.25 L 383.13 237.63 A 34 34 0 0 1 359.96 262.51 L 359.96 235.75 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+    <circle cx="350" cy="230" r="34" fill="none" stroke="#3D2314" stroke-width="1.2" />
+  </g>
+
+  <!-- Geometric Wordmark "stampy." -->
+  <g transform="translate(315, 120)">
+    <text font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="88" font-weight="900" fill="#F7F3EA" letter-spacing="-3px">stampy.</text>
+  </g>
+</svg>

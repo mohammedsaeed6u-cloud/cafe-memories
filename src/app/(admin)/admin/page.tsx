@@ -98,20 +98,20 @@ export default function SuperAdminPortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col selection:bg-[#DD0200] selection:text-white font-sans">
+    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col selection:bg-[#DFAB56] selection:text-[#12100E] font-sans">
       {/* Super Admin Navigation */}
-      <header className="bg-[#0E0D0D] text-[#FBF9F5] border-b border-white/10 sticky top-0 z-40 px-6 py-4 shadow-md">
+      <header className="bg-[#0E0D0D] text-[#FAF5EB] border-b border-white/10 sticky top-0 z-40 px-6 py-4 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-[#FBF9F5] flex items-center justify-center shadow-lg border border-white/10 shrink-0">
-              <MemoriesArchIcon size={22} color="#FBF9F5" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-[#FAF5EB] flex items-center justify-center shadow-lg border border-white/10 shrink-0">
+              <MemoriesArchIcon size={22} color="#FAF5EB" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-bold text-base tracking-tight text-[#FBF9F5] font-serif">
+                <h1 className="font-bold text-base tracking-tight text-[#FAF5EB] font-serif">
                   Memories SaaS • Super Admin Portal
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-[#55100D]/50 text-[#FBF9F5] text-[10px] font-mono font-bold border border-[#DD0200]/40">
+                <span className="px-2 py-0.5 rounded-full bg-[#3D2314]/50 text-[#FAF5EB] text-[10px] font-mono font-bold border border-[#DFAB56]/40">
                   ENTERPRISE CONTROL
                 </span>
               </div>
@@ -128,7 +128,7 @@ export default function SuperAdminPortalPage() {
             </div>
             <a
               href="/dashboard"
-              className="px-3.5 py-1.5 rounded-xl bg-[#1C1B1B] hover:bg-[#252424] text-[#FBF9F5] font-bold transition flex items-center gap-1.5 border border-white/10"
+              className="px-3.5 py-1.5 rounded-xl bg-[#1C1B1B] hover:bg-[#252424] text-[#FAF5EB] font-bold transition flex items-center gap-1.5 border border-white/10"
             >
               <span>لوحة التاجر والاشتراك</span>
               <ExternalLink className="w-3 h-3" />
@@ -141,7 +141,7 @@ export default function SuperAdminPortalPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
         {/* Notice Bar */}
         {notice && (
-          <div className="p-4 bg-[#55100D]/40 border border-[#DD0200]/40 text-[#FBF9F5] text-xs font-bold rounded-2xl flex items-center gap-2 shadow-sm animate-in fade-in">
+          <div className="p-4 bg-[#3D2314]/40 border border-[#DFAB56]/40 text-[#FAF5EB] text-xs font-bold rounded-2xl flex items-center gap-2 shadow-sm animate-in fade-in">
             <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <span>{notice}</span>
           </div>
@@ -151,8 +151,8 @@ export default function SuperAdminPortalPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-                <TrendingUp className="w-5 h-5 text-[#DD0200]" />
+              <h2 className="text-lg font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+                <TrendingUp className="w-5 h-5 text-[#DFAB56]" />
                 <span>مؤشرات إيرادات الـ SaaS الشهرية والسنوية (MRR & ARR Telemetry)</span>
               </h2>
               <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -181,7 +181,7 @@ export default function SuperAdminPortalPage() {
                 <span className="text-xs font-bold text-[#A19E9B]">الإيراد السنوي المتوقع (ARR)</span>
                 <TrendingUp className="w-4 h-4 text-sky-400" />
               </div>
-              <p className="text-2xl font-black text-[#FBF9F5]">
+              <p className="text-2xl font-black text-[#FAF5EB]">
                 {saasMetrics.totalArr.toLocaleString()}{' '}
                 <span className="text-xs font-bold text-[#A19E9B]">ر.س</span>
               </p>
@@ -192,9 +192,9 @@ export default function SuperAdminPortalPage() {
             <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
               <div className="flex items-center justify-between text-[#A19E9B] mb-1">
                 <span className="text-xs font-bold text-[#A19E9B]">المشتركون النشطون</span>
-                <Users className="w-4 h-4 text-[#DD0200]" />
+                <Users className="w-4 h-4 text-[#DFAB56]" />
               </div>
-              <p className="text-2xl font-black text-[#FBF9F5]">
+              <p className="text-2xl font-black text-[#FAF5EB]">
                 {saasMetrics.activeSubscriptionsCount}{' '}
                 <span className="text-xs font-bold text-[#A19E9B]">منشآت ومتاجر نشطة</span>
               </p>
@@ -209,7 +209,7 @@ export default function SuperAdminPortalPage() {
                 <span className="text-xs font-bold text-[#A19E9B]">متوسط العائد لكل منشأة (ARPU)</span>
                 <CreditCard className="w-4 h-4 text-purple-400" />
               </div>
-              <p className="text-2xl font-black text-[#FBF9F5]">
+              <p className="text-2xl font-black text-[#FAF5EB]">
                 {saasMetrics.averageRevenuePerUser.toLocaleString()}{' '}
                 <span className="text-xs font-bold text-[#A19E9B]">ر.س</span>
               </p>
@@ -222,8 +222,8 @@ export default function SuperAdminPortalPage() {
         <div className="bg-[#141212] rounded-2xl border border-white/10 shadow-xl overflow-hidden">
           <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-                <CreditCard className="w-4 h-4 text-[#DD0200]" />
+              <h3 className="text-base font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+                <CreditCard className="w-4 h-4 text-[#DFAB56]" />
                 <span>إدارة اشتراكات وباقات الفروع المركزية (Tenant Subscriptions)</span>
               </h3>
               <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -231,7 +231,7 @@ export default function SuperAdminPortalPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-bold text-[#FBF9F5] bg-[#1C1B1B] border border-white/10 px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#FAF5EB] bg-[#1C1B1B] border border-white/10 px-3 py-1.5 rounded-xl">
               <span>الفروع المربوطة: {tenants.length}</span>
             </div>
           </div>
@@ -261,7 +261,7 @@ export default function SuperAdminPortalPage() {
                   return (
                     <tr key={t.id} className="hover:bg-white/[0.03] transition">
                       {/* Name & Slug */}
-                      <td className="py-4 px-5 font-bold text-[#FBF9F5]">
+                      <td className="py-4 px-5 font-bold text-[#FAF5EB]">
                         <div>
                           <p className="leading-tight">{t.name}</p>
                           <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">
@@ -275,11 +275,11 @@ export default function SuperAdminPortalPage() {
                         <span
                           className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border ${
                             sub.planId === 'enterprise'
-                              ? 'bg-[#55100D]/60 text-[#FBF9F5] border-[#DD0200]/40'
+                              ? 'bg-[#3D2314]/60 text-[#FAF5EB] border-[#DFAB56]/40'
                               : sub.planId === 'multi_location'
-                              ? 'bg-[#1C1B1B] text-[#FBF9F5] border-white/20'
+                              ? 'bg-[#1C1B1B] text-[#FAF5EB] border-white/20'
                               : sub.planId === 'print'
-                              ? 'bg-[#55100D]/30 text-[#FBF9F5] border-[#DD0200]/30'
+                              ? 'bg-[#3D2314]/30 text-[#FAF5EB] border-[#DFAB56]/30'
                               : 'bg-[#141212] text-[#A19E9B] border-white/10'
                           }`}
                         >
@@ -293,7 +293,7 @@ export default function SuperAdminPortalPage() {
                       </td>
 
                       {/* MRR Value */}
-                      <td className="py-4 px-5 text-xs font-bold text-[#FBF9F5]">
+                      <td className="py-4 px-5 text-xs font-bold text-[#FAF5EB]">
                         {mrrValue} ر.س / شهر
                       </td>
 
@@ -304,13 +304,13 @@ export default function SuperAdminPortalPage() {
                             sub.status === 'active'
                               ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/60'
                               : sub.status === 'trialing'
-                              ? 'bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/40'
+                              ? 'bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/40'
                               : 'bg-red-950/40 text-red-400 border border-red-800/60'
                           }`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              sub.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-[#DD0200]'
+                              sub.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-[#DFAB56]'
                             }`}
                           />
                           <span>{sub.status === 'active' ? 'نشط' : sub.status === 'trialing' ? 'فترة تجربة' : 'متوقف'}</span>
@@ -324,7 +324,7 @@ export default function SuperAdminPortalPage() {
                           onChange={(e) =>
                             handleAdminChangePlan(t.slug, e.target.value as SubscriptionPlanId)
                           }
-                          className="px-2.5 py-1.5 rounded-xl border border-white/10 bg-[#0B0A0A] text-xs font-bold text-[#FBF9F5] focus:outline-none focus:ring-1 focus:ring-[#DD0200]"
+                          className="px-2.5 py-1.5 rounded-xl border border-white/10 bg-[#0B0A0A] text-xs font-bold text-[#FAF5EB] focus:outline-none focus:ring-1 focus:ring-[#DFAB56]"
                         >
                           {SAAS_PLANS.map((p) => (
                             <option key={p.id} value={p.id}>
@@ -338,7 +338,7 @@ export default function SuperAdminPortalPage() {
                       <td className="py-4 px-5">
                         <a
                           href="/dashboard"
-                          className="px-2.5 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#252424] text-[#FBF9F5] text-xs font-bold flex items-center gap-1 transition w-fit border border-white/10"
+                          className="px-2.5 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#252424] text-[#FAF5EB] text-xs font-bold flex items-center gap-1 transition w-fit border border-white/10"
                           title="عرض في لوحة التاجر"
                         >
                           <span>لوحة التاجر</span>
@@ -357,8 +357,8 @@ export default function SuperAdminPortalPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-                <Server className="w-5 h-5 text-[#DD0200]" />
+              <h2 className="text-lg font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+                <Server className="w-5 h-5 text-[#DFAB56]" />
                 <span>حالة السيرفرات السحابية ومقاييس الأداء لمليون مستخدم (1M Scale)</span>
               </h2>
               <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -372,9 +372,9 @@ export default function SuperAdminPortalPage() {
             <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
               <div className="flex items-center justify-between text-[#A19E9B] mb-2">
                 <span className="text-xs font-bold text-[#A19E9B]">طاقة الاستيعاب التزامنية</span>
-                <Zap className="w-4 h-4 text-[#DD0200]" />
+                <Zap className="w-4 h-4 text-[#DFAB56]" />
               </div>
-              <p className="text-2xl font-black text-[#FBF9F5]">{telemetry.totalUsersCapacity}</p>
+              <p className="text-2xl font-black text-[#FAF5EB]">{telemetry.totalUsersCapacity}</p>
               <p className="text-[10px] text-emerald-400 font-bold mt-1">Distributed Workers</p>
             </div>
 
@@ -394,7 +394,7 @@ export default function SuperAdminPortalPage() {
                 <span className="text-xs font-bold text-[#A19E9B]">مساحة تخزين الصور (R2 / S3)</span>
                 <HardDrive className="w-4 h-4 text-purple-400" />
               </div>
-              <p className="text-2xl font-black text-[#FBF9F5]">{telemetry.storageUsedGb} GB</p>
+              <p className="text-2xl font-black text-[#FAF5EB]">{telemetry.storageUsedGb} GB</p>
               <p className="text-[10px] text-[#A19E9B]/70 mt-1">WebP Compressed Buckets</p>
             </div>
 
@@ -404,7 +404,7 @@ export default function SuperAdminPortalPage() {
                 <span className="text-xs font-bold text-[#A19E9B]">زمن الاستجابة العالمي</span>
                 <Activity className="w-4 h-4 text-rose-500" />
               </div>
-              <p className="text-2xl font-black text-[#FBF9F5]">{telemetry.globalLatencyMs} ms</p>
+              <p className="text-2xl font-black text-[#FAF5EB]">{telemetry.globalLatencyMs} ms</p>
               <p className="text-[10px] text-emerald-400 font-bold mt-1">Zero Origin Bottleneck</p>
             </div>
           </div>
@@ -414,8 +414,8 @@ export default function SuperAdminPortalPage() {
         <div className="bg-[#141212] rounded-2xl border border-white/10 shadow-xl overflow-hidden">
           <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-                <Layers className="w-4 h-4 text-[#DD0200]" />
+              <h3 className="text-base font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+                <Layers className="w-4 h-4 text-[#DFAB56]" />
                 <span>التحكم في الميزات التشغيلية (Feature Flags)</span>
               </h3>
               <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -437,7 +437,7 @@ export default function SuperAdminPortalPage() {
               <tbody className="divide-y divide-white/5 text-sm">
                 {tenants.map((t) => (
                   <tr key={t.id} className="hover:bg-white/[0.03] transition">
-                    <td className="py-4 px-5 font-bold text-[#FBF9F5]">
+                    <td className="py-4 px-5 font-bold text-[#FAF5EB]">
                       <div>
                         <p className="leading-tight">{t.name}</p>
                         <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">/{t.slug}</p>
@@ -485,7 +485,7 @@ export default function SuperAdminPortalPage() {
                           href={`/c/${t.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#252424] text-[#FBF9F5] text-xs font-bold flex items-center gap-1 transition border border-white/10"
+                          className="px-2.5 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#252424] text-[#FAF5EB] text-xs font-bold flex items-center gap-1 transition border border-white/10"
                         >
                           <span>الفوتوبوث</span>
                           <ExternalLink className="w-3 h-3" />
@@ -495,7 +495,7 @@ export default function SuperAdminPortalPage() {
                           href={`/wall/${t.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold flex items-center gap-1 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                          className="px-2.5 py-1 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-xs font-bold flex items-center gap-1 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                         >
                           <span>الشاشة</span>
                           <ExternalLink className="w-3 h-3" />

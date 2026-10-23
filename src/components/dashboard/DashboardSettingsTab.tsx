@@ -82,11 +82,11 @@ export function DashboardSettingsTab({
       <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-[#DD0200]" />
-            <h3 className="font-bold text-base text-[#FBF9F5] font-serif">
+            <Sliders className="w-5 h-5 text-[#DFAB56]" />
+            <h3 className="font-bold text-base text-[#FAF5EB] font-serif">
               إعدادات النشاط التجاري والهوية
             </h3>
-            <span className="px-2.5 py-0.5 rounded-md bg-[#55100D]/70 text-[#FBF9F5] border border-[#DD0200]/40 text-[10px] font-mono font-bold">
+            <span className="px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 text-[#FAF5EB] border border-[#DFAB56]/40 text-[10px] font-mono font-bold">
               MULTI-INDUSTRY
             </span>
           </div>
@@ -98,9 +98,9 @@ export function DashboardSettingsTab({
         <button
           type="button"
           onClick={onOpenQuickSetup}
-          className="px-4 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+          className="px-4 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer shrink-0"
         >
-          <ExternalLink className="w-3.5 h-3.5 text-[#DD0200]" />
+          <ExternalLink className="w-3.5 h-3.5 text-[#DFAB56]" />
           <span>معالج الإعداد السريع</span>
         </button>
       </div>
@@ -116,10 +116,10 @@ export function DashboardSettingsTab({
       <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <div>
-            <h4 className="font-bold text-sm text-[#FBF9F5] font-serif">1. قطاع النشاط التجاري (Business Industry)</h4>
+            <h4 className="font-bold text-sm text-[#FAF5EB] font-serif">1. قطاع النشاط التجاري (Business Industry)</h4>
             <p className="text-xs text-[#A19E9B]">اختر القطاع ليتم ضبط مسميات طاقم الخدمة، ونوع الهدايا والبطاقات تلقائياً.</p>
           </div>
-          <span className="text-xs font-bold text-[#FBF9F5] bg-[#55100D]/60 px-3 py-1 rounded-lg border border-[#DD0200]/40 font-mono">
+          <span className="text-xs font-bold text-[#FAF5EB] bg-[#3D2314]/60 px-3 py-1 rounded-lg border border-[#DFAB56]/40 font-mono">
             القطاع الحالي: {activeIndustry.nameAr}
           </span>
         </div>
@@ -134,8 +134,8 @@ export function DashboardSettingsTab({
                 onClick={() => handleSelectIndustry(ind.id as BusinessType)}
                 className={`p-3.5 rounded-xl border text-right transition flex flex-col justify-between cursor-pointer ${
                   isSelected
-                    ? 'border-[#DD0200] bg-[#55100D]/40 text-[#FBF9F5] shadow-[0_0_15px_-3px_rgba(221,2,0,0.25)]'
-                    : 'border-white/10 bg-[#1C1B1B] hover:border-white/20 text-[#A19E9B] hover:text-[#FBF9F5]'
+                    ? 'border-[#DFAB56] bg-[#3D2314]/40 text-[#FAF5EB] shadow-[0_0_15px_-3px_rgba(221,2,0,0.25)]'
+                    : 'border-white/10 bg-[#1C1B1B] hover:border-white/20 text-[#A19E9B] hover:text-[#FAF5EB]'
                 }`}
               >
                 <div className="flex items-center justify-between w-full mb-2">
@@ -148,10 +148,10 @@ export function DashboardSettingsTab({
                     {ind.id === 'cafe' && '🏛️'}
                     {ind.id === 'general' && '🏢'}
                   </span>
-                  {isSelected && <Check className="w-4 h-4 text-[#DD0200] stroke-[3]" />}
+                  {isSelected && <Check className="w-4 h-4 text-[#DFAB56] stroke-[3]" />}
                 </div>
                 <div>
-                  <strong className="text-xs font-bold block text-[#FBF9F5]">{ind.nameAr}</strong>
+                  <strong className="text-xs font-bold block text-[#FAF5EB]">{ind.nameAr}</strong>
                   <span className="text-[10px] text-[#A19E9B] font-mono block mt-0.5">{ind.staffLabel}</span>
                 </div>
               </button>
@@ -162,7 +162,7 @@ export function DashboardSettingsTab({
 
       {/* 2. Brand Identity */}
       <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
-        <h4 className="font-bold text-sm text-[#FBF9F5] pb-3 border-b border-white/10 font-serif">
+        <h4 className="font-bold text-sm text-[#FAF5EB] pb-3 border-b border-white/10 font-serif">
           2. بيانات العلامة التجارية (Brand Information)
         </h4>
 
@@ -176,7 +176,7 @@ export function DashboardSettingsTab({
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               placeholder="مثال: بوتيك الأناقة / استوديو الذكريات"
-              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DFAB56] text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
             />
           </div>
 
@@ -189,7 +189,7 @@ export function DashboardSettingsTab({
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               placeholder="مثال: ذكريات مميزة مع كل زيارة"
-              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DFAB56] text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
             />
           </div>
 
@@ -203,7 +203,7 @@ export function DashboardSettingsTab({
               value={logoUrl}
               onChange={(e) => setLogoUrl(e.target.value)}
               placeholder="https://example.com/logo.png"
-              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] font-mono placeholder:text-[#A19E9B]/40"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DFAB56] text-[#FAF5EB] font-mono placeholder:text-[#A19E9B]/40"
             />
             <span className="text-[10px] text-[#A19E9B] mt-1 block">
               اختياري: يظهر الشعار أعلى كروت الفوتوبوث، شاشة الصالة الحية، وستاندات الـ QR.
@@ -214,7 +214,7 @@ export function DashboardSettingsTab({
 
       {/* 3. Loyalty Gift & Visits */}
       <div className="p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
-        <h4 className="font-bold text-sm text-[#FBF9F5] pb-3 border-b border-white/10 font-serif">
+        <h4 className="font-bold text-sm text-[#FAF5EB] pb-3 border-b border-white/10 font-serif">
           3. برنامج مكافآت الزيارات والولاء (Loyalty Offer)
         </h4>
 
@@ -228,7 +228,7 @@ export function DashboardSettingsTab({
               value={giftTitle}
               onChange={(e) => setGiftTitle(e.target.value)}
               placeholder="مثال: خصم 20% / جلسة عناية مجانية / مشروب فاخر"
-              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DFAB56] text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
             />
           </div>
 
@@ -244,8 +244,8 @@ export function DashboardSettingsTab({
                   onClick={() => setShotCount(cnt)}
                   className={`flex-1 py-2 rounded-lg text-xs font-bold font-mono transition cursor-pointer ${
                     shotCount === cnt
-                      ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                      : 'bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] border border-white/10'
+                      ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                      : 'bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FAF5EB] border border-white/10'
                   }`}
                 >
                   {cnt} زيارات
@@ -263,7 +263,7 @@ export function DashboardSettingsTab({
               value={giftSubtitle}
               onChange={(e) => setGiftSubtitle(e.target.value)}
               placeholder="مثال: يستحق العميل هذه المكافأة فور إكمال الخانات في نقطة الكاشير"
-              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DD0200] text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] focus:outline-none focus:border-[#DFAB56] text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
             />
           </div>
         </div>
@@ -274,7 +274,7 @@ export function DashboardSettingsTab({
         <button
           type="button"
           onClick={handleSave}
-          className="px-6 py-3 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center gap-2 cursor-pointer active:scale-95"
+          className="px-6 py-3 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center gap-2 cursor-pointer active:scale-95"
         >
           <Save className="w-4 h-4" />
           <span>حفظ وتطبيق الإعدادات</span>

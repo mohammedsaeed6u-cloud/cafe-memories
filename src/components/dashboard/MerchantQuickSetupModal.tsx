@@ -105,7 +105,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
   const customerUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/c/${cafeSlug}`
-    : `https://memories-7vr.pages.dev/c/${cafeSlug}`;
+    : `https://memories-c9w.pages.dev/c/${cafeSlug}`;
 
   // Generate QR code whenever cafeSlug changes or when reaching step 3
   useEffect(() => {
@@ -193,21 +193,21 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className="w-full max-w-2xl bg-[#141212] rounded-2xl border border-white/10 shadow-2xl overflow-hidden my-6 text-right text-[#e6e1e1]">
         {/* Header */}
-        <div className="bg-[#1C1B1B] text-[#FBF9F5] p-6 relative border-b border-white/10">
+        <div className="bg-[#1C1B1B] text-[#FAF5EB] p-6 relative border-b border-white/10">
           <button
             onClick={onClose}
-            className="absolute top-5 left-5 p-2 rounded-lg text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-[#141212] transition cursor-pointer"
+            className="absolute top-5 left-5 p-2 rounded-lg text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-[#141212] transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#DD0200] flex items-center justify-center font-black shadow-md">
+            <div className="w-11 h-11 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#DFAB56] flex items-center justify-center font-black shadow-md">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-[#FBF9F5] font-serif">إعداد نشاطك التجاري في 60 ثانية</h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#55100D]/70 text-[#FBF9F5] font-bold border border-[#DD0200]/40 font-mono">
+                <h2 className="text-lg font-bold text-[#FAF5EB] font-serif">إعداد نشاطك التجاري في 60 ثانية</h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-md bg-[#3D2314]/70 text-[#FAF5EB] font-bold border border-[#DFAB56]/40 font-mono">
                   إطلاق فوري
                 </span>
               </div>
@@ -219,20 +219,20 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
           {/* Stepper Progress */}
           <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-white/10 text-[11px] font-bold">
-            <div className={`flex items-center gap-1.5 ${step >= 1 ? 'text-[#DD0200]' : 'text-[#A19E9B]'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 1 ? 'bg-[#DD0200] text-[#FBF9F5] font-bold' : 'bg-[#0B0A0A] border border-white/10 text-[#A19E9B]'}`}>
+            <div className={`flex items-center gap-1.5 ${step >= 1 ? 'text-[#DFAB56]' : 'text-[#A19E9B]'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 1 ? 'bg-[#DFAB56] text-[#12100E] font-bold' : 'bg-[#0B0A0A] border border-white/10 text-[#A19E9B]'}`}>
                 1
               </span>
               <span>نوع النشاط والهوية</span>
             </div>
-            <div className={`flex items-center gap-1.5 ${step >= 2 ? 'text-[#DD0200]' : 'text-[#A19E9B]'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 2 ? 'bg-[#DD0200] text-[#FBF9F5] font-bold' : 'bg-[#0B0A0A] border border-white/10 text-[#A19E9B]'}`}>
+            <div className={`flex items-center gap-1.5 ${step >= 2 ? 'text-[#DFAB56]' : 'text-[#A19E9B]'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 2 ? 'bg-[#DFAB56] text-[#12100E] font-bold' : 'bg-[#0B0A0A] border border-white/10 text-[#A19E9B]'}`}>
                 2
               </span>
               <span>نظام الكارت والمكافأة</span>
             </div>
-            <div className={`flex items-center gap-1.5 ${step >= 3 ? 'text-[#DD0200]' : 'text-[#A19E9B]'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 3 ? 'bg-[#DD0200] text-[#FBF9F5] font-bold' : 'bg-[#0B0A0A] border border-white/10 text-[#A19E9B]'}`}>
+            <div className={`flex items-center gap-1.5 ${step >= 3 ? 'text-[#DFAB56]' : 'text-[#A19E9B]'}`}>
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 3 ? 'bg-[#DFAB56] text-[#12100E] font-bold' : 'bg-[#0B0A0A] border border-white/10 text-[#A19E9B]'}`}>
                 3
               </span>
               <span>الرابط و QR الطاولة</span>
@@ -248,7 +248,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
               {/* Industry Grid Selection */}
               <div>
                 <label className="block text-xs font-bold text-[#A19E9B] mb-2">
-                  اختر نوع النشاط التجاري (Industry Type) <span className="text-[#DD0200]">*</span>
+                  اختر نوع النشاط التجاري (Industry Type) <span className="text-[#DFAB56]">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {BUSINESS_INDUSTRY_OPTIONS.map((opt) => {
@@ -261,15 +261,15 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                         onClick={() => handleSelectIndustry(opt.id as BusinessType)}
                         className={`p-3 rounded-xl border text-right transition cursor-pointer flex flex-col justify-between ${
                           isSelected
-                            ? 'bg-[#55100D]/40 border-[#DD0200] text-[#FBF9F5] shadow-[0_0_15px_-3px_rgba(221,2,0,0.25)] font-bold'
-                            : 'bg-[#1C1B1B] hover:bg-[#211F1F] border-white/10 text-[#A19E9B] hover:text-[#FBF9F5]'
+                            ? 'bg-[#3D2314]/40 border-[#DFAB56] text-[#FAF5EB] shadow-[0_0_15px_-3px_rgba(221,2,0,0.25)] font-bold'
+                            : 'bg-[#1C1B1B] hover:bg-[#211F1F] border-white/10 text-[#A19E9B] hover:text-[#FAF5EB]'
                         }`}
                       >
                         <div className="flex items-center justify-between w-full mb-1">
-                          <IconComponent className={`w-4 h-4 ${isSelected ? 'text-[#DD0200]' : 'text-[#A19E9B]'}`} />
-                          {isSelected && <Check className="w-3.5 h-3.5 text-[#DD0200] stroke-[3]" />}
+                          <IconComponent className={`w-4 h-4 ${isSelected ? 'text-[#DFAB56]' : 'text-[#A19E9B]'}`} />
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#DFAB56] stroke-[3]" />}
                         </div>
-                        <span className="text-xs font-bold block text-[#FBF9F5]">{opt.nameAr}</span>
+                        <span className="text-xs font-bold block text-[#FAF5EB]">{opt.nameAr}</span>
                       </button>
                     );
                   })}
@@ -278,7 +278,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
 
               <div>
                 <label className="block text-xs font-bold text-[#A19E9B] mb-2">
-                  اسم المنشأة أو العلامة التجارية <span className="text-[#DD0200]">*</span>
+                  اسم المنشأة أو العلامة التجارية <span className="text-[#DFAB56]">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-[#A19E9B]/50">
@@ -303,16 +303,16 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                         ? 'مثال: محمصة صويل المختصة'
                         : 'مثال: استوديو الذكريات'
                     }
-                    className="w-full pr-11 pl-4 py-3 rounded-lg bg-[#0B0A0A] border border-white/10 text-[#FBF9F5] font-bold text-sm focus:outline-none focus:border-[#DD0200] transition placeholder:text-[#A19E9B]/40"
+                    className="w-full pr-11 pl-4 py-3 rounded-lg bg-[#0B0A0A] border border-white/10 text-[#FAF5EB] font-bold text-sm focus:outline-none focus:border-[#DFAB56] transition placeholder:text-[#A19E9B]/40"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-[#A19E9B] mb-2">
-                  معرف الرابط المخصص للعملاء (Custom Slug) <span className="text-[#DD0200]">*</span>
+                  معرف الرابط المخصص للعملاء (Custom Slug) <span className="text-[#DFAB56]">*</span>
                 </label>
-                <div className="flex items-center gap-2 rounded-lg bg-[#0B0A0A] border border-white/10 px-3.5 py-2.5 focus-within:border-[#DD0200] transition">
+                <div className="flex items-center gap-2 rounded-lg bg-[#0B0A0A] border border-white/10 px-3.5 py-2.5 focus-within:border-[#DFAB56] transition">
                   <span className="text-xs font-mono font-bold text-[#A19E9B] select-none ltr">
                     memories.dev/c/
                   </span>
@@ -321,7 +321,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     value={cafeSlug}
                     onChange={(e) => setCafeSlug(e.target.value.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, ''))}
                     placeholder="my-business"
-                    className="w-full bg-transparent text-[#FBF9F5] font-mono font-bold text-sm focus:outline-none"
+                    className="w-full bg-transparent text-[#FAF5EB] font-mono font-bold text-sm focus:outline-none"
                   />
                 </div>
                 <p className="text-[11px] text-[#A19E9B] mt-1.5">
@@ -330,9 +330,9 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
               </div>
 
               <div className="p-4 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-[#DD0200] shrink-0 mt-0.5" />
+                <Sparkles className="w-4 h-4 text-[#DFAB56] shrink-0 mt-0.5" />
                 <p className="text-xs text-[#e6e1e1] leading-relaxed font-medium">
-                  <strong className="text-[#FBF9F5]">ملاءمة تامة لنشاطك:</strong> سيتعرف النظام تلقائياً على أنك ({currentProfile.nameAr})، ويخصص مسميات طاقم الخدمة ({currentProfile.staffLabel}) ونوع الهدايا والبطاقات بما يتناسق مع زوارك.
+                  <strong className="text-[#FAF5EB]">ملاءمة تامة لنشاطك:</strong> سيتعرف النظام تلقائياً على أنك ({currentProfile.nameAr})، ويخصص مسميات طاقم الخدمة ({currentProfile.staffLabel}) ونوع الهدايا والبطاقات بما يتناسق مع زوارك.
                 </p>
               </div>
 
@@ -341,7 +341,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={!cafeName.trim() || !cafeSlug.trim()}
-                  className="px-6 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm flex items-center gap-2 transition active:scale-[0.98] disabled:opacity-40 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  className="px-6 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-sm flex items-center gap-2 transition active:scale-[0.98] disabled:opacity-40 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                 >
                   <span>التالي: نظام الكارت والمكافأة</span>
                   <ArrowLeft className="w-4 h-4" />
@@ -362,22 +362,22 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     onClick={() => setOrientation('vertical')}
                     className={`p-4 rounded-xl border-2 cursor-pointer transition relative flex flex-col justify-between ${
                       orientation === 'vertical'
-                        ? 'border-[#DD0200] bg-[#55100D]/30 shadow-md text-[#FBF9F5]'
+                        ? 'border-[#DFAB56] bg-[#3D2314]/30 shadow-md text-[#FAF5EB]'
                         : 'border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B]'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-[#55100D] border border-[#DD0200]/40 text-[#DD0200] flex items-center justify-center font-bold">
+                        <div className="w-8 h-8 rounded-lg bg-[#3D2314] border border-[#DFAB56]/40 text-[#DFAB56] flex items-center justify-center font-bold">
                           <Smartphone className="w-4 h-4" />
                         </div>
                         <div>
-                          <h4 className="font-bold text-sm text-[#FBF9F5]">كارت طولي (Photo Strip)</h4>
-                          <span className="text-[10px] text-[#DD0200] font-bold font-mono">النمط الكوري الكلاسيكي</span>
+                          <h4 className="font-bold text-sm text-[#FAF5EB]">كارت طولي (Photo Strip)</h4>
+                          <span className="text-[10px] text-[#DFAB56] font-bold font-mono">النمط الكوري الكلاسيكي</span>
                         </div>
                       </div>
                       {orientation === 'vertical' && (
-                        <CheckCircle2 className="w-5 h-5 text-[#DD0200] shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-[#DFAB56] shrink-0" />
                       )}
                     </div>
                     <p className="text-xs text-[#A19E9B] mt-2.5 leading-relaxed">
@@ -389,22 +389,22 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     onClick={() => setOrientation('horizontal')}
                     className={`p-4 rounded-xl border-2 cursor-pointer transition relative flex flex-col justify-between ${
                       orientation === 'horizontal'
-                        ? 'border-[#DD0200] bg-[#55100D]/30 shadow-md text-[#FBF9F5]'
+                        ? 'border-[#DFAB56] bg-[#3D2314]/30 shadow-md text-[#FAF5EB]'
                         : 'border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B]'
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-[#1C1B1B] border border-white/10 text-[#FBF9F5] flex items-center justify-center font-bold">
-                          <CreditCard className="w-4 h-4 text-[#DD0200]" />
+                        <div className="w-8 h-8 rounded-lg bg-[#1C1B1B] border border-white/10 text-[#FAF5EB] flex items-center justify-center font-bold">
+                          <CreditCard className="w-4 h-4 text-[#DFAB56]" />
                         </div>
                         <div>
-                          <h4 className="font-bold text-sm text-[#FBF9F5]">كارت أفقي (Digital Wallet Pass)</h4>
+                          <h4 className="font-bold text-sm text-[#FAF5EB]">كارت أفقي (Digital Wallet Pass)</h4>
                           <span className="text-[10px] text-[#A19E9B] font-bold font-mono">نمط بطاقة محفظة آبل</span>
                         </div>
                       </div>
                       {orientation === 'horizontal' && (
-                        <CheckCircle2 className="w-5 h-5 text-[#DD0200] shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-[#DFAB56] shrink-0" />
                       )}
                     </div>
                     <p className="text-xs text-[#A19E9B] mt-2.5 leading-relaxed">
@@ -427,8 +427,8 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                       onClick={() => setShotCount(count)}
                       className={`py-3 rounded-lg border font-bold text-sm transition cursor-pointer flex flex-col items-center justify-center ${
                         shotCount === count
-                          ? 'border-[#DD0200] bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                          : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:bg-[#211F1F] hover:text-[#FBF9F5]'
+                          ? 'border-[#DFAB56] bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                          : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:bg-[#211F1F] hover:text-[#FAF5EB]'
                       }`}
                     >
                       <span className="text-base font-bold font-mono">{count}</span>
@@ -442,7 +442,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
               <div className="space-y-3 p-4 rounded-xl bg-[#1C1B1B] border border-white/10">
                 <div>
                   <label className="block text-xs font-bold text-[#A19E9B] mb-1.5 flex items-center gap-1.5">
-                    <Gift className="w-4 h-4 text-[#DD0200]" />
+                    <Gift className="w-4 h-4 text-[#DFAB56]" />
                     <span>عنوان الهدية أو المكافأة عند إكمال الأختام</span>
                   </label>
                   <input
@@ -450,7 +450,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     value={giftTitle}
                     onChange={(e) => setGiftTitle(e.target.value)}
                     placeholder={currentProfile.defaultGiftTitle}
-                    className="w-full px-4 py-2.5 rounded-lg bg-[#0B0A0A] border border-white/10 text-[#FBF9F5] font-bold text-xs focus:outline-none focus:border-[#DD0200] placeholder:text-[#A19E9B]/40"
+                    className="w-full px-4 py-2.5 rounded-lg bg-[#0B0A0A] border border-white/10 text-[#FAF5EB] font-bold text-xs focus:outline-none focus:border-[#DFAB56] placeholder:text-[#A19E9B]/40"
                   />
                 </div>
 
@@ -463,7 +463,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                     value={giftSubtitle}
                     onChange={(e) => setGiftSubtitle(e.target.value)}
                     placeholder={currentProfile.defaultGiftSubtitle}
-                    className="w-full px-4 py-2.5 rounded-lg bg-[#0B0A0A] border border-white/10 text-[#FBF9F5] text-xs focus:outline-none focus:border-[#DD0200] placeholder:text-[#A19E9B]/40"
+                    className="w-full px-4 py-2.5 rounded-lg bg-[#0B0A0A] border border-white/10 text-[#FAF5EB] text-xs focus:outline-none focus:border-[#DFAB56] placeholder:text-[#A19E9B]/40"
                   />
                 </div>
               </div>
@@ -472,14 +472,14 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="px-5 py-2.5 rounded-lg border border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FBF9F5] font-bold text-xs hover:bg-[#211F1F] transition cursor-pointer"
+                  className="px-5 py-2.5 rounded-lg border border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FAF5EB] font-bold text-xs hover:bg-[#211F1F] transition cursor-pointer"
                 >
                   السابق
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveAndLaunch}
-                  className="px-6 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm flex items-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  className="px-6 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-sm flex items-center gap-2 transition active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                 >
                   <Check className="w-4 h-4" />
                   <span>حفظ وتوليد QR الطاولات فوراً</span>
@@ -491,12 +491,12 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
           {/* STEP 3: Complete & Ready to Print */}
           {step === 3 && (
             <div className="space-y-6 text-center animate-in zoom-in-95 duration-200">
-              <div className="w-16 h-16 rounded-full bg-[#55100D] border border-[#DD0200]/40 text-[#DD0200] mx-auto flex items-center justify-center shadow-md">
+              <div className="w-16 h-16 rounded-full bg-[#3D2314] border border-[#DFAB56]/40 text-[#DFAB56] mx-auto flex items-center justify-center shadow-md">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
 
               <div>
-                <h3 className="text-xl font-bold font-serif text-[#FBF9F5]">
+                <h3 className="text-xl font-bold font-serif text-[#FAF5EB]">
                   تم إعداد وتفعيل {cafeName} بنجاح!
                 </h3>
                 <p className="text-xs text-[#A19E9B] mt-1 max-w-md mx-auto leading-relaxed">
@@ -507,10 +507,10 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
               {/* Acrylic Stand Preview Card */}
               <div className="max-w-xs mx-auto p-5 rounded-2xl bg-[#1C1B1B] border border-white/10 shadow-2xl space-y-4">
                 <div className="text-center space-y-1">
-                  <span className="text-[10px] font-mono tracking-widest text-[#DD0200] font-bold uppercase block">
+                  <span className="text-[10px] font-mono tracking-widest text-[#DFAB56] font-bold uppercase block">
                     TABLE SCAN STAND • {currentProfile.nameAr}
                   </span>
-                  <h4 className="font-serif font-bold text-base text-[#FBF9F5]">
+                  <h4 className="font-serif font-bold text-base text-[#FAF5EB]">
                     {cafeName}
                   </h4>
                 </div>
@@ -523,7 +523,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                 )}
 
                 <div className="text-center space-y-0.5">
-                  <span className="text-xs font-bold text-[#FBF9F5] block">امسح الكود بكاميرا هاتفك</span>
+                  <span className="text-xs font-bold text-[#FAF5EB] block">امسح الكود بكاميرا هاتفك</span>
                   <span className="text-[10px] text-[#A19E9B] block">وثّق زيارتك واستلم {giftTitle}</span>
                 </div>
               </div>
@@ -534,12 +534,12 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                   type="text"
                   readOnly
                   value={customerUrl}
-                  className="w-full bg-transparent text-xs font-mono text-[#FBF9F5] px-2 outline-none ltr"
+                  className="w-full bg-transparent text-xs font-mono text-[#FAF5EB] px-2 outline-none ltr"
                 />
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#1C1B1B] border border-white/10 hover:bg-[#211F1F] text-xs font-bold text-[#FBF9F5] transition flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-lg bg-[#1C1B1B] border border-white/10 hover:bg-[#211F1F] text-xs font-bold text-[#FAF5EB] transition flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
                 >
                   {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedLink ? 'تم النسخ' : 'نسخ'}</span>
@@ -551,7 +551,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                 <button
                   type="button"
                   onClick={handleDownloadQr}
-                  className="px-5 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm"
+                  className="px-5 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-sm"
                 >
                   <Download className="w-4 h-4 text-[#A19E9B]" />
                   <span>تحميل كود QR عالي الدقة</span>
@@ -561,7 +561,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                   href={customerUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-5 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+                  className="px-5 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>فتح تجربة العميل الحية</span>
@@ -570,7 +570,7 @@ export const MerchantQuickSetupModal: React.FC<MerchantQuickSetupModalProps> = (
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] font-bold text-xs transition cursor-pointer"
+                  className="px-5 py-2.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FAF5EB] font-bold text-xs transition cursor-pointer"
                 >
                   إغلاق والعودة للوحة التحكم
                 </button>

@@ -33,7 +33,7 @@ import { SoundEffectsService } from '@/lib/services/sound-effects.service';
 import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
 import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-auth.service';
 import { PrintService } from '@/lib/services/print.service';
-import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
+import { StampyLogo, StampyApertureIcon } from '@/components/brand/StampyLogo';
 
 export default function StaffTerminalPage() {
   const [cafeSlug, setCafeSlug] = useState(() => {
@@ -46,15 +46,15 @@ export default function StaffTerminalPage() {
         if (stored) return stored;
       } catch {}
     }
-    return 'memories';
+    return 'stampy';
   });
 
   const [settings, setSettings] = useState(() => {
-    let slug = 'memories';
+    let slug = 'stampy';
     if (typeof window !== 'undefined') {
       try {
         const urlParams = new URLSearchParams(window.location.search);
-        slug = urlParams.get('cafe') || localStorage.getItem('memories_active_merchant_slug') || 'memories';
+        slug = urlParams.get('cafe') || localStorage.getItem('memories_active_merchant_slug') || 'stampy';
       } catch {}
     }
     return BusinessSettingsService.getSettings(slug);
@@ -446,24 +446,24 @@ export default function StaffTerminalPage() {
   const isEligibleForGift = availableToClaim > 0;
 
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col font-sans selection:bg-[#DD0200] selection:text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[#12100E] text-[#e6e1e1] flex flex-col font-sans selection:bg-[#DFAB56] selection:text-[#12100E] relative overflow-hidden">
       {/* Ambient Archival Glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#55100D]/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DD0200]/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#3D2314]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Top Header */}
       <header className="bg-[#141212]/95 backdrop-blur-md text-white border-b border-white/10 px-4 sm:px-6 py-3.5 sticky top-0 z-40 shadow-xl relative z-10">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center shadow-lg shadow-red-950/40 border border-white/10 shrink-0">
-              <MemoriesArchIcon size={22} color="#FBF9F5" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center shadow-lg shadow-red-950/40 border border-white/10 shrink-0">
+              <StampyApertureIcon size={22} color="#FAF5EB" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-bold text-sm sm:text-base text-[#FBF9F5]">
+                <h1 className="font-bold text-sm sm:text-base text-[#FAF5EB]">
                   محطة الخدمة السريعة • {industry.staffLabel}
                 </h1>
-                <span className="px-2 py-0.5 rounded-md bg-[#55100D]/60 text-[#FBF9F5] text-[10px] font-mono font-bold border border-[#DD0200]/40 tracking-wider">
+                <span className="px-2 py-0.5 rounded-md bg-[#3D2314]/60 text-[#FAF5EB] text-[10px] font-mono font-bold border border-[#DFAB56]/40 tracking-wider">
                   STAFF POS TERMINAL
                 </span>
               </div>
@@ -476,9 +476,9 @@ export default function StaffTerminalPage() {
           <div className="flex items-center gap-2">
             <a
               href={`/dashboard?cafe=${cafeSlug}`}
-              className="px-3.5 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FBF9F5] font-bold text-xs transition flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] font-bold text-xs transition flex items-center gap-1.5"
             >
-              <LayoutDashboard className="w-3.5 h-3.5 text-[#DD0200]" />
+              <LayoutDashboard className="w-3.5 h-3.5 text-[#DFAB56]" />
               <span className="hidden sm:inline">لوحة الإدارة</span>
             </a>
           </div>
@@ -494,14 +494,14 @@ export default function StaffTerminalPage() {
             onClick={() => setTerminalTab('queue')}
             className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               terminalTab === 'queue'
-                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
-                : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
+                : 'text-[#A19E9B] hover:text-[#FAF5EB]'
             }`}
           >
             <Printer className="w-4 h-4" />
             <span>طابور طباعة الأشرطة</span>
             {printQueue.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] text-[10px] font-mono font-black animate-pulse">
+              <span className="px-2 py-0.5 rounded-full bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] text-[10px] font-mono font-black animate-pulse">
                 {printQueue.length}
               </span>
             )}
@@ -512,8 +512,8 @@ export default function StaffTerminalPage() {
             onClick={() => setTerminalTab('stamps')}
             className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
               terminalTab === 'stamps'
-                ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
-                : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
+                : 'text-[#A19E9B] hover:text-[#FAF5EB]'
             }`}
           >
             <Award className="w-4 h-4" />
@@ -524,12 +524,12 @@ export default function StaffTerminalPage() {
         {/* Shift Stats Ribbon */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="p-4 rounded-xl bg-[#141212] border border-white/10 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#1C1B1B] text-[#DD0200] border border-white/10 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-lg bg-[#1C1B1B] text-[#DFAB56] border border-white/10 flex items-center justify-center font-bold">
               <Printer className="w-5 h-5" />
             </div>
             <div>
               <span className="text-[10px] text-[#A19E9B] font-bold block uppercase tracking-wider">أشرطة بانتظار الطباعة</span>
-              <span className="text-xl font-bold font-mono text-[#FBF9F5]">{printQueue.length}</span>
+              <span className="text-xl font-bold font-mono text-[#FAF5EB]">{printQueue.length}</span>
             </div>
           </div>
 
@@ -544,12 +544,12 @@ export default function StaffTerminalPage() {
           </div>
 
           <div className="col-span-2 sm:col-span-1 p-4 rounded-xl bg-[#141212] border border-white/10 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/40 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-lg bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/40 flex items-center justify-center font-bold">
               <Award className="w-5 h-5" />
             </div>
             <div>
               <span className="text-[10px] text-[#A19E9B] font-bold block uppercase tracking-wider">أختام الشفت الحالية</span>
-              <span className="text-xl font-bold font-mono text-[#FBF9F5]">+{shiftStampsCount}</span>
+              <span className="text-xl font-bold font-mono text-[#FAF5EB]">+{shiftStampsCount}</span>
             </div>
           </div>
         </div>
@@ -572,17 +572,17 @@ export default function StaffTerminalPage() {
         {terminalTab === 'queue' && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#FBF9F5] flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#DD0200]" />
+              <h3 className="text-sm font-bold text-[#FAF5EB] flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#DFAB56]" />
                 <span>طابور الأشرطة الجاهزة للطباعة من الزوار</span>
               </h3>
 
               <button
                 type="button"
                 onClick={() => setSoundAlertEnabled(!soundAlertEnabled)}
-                className="px-3 py-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5 transition cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-xs font-bold text-[#FAF5EB] flex items-center gap-1.5 transition cursor-pointer"
               >
-                {soundAlertEnabled ? <Bell className="w-3.5 h-3.5 text-[#DD0200]" /> : <BellOff className="w-3.5 h-3.5 text-[#A19E9B]" />}
+                {soundAlertEnabled ? <Bell className="w-3.5 h-3.5 text-[#DFAB56]" /> : <BellOff className="w-3.5 h-3.5 text-[#A19E9B]" />}
                 <span>{soundAlertEnabled ? 'جرس التنبيه مفعل' : 'جرس التنبيه مكتوم'}</span>
               </button>
             </div>
@@ -590,7 +590,7 @@ export default function StaffTerminalPage() {
             {printQueue.length === 0 ? (
               <div className="p-12 rounded-2xl bg-[#141212] border border-white/10 text-center shadow-lg space-y-2">
                 <Printer className="w-10 h-10 text-[#A19E9B]/40 mx-auto" />
-                <h4 className="font-bold text-sm text-[#FBF9F5]">لا توجد طلبات طباعة معلقة حالياً</h4>
+                <h4 className="font-bold text-sm text-[#FAF5EB]">لا توجد طلبات طباعة معلقة حالياً</h4>
                 <p className="text-xs text-[#A19E9B] max-w-md mx-auto leading-relaxed">
                   عندما يكمل الزوار التقاط شريط الصور ويطلبون طباعته من هواتفهم، سيظهر هنا فوراً مع صوت تنبيه لطاقم العمل.
                 </p>
@@ -600,7 +600,7 @@ export default function StaffTerminalPage() {
                 {printQueue.map((item) => (
                   <div
                     key={item.id}
-                    className="p-5 rounded-2xl bg-[#141212] border border-white/10 hover:border-[#DD0200]/30 shadow-lg flex items-center justify-between gap-4 transition"
+                    className="p-5 rounded-2xl bg-[#141212] border border-white/10 hover:border-[#DFAB56]/30 shadow-lg flex items-center justify-between gap-4 transition"
                   >
                     <div className="w-16 h-24 rounded-lg overflow-hidden border border-white/10 bg-[#0B0A0A] shrink-0 shadow-inner">
                       {item.photoStripUrl ? (
@@ -618,13 +618,13 @@ export default function StaffTerminalPage() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-[#FBF9F5] text-sm truncate">
+                      <h4 className="font-bold text-[#FAF5EB] text-sm truncate">
                         {item.name || 'عميل مميز'}
                       </h4>
                       <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">
                         {item.phone || 'طلب فوري'}
                       </p>
-                      <span className="text-[10px] text-[#FBF9F5] font-bold bg-[#55100D]/50 px-2 py-0.5 rounded-md border border-[#DD0200]/40 inline-block mt-2 font-mono uppercase tracking-wider">
+                      <span className="text-[10px] text-[#FAF5EB] font-bold bg-[#3D2314]/50 px-2 py-0.5 rounded-md border border-[#DFAB56]/40 inline-block mt-2 font-mono uppercase tracking-wider">
                         {item.format || 'standard-2x6'}
                       </span>
                     </div>
@@ -633,7 +633,7 @@ export default function StaffTerminalPage() {
                       <button
                         type="button"
                         onClick={() => handlePrintItem(item, 'standard-2x6')}
-                        className="px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold flex items-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
+                        className="px-3.5 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-xs font-bold flex items-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
                       >
                         <Printer className="w-3.5 h-3.5" />
                         <span>طباعة 2×6</span>
@@ -663,8 +663,8 @@ export default function StaffTerminalPage() {
               {/* Input Form */}
               <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-lg space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5">
-                    <Search className="w-4 h-4 text-[#DD0200]" />
+                  <span className="text-xs font-bold text-[#FAF5EB] flex items-center gap-1.5">
+                    <Search className="w-4 h-4 text-[#DFAB56]" />
                     <span>بحث برقم الجوال أو رمز الهدية (GIFT-XXXX):</span>
                   </span>
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#A19E9B]">PHONE SEARCH</span>
@@ -682,13 +682,13 @@ export default function StaffTerminalPage() {
                         handleLookup(e.target.value);
                       }
                     }}
-                    className="w-full text-center text-xl sm:text-2xl font-mono font-bold py-3.5 px-4 rounded-xl bg-[#0B0A0A] border border-white/10 focus:bg-[#0E0D0D] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200]/30 focus:outline-none tracking-widest text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+                    className="w-full text-center text-xl sm:text-2xl font-mono font-bold py-3.5 px-4 rounded-xl bg-[#0B0A0A] border border-white/10 focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none tracking-widest text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={handleClearKeypad}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] flex items-center justify-center transition cursor-pointer"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FAF5EB] flex items-center justify-center transition cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -702,7 +702,7 @@ export default function StaffTerminalPage() {
                       key={val}
                       type="button"
                       onClick={() => handleKeyPress(val)}
-                      className="py-3 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] active:scale-95 text-[#FBF9F5] font-mono font-bold text-base border border-white/10 transition cursor-pointer"
+                      className="py-3 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] active:scale-95 text-[#FAF5EB] font-mono font-bold text-base border border-white/10 transition cursor-pointer"
                     >
                       {val}
                     </button>
@@ -712,19 +712,19 @@ export default function StaffTerminalPage() {
 
               {/* Customer Details & Actions */}
               {selectedCustomer && loyaltyData && (
-                <div className="p-6 rounded-2xl bg-[#141212] border border-[#DD0200]/30 shadow-xl space-y-5 animate-in zoom-in-95 duration-200">
+                <div className="p-6 rounded-2xl bg-[#141212] border border-[#DFAB56]/30 shadow-xl space-y-5 animate-in zoom-in-95 duration-200">
                   <div className="flex items-center justify-between pb-3 border-b border-white/10">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-bold text-xl shadow-lg border border-white/10">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center font-bold text-xl shadow-lg border border-white/10">
                         {selectedCustomer.name.charAt(0) || 'ع'}
                       </div>
                       <div>
-                        <h3 className="text-base font-bold text-[#FBF9F5]">{selectedCustomer.name}</h3>
+                        <h3 className="text-base font-bold text-[#FAF5EB]">{selectedCustomer.name}</h3>
                         <p className="text-xs text-[#A19E9B] font-mono" dir="ltr">{selectedCustomer.phone}</p>
                       </div>
                     </div>
 
-                    <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/40">
+                    <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/40">
                       {loyaltyData.stampedCount} من {requiredVisits} أختام
                     </span>
                   </div>
@@ -745,7 +745,7 @@ export default function StaffTerminalPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-mono font-bold text-sm text-[#FBF9F5] tracking-wider">
+                              <span className="font-mono font-bold text-sm text-[#FAF5EB] tracking-wider">
                                 {activeVoucher.code}
                               </span>
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
@@ -777,11 +777,11 @@ export default function StaffTerminalPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs font-bold text-[#A19E9B]">
                       <span>تقدم بطاقة الولاء الحالية</span>
-                      <span className="font-mono text-[#FBF9F5]">{loyaltyData.stampedCount} / {requiredVisits} زيارات</span>
+                      <span className="font-mono text-[#FAF5EB]">{loyaltyData.stampedCount} / {requiredVisits} زيارات</span>
                     </div>
                     <div className="w-full bg-[#0B0A0A] h-3 rounded-full overflow-hidden p-0.5 border border-white/10">
                       <div
-                        className="bg-gradient-to-r from-[#55100D] to-[#DD0200] h-full rounded-full transition-all duration-500"
+                        className="bg-gradient-to-r from-[#3D2314] to-[#DFAB56] h-full rounded-full transition-all duration-500"
                         style={{ width: `${Math.min(100, (loyaltyData.stampedCount / requiredVisits) * 100)}%` }}
                       />
                     </div>
@@ -792,7 +792,7 @@ export default function StaffTerminalPage() {
                     <button
                       type="button"
                       onClick={handleAddStamp}
-                      className="py-3.5 px-4 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                      className="py-3.5 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                     >
                       <Award className="w-5 h-5" />
                       <span>ختم زيارة جديدة (+1)</span>
@@ -817,9 +817,9 @@ export default function StaffTerminalPage() {
                     <button
                       type="button"
                       onClick={handleUnlockCooldown}
-                      className="text-[#A19E9B] hover:text-[#FBF9F5] font-bold flex items-center gap-1.5 transition cursor-pointer"
+                      className="text-[#A19E9B] hover:text-[#FAF5EB] font-bold flex items-center gap-1.5 transition cursor-pointer"
                     >
-                      <Unlock className="w-3.5 h-3.5 text-[#DD0200]" />
+                      <Unlock className="w-3.5 h-3.5 text-[#DFAB56]" />
                       <span>فك قفل الـ 24 ساعة للعميل</span>
                     </button>
 
@@ -834,17 +834,17 @@ export default function StaffTerminalPage() {
             {/* RIGHT: Shift Activity & Guidelines */}
             <div className="lg:col-span-5 space-y-4">
               <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-lg space-y-3">
-                <h4 className="font-bold text-sm text-[#FBF9F5] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#DD0200]" />
+                <h4 className="font-bold text-sm text-[#FAF5EB] flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#DFAB56]" />
                   <span>إرشادات تشغيل الكاونتر:</span>
                 </h4>
                 <ul className="text-xs text-[#A19E9B] space-y-2 leading-relaxed">
                   <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-md bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+                    <span className="w-5 h-5 rounded-md bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
                     <span>العميل يحصل على خدمته ويذكر رقم جواله أو يمسح كود الفرع.</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-md bg-[#55100D]/50 text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+                    <span className="w-5 h-5 rounded-md bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
                     <span>اضغط <strong>«ختم زيارة جديدة»</strong> لإضافة ختم فوري لكارت العميل في محفظة Apple/Google Wallet.</span>
                   </li>
                   <li className="flex items-start gap-2">
@@ -854,12 +854,12 @@ export default function StaffTerminalPage() {
                 </ul>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-center justify-between text-xs font-bold text-[#FBF9F5]">
+              <div className="p-4 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-center justify-between text-xs font-bold text-[#FAF5EB]">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span>{industry.staffLabel} المسؤول:</span>
                 </div>
-                <span className="font-mono text-[#FBF9F5]">{staffMember?.name || `${industry.staffLabel} المعتمد`}</span>
+                <span className="font-mono text-[#FAF5EB]">{staffMember?.name || `${industry.staffLabel} المعتمد`}</span>
               </div>
             </div>
           </div>

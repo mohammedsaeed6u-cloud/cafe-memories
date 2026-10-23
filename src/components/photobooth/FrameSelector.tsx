@@ -18,10 +18,10 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
   return (
     <div className="w-full">
       <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-4 h-4 text-[#DD0200]" />
+        <Sparkles className="w-4 h-4 text-[#DFAB56]" />
         <h4
           style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-          className="text-xs font-bold text-[#FBF9F5] tracking-wide"
+          className="text-xs font-bold text-[#FAF5EB] tracking-wide"
         >
           اختر إطار الفوتوبوث الخاص بك:
         </h4>
@@ -36,12 +36,12 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
               onClick={() => onSelectFrame(frame)}
               style={{
                 backgroundColor: frame.bgColor,
-                borderColor: isSelected ? frame.accentColor || '#DD0200' : frame.borderColor,
+                borderColor: isSelected ? frame.accentColor || '#DFAB56' : frame.borderColor,
                 color: frame.textColor,
               }}
               className={`relative p-3 rounded-2xl border-2 text-right transition-all duration-200 hover:scale-[1.02] shadow-sm flex flex-col justify-between h-24 ${
                 isSelected
-                  ? 'ring-2 ring-[#DD0200]/40 shadow-md font-bold'
+                  ? 'ring-2 ring-[#DFAB56]/40 shadow-md font-bold'
                   : 'hover:border-white/20 opacity-90'
               }`}
             >

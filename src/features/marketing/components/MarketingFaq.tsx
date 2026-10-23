@@ -69,19 +69,19 @@ export function MarketingFaq() {
   ];
 
   return (
-    <section id="faq" className="py-24 px-6 max-w-4xl mx-auto border-t border-white/10 apple-font">
+    <section id="faq" className="py-24 px-6 max-w-4xl mx-auto border-t border-[#EADDC4] apple-font">
       <div className="text-center mb-16">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-md border border-white/10 bg-[#55100D]/50 text-[10px] font-mono tracking-widest text-[#FBF9F5] uppercase mb-3 backdrop-blur-xl">
-          <HelpCircle className="w-3.5 h-3.5 text-[#DD0200]" />
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-md border border-white/10 bg-[#3D2314]/50 text-[10px] font-mono tracking-widest text-[#FAF5EB] uppercase mb-3 backdrop-blur-xl">
+          <HelpCircle className="w-3.5 h-3.5 text-[#DFAB56]" />
           <span>FREQUENTLY ASKED • إجابات واضحة</span>
         </div>
         <h2
-          className="text-3xl sm:text-5xl font-bold text-white tracking-tight leading-tight"
+          className="text-3xl sm:text-5xl font-bold text-[#3D2314] tracking-tight leading-tight"
           style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
         >
           كل ما تحتاج معرفته قبل الانطلاق.
         </h2>
-        <p className="text-sm sm:text-base text-[#A19E9B] mt-3.5 max-w-xl mx-auto leading-relaxed">
+        <p className="text-sm sm:text-base text-[#63574D] mt-3.5 max-w-xl mx-auto leading-relaxed">
           إجابات دقيقة ومباشرة على أكثر الأسئلة شيوعاً حول تقنية الأستوديو وتشغيل البيزنس.
         </p>
       </div>
@@ -92,9 +92,9 @@ export function MarketingFaq() {
             key={f.id}
             value={f.id}
             title={f.q}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] backdrop-blur-xl transition-all duration-200"
+            className="rounded-2xl border border-[#EADDC4] bg-white hover:bg-[#FAF5EB] shadow-xs text-[#3D2314] backdrop-blur-xl transition-all duration-200"
           >
-            <div className="text-xs sm:text-sm text-[#D9D9D9]/80 leading-relaxed pt-1 pb-2">
+            <div className="text-xs sm:text-sm text-[#63574D] leading-relaxed pt-1 pb-2">
               {f.a}
             </div>
           </AppleAccordionItem>

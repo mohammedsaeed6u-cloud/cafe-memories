@@ -396,11 +396,11 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
         <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold">
+              <div className="w-8 h-8 rounded-xl bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold">
                 0
               </div>
               <div>
-                <h3 className="font-bold text-[#FBF9F5] text-base font-serif">
+                <h3 className="font-bold text-[#FAF5EB] text-base font-serif">
                   نوع ونشاط البيزنس (Multi-Industry)
                 </h3>
                 <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -408,7 +408,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30">
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30">
               متعدد الأنشطة
             </span>
           </div>
@@ -432,16 +432,16 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   }}
                   className={`p-3 rounded-xl border text-right transition flex flex-col justify-between gap-1.5 cursor-pointer ${
                     isSelected
-                      ? 'border-[#DD0200] bg-[#55100D]/30 shadow-md ring-1 ring-[#DD0200]'
+                      ? 'border-[#DFAB56] bg-[#3D2314]/30 shadow-md ring-1 ring-[#DFAB56]'
                       : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
                     <span className="text-xl">{ind.icon}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-[#DD0200]" />}
+                    {isSelected && <Check className="w-3.5 h-3.5 text-[#DFAB56]" />}
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-[#FBF9F5] block leading-tight">
+                    <span className="text-xs font-bold text-[#FAF5EB] block leading-tight">
                       {ind.nameAr}
                     </span>
                     <span className="text-[10px] text-[#A19E9B] line-clamp-1 mt-0.5">
@@ -457,11 +457,11 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
         {/* Section 1: Business Branding, Logo & Custom Texts */}
         <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold">
               1
             </div>
             <div>
-              <h3 className="font-bold text-[#FBF9F5] text-base font-serif">
+              <h3 className="font-bold text-[#FAF5EB] text-base font-serif">
                 هوية البيزنس والنصوص التحريرية (Custom Branding & Texts)
               </h3>
               <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -480,8 +480,8 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   type="text"
                   value={branding.name}
                   onChange={(e) => setBranding({ ...branding, name: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:ring-1 focus:ring-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50"
-                  placeholder="مثلاً: Memories Studio أو Elixir Roastery"
+                  className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:ring-1 focus:ring-[#DFAB56] focus:outline-none bg-[#0B0A0A] text-[#FAF5EB] placeholder-[#A19E9B]/50"
+                  placeholder="مثلاً: stampy. أو Elixir Roastery"
                 />
               </div>
 
@@ -496,7 +496,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                     setBadgeText(e.target.value);
                     setActiveFrame((prev) => ({ ...prev, badgeText: e.target.value }));
                   }}
-                  className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:ring-1 focus:ring-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50 font-mono"
+                  className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:ring-1 focus:ring-[#DFAB56] focus:outline-none bg-[#0B0A0A] text-[#FAF5EB] placeholder-[#A19E9B]/50 font-mono"
                   placeholder="مثلاً: SEOUL 4-CUTS // 35MM أو % ARABICA GOLD"
                 />
               </div>
@@ -512,7 +512,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   type="text"
                   value={(branding.instagramHandle || '').replace('@', '')}
                   onChange={(e) => setBranding({ ...branding, instagramHandle: `@${e.target.value.replace('@', '')}` })}
-                  className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-white/10 text-sm focus:ring-1 focus:ring-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50 font-mono"
+                  className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-white/10 text-sm focus:ring-1 focus:ring-[#DFAB56] focus:outline-none bg-[#0B0A0A] text-[#FAF5EB] placeholder-[#A19E9B]/50 font-mono"
                   placeholder="مثلاً: roastery.official"
                 />
               </div>
@@ -530,7 +530,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   setCustomText(e.target.value);
                   setActiveFrame((prev) => ({ ...prev, customText: e.target.value }));
                 }}
-                className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:ring-1 focus:ring-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50"
+                className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:ring-1 focus:ring-[#DFAB56] focus:outline-none bg-[#0B0A0A] text-[#FAF5EB] placeholder-[#A19E9B]/50"
                 placeholder="مثلاً: CHERISHED ATELIER MOMENTS أو A SENSE OF PLACE"
               />
             </div>
@@ -556,7 +556,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   </div>
                 )}
 
-                <label className="cursor-pointer px-4 py-2.5 rounded-xl bg-[#1C1B1B] hover:bg-[#252424] text-[#FBF9F5] text-xs font-bold border border-white/10 flex items-center gap-2 transition">
+                <label className="cursor-pointer px-4 py-2.5 rounded-xl bg-[#1C1B1B] hover:bg-[#252424] text-[#FAF5EB] text-xs font-bold border border-white/10 flex items-center gap-2 transition">
                   <Upload className="w-3.5 h-3.5 text-[#A19E9B]" />
                   <span>{branding.logoUrl ? 'تغيير اللوجو' : 'رفع لوجو المكان'}</span>
                   <input
@@ -585,11 +585,11 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
         <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold">
+              <div className="w-8 h-8 rounded-xl bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold">
                 2
               </div>
               <div>
-                <h3 className="font-bold text-[#FBF9F5] text-base font-serif">
+                <h3 className="font-bold text-[#FAF5EB] text-base font-serif">
                   قوالب وثيمات الهوية البصرية (Frame Identity Themes)
                 </h3>
                 <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -597,8 +597,8 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center gap-1">
-              <Lock className="w-3 h-3 text-[#DD0200]" />
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center gap-1">
+              <Lock className="w-3 h-3 text-[#DFAB56]" />
               <span>هويات أصلية</span>
             </span>
           </div>
@@ -607,7 +607,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
           <div
             className={`p-4 rounded-xl border transition-all mb-4 ${
               lockFrameForCustomers
-                ? 'bg-[#55100D]/30 border-[#DD0200]/40 ring-1 ring-[#DD0200]/40'
+                ? 'bg-[#3D2314]/30 border-[#DFAB56]/40 ring-1 ring-[#DFAB56]/40'
                 : 'bg-[#1C1B1B]/70 border-white/10'
             }`}
           >
@@ -615,20 +615,20 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
               <div className="flex items-start gap-2.5">
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                    lockFrameForCustomers ? 'bg-[#DD0200] text-white' : 'bg-[#1C1B1B] text-[#A19E9B]'
+                    lockFrameForCustomers ? 'bg-[#DFAB56] text-[#12100E]' : 'bg-[#1C1B1B] text-[#A19E9B]'
                   }`}
                 >
                   <Lock className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-[#FBF9F5]">
+                    <span className="text-xs font-bold text-[#FAF5EB]">
                       قفل الفريم إجبارياً على جميع العملاء (إلزامي وموحد)
                     </span>
                     <span
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         lockFrameForCustomers
-                          ? 'bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/40'
+                          ? 'bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/40'
                           : 'bg-[#1C1B1B] text-[#A19E9B]'
                       }`}
                     >
@@ -648,7 +648,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   onChange={(e) => setLockFrameForCustomers(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-[#1C1B1B] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#DD0200]"></div>
+                <div className="w-11 h-6 bg-[#1C1B1B] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#DFAB56]"></div>
               </label>
             </div>
           </div>
@@ -664,7 +664,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   onClick={() => handleSelectTemplate(tmpl.id)}
                   className={`p-3.5 rounded-xl border text-right transition flex items-start gap-3 relative cursor-pointer ${
                     isSelected
-                      ? 'border-[#DD0200] bg-[#55100D]/30 shadow-md ring-1 ring-[#DD0200]'
+                      ? 'border-[#DFAB56] bg-[#3D2314]/30 shadow-md ring-1 ring-[#DFAB56]'
                       : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70'
                   }`}
                 >
@@ -673,17 +673,17 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#FBF9F5] leading-tight font-serif">
+                      <span className="text-xs font-bold text-[#FAF5EB] leading-tight font-serif">
                         {tmpl.nameAr}
                       </span>
-                      {isSelected && <Check className="w-4 h-4 text-[#DD0200] shrink-0" />}
+                      {isSelected && <Check className="w-4 h-4 text-[#DFAB56] shrink-0" />}
                     </div>
 
                     <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-[#0B0A0A] text-[#FBF9F5] rounded-md border border-white/10">
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-[#0B0A0A] text-[#FAF5EB] rounded-md border border-white/10">
                         {tmpl.dimensions} ({tmpl.dimensionsCm})
                       </span>
-                      <span className="text-[10px] font-bold text-[#DD0200]">
+                      <span className="text-[10px] font-bold text-[#DFAB56]">
                         {tmpl.shotCount} {tmpl.shotCount === 1 ? 'لقطة' : 'صور'}
                       </span>
                       <span className="text-[9px] text-[#A19E9B] font-medium">
@@ -705,11 +705,11 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
         <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold">
+              <div className="w-8 h-8 rounded-xl bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold">
                 3
               </div>
               <div>
-                <h3 className="font-bold text-[#FBF9F5] text-base font-serif">
+                <h3 className="font-bold text-[#FAF5EB] text-base font-serif">
                   الأبعاد والمقاسات الفعلية وعدد الخانات (Dimensions & Slot Counts)
                 </h3>
                 <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -717,7 +717,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30">
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30">
               حرية كاملة
             </span>
           </div>
@@ -725,7 +725,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
           <div className="space-y-4">
             {/* Standard Dimension Presets */}
             <div>
-              <label className="block text-xs font-bold text-[#FBF9F5] mb-2">
+              <label className="block text-xs font-bold text-[#FAF5EB] mb-2">
                 أ) اختر مقاس وأبعاد الكارت المطبوع:
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -738,13 +738,13 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                       onClick={() => handleSelectDimensionPreset(preset.id)}
                       className={`p-2.5 rounded-xl border text-right transition flex flex-col justify-between cursor-pointer ${
                         isSelected
-                          ? 'border-[#DD0200] bg-[#55100D]/30 font-bold ring-1 ring-[#DD0200] shadow-sm'
+                          ? 'border-[#DFAB56] bg-[#3D2314]/30 font-bold ring-1 ring-[#DFAB56] shadow-sm'
                           : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#1C1B1B]'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-1">
-                        <span className="text-xs text-[#FBF9F5] font-serif">{preset.nameAr}</span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#DD0200] shrink-0" />}
+                        <span className="text-xs text-[#FAF5EB] font-serif">{preset.nameAr}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#DFAB56] shrink-0" />}
                       </div>
                       <div className="flex items-center gap-1.5 text-[9px] text-[#A19E9B] font-mono">
                         <span>{preset.dimensionsCm}</span>
@@ -760,8 +760,8 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             {/* Custom cm inputs (always available for fine-tuning) */}
             <div className="p-3.5 bg-[#0B0A0A] rounded-xl border border-white/10">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5">
-                  <Maximize2 className="w-3.5 h-3.5 text-[#DD0200]" />
+                <span className="text-xs font-bold text-[#FAF5EB] flex items-center gap-1.5">
+                  <Maximize2 className="w-3.5 h-3.5 text-[#DFAB56]" />
                   <span>تعديل الأبعاد بالسنتيمتر (Custom Dimensions):</span>
                 </span>
                 <span className="text-[10px] font-mono text-[#A19E9B]">
@@ -780,7 +780,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                     max="40"
                     value={widthCm}
                     onChange={(e) => handleCustomDimensionChange(parseFloat(e.target.value) || 5, heightCm)}
-                    className="w-full px-3 py-1.5 text-xs font-mono rounded-lg border border-white/10 bg-[#141212] text-[#FBF9F5] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200] focus:outline-none"
+                    className="w-full px-3 py-1.5 text-xs font-mono rounded-lg border border-white/10 bg-[#141212] text-[#FAF5EB] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -794,7 +794,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                     max="50"
                     value={heightCm}
                     onChange={(e) => handleCustomDimensionChange(widthCm, parseFloat(e.target.value) || 15.2)}
-                    className="w-full px-3 py-1.5 text-xs font-mono rounded-lg border border-white/10 bg-[#141212] text-[#FBF9F5] focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200] focus:outline-none"
+                    className="w-full px-3 py-1.5 text-xs font-mono rounded-lg border border-white/10 bg-[#141212] text-[#FAF5EB] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56] focus:outline-none"
                   />
                 </div>
               </div>
@@ -803,9 +803,9 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             {/* Quick Orientation Switcher: Vertical vs Horizontal */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 bg-[#0B0A0A] rounded-xl border border-white/10">
               <div className="flex items-center gap-2">
-                <Layout className="w-4 h-4 text-[#DD0200] shrink-0" />
+                <Layout className="w-4 h-4 text-[#DFAB56] shrink-0" />
                 <div>
-                  <span className="text-xs font-bold text-[#FBF9F5] block">توجيه الكارت (Card Orientation):</span>
+                  <span className="text-xs font-bold text-[#FAF5EB] block">توجيه الكارت (Card Orientation):</span>
                   <span className="text-[10px] text-[#A19E9B]">رأسي طولي (شريط فوتوبوث) أو أفقي عريض (بوستكارد)</span>
                 </div>
               </div>
@@ -816,8 +816,8 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   onClick={() => handleOrientationChange('vertical')}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none text-center cursor-pointer ${
                     activeFrame.orientation === 'vertical'
-                      ? 'bg-[#DD0200] text-white shadow-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                      : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                      ? 'bg-[#DFAB56] text-[#12100E] shadow-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                      : 'text-[#A19E9B] hover:text-[#FAF5EB]'
                   }`}
                 >
                   رأسي (Vertical)
@@ -827,8 +827,8 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   onClick={() => handleOrientationChange('horizontal')}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex-1 sm:flex-none text-center cursor-pointer ${
                     activeFrame.orientation === 'horizontal'
-                      ? 'bg-[#DD0200] text-white shadow-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                      : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                      ? 'bg-[#DFAB56] text-[#12100E] shadow-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                      : 'text-[#A19E9B] hover:text-[#FAF5EB]'
                   }`}
                 >
                   أفقي عريض (Horizontal)
@@ -839,10 +839,10 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             {/* Number of Photo Slots / Cuts (عدد الخانات) */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-bold text-[#FBF9F5] block">
+                <label className="text-xs font-bold text-[#FAF5EB] block">
                   ب) عدد خانات الصور في الكارت (عدد الزيارات المطلوبة لاكتمال الكارت):
                 </label>
-                <span className="text-xs font-mono font-bold text-[#FBF9F5] bg-[#55100D] px-2 py-0.5 rounded-md border border-[#DD0200]/30">
+                <span className="text-xs font-mono font-bold text-[#FAF5EB] bg-[#3D2314] px-2 py-0.5 rounded-md border border-[#DFAB56]/30">
                   {activeFrame.shotCount} خانات
                 </span>
               </div>
@@ -858,7 +858,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                       onClick={() => handleShotCountChange(shotOpt.count)}
                       className={`p-2.5 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
                         isSelected
-                          ? 'border-[#DD0200] bg-[#55100D]/30 font-bold text-[#FBF9F5] shadow-xs ring-1 ring-[#DD0200]'
+                          ? 'border-[#DFAB56] bg-[#3D2314]/30 font-bold text-[#FAF5EB] shadow-xs ring-1 ring-[#DFAB56]'
                           : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#1C1B1B] text-[#A19E9B]'
                       }`}
                     >
@@ -879,18 +879,18 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                     type="button"
                     onClick={() => handleShotCountChange((activeFrame.shotCount || 3) - 1)}
                     disabled={(activeFrame.shotCount || 3) <= 1}
-                    className="w-7 h-7 rounded-lg bg-[#1C1B1B] border border-white/10 font-bold text-[#FBF9F5] hover:bg-[#252424] hover:border-white/20 disabled:opacity-30 cursor-pointer"
+                    className="w-7 h-7 rounded-lg bg-[#1C1B1B] border border-white/10 font-bold text-[#FAF5EB] hover:bg-[#252424] hover:border-white/20 disabled:opacity-30 cursor-pointer"
                   >
                     -
                   </button>
-                  <span className="w-8 text-center text-xs font-mono font-bold text-[#FBF9F5]">
+                  <span className="w-8 text-center text-xs font-mono font-bold text-[#FAF5EB]">
                     {activeFrame.shotCount || 3}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleShotCountChange((activeFrame.shotCount || 3) + 1)}
                     disabled={(activeFrame.shotCount || 3) >= 8}
-                    className="w-7 h-7 rounded-lg bg-[#1C1B1B] border border-white/10 font-bold text-[#FBF9F5] hover:bg-[#252424] hover:border-white/20 disabled:opacity-30 cursor-pointer"
+                    className="w-7 h-7 rounded-lg bg-[#1C1B1B] border border-white/10 font-bold text-[#FAF5EB] hover:bg-[#252424] hover:border-white/20 disabled:opacity-30 cursor-pointer"
                   >
                     +
                   </button>
@@ -904,11 +904,11 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
         <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold">
+              <div className="w-8 h-8 rounded-xl bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold">
                 4
               </div>
               <div>
-                <h3 className="font-bold text-[#FBF9F5] text-base font-serif">
+                <h3 className="font-bold text-[#FAF5EB] text-base font-serif">
                   انحناء الحواف وشكل الكارت (Border Radius & Shape)
                 </h3>
                 <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -916,7 +916,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 </p>
               </div>
             </div>
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#1C1B1B] text-[#FBF9F5] border border-white/10">
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#1C1B1B] text-[#FAF5EB] border border-white/10">
               {borderRadius}px
             </span>
           </div>
@@ -929,7 +929,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 onClick={() => handleSelectFrameShape('sharp')}
                 className={`p-2.5 rounded-xl border text-center transition cursor-pointer ${
                   borderRadius === 0
-                    ? 'border-[#DD0200] bg-[#55100D]/30 font-bold text-[#FBF9F5] ring-1 ring-[#DD0200]'
+                    ? 'border-[#DFAB56] bg-[#3D2314]/30 font-bold text-[#FAF5EB] ring-1 ring-[#DFAB56]'
                     : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#1C1B1B] text-[#A19E9B]'
                 }`}
               >
@@ -941,7 +941,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 onClick={() => handleBorderRadiusChange(12)}
                 className={`p-2.5 rounded-xl border text-center transition cursor-pointer ${
                   borderRadius === 12
-                    ? 'border-[#DD0200] bg-[#55100D]/30 font-bold text-[#FBF9F5] ring-1 ring-[#DD0200]'
+                    ? 'border-[#DFAB56] bg-[#3D2314]/30 font-bold text-[#FAF5EB] ring-1 ring-[#DFAB56]'
                     : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#1C1B1B] text-[#A19E9B]'
                 }`}
               >
@@ -953,7 +953,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 onClick={() => handleBorderRadiusChange(20)}
                 className={`p-2.5 rounded-xl border text-center transition cursor-pointer ${
                   borderRadius === 20
-                    ? 'border-[#DD0200] bg-[#55100D]/30 font-bold text-[#FBF9F5] ring-1 ring-[#DD0200]'
+                    ? 'border-[#DFAB56] bg-[#3D2314]/30 font-bold text-[#FAF5EB] ring-1 ring-[#DFAB56]'
                     : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#1C1B1B] text-[#A19E9B]'
                 }`}
               >
@@ -965,7 +965,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 onClick={() => handleSelectFrameShape('polaroid')}
                 className={`p-2.5 rounded-xl border text-center transition cursor-pointer ${
                   frameShape === 'polaroid'
-                    ? 'border-[#DD0200] bg-[#55100D]/30 font-bold text-[#FBF9F5] ring-1 ring-[#DD0200]'
+                    ? 'border-[#DFAB56] bg-[#3D2314]/30 font-bold text-[#FAF5EB] ring-1 ring-[#DFAB56]'
                     : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#1C1B1B] text-[#A19E9B]'
                 }`}
               >
@@ -977,11 +977,11 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             {/* Fine Radius Slider */}
             <div className="p-3.5 bg-[#0B0A0A] rounded-xl border border-white/10">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-bold text-[#FBF9F5] flex items-center gap-1.5">
-                  <Sliders className="w-3.5 h-3.5 text-[#DD0200]" />
+                <label className="text-xs font-bold text-[#FAF5EB] flex items-center gap-1.5">
+                  <Sliders className="w-3.5 h-3.5 text-[#DFAB56]" />
                   <span>التحكم الدقيق في درجة الاستدارة (Border Radius Slider):</span>
                 </label>
-                <span className="text-xs font-mono font-bold text-[#DD0200]">{borderRadius} px</span>
+                <span className="text-xs font-mono font-bold text-[#DFAB56]">{borderRadius} px</span>
               </div>
               <input
                 type="range"
@@ -990,7 +990,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 step="1"
                 value={borderRadius}
                 onChange={(e) => handleBorderRadiusChange(parseInt(e.target.value, 10))}
-                className="w-full accent-[#DD0200] cursor-pointer"
+                className="w-full accent-[#DFAB56] cursor-pointer"
               />
               <div className="flex justify-between text-[9px] text-[#A19E9B] font-mono mt-1">
                 <span>0px (حواف مستقيمة حادة)</span>
@@ -1004,11 +1004,11 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
         {/* Section 5: Color Studio & Merchant Allowed Colors */}
         <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold">
               5
             </div>
             <div>
-              <h3 className="font-bold text-[#FBF9F5] text-base font-serif">
+              <h3 className="font-bold text-[#FAF5EB] text-base font-serif">
                 ألوان وثيم الكارت، وتحديد الألوان المصرح بها للعميل
               </h3>
               <p className="text-xs text-[#A19E9B] mt-0.5">
@@ -1020,7 +1020,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
           <div className="space-y-5">
             {/* Primary Palette Selection */}
             <div>
-              <label className="block text-xs font-bold text-[#FBF9F5] mb-2">
+              <label className="block text-xs font-bold text-[#FAF5EB] mb-2">
                 أ) اختر باليتة وثيم الكارت الأساسي للمنشأة:
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -1033,7 +1033,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                       onClick={() => handleSelectPalette(palette)}
                       className={`p-2.5 rounded-xl border text-right transition flex items-center justify-between gap-2 cursor-pointer ${
                         isSelected
-                          ? 'border-[#DD0200] bg-[#55100D]/30 shadow-sm font-bold ring-1 ring-[#DD0200]'
+                          ? 'border-[#DFAB56] bg-[#3D2314]/30 shadow-sm font-bold ring-1 ring-[#DFAB56]'
                           : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#1C1B1B]'
                       }`}
                     >
@@ -1045,11 +1045,11 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                           }}
                           className="w-5 h-5 rounded-full border shadow-xs shrink-0"
                         />
-                        <span className="text-xs text-[#FBF9F5] font-serif truncate">
+                        <span className="text-xs text-[#FAF5EB] font-serif truncate">
                           {palette.nameAr}
                         </span>
                       </div>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-[#DD0200] shrink-0" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-[#DFAB56] shrink-0" />}
                     </button>
                   );
                 })}
@@ -1060,15 +1060,15 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   onClick={() => setIsCustomColorMode(true)}
                   className={`p-2.5 rounded-xl border text-right transition flex items-center justify-between gap-2 cursor-pointer ${
                     isCustomColorMode
-                      ? 'border-[#DD0200] bg-[#55100D]/30 shadow-sm font-bold ring-1 ring-[#DD0200]'
+                      ? 'border-[#DFAB56] bg-[#3D2314]/30 shadow-sm font-bold ring-1 ring-[#DFAB56]'
                       : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#1C1B1B]'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#DD0200] to-[#55100D] border border-white/20 shadow-xs shrink-0" />
-                    <span className="text-xs text-[#FBF9F5] font-serif truncate">ألوان مخصصة</span>
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#DFAB56] to-[#3D2314] border border-white/20 shadow-xs shrink-0" />
+                    <span className="text-xs text-[#FAF5EB] font-serif truncate">ألوان مخصصة</span>
                   </div>
-                  {isCustomColorMode && <Check className="w-3.5 h-3.5 text-[#DD0200] shrink-0" />}
+                  {isCustomColorMode && <Check className="w-3.5 h-3.5 text-[#DFAB56] shrink-0" />}
                 </button>
               </div>
             </div>
@@ -1076,7 +1076,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             {/* Custom HEX Colors (if custom mode active) */}
             {isCustomColorMode && (
               <div className="p-4 bg-[#0B0A0A] rounded-xl border border-white/10 space-y-3 animate-in fade-in">
-                <span className="text-xs font-bold text-[#FBF9F5] block">
+                <span className="text-xs font-bold text-[#FAF5EB] block">
                   تحديد الألوان يدوياً (HEX Colors):
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1099,7 +1099,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                           setCustomBg(e.target.value);
                           setActiveFrame((prev) => ({ ...prev, bgColor: e.target.value }));
                         }}
-                        className="w-full text-xs font-mono p-1 border border-white/10 rounded bg-[#141212] text-[#FBF9F5] focus:border-[#DD0200] focus:outline-none"
+                        className="w-full text-xs font-mono p-1 border border-white/10 rounded bg-[#141212] text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1123,7 +1123,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                           setCustomBorder(e.target.value);
                           setActiveFrame((prev) => ({ ...prev, borderColor: e.target.value }));
                         }}
-                        className="w-full text-xs font-mono p-1 border border-white/10 rounded bg-[#141212] text-[#FBF9F5] focus:border-[#DD0200] focus:outline-none"
+                        className="w-full text-xs font-mono p-1 border border-white/10 rounded bg-[#141212] text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1147,7 +1147,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                           setCustomTextColor(e.target.value);
                           setActiveFrame((prev) => ({ ...prev, textColor: e.target.value }));
                         }}
-                        className="w-full text-xs font-mono p-1 border border-white/10 rounded bg-[#141212] text-[#FBF9F5] focus:border-[#DD0200] focus:outline-none"
+                        className="w-full text-xs font-mono p-1 border border-white/10 rounded bg-[#141212] text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1171,7 +1171,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                           setCustomAccent(e.target.value);
                           setActiveFrame((prev) => ({ ...prev, accentColor: e.target.value }));
                         }}
-                        className="w-full text-xs font-mono p-1 border border-white/10 rounded bg-[#141212] text-[#FBF9F5] focus:border-[#DD0200] focus:outline-none"
+                        className="w-full text-xs font-mono p-1 border border-white/10 rounded bg-[#141212] text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1183,7 +1183,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
             <div className="pt-4 border-t border-white/10">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <label className="text-xs font-bold text-[#FBF9F5] block">
+                  <label className="text-xs font-bold text-[#FAF5EB] block">
                     ب) تحديد الألوان المتاحة للعميل:
                   </label>
                   <p className="text-[11px] text-[#A19E9B] mt-0.5">
@@ -1196,9 +1196,9 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                     type="checkbox"
                     checked={allowCustomerColors}
                     onChange={(e) => setAllowCustomerColors(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#DD0200] bg-[#141212] border-white/20 focus:ring-[#DD0200] cursor-pointer"
+                    className="w-4 h-4 rounded text-[#DFAB56] bg-[#141212] border-white/20 focus:ring-[#DFAB56] cursor-pointer"
                   />
-                  <span className="text-xs font-bold text-[#FBF9F5]">
+                  <span className="text-xs font-bold text-[#FAF5EB]">
                     {allowCustomerColors ? 'مسموح للعميل الاختيار' : 'الكارت مقفول بلون واحد'}
                   </span>
                 </label>
@@ -1219,7 +1219,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                           onClick={() => handleToggleAllowedColor(palette.id)}
                           className={`p-2 rounded-xl border text-right transition flex items-center justify-between gap-1.5 cursor-pointer ${
                             isAllowed
-                              ? 'bg-[#1C1B1B] border-[#DD0200] text-[#FBF9F5] shadow-xs'
+                              ? 'bg-[#1C1B1B] border-[#DFAB56] text-[#FAF5EB] shadow-xs'
                               : 'bg-[#141212] border-white/10 text-[#A19E9B] opacity-60 hover:opacity-80'
                           }`}
                         >
@@ -1231,12 +1231,12 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                               }}
                               className="w-4 h-4 rounded-full border shrink-0"
                             />
-                            <span className="text-[11px] font-bold text-[#FBF9F5] truncate">
+                            <span className="text-[11px] font-bold text-[#FAF5EB] truncate">
                               {palette.nameAr}
                             </span>
                           </div>
                           {isAllowed ? (
-                            <CheckSquare className="w-4 h-4 text-[#DD0200] shrink-0" />
+                            <CheckSquare className="w-4 h-4 text-[#DFAB56] shrink-0" />
                           ) : (
                             <Square className="w-4 h-4 text-[#A19E9B] shrink-0" />
                           )}
@@ -1259,9 +1259,9 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   type="checkbox"
                   checked={allowCustomerStickers}
                   onChange={(e) => setAllowCustomerStickers(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#DD0200] bg-[#141212] border-white/20 focus:ring-[#DD0200] cursor-pointer"
+                  className="w-4 h-4 rounded text-[#DFAB56] bg-[#141212] border-white/20 focus:ring-[#DFAB56] cursor-pointer"
                 />
-                <span className="font-bold text-xs text-[#FBF9F5]">السماح للعميل بإضافة وتحريك ستيكرز وإيموجيز على الكارت</span>
+                <span className="font-bold text-xs text-[#FAF5EB]">السماح للعميل بإضافة وتحريك ستيكرز وإيموجيز على الكارت</span>
               </label>
             </div>
           </div>
@@ -1270,36 +1270,36 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
         {/* Section 6: Reward on the Last Slot */}
         <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-xl bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold">
               6
             </div>
-            <h3 className="font-bold text-[#FBF9F5] text-base font-serif">
+            <h3 className="font-bold text-[#FAF5EB] text-base font-serif">
               هدية وجائزة الخانة الأخيرة في الكارت
             </h3>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-bold text-[#FBF9F5] mb-1">
+              <label className="block text-xs font-bold text-[#FAF5EB] mb-1">
                 اسم الهدية (تظهر داخل الخانة الأخيرة في شريط العميل)
               </label>
               <input
                 type="text"
                 value={freeGift.title}
                 onChange={(e) => setFreeGift({ ...freeGift, title: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50"
+                className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56] focus:outline-none bg-[#0B0A0A] text-[#FAF5EB] placeholder-[#A19E9B]/50"
                 placeholder="مثلاً: مشروب مجاني مميز + طباعة الكارت"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#FBF9F5] mb-1">
+              <label className="block text-xs font-bold text-[#FAF5EB] mb-1">
                 شرح الاستلام لطاقم العمل أو موظف الكاونتر
               </label>
               <input
                 type="text"
                 value={freeGift.subtitle}
                 onChange={(e) => setFreeGift({ ...freeGift, subtitle: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50"
+                className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56] focus:outline-none bg-[#0B0A0A] text-[#FAF5EB] placeholder-[#A19E9B]/50"
                 placeholder="يظهر لطاقم الخدمة لتسليم الهدية وطباعة الشريط الورقي"
               />
             </div>
@@ -1310,14 +1310,14 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
         <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold">
+              <div className="w-8 h-8 rounded-xl bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold">
                 7
               </div>
-              <h3 className="font-bold text-[#FBF9F5] text-base font-serif">
+              <h3 className="font-bold text-[#FAF5EB] text-base font-serif">
                 ستيكرز الزوايا (Corner Emojis)
               </h3>
             </div>
-            <label className="flex items-center gap-2 text-xs font-bold text-[#FBF9F5] cursor-pointer">
+            <label className="flex items-center gap-2 text-xs font-bold text-[#FAF5EB] cursor-pointer">
               <input
                 type="checkbox"
                 checked={activeFrame.cornerEmojis?.enabled ?? true}
@@ -1330,7 +1330,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                     },
                   })
                 }
-                className="rounded text-[#DD0200] bg-[#141212] border-white/20 focus:ring-[#DD0200] cursor-pointer"
+                className="rounded text-[#DFAB56] bg-[#141212] border-white/20 focus:ring-[#DFAB56] cursor-pointer"
               />
               <span>تفعيل الستيكرز</span>
             </label>
@@ -1345,7 +1345,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                 className={`p-2 rounded-xl border text-xs font-medium flex items-center justify-between transition cursor-pointer ${
                   activeFrame.cornerEmojis?.topRight === pair.topRight &&
                   activeFrame.cornerEmojis?.bottomLeft === pair.bottomLeft
-                    ? 'border-[#DD0200] bg-[#55100D]/30 font-bold text-[#FBF9F5] ring-1 ring-[#DD0200]'
+                    ? 'border-[#DFAB56] bg-[#3D2314]/30 font-bold text-[#FAF5EB] ring-1 ring-[#DFAB56]'
                     : 'border-white/10 hover:border-white/20 bg-[#1C1B1B]/70 hover:bg-[#1C1B1B] text-[#A19E9B]'
                 }`}
               >
@@ -1375,7 +1375,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                     },
                   })
                 }
-                className="w-full text-center text-xl py-1.5 px-2 rounded-xl border border-white/10 focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5]"
+                className="w-full text-center text-xl py-1.5 px-2 rounded-xl border border-white/10 focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56] focus:outline-none bg-[#0B0A0A] text-[#FAF5EB]"
               />
             </div>
             <div>
@@ -1395,7 +1395,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                     },
                   })
                 }
-                className="w-full text-center text-xl py-1.5 px-2 rounded-xl border border-white/10 focus:border-[#DD0200] focus:ring-1 focus:ring-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5]"
+                className="w-full text-center text-xl py-1.5 px-2 rounded-xl border border-white/10 focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56] focus:outline-none bg-[#0B0A0A] text-[#FAF5EB]"
               />
             </div>
           </div>
@@ -1406,15 +1406,15 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
           <button
             type="button"
             onClick={handleSaveAll}
-            className="w-full py-4 px-6 rounded-2xl bg-[#DD0200] hover:bg-[#b00200] text-[#FBF9F5] font-black text-base shadow-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-2xl transition flex items-center justify-center gap-3 active:scale-[0.98] cursor-pointer"
+            className="w-full py-4 px-6 rounded-2xl bg-[#DFAB56] hover:bg-[#b00200] text-[#12100E] font-black text-base shadow-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-2xl transition flex items-center justify-center gap-3 active:scale-[0.98] cursor-pointer"
           >
             <Save className="w-5 h-5 text-white" />
             <span>حفظ الإعدادات وتطبيقها فوراً على كروت العملاء</span>
           </button>
 
           {isSavedNotice && (
-            <div className="mt-3 p-3.5 bg-[#55100D]/40 border border-[#DD0200]/40 text-[#FBF9F5] text-xs font-bold rounded-2xl text-center flex items-center justify-center gap-2 animate-in fade-in shadow-xs">
-              <Check className="w-4 h-4 text-[#DD0200]" />
+            <div className="mt-3 p-3.5 bg-[#3D2314]/40 border border-[#DFAB56]/40 text-[#FAF5EB] text-xs font-bold rounded-2xl text-center flex items-center justify-center gap-2 animate-in fade-in shadow-xs">
+              <Check className="w-4 h-4 text-[#DFAB56]" />
               <span>تم حفظ وتطبيق مقاس الكارت ({activeFrame.shotCount} صور)، أبعاده ({widthCm}×{heightCm} سم)، هويته وثيم ألوانه بنجاح!</span>
             </div>
           )}
@@ -1426,10 +1426,10 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
         <div className="p-6 bg-[#141212] rounded-3xl border border-white/10 shadow-2xl flex flex-col items-center">
           <div className="flex items-center gap-2 mb-4 w-full justify-between">
             <span className="text-xs font-black tracking-widest text-[#A19E9B] uppercase flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#DD0200]" />
+              <Sparkles className="w-3.5 h-3.5 text-[#DFAB56]" />
               <span>معاينة كارت الولاء المطبوع</span>
             </span>
-            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 font-bold">
+            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 font-bold">
               {activeFrame.shotCount} خانات • {activeFrame.orientation === 'horizontal' ? 'أفقي' : 'رأسي'}
             </span>
           </div>

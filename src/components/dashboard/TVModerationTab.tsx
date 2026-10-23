@@ -110,8 +110,8 @@ export const TVModerationTab: React.FC<TVModerationTabProps> = ({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#141212] p-6 rounded-2xl border border-white/10 shadow-xl">
         <div>
-          <h3 className="text-lg font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-            <Monitor className="w-5 h-5 text-[#DD0200]" />
+          <h3 className="text-lg font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+            <Monitor className="w-5 h-5 text-[#DFAB56]" />
             <span>فرز واعتماد شرائط العرض على شاشة الصالة (TV Wall)</span>
           </h3>
           <p className="text-xs text-[#A19E9B] mt-1 font-sans">
@@ -123,9 +123,9 @@ export const TVModerationTab: React.FC<TVModerationTabProps> = ({
           href={`/wall/${screenId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-4 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
+          className="px-4 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-xs font-bold flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
         >
-          <Sparkles className="w-4 h-4 text-[#FBF9F5]" />
+          <Sparkles className="w-4 h-4 text-[#FAF5EB]" />
           <span>فتح شاشة العرض الحية (Wall)</span>
         </a>
       </div>
@@ -140,13 +140,13 @@ export const TVModerationTab: React.FC<TVModerationTabProps> = ({
       <div className="bg-[#141212] p-6 rounded-2xl border border-white/10 shadow-xl">
         {isLoading ? (
           <div className="py-16 text-center text-[#A19E9B] flex flex-col items-center justify-center gap-3">
-            <RefreshCw className="w-8 h-8 animate-spin text-[#DD0200]" />
-            <p className="font-bold text-[#FBF9F5] text-sm font-sans">جاري تحميل الأشرطة من الخادم...</p>
+            <RefreshCw className="w-8 h-8 animate-spin text-[#DFAB56]" />
+            <p className="font-bold text-[#FAF5EB] text-sm font-sans">جاري تحميل الأشرطة من الخادم...</p>
           </div>
         ) : items.length === 0 ? (
           <div className="py-16 text-center text-[#A19E9B]/50">
             <Monitor className="w-12 h-12 mx-auto mb-2 opacity-30" />
-            <p className="font-bold text-[#FBF9F5]">لا توجد أشرطة صور بانتظار الفرز حالياً</p>
+            <p className="font-bold text-[#FAF5EB]">لا توجد أشرطة صور بانتظار الفرز حالياً</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -174,7 +174,7 @@ export const TVModerationTab: React.FC<TVModerationTabProps> = ({
                         شريط صور
                       </div>
                     )}
-                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/80 text-[#FBF9F5] border border-white/10 backdrop-blur-xs">
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/80 text-[#FAF5EB] border border-white/10 backdrop-blur-xs">
                       {mem.name}
                     </span>
                   </div>
@@ -188,7 +188,7 @@ export const TVModerationTab: React.FC<TVModerationTabProps> = ({
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                         isApproved
                           ? 'bg-[#1C1B1B] text-[#A19E9B] hover:text-rose-400 hover:bg-[#211F1F] border border-white/10'
-                          : 'bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                          : 'bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
                       }`}
                     >
                       {isApproved ? <EyeOff className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}

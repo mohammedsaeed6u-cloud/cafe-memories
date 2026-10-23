@@ -52,8 +52,8 @@ export const DashboardRewardsTab: React.FC<DashboardRewardsTabProps> = ({
         {/* LEFT: Rewards Settings Form */}
         <div className="lg:col-span-7 p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-5">
           <div className="pb-3 border-b border-white/10">
-            <h3 className="font-bold text-base text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <Gift className="w-5 h-5 text-[#DD0200]" />
+            <h3 className="font-bold text-base text-[#FAF5EB] flex items-center gap-2 font-serif">
+              <Gift className="w-5 h-5 text-[#DFAB56]" />
               <span>إعدادات حوافز ومكافآت الولاء (Loyalty Rewards Program)</span>
             </h3>
             <p className="text-xs text-[#A19E9B] mt-1">
@@ -74,8 +74,8 @@ export const DashboardRewardsTab: React.FC<DashboardRewardsTabProps> = ({
                     onClick={() => setRewardVisits(num)}
                     className={`py-2.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
                       rewardVisits === num
-                        ? 'bg-[#DD0200] text-[#FBF9F5] border-[#DD0200] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
-                        : 'bg-[#1C1B1B] border-white/10 text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-[#211F1F]'
+                        ? 'bg-[#DFAB56] text-[#12100E] border-[#DFAB56] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
+                        : 'bg-[#1C1B1B] border-white/10 text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-[#211F1F]'
                     }`}
                   >
                     <span>{num} زيارات</span>
@@ -94,7 +94,7 @@ export const DashboardRewardsTab: React.FC<DashboardRewardsTabProps> = ({
                 value={rewardGiftTitle}
                 onChange={(e) => setRewardGiftTitle(e.target.value)}
                 placeholder="مثال: كوب فلات وايت مجاني، حلى مجاني..."
-                className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DD0200] focus:outline-none text-xs font-bold text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DFAB56] focus:outline-none text-xs font-bold text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
               />
             </div>
 
@@ -108,14 +108,14 @@ export const DashboardRewardsTab: React.FC<DashboardRewardsTabProps> = ({
                 value={rewardGiftSubtitle}
                 onChange={(e) => setRewardGiftSubtitle(e.target.value)}
                 placeholder="مثال: مكافأة خاصة لزوار مقهانا الأوفياء..."
-                className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DD0200] focus:outline-none text-xs text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DFAB56] focus:outline-none text-xs text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSavingRewards}
-              className="w-full py-3 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+              className="w-full py-3 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
             >
               <Save className="w-4 h-4" />
               <span>{isSavingRewards ? 'جاري الحفظ...' : 'حفظ ونشر التعديلات'}</span>
@@ -130,25 +130,25 @@ export const DashboardRewardsTab: React.FC<DashboardRewardsTabProps> = ({
           </span>
 
           <div className="p-6 rounded-xl bg-[#1C1B1B] border border-white/10 shadow-lg space-y-4 text-center">
-            <div className="w-12 h-12 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#DD0200] flex items-center justify-center mx-auto shadow-md">
+            <div className="w-12 h-12 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#DFAB56] flex items-center justify-center mx-auto shadow-md">
               <Gift className="w-6 h-6" />
             </div>
 
             <div>
-              <span className="px-2.5 py-0.5 rounded-md bg-[#55100D]/70 border border-[#DD0200]/40 text-[#FBF9F5] text-[10px] font-bold font-mono tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 border border-[#DFAB56]/40 text-[#FAF5EB] text-[10px] font-bold font-mono tracking-wider">
                 COMPLETION REWARD
               </span>
-              <h4 className="text-base font-bold text-[#FBF9F5] mt-1.5 font-serif">{rewardGiftTitle}</h4>
+              <h4 className="text-base font-bold text-[#FAF5EB] mt-1.5 font-serif">{rewardGiftTitle}</h4>
               <p className="text-xs text-[#A19E9B] mt-0.5">{rewardGiftSubtitle}</p>
             </div>
 
             <div className="p-3 bg-[#0B0A0A] rounded-lg border border-white/10 text-xs text-[#A19E9B] font-medium">
-              يستحقها العميل تلقائياً عند إكمال <strong className="text-[#FBF9F5]">{rewardVisits}</strong> أختام معتمدة.
+              يستحقها العميل تلقائياً عند إكمال <strong className="text-[#FAF5EB]">{rewardVisits}</strong> أختام معتمدة.
             </div>
 
-            <div className="p-2.5 rounded-lg bg-[#141212] border border-white/10 text-[11px] font-bold text-[#FBF9F5] flex items-center justify-center gap-1.5 font-mono">
+            <div className="p-2.5 rounded-lg bg-[#141212] border border-white/10 text-[11px] font-bold text-[#FAF5EB] flex items-center justify-center gap-1.5 font-mono">
               <span className="text-[#A19E9B]">كود الصرف:</span>
-              <span className="text-[#DD0200]">#GIFT-XXXX</span>
+              <span className="text-[#DFAB56]">#GIFT-XXXX</span>
             </div>
           </div>
         </div>

@@ -1,15 +1,27 @@
 {
-  "name": "Memories • استوديو الذكريات والولاء للأنشطة الفاخرة",
-  "short_name": "Memories",
-  "description": "استوديو تصوير فوتوبوث تفاعلي، شاشات عرض الصالة الحية، وبطاقات ولاء رقمية لمحفظة Apple و Google Wallet للمنشآت والعلامات التجارية",
+  "name": "Stampy • استامبي | استوديو كروت التصوير وبرامج الولاء الذكية",
+  "short_name": "Stampy استامبي",
+  "description": "منصة كروت التصوير التفاعلية، شاشات عرض الصالة الحية، وأختام الولاء الرقمية لمحفظة Apple و Google Wallet للمنشآت والعلامات التجارية",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#141313",
-  "theme_color": "#141313",
+  "background_color": "#12100E",
+  "theme_color": "#DFAB56",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
+    {
+      "src": "/stampy-app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/stampy-app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/icon.svg",
       "sizes": "512x512",
@@ -19,10 +31,10 @@
   ],
   "shortcuts": [
     {
-      "name": "استوديو الصور",
-      "short_name": "الاستوديو",
-      "description": "التقاط وتوثيق لقطة الزيارة",
-      "url": "/c/memories",
+      "name": "استوديو الصور التفاعلي",
+      "short_name": "استامبي",
+      "description": "التقاط وتوثيق لقطة الزيارة وشريط الصور",
+      "url": "/c/stampy",
       "icons": [
         {
           "src": "/icon.svg",
@@ -43,7 +55,7 @@
       ]
     },
     {
-      "name": "لوحة تحكم التاجر",
+      "name": "لوحة تحكم المنشأة",
       "short_name": "لوحة التحكم",
       "description": "إدارة الفروع وطاقم العمل والاشتراك",
       "url": "/dashboard",

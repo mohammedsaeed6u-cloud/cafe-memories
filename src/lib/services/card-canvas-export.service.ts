@@ -36,10 +36,10 @@ const THEME_PALETTES: Record<string, ThemePalette> = {
     cardBorder: 'rgba(255, 255, 255, 0.22)',
     titleColor: '#FFFFFF',
     textColor: '#D9D9D9',
-    accentColor: '#DD0200',
+    accentColor: '#DFAB56',
     slotBg: '#120909',
-    slotBorder: '#55100D',
-    slotActiveBg: '#DD0200',
+    slotBorder: '#3D2314',
+    slotActiveBg: '#DFAB56',
     slotActiveBorder: '#FF2A28',
   },
   espresso_pass: {
@@ -237,7 +237,7 @@ export class CardCanvasExportService {
     ctx.fillStyle = `${palette.textColor}66`;
     ctx.font = '18px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('Powered by Memories Studio • Experience & Loyalty', width - 60, height - 40);
+    ctx.fillText('Powered by stampy. • Experience & Loyalty', width - 60, height - 40);
     ctx.restore();
 
     return canvas.toDataURL('image/png');

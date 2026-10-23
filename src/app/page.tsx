@@ -22,16 +22,16 @@ export default function HomePage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#141313] text-[#e6e1e1] selection:bg-[#DD0200] selection:text-white font-sans relative overflow-x-hidden">
-      {/* Atelier Nostalgia Ambient Mesh Glows in Background */}
-      <div className="fixed top-0 left-0 w-[650px] h-[550px] bg-gradient-to-br from-[#55100D]/25 via-[#1A0706]/35 to-transparent rounded-full blur-[140px] pointer-events-none z-0" />
-      <div className="fixed top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-tl from-[#DD0200]/12 via-[#55100D]/15 to-transparent rounded-full blur-[160px] pointer-events-none z-0" />
-      <div className="fixed bottom-0 left-1/4 w-[700px] h-[500px] bg-gradient-to-tr from-[#1A0706]/50 via-[#55100D]/20 to-transparent rounded-full blur-[150px] pointer-events-none z-0" />
+    <div className="min-h-screen bg-[#FAF5EB] text-[#3D2314] selection:bg-[#DFAB56] selection:text-[#3D2314] font-sans relative overflow-x-hidden">
+      {/* استامبي • Stampy Ambient Mesh Glows in Background */}
+      <div className="fixed top-0 left-0 w-[650px] h-[550px] bg-gradient-to-br from-[#DFAB56]/15 via-[#EADDC4]/30 to-transparent rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="fixed top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-tl from-[#DFAB56]/12 via-[#FAF5EB] to-transparent rounded-full blur-[160px] pointer-events-none z-0" />
+      <div className="fixed bottom-0 left-1/4 w-[700px] h-[500px] bg-gradient-to-tr from-[#AC3E25]/8 via-[#DFAB56]/10 to-transparent rounded-full blur-[150px] pointer-events-none z-0" />
 
       {/* Accessibility: Skip to Content */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#DD0200] focus:text-white focus:rounded-xl focus:shadow-lg focus:outline-none"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#DFAB56] focus:text-[#12100E] focus:rounded-xl focus:shadow-lg focus:outline-none"
       >
         تخطي إلى المحتوى الرئيسي
       </a>

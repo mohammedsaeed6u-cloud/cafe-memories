@@ -87,31 +87,31 @@ export function MarketingPricing() {
   ];
 
   return (
-    <section id="pricing" className="py-24 px-6 max-w-6xl mx-auto border-t border-white/10 apple-font">
+    <section id="pricing" className="py-24 px-6 max-w-6xl mx-auto border-t border-[#EADDC4] apple-font">
       <div className="text-center max-w-2xl mx-auto mb-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.04] text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase mb-3 backdrop-blur-xl">
-          <Layers className="w-3.5 h-3.5 text-[#DD0200]" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#EADDC4] bg-white/[0.04] text-[10px] font-mono tracking-widest text-[#D9D9D9] uppercase mb-3 backdrop-blur-xl">
+          <Layers className="w-3.5 h-3.5 text-[#DFAB56]" />
           <span>TRANSPARENT PRICING • باقات الشراكة</span>
         </div>
-        <h2 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+        <h2 className="text-3xl sm:text-5xl font-semibold text-[#3D2314] tracking-tight leading-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
           خطط اشتراك واضحة مبنية على القيمة.
         </h2>
-        <p className="text-sm sm:text-base text-[#D9D9D9]/80 mt-3.5 leading-relaxed">
+        <p className="text-sm sm:text-base text-[#63574D] mt-3.5 leading-relaxed">
           اختر المستوى المناسب لعلامتك التجارية — من التجربة الرقمية الكاملة وحتى محطات الطباعة الفورية وإدارة الفروع المتعددة، بدون أي تكاليف خفية.
         </p>
 
         {/* Apple HIG Billing Switch with 20% discount */}
-        <div className="mt-8 inline-flex items-center gap-3 p-1.5 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl">
-          <span className="text-xs font-semibold text-white">
+        <div className="mt-8 inline-flex items-center gap-3 p-1.5 rounded-full bg-white border border-[#EADDC4] backdrop-blur-xl">
+          <span className="text-xs font-semibold text-[#3D2314]">
             فاتورة شهرية
           </span>
           <AppleSwitch
             checked={isAnnual}
             onCheckedChange={(details) => setIsAnnual(details.checked)}
           />
-          <span className="text-xs font-semibold flex items-center gap-1.5 text-white">
+          <span className="text-xs font-semibold flex items-center gap-1.5 text-[#3D2314]">
             <span>فاتورة سنوية</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#DD0200] text-white font-bold">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#DFAB56] text-[#3D2314] font-bold">
               خصم 20%
             </span>
           </span>
@@ -127,43 +127,43 @@ export function MarketingPricing() {
               className={
                 'p-6 sm:p-7 rounded-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden backdrop-blur-xl ' +
                 (tier.isPopular
-                  ? 'bg-gradient-to-b from-[#240807] via-[#141212] to-[#0E0D0D] border border-[#DD0200]/40 shadow-[0_0_50px_-10px_rgba(221,2,0,0.3)] scale-[1.01]'
-                  : 'bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 shadow-lg')
+                  ? 'bg-[#3D2314] border border-[#DFAB56] shadow-2xl text-[#FAF5EB] scale-[1.01]'
+                  : 'bg-white hover:bg-[#FAF5EB] border border-[#EADDC4] shadow-lg')
               }
             >
               {/* Featured Aura Glow for Popular Card */}
               {tier.isPopular && (
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#DD0200]/15 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#DFAB56]/15 rounded-full blur-2xl pointer-events-none" />
               )}
 
               <div>
                 {tier.isPopular && (
-                  <div className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.15em] bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] px-2.5 py-1 rounded-md font-bold mb-4 shadow-sm">
-                    <Sparkles className="w-3 h-3 text-[#DD0200]" />
+                  <div className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.15em] bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] px-2.5 py-1 rounded-md font-bold mb-4 shadow-sm">
+                    <Sparkles className="w-3 h-3 text-[#DFAB56]" />
                     <span>الأكثر طلباً للعلامات</span>
                   </div>
                 )}
 
-                <h3 className="text-lg font-semibold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+                <h3 className="text-lg font-semibold text-[#3D2314] tracking-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
                   {tier.name}
                 </h3>
-                <p className="text-xs text-[#A19E9B] mt-1 leading-relaxed">
+                <p className="text-xs text-[#63574D] mt-1 leading-relaxed">
                   {tier.tagline}
                 </p>
 
-                <div className="mt-5 pb-5 border-b border-white/10 flex items-baseline gap-1.5">
-                  <span className="text-3xl sm:text-4xl font-bold font-mono text-white">
+                <div className="mt-5 pb-5 border-b border-[#EADDC4] flex items-baseline gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-bold font-mono text-[#3D2314]">
                     {displayPrice}
                   </span>
-                  <span className="text-[11px] font-medium text-[#A19E9B]">
+                  <span className="text-[11px] font-medium text-[#63574D]">
                     {tier.period}
                   </span>
                 </div>
 
                 <ul className="mt-5 space-y-2.5">
                   {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5 text-xs leading-relaxed text-[#e6e1e1]">
-                      <Check className={'w-4 h-4 shrink-0 mt-0.5 ' + (tier.isPopular ? 'text-[#DD0200]' : 'text-emerald-400')} />
+                    <li key={feature} className="flex items-start gap-2.5 text-xs leading-relaxed text-[#3D2314]">
+                      <Check className={'w-4 h-4 shrink-0 mt-0.5 ' + (tier.isPopular ? 'text-[#DFAB56]' : 'text-emerald-400')} />
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -176,8 +176,8 @@ export function MarketingPricing() {
                   className={
                     'w-full py-3 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ' +
                     (tier.isPopular
-                      ? 'bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] hover:scale-[1.01] active:scale-[0.98]'
-                      : 'bg-white/10 hover:bg-white/15 text-[#FBF9F5] border border-white/10 hover:border-[#DD0200]/30 backdrop-blur-md hover:scale-[1.01] active:scale-[0.98]')
+                      ? 'bg-[#DFAB56] hover:bg-[#C99645] text-[#3D2314] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] hover:scale-[1.01] active:scale-[0.98]'
+                      : 'bg-white/10 hover:bg-white/15 text-[#FAF5EB] border border-[#EADDC4] hover:border-[#DFAB56]/30 backdrop-blur-md hover:scale-[1.01] active:scale-[0.98]')
                   }
                 >
                   <span>{tier.ctaText}</span>

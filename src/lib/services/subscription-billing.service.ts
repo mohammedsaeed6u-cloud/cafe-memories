@@ -148,7 +148,7 @@ const INITIAL_SUBSCRIPTIONS: Record<string, TenantSubscription> = {
       last4: '4820',
       expiryMonth: 11,
       expiryYear: 2028,
-      cardHolderName: 'Memories Studio Operations',
+      cardHolderName: 'stampy. Operations',
     },
     usage: {
       currentMonthVisits: 1840,

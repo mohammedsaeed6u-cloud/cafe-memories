@@ -7,16 +7,21 @@ export interface CustomerLoyaltyData {
   maxSlots: number;
   lastStampedAt?: string;
   completedCardsCount: number;
+  version?: number;
 }
 
-const STORAGE_PREFIX = 'memories_loyalty_purse_';
+const STORAGE_PREFIX = 'stampy_loyalty_purse_';
 
 export class LoyaltyPurseService {
   private static inMemoryStore = new Map<string, string>();
+  private static activeLocks = new Set<string>();
 
   private static getItem(key: string): string | null {
     if (typeof window !== 'undefined' && window.localStorage) {
-      return localStorage.getItem(key);
+      const val = localStorage.getItem(key);
+      if (val) return val;
+      const legacy = localStorage.getItem(key.replace('stampy_', 'memories_'));
+      if (legacy) return legacy;
     }
     return this.inMemoryStore.get(key) || null;
   }
@@ -44,6 +49,7 @@ export class LoyaltyPurseService {
         maxSlots,
         completedCardsCount: 0,
         lastStampedAt: new Date().toISOString(),
+        version: 1,
       };
       this.setItem(key, JSON.stringify(initial));
       return initial;
@@ -56,26 +62,47 @@ export class LoyaltyPurseService {
         stampedCount: Math.max(parsed.stampedCount ?? 1, 1),
       };
     } catch {
-      return { customerPhone, cafeSlug, stampedCount: 1, maxSlots, completedCardsCount: 0 };
+      return { customerPhone, cafeSlug, stampedCount: 1, maxSlots, completedCardsCount: 0, version: 1 };
     }
   }
 
-  public static addDirectStamp(customerPhone: string, cafeSlug: string, maxSlots = 5): { success: boolean; newCount: number; isCardComplete: boolean } {
-    const current = this.getData(customerPhone, cafeSlug, maxSlots);
-    const newCount = current.stampedCount + 1;
-    const isCardComplete = newCount >= maxSlots;
-    const updated: CustomerLoyaltyData = {
-      ...current,
-      stampedCount: newCount,
-      lastStampedAt: new Date().toISOString(),
-      completedCardsCount: isCardComplete ? (current.completedCardsCount || 0) + 1 : current.completedCardsCount,
-    };
-    this.setItem(this.getKey(customerPhone, cafeSlug), JSON.stringify(updated));
-    return { success: true, newCount, isCardComplete };
+  public static addDirectStamp(
+    customerPhone: string,
+    cafeSlug: string,
+    maxSlots = 5
+  ): { success: boolean; newCount: number; isCardComplete: boolean; error?: string } {
+    const lockKey = `stamp:${cafeSlug}:${customerPhone}`;
+
+    // Concurrency guard: Mutex Lock
+    if (this.activeLocks.has(lockKey)) {
+      return {
+        success: false,
+        newCount: 0,
+        isCardComplete: false,
+        error: 'عملية إضافة ختم قيد المعالجة للعميل حالياً. يرجى الانتظار.',
+      };
+    }
+
+    this.activeLocks.add(lockKey);
+    try {
+      const current = this.getData(customerPhone, cafeSlug, maxSlots);
+      const newCount = current.stampedCount + 1;
+      const isCardComplete = newCount >= maxSlots;
+      const updated: CustomerLoyaltyData = {
+        ...current,
+        stampedCount: newCount,
+        lastStampedAt: new Date().toISOString(),
+        completedCardsCount: isCardComplete ? (current.completedCardsCount || 0) + 1 : current.completedCardsCount,
+        version: (current.version || 1) + 1,
+      };
+      this.setItem(this.getKey(customerPhone, cafeSlug), JSON.stringify(updated));
+      return { success: true, newCount, isCardComplete };
+    } finally {
+      this.activeLocks.delete(lockKey);
+    }
   }
 
   public static canCustomerShoot(customerPhone?: string, cafeSlug?: string, currentPhotosCount?: number): boolean {
-    // Customer photobooth sessions are open to capture all strip photos
     return true;
   }
 }

@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const cafeSlug = searchParams.get('cafe') || 'memories';
-    const cafeName = searchParams.get('name') || 'Memories Studio';
+    const cafeName = searchParams.get('name') || 'stampy.';
     const customerPhone = searchParams.get('phone') || searchParams.get('customer') || '01000000000';
     const customerName = searchParams.get('customerName') || 'ضيف مميز';
     const stampedCount = parseInt(searchParams.get('stamps') || '3', 10);

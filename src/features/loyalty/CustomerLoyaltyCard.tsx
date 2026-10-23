@@ -22,7 +22,7 @@ interface CustomerLoyaltyCardProps {
 export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
   loyaltyData,
   giftTitle = 'هدية ترحيبية خاصة',
-  brandName = 'Memories Studio',
+  brandName = 'stampy.',
   customerName = 'ضيف مميز',
   instagramHandle = '@memories',
   onOpenStaffStamp,
@@ -33,7 +33,7 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
   const [iosModalImage, setIosModalImage] = useState<string | null>(null);
 
   const cleanPhone = encodeURIComponent(customerPhone || 'guest');
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-7vr.pages.dev';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-c9w.pages.dev';
   const stampQrValue = `${origin}/c/${cafeSlug || 'memories'}?action=stamp&customer=${cleanPhone}`;
 
   const handleSaveCardToDevice = async () => {
@@ -65,31 +65,31 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
   return (
     <div className={`w-full max-w-xl mx-auto p-5 sm:p-6 bg-[#141212] border border-white/10 rounded-2xl shadow-2xl text-[#e6e1e1] backdrop-blur-xl transition-all relative overflow-hidden ${className}`}>
       {/* Ambient background glow */}
-      <div className="absolute top-0 right-0 w-40 h-40 bg-[#55100D]/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-40 h-40 bg-[#3D2314]/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-5 relative z-10">
         <div className="flex-1 text-center sm:text-right space-y-3 w-full">
           <div className="flex items-center justify-center sm:justify-start gap-2.5">
-            <Award className="w-4 h-4 text-[#DD0200]" />
+            <Award className="w-4 h-4 text-[#DFAB56]" />
             <h3 className="text-base font-semibold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
               كارت الولاء والأختام الرقمي
             </h3>
-            {/* VIP / Loyalty Tier Badge: Dark Cherry Backing (#55100D) with high-contrast alabaster typography and faint red hairline border */}
-            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-md bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] font-bold shadow-xs">
+            {/* VIP / Loyalty Tier Badge: Dark Cherry Backing (#3D2314) with high-contrast alabaster typography and faint red hairline border */}
+            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-md bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] font-bold shadow-xs">
               {stampedCount} / {maxSlots} أختام
             </span>
           </div>
 
-          {/* Tier Horizon Bar: minimal hairline progress tracker transitioning from #55100D to #DD0200 */}
+          {/* Tier Horizon Bar: minimal hairline progress tracker transitioning from #3D2314 to #DFAB56 */}
           <div className="w-full bg-[#1C1B1B] h-1.5 rounded-full overflow-hidden border border-white/5">
             <div
-              className="h-full bg-gradient-to-r from-[#55100D] to-[#DD0200] transition-all duration-500 rounded-full shadow-[0_0_8px_rgba(221,2,0,0.5)]"
+              className="h-full bg-gradient-to-r from-[#3D2314] to-[#DFAB56] transition-all duration-500 rounded-full shadow-[0_0_8px_rgba(221,2,0,0.5)]"
               style={{ width: `${Math.min(100, (stampedCount / maxSlots) * 100)}%` }}
             />
           </div>
 
           <p className="text-xs text-[#A19E9B] leading-relaxed">
-            امسح الرمز عند كل زيارة ليختم لك فريق الخدمة وتفتح لقطاتك وتستلم <span className="font-bold text-[#FBF9F5]">{giftTitle}</span>.
+            امسح الرمز عند كل زيارة ليختم لك فريق الخدمة وتفتح لقطاتك وتستلم <span className="font-bold text-[#FAF5EB]">{giftTitle}</span>.
           </p>
 
           {/* Stamp Rings */}
@@ -102,16 +102,16 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
                   key={idx}
                   className={`w-9 h-9 rounded-lg border flex items-center justify-center text-xs font-bold transition-all ${
                     isStamped
-                      ? 'bg-[#DD0200] border-[#DD0200] text-white shadow-md shadow-red-950/60 scale-105'
+                      ? 'bg-[#DFAB56] border-[#DFAB56] text-[#12100E] shadow-md shadow-red-950/60 scale-105'
                       : isGiftSlot
-                      ? 'bg-[#55100D]/50 border-dashed border-[#DD0200]/60 text-[#FBF9F5]'
+                      ? 'bg-[#3D2314]/50 border-dashed border-[#DFAB56]/60 text-[#FAF5EB]'
                       : 'bg-[#1C1B1B] border-white/10 text-stone-500'
                   }`}
                 >
                   {isStamped ? (
                     <Check className="w-4 h-4 text-white stroke-[3]" />
                   ) : isGiftSlot ? (
-                    <Gift className="w-3.5 h-3.5 text-[#FBF9F5]" />
+                    <Gift className="w-3.5 h-3.5 text-[#FAF5EB]" />
                   ) : (
                     <span className="font-mono text-[10px] text-stone-500">{idx + 1}</span>
                   )}
@@ -124,18 +124,18 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
             <button
               type="button"
               onClick={onOpenStaffStamp}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-[#FBF9F5] text-[11px] font-bold border border-white/10 hover:border-[#DD0200]/30 transition cursor-pointer backdrop-blur-md"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-[#FAF5EB] text-[11px] font-bold border border-white/10 hover:border-[#DFAB56]/30 transition cursor-pointer backdrop-blur-md"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#DD0200]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#DFAB56]" />
               <span>ختم مباشر للموظف (PIN)</span>
             </button>
             <button
               type="button"
               onClick={handleSaveCardToDevice}
               disabled={isExporting}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-[11px] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-6px_rgba(221,2,0,0.4)] transition cursor-pointer active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-[11px] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-6px_rgba(221,2,0,0.4)] transition cursor-pointer active:scale-95 disabled:opacity-50"
             >
-              <Download className="w-3.5 h-3.5 text-[#FBF9F5]" />
+              <Download className="w-3.5 h-3.5 text-[#FAF5EB]" />
               <span>{isExporting ? 'جاري تجهيز الكارت...' : 'حفظ الكارت في ألبوم الصور'}</span>
             </button>
           </div>
@@ -144,7 +144,7 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
             <AddToWalletButtons
               passData={{
                 cafeSlug: cafeSlug || 'memories',
-                cafeName: brandName || 'Memories Studio',
+                cafeName: brandName || 'stampy.',
                 customerPhone: customerPhone || 'guest',
                 stampedCount,
                 maxSlots,

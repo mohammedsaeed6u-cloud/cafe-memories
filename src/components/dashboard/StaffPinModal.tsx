@@ -166,15 +166,15 @@ const StaffPinModalBody: React.FC<{
   }));
 
   const numpadButtonClass = cn(
-    'h-14 rounded-xl bg-[#1C1B1B] border border-white/10 text-xl font-bold text-[#FBF9F5]',
+    'h-14 rounded-xl bg-[#1C1B1B] border border-white/10 text-xl font-bold text-[#FAF5EB]',
     'active:scale-95 active:bg-[#211F1F] hover:bg-[#211F1F] transition',
     'disabled:opacity-40 disabled:active:scale-100 cursor-pointer',
-    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DD0200]'
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DFAB56]'
   );
   const utilityButtonClass = cn(
     'h-14 rounded-xl bg-[#0B0A0A] border border-white/10 text-[#A19E9B] flex items-center justify-center',
-    'active:scale-95 hover:bg-[#1C1B1B] hover:text-[#FBF9F5] transition disabled:opacity-40 cursor-pointer',
-    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DD0200]'
+    'active:scale-95 hover:bg-[#1C1B1B] hover:text-[#FAF5EB] transition disabled:opacity-40 cursor-pointer',
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DFAB56]'
   );
 
   return (
@@ -187,17 +187,17 @@ const StaffPinModalBody: React.FC<{
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative bg-[#141212] rounded-2xl p-6 sm:p-8 max-w-sm w-full text-[#FBF9F5] shadow-2xl border border-white/10">
+      <div className="relative bg-[#141212] rounded-2xl p-6 sm:p-8 max-w-sm w-full text-[#FAF5EB] shadow-2xl border border-white/10">
         <button
           type="button"
           onClick={onClose}
           aria-label="Close staff switcher"
-          className="absolute top-4 right-4 p-2 rounded-lg text-[#A19E9B] hover:text-[#FBF9F5] hover:bg-[#1C1B1B] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DD0200] cursor-pointer"
+          className="absolute top-4 right-4 p-2 rounded-lg text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-[#1C1B1B] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DFAB56] cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-lg font-bold tracking-tight font-serif text-[#FBF9F5]">Quick PIN Switcher</h2>
+        <h2 className="text-lg font-bold tracking-tight font-serif text-[#FAF5EB]">Quick PIN Switcher</h2>
         <p className="text-xs text-[#A19E9B] mt-1 font-sans">
           {selectedStaff
             ? `Enter PIN for ${selectedStaff.name}`
@@ -224,10 +224,10 @@ const StaffPinModalBody: React.FC<{
                 }}
                 className={cn(
                   'flex items-center gap-2.5 p-2.5 rounded-xl border text-left transition cursor-pointer',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DD0200]',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#DFAB56]',
                   isSelected
-                    ? 'border-[#DD0200] bg-[#55100D]/50 text-[#FBF9F5] shadow-[0_0_15px_-3px_rgba(221,2,0,0.25)]'
-                    : 'border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5]',
+                    ? 'border-[#DFAB56] bg-[#3D2314]/50 text-[#FAF5EB] shadow-[0_0_15px_-3px_rgba(221,2,0,0.25)]'
+                    : 'border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FAF5EB]',
                   isMemberLocked && 'opacity-50'
                 )}
               >
@@ -244,14 +244,14 @@ const StaffPinModalBody: React.FC<{
                   </span>
                 )}
                 <span className="min-w-0">
-                  <span className="block text-xs font-bold truncate text-[#FBF9F5]">{member.name}</span>
+                  <span className="block text-xs font-bold truncate text-[#FAF5EB]">{member.name}</span>
                   <span className="block text-[10px] text-[#A19E9B] font-mono">
                     {isMemberLocked
                       ? `Locked ${member.lockedOutSeconds}s`
                       : STAFF_ROLE_LABELS[member.role]}
                   </span>
                 </span>
-                {isSelected && <Check className="w-4 h-4 text-[#DD0200] ml-auto shrink-0" />}
+                {isSelected && <Check className="w-4 h-4 text-[#DFAB56] ml-auto shrink-0" />}
               </button>
             );
           })}
@@ -275,7 +275,7 @@ const StaffPinModalBody: React.FC<{
                 i < pin.length
                   ? status === 'error'
                     ? 'bg-rose-500 border-rose-500'
-                    : 'bg-[#DD0200] border-[#DD0200] shadow-[0_0_10px_rgba(221,2,0,0.5)]'
+                    : 'bg-[#DFAB56] border-[#DFAB56] shadow-[0_0_10px_rgba(221,2,0,0.5)]'
                   : 'border-white/20 bg-transparent'
               )}
             />
@@ -294,7 +294,7 @@ const StaffPinModalBody: React.FC<{
             </span>
           ) : status === 'verifying' ? (
             <span className="inline-flex items-center gap-1.5 text-[#A19E9B]">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#DD0200]" /> Verifying…
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#DFAB56]" /> Verifying…
             </span>
           ) : status === 'error' && errorMessage ? (
             <span className="text-rose-400">{errorMessage}</span>

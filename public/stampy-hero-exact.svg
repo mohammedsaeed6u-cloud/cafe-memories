@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" width="600" height="420">
+  <defs>
+    <clipPath id="ticket-clip-hero">
+      <path d="M -144.0 -78.0 L 144.0 -78.0 A 16 16 0 0 0 160.0 -62.0 C 157.2 -57.0 157.2 -49.2 160.0 -44.3 C 157.2 -39.3 157.2 -31.5 160.0 -26.6 C 157.2 -21.6 157.2 -13.8 160.0 -8.9 C 157.2 -3.9 157.2 3.9 160.0 8.9 C 157.2 13.8 157.2 21.6 160.0 26.6 C 157.2 31.5 157.2 39.3 160.0 44.3 C 157.2 49.2 157.2 57.0 160.0 62.0 A 16 16 0 0 0 144.0 78.0 L -144.0 78.0 A 16 16 0 0 0 -160.0 62.0 C -157.2 57.0 -157.2 49.2 -160.0 44.3 C -157.2 39.3 -157.2 31.5 -160.0 26.6 C -157.2 21.6 -157.2 13.8 -160.0 8.9 C -157.2 3.9 -157.2 -3.9 -160.0 -8.9 C -157.2 -13.8 -157.2 -21.6 -160.0 -26.6 C -157.2 -31.5 -157.2 -39.3 -160.0 -44.3 C -157.2 -49.2 -157.2 -57.0 -160.0 -62.0 A 16 16 0 0 0 -144.0 -78.0 Z" />
+    </clipPath>
+    <filter id="ticket-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#3D2314" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Tilted Ticket (-6.42°) -->
+  <g transform="translate(300, 150) rotate(-6.42)" filter="url(#ticket-shadow)">
+    <!-- 3D Bevel Shadow Edge beneath ticket (#451215) -->
+    <path d="M -144.0 -78.0 L 144.0 -78.0 A 16 16 0 0 0 160.0 -62.0 C 157.2 -57.0 157.2 -49.2 160.0 -44.3 C 157.2 -39.3 157.2 -31.5 160.0 -26.6 C 157.2 -21.6 157.2 -13.8 160.0 -8.9 C 157.2 -3.9 157.2 3.9 160.0 8.9 C 157.2 13.8 157.2 21.6 160.0 26.6 C 157.2 31.5 157.2 39.3 160.0 44.3 C 157.2 49.2 157.2 57.0 160.0 62.0 A 16 16 0 0 0 144.0 78.0 L -144.0 78.0 A 16 16 0 0 0 -160.0 62.0 C -157.2 57.0 -157.2 49.2 -160.0 44.3 C -157.2 39.3 -157.2 31.5 -160.0 26.6 C -157.2 21.6 -157.2 13.8 -160.0 8.9 C -157.2 3.9 -157.2 -3.9 -160.0 -8.9 C -157.2 -13.8 -157.2 -21.6 -160.0 -26.6 C -157.2 -31.5 -157.2 -39.3 -160.0 -44.3 C -157.2 -49.2 -157.2 -57.0 -160.0 -62.0 A 16 16 0 0 0 -144.0 -78.0 Z" fill="#451215" transform="translate(0, 5)" />
+
+    <!-- Ticket Body: Warm Gold Ochre (#DFAB56) -->
+    <path d="M -144.0 -78.0 L 144.0 -78.0 A 16 16 0 0 0 160.0 -62.0 C 157.2 -57.0 157.2 -49.2 160.0 -44.3 C 157.2 -39.3 157.2 -31.5 160.0 -26.6 C 157.2 -21.6 157.2 -13.8 160.0 -8.9 C 157.2 -3.9 157.2 3.9 160.0 8.9 C 157.2 13.8 157.2 21.6 160.0 26.6 C 157.2 31.5 157.2 39.3 160.0 44.3 C 157.2 49.2 157.2 57.0 160.0 62.0 A 16 16 0 0 0 144.0 78.0 L -144.0 78.0 A 16 16 0 0 0 -160.0 62.0 C -157.2 57.0 -157.2 49.2 -160.0 44.3 C -157.2 39.3 -157.2 31.5 -160.0 26.6 C -157.2 21.6 -157.2 13.8 -160.0 8.9 C -157.2 3.9 -157.2 -3.9 -160.0 -8.9 C -157.2 -13.8 -157.2 -21.6 -160.0 -26.6 C -157.2 -31.5 -157.2 -39.3 -160.0 -44.3 C -157.2 -49.2 -157.2 -57.0 -160.0 -62.0 A 16 16 0 0 0 -144.0 -78.0 Z" fill="#DFAB56" />
+
+    <!-- 5 Spectral Stripes -->
+    <g clip-path="url(#ticket-clip-hero)">
+      
+      <rect x="-160" y="-15.5" width="320" height="6.2" fill="#3D2314" />
+      
+      <rect x="-160" y="-9.3" width="320" height="6.2" fill="#AC3E25" />
+      
+      <rect x="-160" y="-3.0999999999999996" width="320" height="6.2" fill="#EBA935" />
+      
+      <rect x="-160" y="3.1000000000000014" width="320" height="6.2" fill="#B18944" />
+      
+      <rect x="-160" y="9.3" width="320" height="6.2" fill="#337482" />
+      
+    </g>
+
+    <!-- Chamfered Solid Border -->
+    <path d="M -136 -68 L 136 -68 L 150 -54 L 150 54 L 136 68 L -136 68 L -150 54 L -150 -54 Z" fill="none" stroke="#3D2314" stroke-width="1.8" />
+
+    <!-- Dashed Stitch Line -->
+    <path d="M -134 -64 L 134 -64 L 146 -52 L 146 52 L 134 64 L -134 64 L -146 52 L -146 -52 Z" fill="none" stroke="#3D2314" stroke-width="1.1" stroke-dasharray="3.5, 2.5" opacity="0.9" />
+
+    <!-- Aperture Backing Mask & Ring Clearance -->
+    <circle cx="0" cy="0" r="31" fill="#DFAB56" />
+    <circle cx="0" cy="0" r="31" fill="none" stroke="#3D2314" stroke-width="1.5" />
+
+    <!-- 6-Blade Camera Iris Aperture Shutter -->
+    <g transform="translate(0, 0) scale(0.82) translate(-350, -230)">
+      <path d="M 359.96 235.75 L 359.96 262.51 A 34 34 0 0 1 326.83 254.88 L 350.00 241.50 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+      <path d="M 350.00 241.50 L 326.83 254.88 A 34 34 0 0 1 316.87 222.37 L 340.04 235.75 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+      <path d="M 340.04 235.75 L 316.87 222.37 A 34 34 0 0 1 340.04 197.49 L 340.04 224.25 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+      <path d="M 340.04 224.25 L 340.04 197.49 A 34 34 0 0 1 373.17 205.12 L 350.00 218.50 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+      <path d="M 350.00 218.50 L 373.17 205.12 A 34 34 0 0 1 383.13 237.63 L 359.96 224.25 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+      <path d="M 359.96 224.25 L 383.13 237.63 A 34 34 0 0 1 359.96 262.51 L 359.96 235.75 Z" fill="#3D2314" stroke="#DFAB56" stroke-width="0.8" stroke-linejoin="round" />
+      <circle cx="350" cy="230" r="34" fill="none" stroke="#3D2314" stroke-width="1.4" />
+    </g>
+  </g>
+
+  <!-- Wordmark "stampy." Centered Below Hero Ticket -->
+  <g transform="translate(300, 335)">
+    <text font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="76" font-weight="900" fill="#3D2314" text-anchor="middle" letter-spacing="-2.5px">stampy.</text>
+  </g>
+</svg>

@@ -91,8 +91,8 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
     <div className="space-y-6">
       {/* Toast Notification */}
       {toast && (
-        <div className="p-4 rounded-xl bg-[#1A0706] border border-[#DD0200]/40 text-[#FBF9F5] text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-lg">
-          <CheckCircle className="w-4 h-4 text-[#DD0200] shrink-0" />
+        <div className="p-4 rounded-xl bg-[#1A0706] border border-[#DFAB56]/40 text-[#FAF5EB] text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-lg">
+          <CheckCircle className="w-4 h-4 text-[#DFAB56] shrink-0" />
           <span>{toast}</span>
         </div>
       )}
@@ -101,8 +101,8 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
       <div className="p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-[#FBF9F5] flex items-center gap-2 font-serif">
-              <Users className="w-5 h-5 text-[#DD0200]" />
+            <h3 className="text-base font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
+              <Users className="w-5 h-5 text-[#DFAB56]" />
               <span>سجل ولاء العملاء (Customer Retention CRM)</span>
             </h3>
             <span className="px-2.5 py-0.5 rounded-md bg-[#1C1B1B] border border-white/10 text-[#A19E9B] text-xs font-mono font-bold">
@@ -118,7 +118,7 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>تسجيل عميل جديد</span>
@@ -128,7 +128,7 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
             type="button"
             onClick={onExportCsv}
             disabled={customers.length === 0}
-            className="px-3.5 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FBF9F5] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+            className="px-3.5 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
             <span>تصدير CSV للعملاء</span>
@@ -137,7 +137,7 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
           <button
             type="button"
             onClick={onRefresh}
-            className="p-2 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FBF9F5] transition cursor-pointer"
+            className="p-2 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FAF5EB] transition cursor-pointer"
             title="تحديث القائمة"
           >
             <RefreshCw className={`w-4 h-4 ${isLoadingCustomers ? 'animate-spin' : ''}`} />
@@ -159,8 +159,8 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
               onClick={() => setFilter(tab.id as any)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                 filter === tab.id
-                  ? 'bg-[#DD0200] text-[#FBF9F5] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                  : 'text-[#A19E9B] hover:text-[#FBF9F5]'
+                  ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
+                  : 'text-[#A19E9B] hover:text-[#FAF5EB]'
               }`}
             >
               <span>{tab.label}</span>
@@ -174,7 +174,7 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
             placeholder="بحث بالاسم أو رقم الهاتف..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3.5 py-2 pr-9 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FBF9F5] placeholder:text-[#A19E9B]/50 focus:outline-none focus:border-[#DD0200] transition"
+            className="w-full px-3.5 py-2 pr-9 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FAF5EB] placeholder:text-[#A19E9B]/50 focus:outline-none focus:border-[#DFAB56] transition"
           />
           <Search className="w-4 h-4 text-[#A19E9B]/60 absolute right-3 top-2.5 pointer-events-none" />
         </div>
@@ -186,7 +186,7 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
       ) : filteredCustomers.length === 0 ? (
         <div className="p-12 rounded-2xl bg-[#141212] border border-white/10 text-center shadow-xl space-y-2">
           <Users className="w-10 h-10 text-[#A19E9B]/30 mx-auto" />
-          <h4 className="font-bold text-sm text-[#FBF9F5]">لا يوجد عملاء مسجلون حالياً</h4>
+          <h4 className="font-bold text-sm text-[#FAF5EB]">لا يوجد عملاء مسجلون حالياً</h4>
           <p className="text-xs text-[#A19E9B] max-w-md mx-auto leading-relaxed">
             عندما يقوم الضيوف بحفظ كارت الولاء في هواتفهم أو عندما تسجلهم يدويًا، ستظهر بياناتهم هنا تلقائياً.
           </p>
@@ -211,8 +211,8 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
                   const rawPhone = c.id.replace('c_', '');
                   return (
                     <tr key={c.id} className="hover:bg-[#1C1B1B]/50 transition">
-                      <td className="py-3.5 px-4 font-bold text-[#FBF9F5] flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-[#55100D] text-[#FBF9F5] border border-[#DD0200]/30 flex items-center justify-center font-bold text-xs">
+                      <td className="py-3.5 px-4 font-bold text-[#FAF5EB] flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-[#3D2314] text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold text-xs">
                           {c.displayName.charAt(0) || 'ض'}
                         </div>
                         <span>{c.displayName}</span>
@@ -220,13 +220,13 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
                       <td className="py-3.5 px-4 font-mono text-[#A19E9B]" dir="ltr">
                         {rawPhone}
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#FBF9F5]">
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#FAF5EB]">
                         {c.totalVisits} زيارة
                       </td>
                       <td className="py-3.5 px-4">
                         {isVip ? (
-                          <span className="px-2.5 py-1 rounded-md bg-[#55100D]/70 border border-[#DD0200]/50 text-[#FBF9F5] font-bold text-[10px] inline-flex items-center gap-1 shadow-sm">
-                            <Award className="w-3 h-3 text-[#DD0200]" />
+                          <span className="px-2.5 py-1 rounded-md bg-[#3D2314]/70 border border-[#DFAB56]/50 text-[#FAF5EB] font-bold text-[10px] inline-flex items-center gap-1 shadow-sm">
+                            <Award className="w-3 h-3 text-[#DFAB56]" />
                             <span>مستحق للهدية ({Math.floor(c.totalVisits / requiredVisits)})</span>
                           </span>
                         ) : (
@@ -243,7 +243,7 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
                           <button
                             type="button"
                             onClick={() => onAddDirectStamp(c)}
-                            className="px-2.5 py-1 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-[11px] transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center gap-1 cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-[11px] transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center gap-1 cursor-pointer"
                             title="ختم يدوي مباشر (+1)"
                           >
                             <Award className="w-3 h-3" />
@@ -274,11 +274,11 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#141212] border border-white/10 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-[#FBF9F5] font-serif">تسجيل عميل جديد يدوياً</h3>
+              <h3 className="font-bold text-sm text-[#FAF5EB] font-serif">تسجيل عميل جديد يدوياً</h3>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FBF9F5] transition"
+                className="p-1.5 rounded-lg hover:bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FAF5EB] transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -293,7 +293,7 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
                   placeholder="محمد السعيد"
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FBF9F5] placeholder:text-[#A19E9B]/50 focus:outline-none focus:border-[#DD0200] font-bold transition"
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FAF5EB] placeholder:text-[#A19E9B]/50 focus:outline-none focus:border-[#DFAB56] font-bold transition"
                 />
               </div>
 
@@ -306,14 +306,14 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
                   placeholder="05xxxxxxxx"
                   value={newCustPhone}
                   onChange={(e) => setNewCustPhone(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FBF9F5] placeholder:text-[#A19E9B]/50 focus:outline-none focus:border-[#DD0200] font-mono font-bold transition"
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FAF5EB] placeholder:text-[#A19E9B]/50 focus:outline-none focus:border-[#DFAB56] font-mono font-bold transition"
                 />
               </div>
 
               <div className="flex items-center gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
+                  className="flex-1 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
                 >
                   حفظ وتسجيل العميل
                 </button>

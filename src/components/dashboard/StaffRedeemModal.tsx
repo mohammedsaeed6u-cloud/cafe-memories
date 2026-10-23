@@ -137,13 +137,13 @@ export function StaffRedeemModal({
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="relative w-full max-w-lg bg-[#141212] rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col text-right text-[#e6e1e1]">
         {/* Header */}
-        <div className="p-5 px-6 bg-[#1C1B1B] border-b border-white/10 text-[#FBF9F5] flex items-center justify-between">
+        <div className="p-5 px-6 bg-[#1C1B1B] border-b border-white/10 text-[#FAF5EB] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-[#55100D] text-[#DD0200] flex items-center justify-center border border-[#DD0200]/40">
+            <div className="w-10 h-10 rounded-xl bg-[#3D2314] text-[#DFAB56] flex items-center justify-center border border-[#DFAB56]/40">
               <Gift className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base font-serif text-[#FBF9F5]">
+              <h3 className="font-bold text-base font-serif text-[#FAF5EB]">
                 صرف هدية الولاء من الكاونتر (Staff Claim)
               </h3>
               <p className="text-[11px] text-[#A19E9B]">
@@ -153,7 +153,7 @@ export function StaffRedeemModal({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-[#141212] hover:bg-[#211F1F] border border-white/10 flex items-center justify-center text-[#A19E9B] hover:text-[#FBF9F5] transition cursor-pointer"
+            className="w-8 h-8 rounded-lg bg-[#141212] hover:bg-[#211F1F] border border-white/10 flex items-center justify-center text-[#A19E9B] hover:text-[#FAF5EB] transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -164,9 +164,9 @@ export function StaffRedeemModal({
           <div className="flex items-center justify-between text-xs bg-[#1C1B1B] border border-white/10 p-3 rounded-xl">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span className="font-bold text-[#FBF9F5]">
+              <span className="font-bold text-[#FAF5EB]">
                 طاقم العمل المعتمد:{' '}
-                <strong className="text-[#DD0200]">{activeStaff?.name || 'طاقم العمل المناوب'}</strong>
+                <strong className="text-[#DFAB56]">{activeStaff?.name || 'طاقم العمل المناوب'}</strong>
               </span>
             </div>
             <span className="text-[11px] font-mono text-[#A19E9B]">{cafeSlug}</span>
@@ -187,13 +187,13 @@ export function StaffRedeemModal({
                     setSearchQuery(e.target.value);
                     if (e.target.value.length >= 8) lookupCustomerData(e.target.value);
                   }}
-                  className="w-full pr-10 pl-4 py-2.5 rounded-lg border border-white/10 text-xs font-bold font-mono focus:border-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5] placeholder:text-[#A19E9B]/40"
+                  className="w-full pr-10 pl-4 py-2.5 rounded-lg border border-white/10 text-xs font-bold font-mono focus:border-[#DFAB56] focus:outline-none bg-[#0B0A0A] text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
                   dir="ltr"
                 />
               </div>
               <button
                 type="submit"
-                className="px-4 py-2.5 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
+                className="px-4 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
               >
                 فحص الاستحقاق
               </button>
@@ -211,7 +211,7 @@ export function StaffRedeemModal({
             <div className="p-4 rounded-xl bg-[#141212] border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-3 animate-in zoom-in-95 duration-200">
               <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
               <div>
-                <span className="block font-bold text-sm text-[#FBF9F5] font-serif">{successNotice}</span>
+                <span className="block font-bold text-sm text-[#FAF5EB] font-serif">{successNotice}</span>
                 <span className="text-[11px] text-emerald-400 block font-normal">
                   تم تسجيل صرف الهدية رسمياً في سجلات المنشأة وتحديث بطاقة العميل.
                 </span>
@@ -223,11 +223,11 @@ export function StaffRedeemModal({
             <div className="p-5 rounded-xl bg-[#1C1B1B] border border-white/10 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#55100D] border border-[#DD0200]/40 text-[#FBF9F5] font-bold flex items-center justify-center text-sm shadow-md">
+                  <div className="w-10 h-10 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] font-bold flex items-center justify-center text-sm shadow-md">
                     {selectedCustomer.name.slice(0, 2)}
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm text-[#FBF9F5] font-serif">{selectedCustomer.name}</h4>
+                    <h4 className="font-bold text-sm text-[#FAF5EB] font-serif">{selectedCustomer.name}</h4>
                     <p className="text-[10px] font-mono text-[#A19E9B]">{selectedCustomer.phone}</p>
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export function StaffRedeemModal({
                   className={
                     'px-3 py-1 rounded-md text-xs font-bold font-mono ' +
                     (isEligible
-                      ? 'bg-[#55100D]/70 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-[#3D2314]/70 text-emerald-400 border border-emerald-500/30'
                       : 'bg-[#0B0A0A] text-[#A19E9B] border border-white/10')
                   }
                 >
@@ -246,24 +246,24 @@ export function StaffRedeemModal({
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="p-2.5 rounded-lg bg-[#0B0A0A] border border-white/10">
                   <span className="text-[10px] text-[#A19E9B] block font-bold">الزيارات الموثقة</span>
-                  <strong className="text-base font-bold font-mono text-[#FBF9F5]">{totalVisits}</strong>
+                  <strong className="text-base font-bold font-mono text-[#FAF5EB]">{totalVisits}</strong>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[#0B0A0A] border border-white/10">
                   <span className="text-[10px] text-[#A19E9B] block font-bold">المطلوب للهدية</span>
-                  <strong className="text-base font-bold font-mono text-[#DD0200]">{requiredVisits}</strong>
+                  <strong className="text-base font-bold font-mono text-[#DFAB56]">{requiredVisits}</strong>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[#0B0A0A] border border-white/10">
                   <span className="text-[10px] text-[#A19E9B] block font-bold">هدايا جاهزة للصرف</span>
-                  <strong className="text-base font-bold font-mono text-[#FBF9F5]">{availableToClaim}</strong>
+                  <strong className="text-base font-bold font-mono text-[#FAF5EB]">{availableToClaim}</strong>
                 </div>
               </div>
 
               <div className="p-3.5 rounded-lg bg-[#0B0A0A] border border-white/10 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <Gift className="w-4 h-4 text-[#DD0200]" />
+                  <Gift className="w-4 h-4 text-[#DFAB56]" />
                   <span className="font-bold text-[#A19E9B]">الهدية المستحقة:</span>
                 </div>
-                <strong className="text-[#FBF9F5] font-bold font-serif">{giftTitle}</strong>
+                <strong className="text-[#FAF5EB] font-bold font-serif">{giftTitle}</strong>
               </div>
 
               {isEligible ? (
@@ -271,7 +271,7 @@ export function StaffRedeemModal({
                   type="button"
                   onClick={handleConfirmRedemption}
                   disabled={isRedeeming}
-                  className="w-full py-3 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-xs transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                   <span>{isRedeeming ? 'جاري تسجيل الصرف...' : 'تأكيد صرف الهدية للعميل الآن'}</span>
@@ -288,7 +288,7 @@ export function StaffRedeemModal({
         {/* Footer */}
         <div className="p-4 px-6 bg-[#141212] border-t border-white/10 flex items-center justify-between text-xs text-[#A19E9B]">
           <span>Memories Counter Security • Anti-Fraud Protection</span>
-          <button onClick={onClose} className="text-[#A19E9B] hover:text-[#FBF9F5] font-bold cursor-pointer">
+          <button onClick={onClose} className="text-[#A19E9B] hover:text-[#FAF5EB] font-bold cursor-pointer">
             إغلاق
           </button>
         </div>
