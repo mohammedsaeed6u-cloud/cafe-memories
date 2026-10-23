@@ -114,6 +114,14 @@ export function WallClient({ screenId }: WallClientProps) {
     return 'memories';
   });
 
+  const [origin, setOrigin] = useState('https://memories-7vr.pages.dev');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
+    }
+  }, []);
+
   useEffect(() => {
     try {
       const s = BusinessSettingsService.getSettings(cafeSlug);
@@ -673,7 +681,7 @@ export function WallClient({ screenId }: WallClientProps) {
               <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl flex flex-col items-center gap-2.5">
                 <div className="p-3 bg-white rounded-xl">
                   <RealOutsourcedQr
-                    value={`https://memories-c9w.pages.dev/c/${cafeSlug}?source=live_wall`}
+                    value={`${origin}/c/${cafeSlug}?source=live_wall`}
                     size={144}
                     alt="Live Wall QR"
                     className="w-36 h-36 object-contain"
@@ -699,7 +707,7 @@ export function WallClient({ screenId }: WallClientProps) {
             </p>
             <div className="p-3 bg-white rounded-xl w-32 h-32 mx-auto flex items-center justify-center">
               <RealOutsourcedQr
-                value={`https://memories-c9w.pages.dev/c/${cafeSlug}?source=live_wall`}
+                value={`${origin}/c/${cafeSlug}?source=live_wall`}
                 size={112}
                 alt="Live Wall QR"
               />

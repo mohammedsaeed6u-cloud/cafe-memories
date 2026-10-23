@@ -65,10 +65,14 @@ export default function LoginPage() {
   // Staff PIN state
   const [selectedStaffId, setSelectedStaffId] = useState<string>(STAFF_ROSTER[0]?.id || 'staff-1');
   const [pin, setPin] = useState('');
+  const [hostDomain, setHostDomain] = useState('memories-7vr.pages.dev');
 
   // Auto-redirect if already logged in with valid session, and check tab query param
   useEffect(() => {
     try {
+      if (typeof window !== 'undefined') {
+        setHostDomain(window.location.host);
+      }
       const activeSlug = localStorage.getItem('memories_active_merchant_slug');
       if (activeSlug && document.cookie.includes('memories_staff_session=1')) {
         // Already active session
@@ -275,7 +279,7 @@ export default function LoginPage() {
     setErrorMsg(null);
     try {
       const supabase = createClient();
-      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-c9w.pages.dev';
+      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-7vr.pages.dev';
       const redirectTo = `${origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -486,7 +490,7 @@ export default function LoginPage() {
                     <p className="text-[11px] text-[#A19E9B] mt-1.5 flex items-center gap-1 font-mono" dir="ltr">
                       <span className="text-[#DD0200] font-bold">Live URL:</span>
                       <span className="text-stone-300">
-                        memories-c9w.pages.dev/c/{cafeSlug || 'my-brand'}
+                        {hostDomain}/c/{cafeSlug || 'my-brand'}
                       </span>
                     </p>
                   </div>

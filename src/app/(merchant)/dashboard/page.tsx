@@ -122,7 +122,7 @@ export default function MerchantDashboardPage() {
   const customerLiveUrl =
     typeof window !== 'undefined'
       ? `${window.location.origin}/c?cafe=${settings.cafeSlug || 'memories'}`
-      : `https://memories-c9w.pages.dev/c?cafe=${settings.cafeSlug || 'memories'}`;
+      : `https://memories-7vr.pages.dev/c?cafe=${settings.cafeSlug || 'memories'}`;
 
   const handleCopyUrl = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {

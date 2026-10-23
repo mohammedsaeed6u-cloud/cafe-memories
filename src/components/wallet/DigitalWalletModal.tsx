@@ -65,7 +65,8 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
   } = passData;
 
   const cleanPhone = (customerPhone || 'guest').trim().replace(/[^0-9]/g, '') || 'guest';
-  const qrValue = `https://memories-c9w.pages.dev/c/${cafeSlug}?action=stamp&customer=${cleanPhone}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-7vr.pages.dev';
+  const qrValue = `${origin}/c/${cafeSlug}?action=stamp&customer=${cleanPhone}`;
 
   const handleDownloadApplePass = () => {
     DigitalWalletService.downloadApplePass(passData);
@@ -356,7 +357,7 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
                       الرابط الدائم:
                     </span>
                     <span className="font-mono text-[10px] text-[#A19E9B] block truncate">
-                      memories-c9w.pages.dev/c/{cafeSlug}
+                      {typeof window !== 'undefined' ? window.location.host : 'memories-7vr.pages.dev'}/c/{cafeSlug}
                     </span>
                   </div>
                   <div>

@@ -33,7 +33,8 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
   const [iosModalImage, setIosModalImage] = useState<string | null>(null);
 
   const cleanPhone = encodeURIComponent(customerPhone || 'guest');
-  const stampQrValue = `https://memories-c9w.pages.dev/c/${cafeSlug || 'memories'}?action=stamp&customer=${cleanPhone}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-7vr.pages.dev';
+  const stampQrValue = `${origin}/c/${cafeSlug || 'memories'}?action=stamp&customer=${cleanPhone}`;
 
   const handleSaveCardToDevice = async () => {
     setIsExporting(true);

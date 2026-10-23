@@ -33,7 +33,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://memories-c9w.pages.dev'),
+  metadataBase: new URL('https://memories-7vr.pages.dev'),
   title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
   description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوري عبر الهاتف بدون تطبيق، شاشات عرض تفاعلية للصالة، وكروت ولاء رقمية في محفظة Apple و Google Wallet للمطاعم، العلامات التجارية الفاخرة، المتاجر، الصالونات، والفعاليات.',
   keywords: ['فوتوبوث رقمي', 'ولاء العملاء', 'استوديو تصوير للأنشطة التجارية', 'شاشات الصالة الذكية', 'بطاقات ولاء رقمية', 'تجربة العميل', 'Apple Wallet', 'Google Wallet'],
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'memories • منصة استوديو الذكريات وتجربة العملاء لجميع الأنشطة التجارية',
     description: 'تحويل كل زيارة في نشاطك التجاري إلى ذكرى تدوم — وكل ذكرى إلى دافع حقيقي للعودة.',
-    url: 'https://memories-c9w.pages.dev',
+    url: 'https://memories-7vr.pages.dev',
     siteName: 'memories',
     locale: 'ar_SA',
     type: 'website',

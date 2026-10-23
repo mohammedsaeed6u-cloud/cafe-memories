@@ -143,13 +143,21 @@ export function createZipArchive(files: ZipEntry[]): Uint8Array {
   return result;
 }
 
+function getWalletBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return window.location.origin;
+  }
+  return 'https://memories-7vr.pages.dev';
+}
+
 export class DigitalWalletService {
   /**
    * Generates official Apple PassKit pass.json structure for a storeCard
    */
   public static generateApplePassJson(data: DigitalWalletPassData): Record<string, unknown> {
     const cleanPhone = (data.customerPhone || 'guest').trim().replace(/[^0-9]/g, '') || 'guest';
-    const stampUrl = `https://memories-c9w.pages.dev/c/${data.cafeSlug}?action=stamp&customer=${cleanPhone}`;
+    const baseUrl = getWalletBaseUrl();
+    const stampUrl = `${baseUrl}/c/${data.cafeSlug}?action=stamp&customer=${cleanPhone}`;
     const formattedPhone = data.customerPhone || 'ضيف مميز';
     const isCompleted = data.stampedCount >= data.maxSlots;
 
@@ -215,7 +223,7 @@ export class DigitalWalletService {
           {
             key: 'digitalCardUrl',
             label: 'رابط الذكريات المباشر',
-            value: `https://memories-c9w.pages.dev/c/${data.cafeSlug}`,
+            value: `${baseUrl}/c/${data.cafeSlug}`,
           },
           {
             key: 'terms',
@@ -233,13 +241,14 @@ export class DigitalWalletService {
    */
   public static generateGoogleWalletPass(data: DigitalWalletPassData): Record<string, unknown> {
     const cleanPhone = (data.customerPhone || 'guest').trim().replace(/[^0-9]/g, '') || 'guest';
-    const stampUrl = `https://memories-c9w.pages.dev/c/${data.cafeSlug}?action=stamp&customer=${cleanPhone}`;
+    const baseUrl = getWalletBaseUrl();
+    const stampUrl = `${baseUrl}/c/${data.cafeSlug}?action=stamp&customer=${cleanPhone}`;
 
     return {
       iss: 'memories-system@google-wallet.iam.gserviceaccount.com',
       aud: 'google',
       typ: 'savetowallet',
-      origins: ['https://memories-c9w.pages.dev'],
+      origins: [baseUrl],
       payload: {
         loyaltyObjects: [
           {
@@ -286,7 +295,8 @@ export class DigitalWalletService {
    */
   public static generateGoogleWalletSaveUrl(data: DigitalWalletPassData): string {
     const cleanPhone = (data.customerPhone || 'guest').trim().replace(/[^0-9]/g, '') || 'guest';
-    const returnUrl = encodeURIComponent(`https://memories-c9w.pages.dev/c/${data.cafeSlug}`);
+    const baseUrl = getWalletBaseUrl();
+    const returnUrl = encodeURIComponent(`${baseUrl}/c/${data.cafeSlug}`);
     return `https://pay.google.com/gp/v/save?origin=${returnUrl}&cafe=${encodeURIComponent(
       data.cafeName
     )}&stamps=${data.stampedCount}&customer=${cleanPhone}`;
