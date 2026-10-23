@@ -531,7 +531,7 @@ export const FrameStudioTab: React.FC<FrameStudioTabProps> = ({
                   setActiveFrame((prev) => ({ ...prev, customText: e.target.value }));
                 }}
                 className="w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm focus:ring-1 focus:ring-[#DD0200] focus:outline-none bg-[#0B0A0A] text-[#FBF9F5] placeholder-[#A19E9B]/50"
-                placeholder="مثلاً: special coffee memories أو A SENSE OF PLACE"
+                placeholder="مثلاً: CHERISHED ATELIER MOMENTS أو A SENSE OF PLACE"
               />
             </div>
 

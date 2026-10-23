@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Coffee, Gift, Sparkles, Check } from 'lucide-react';
+import { Sparkles, Gift, Check, Award } from 'lucide-react';
 
 interface LoyaltyCardWidgetProps {
   currentVisitCount: number;
@@ -14,27 +14,27 @@ export const LoyaltyCardWidget: React.FC<LoyaltyCardWidgetProps> = ({
   currentVisitCount,
   totalStamps = 5,
   brandName = 'Memories',
-  nextRewardTitle = 'مشروب مجاني مميز عند اكتمال البطاقة',
+  nextRewardTitle = 'هدية خاصة وترحيبية مميزة عند اكتمال البطاقة',
 }) => {
   const activeStamps = Math.min(currentVisitCount, totalStamps);
   const remaining = totalStamps - activeStamps;
 
   return (
-    <div className="w-full bg-gradient-to-br from-stone-900 via-stone-850 to-stone-950 text-white rounded-3xl p-5 shadow-xl border border-amber-500/30 relative overflow-hidden select-none">
+    <div className="w-full bg-[#181212] text-white rounded-3xl p-5 shadow-xl border border-white/10 relative overflow-hidden select-none">
       {/* Subtle background glow */}
-      <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-36 h-36 bg-[#DD0200]/10 rounded-full blur-2xl pointer-events-none" />
 
       {/* Card Header */}
       <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
-            <Coffee className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-xl bg-[#55100D] text-[#DD0200] flex items-center justify-center border border-[#DD0200]/40">
+            <Sparkles className="w-4 h-4" />
           </div>
           <div>
             <h4 className="font-extrabold text-sm text-white">
               بطاقة ولاء ذكريات • {brandName}
             </h4>
-            <p className="text-[10px] text-amber-300 font-medium">
+            <p className="text-[10px] text-[#A19E9B] font-medium">
               الزيارة {currentVisitCount} من {totalStamps}
             </p>
           </div>
@@ -64,9 +64,9 @@ export const LoyaltyCardWidget: React.FC<LoyaltyCardWidgetProps> = ({
               {isStamped ? (
                 <Check className="w-5 h-5 stroke-[3]" />
               ) : isFinal ? (
-                <Gift className="w-5 h-5 text-amber-400 animate-pulse" />
+                <Gift className="w-5 h-5 text-[#DD0200] animate-pulse" />
               ) : (
-                <Coffee className="w-4 h-4 opacity-50" />
+                <Sparkles className="w-4 h-4 text-[#A19E9B]/50" />
               )}
               <span className="text-[9px] font-bold mt-0.5">
                 {isFinal ? 'الهدية' : `#${stampNumber}`}

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import QRCode from 'qrcode';
 import {
-  Coffee,
   Gift,
   Sparkles,
   Crown,
@@ -214,7 +213,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
   const renderMilestoneIcon = (icon?: LoyaltyMilestoneIcon, className: string = 'w-4 h-4') => {
     switch (icon) {
       case 'coffee':
-        return <Coffee className={className} />;
+        return <Sparkles className={className} />;
       case 'crown':
         return <Crown className={className} />;
       case 'tag':
@@ -383,7 +382,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                       color: template.theme.badgeTextColor || template.theme.textColor,
                     }}
                   >
-                    <Coffee className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4" />
                   </div>
                 )}
                 <div className="min-w-0">
@@ -512,7 +511,7 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
                               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#DD0200]" />
                             </div>
                           ) : (
-                            <Coffee className="w-4 h-4 opacity-50" />
+                            <Sparkles className="w-4 h-4 opacity-50" />
                           )}
                           <span className="text-[8px] font-bold mt-0.5 opacity-75">
                             {String(slotNumber).padStart(2, '0')}

@@ -36,7 +36,6 @@ import {
   ShieldCheck,
   RotateCcw,
   Clock,
-  Coffee,
   Heart,
   X,
   UserCheck,
@@ -340,7 +339,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
           id: createTrackedId('wall'),
           customerName: customerName || 'ضيف مميز',
           photoUrl: accumulatedPhotos[0] || '',
-          caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'Memories'} ✨☕`,
+          caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'Memories'} ✨🏛️`,
           timeFormatted: 'الآن',
           visitNumber: loyaltyData.stampedCount || 1,
           createdAt: new Date().toISOString(),
@@ -573,7 +572,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                 {[
                   { id: 'luxury_glass', label: 'جلاسي فاخر (Luxury Glass)', icon: '💎' },
                   { id: 'polaroid_vintage', label: 'بولارويد كلاسيك', icon: '🎞️' },
-                  { id: 'korean_noir', label: 'نوار كوري عاجي', icon: '☕' },
+                  { id: 'korean_noir', label: 'نوار كوري عاجي', icon: '🏛️' },
                   { id: 'ticket_express', label: 'تذكرة الزيارة', icon: '🎟️' },
                   { id: 'ios_camera', label: 'كاميرا آيفون', icon: '📷' },
                   { id: 'spotify_player', label: 'مشغل سبوتيفاي', icon: '🎵' },
@@ -632,7 +631,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
 
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {[
-                        { title: 'Morning Coffee', artist: 'Lofi Cafe Beats' },
+                        { title: 'Morning Resonance', artist: 'Atelier Beats' },
                         { title: 'Nobody Gets Me', artist: 'SZA • SOS' },
                         { title: 'صباح ومساء', artist: 'فيروز' },
                         { title: 'Golden Hour', artist: 'JVKE' },

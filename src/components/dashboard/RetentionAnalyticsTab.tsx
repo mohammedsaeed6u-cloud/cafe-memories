@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import {
   TrendingUp,
   Users,
-  Coffee,
+  Camera,
   Gift,
   QrCode,
   Clock,
@@ -164,7 +164,7 @@ export function RetentionAnalyticsTab({
         <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
           {[
             { step: '1. مسح الكود', count: '1,420', label: 'مسحة QR طاولات', pct: '100%', icon: QrCode },
-            { step: '2. توثيق اللقطة', count: '1,180', label: 'التقاط صور بالكاميرا', pct: '83.1%', icon: Coffee },
+            { step: '2. توثيق اللقطة', count: '1,180', label: 'التقاط صور بالكاميرا', pct: '83.1%', icon: Camera },
             { step: '3. بث التلفزيون', count: '960', label: 'معروض على شاشة الصالة', pct: '81.3%', icon: Tv },
             { step: '4. حفظ المحفظة', count: '840', label: 'كروت في Apple Wallet', pct: '71.2%', icon: Wallet },
             { step: '5. عودة ومكافأة', count: '612', label: 'زيارات تكرار وهدايا', pct: '51.8%', icon: Gift },

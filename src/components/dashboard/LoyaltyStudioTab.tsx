@@ -27,7 +27,6 @@ import {
   Plus,
   Trash2,
   Gift,
-  Coffee,
   Palette,
   Layers,
   Crown,

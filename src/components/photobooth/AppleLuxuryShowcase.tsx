@@ -119,9 +119,9 @@ export function AppleLuxuryShowcase({
                       instagramHandle: '@memories_studio',
                     }}
                     freeGiftOffer={{
-                      title: 'قهوة اليوم مجاناً',
+                      title: 'مشروب ضيافة مميز مجاناً',
                       subtitle: 'عند استكمال شريط الذكريات',
-                      icon: '☕',
+                      icon: '✨',
                     }}
                     cardMode="korean_noir"
                   />

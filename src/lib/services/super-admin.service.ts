@@ -56,8 +56,8 @@ export const INITIAL_TENANTS: TenantSummary[] = [
   },
   {
     id: 'ten-4',
-    name: 'Bloom Coffee & Bakery',
-    slug: 'bloom-cafe',
+    name: 'Bloom Atelier & Lounge',
+    slug: 'bloom-lounge',
     tier: 'free',
     status: 'trial',
     features: {

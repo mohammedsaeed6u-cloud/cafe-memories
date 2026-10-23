@@ -9,7 +9,6 @@ import {
   Scissors,
   ShoppingBag,
   PartyPopper,
-  Coffee,
   Check,
   Save,
   CheckCircle,
@@ -146,7 +145,7 @@ export function DashboardSettingsTab({
                     {ind.id === 'restaurant' && '🍽️'}
                     {ind.id === 'events' && '🎪'}
                     {ind.id === 'entertainment' && '🎮'}
-                    {ind.id === 'cafe' && '☕'}
+                    {ind.id === 'cafe' && '🏛️'}
                     {ind.id === 'general' && '🏢'}
                   </span>
                   {isSelected && <Check className="w-4 h-4 text-[#DD0200] stroke-[3]" />}

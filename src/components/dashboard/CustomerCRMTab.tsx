@@ -6,7 +6,6 @@ import { CustomerPersonaKey } from '@/types/photobooth';
 import { CooldownService } from '@/lib/services/cooldown.service';
 import {
   Users,
-  Coffee,
   Plus,
   Search,
   Download,
@@ -152,15 +151,15 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center font-bold shadow-md border border-white/10">
-              <Coffee className="w-5 h-5" />
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <h4 className="font-bold text-[#FBF9F5] text-sm flex items-center gap-2 font-serif">
-                <span>شاحن لقطات الأوردرات السريع (الكاشير / المدير)</span>
-                <span className="text-[10px] bg-[#55100D] text-[#FBF9F5] px-2 py-0.5 rounded-full font-bold border border-[#DD0200]/30">كل أوردر = لقطة إضافية</span>
+                <span>شاحن لقطات الطلبات السريع (الكاشير / الإدارة)</span>
+                <span className="text-[10px] bg-[#55100D] text-[#FBF9F5] px-2 py-0.5 rounded-full font-bold border border-[#DD0200]/30">كل طلب = لقطة إضافية</span>
               </h4>
               <p className="text-[11px] text-[#A19E9B] mt-0.5">
-                إذا طلب العميل أكثر من مشروب أو أوردر، اشحن له صوراً إضافية فوراً لتضاف لكارته
+                إذا طلب العميل أكثر من طلب أو باقة، اشحن له لقطات إضافية فوراً لتضاف لبطاقته
               </p>
             </div>
           </div>
@@ -364,10 +363,10 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
                             setShotsToAdd(1);
                           }}
                           className="px-2.5 py-1.5 rounded-xl bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] text-xs font-bold flex items-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
-                          title="شحن لقطات إضافية بناءً على طلب الأوردرات"
+                          title="شحن لقطات إضافية للطلبات"
                         >
-                          <Coffee className="w-3.5 h-3.5 text-white/90" />
-                          <span>+ صور أوردر</span>
+                          <Sparkles className="w-3.5 h-3.5 text-white/90" />
+                          <span>+ لقطات إضافية</span>
                         </button>
 
                         <button
@@ -427,11 +426,11 @@ export const CustomerCRMTab: React.FC<CustomerCRMTabProps> = ({
           <div className="relative bg-[#141212] rounded-2xl p-6 sm:p-7 max-w-md w-full text-[#FBF9F5] shadow-2xl border border-white/10">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DD0200] to-[#55100D] text-white flex items-center justify-center border border-white/10 shadow-md">
-                <Coffee className="w-6 h-6" />
+                <Sparkles className="w-6 h-6" />
               </div>
               <div>
                 <h4 className="font-bold text-base text-[#FBF9F5] font-serif">
-                  شحن صور إضافية للأوردرات
+                  شحن لقطات إضافية للطلبات
                 </h4>
                 <p className="text-xs text-[#A19E9B]">
                   العميل: <span className="font-bold text-[#FBF9F5]">{orderModalCustomer.name}</span> ({orderModalCustomer.phone})

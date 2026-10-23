@@ -132,7 +132,7 @@ export const PRESET_COLOR_PALETTES: {
   },
   {
     id: 'memories-signature',
-    nameAr: 'هوية ميموريز الرسمية (Artisanal Coffee)',
+    nameAr: 'هوية ميموريز الرسمية (Atelier Hospitality & Studio)',
     bgColor: '#E8DCC6',
     borderColor: '#3B2F2A',
     textColor: '#3B2F2A',
@@ -1153,7 +1153,7 @@ export const PHOTOBOOTH_CARD_MODES: PhotoboothModeInfo[] = [
     nameAr: '% أرابيكا مونوكروم استوديو',
     nameEn: '% Arabica Monochrome',
     icon: 'star',
-    description: 'تصميم هندسي فائق النقاء بالأبيض والأسود مع تايبوغرافي قوي مستوحى من المقاهي اليابانية',
+    description: 'تصميم هندسي فائق النقاء بالأبيض والأسود مع تايبوغرافي قوي مستوحى من الاستوديوهات اليابانية',
     defaultBg: '#FFFFFF',
     defaultBorder: '#000000',
     defaultText: '#000000',
@@ -1165,7 +1165,7 @@ export const PHOTOBOOTH_CARD_MODES: PhotoboothModeInfo[] = [
 ];
 
 export const CURATED_STICKER_SET = [
-  'MEMORIES', 'COFFEE', 'SPECIALTY', 'ARTISAN', 'STUDIO', 'EST.2026', 'MOMENT', 'ORIGIN',
+  'MEMORIES', 'MOMENTS', 'SPECIALTY', 'ARTISAN', 'STUDIO', 'EST.2026', 'ATELIER', 'ORIGIN',
   'BOTANIC', 'PARIS', 'MILAN', 'SEOUL', 'TOKYO', 'LONDON', 'KYOTO', 'VIBE',
 ];
 

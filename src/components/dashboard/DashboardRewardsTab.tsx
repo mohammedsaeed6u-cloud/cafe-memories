@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import {
   Gift,
-  Coffee,
+  Star,
   CheckCircle,
   Save,
   Sparkles,

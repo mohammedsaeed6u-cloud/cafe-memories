@@ -193,7 +193,7 @@ export class CardCanvasExportService {
         ctx.strokeStyle = palette.slotActiveBorder;
         ctx.stroke();
 
-        // Active stamp icon (coffee cup or star)
+        // Active stamp icon (atelier emblem or star)
         ctx.fillStyle = palette.background;
         ctx.font = `bold ${Math.floor(slotSize * 0.45)}px sans-serif`;
         ctx.textAlign = 'center';

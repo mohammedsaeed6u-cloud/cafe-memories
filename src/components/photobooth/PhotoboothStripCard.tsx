@@ -30,7 +30,7 @@ import {
   Gift,
   Lock,
   Mic,
-  Coffee,
+  Store,
 } from 'lucide-react';
 import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
 import { DraggableStickerLayer } from './DraggableStickerLayer';

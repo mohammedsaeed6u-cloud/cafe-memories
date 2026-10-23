@@ -748,7 +748,7 @@ export class StripComposerService {
       if (isPolaroid) {
         ctx.font = 'italic 13px serif';
         ctx.fillStyle = effectiveText;
-        const chinNote = frame.customText || branding.tagline || 'special coffee memory';
+        const chinNote = frame.customText || branding.tagline || 'cherished atelier memory';
         ctx.fillText(chinNote, width / 2, footerY + 22);
       }
     }

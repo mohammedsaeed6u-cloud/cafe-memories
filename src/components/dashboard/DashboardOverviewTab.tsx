@@ -3,7 +3,7 @@
 import React from 'react';
 import {
   Sparkles,
-  Coffee,
+  Store,
   Tv,
   Printer,
   Download,
@@ -98,12 +98,12 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             <span>فتح استوديو الزائر</span>
           </a>
           <a
-            href={`/barista?cafe=${settings.cafeSlug || 'memories'}`}
+            href={`/terminal?cafe=${settings.cafeSlug || 'memories'}`}
             target="_blank"
             rel="noreferrer"
             className="px-4 py-2.5 rounded-lg bg-[#141212]/70 hover:bg-[#141212] text-[#FBF9F5] font-bold text-xs border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
           >
-            <Coffee className="w-3.5 h-3.5 text-[#DD0200]" />
+            <Store className="w-3.5 h-3.5 text-[#DD0200]" />
             <span>محطة الكاونتر (POS)</span>
           </a>
           <a

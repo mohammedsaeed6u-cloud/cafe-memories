@@ -46,7 +46,7 @@ export function NewsletterSignup() {
           <div>
             <h4 className="font-bold text-sm text-[#FAF6EE]">شكراً لانضمامك إلى مجتمع memories! </h4>
             <p className="text-xs text-[#E8DCC6]/80 mt-0.5">
-              ستصلك أحدث دراسات عودة الزوار وأفكار المقاهي المختصة شهرياً.
+              ستصلك أحدث دراسات عودة الزوار واستراتيجيات الضيافة الراقية شهرياً.
             </p>
           </div>
         </div>

@@ -48,8 +48,8 @@ export const DEFAULT_BUSINESS_CONFIG: BusinessConfig = {
       subTextColor: '#92400E',
       frameBg: '#F5EBE1',
       headerText: 'MEMORIES • موميريز',
-      footerText: 'COFFEE MOMENT • ROASTERY',
-      badge: 'ROAST',
+      footerText: 'CHERISHED MOMENT • ATELIER',
+      badge: 'ATELIER',
     },
     {
       id: 'matcha',

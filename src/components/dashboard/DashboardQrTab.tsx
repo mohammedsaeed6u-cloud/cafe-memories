@@ -7,7 +7,7 @@ import {
   Printer,
   Sparkles,
   Settings,
-  Coffee,
+  Store,
   CheckCircle,
 } from 'lucide-react';
 import { BusinessSettings } from '@/types/photobooth';

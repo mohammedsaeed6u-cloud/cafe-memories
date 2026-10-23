@@ -6,7 +6,6 @@ import {
   Search,
   Download,
   Plus,
-  Coffee,
   CheckCircle,
   FileSpreadsheet,
   Award,
@@ -247,7 +246,7 @@ export const DashboardCustomersTab: React.FC<DashboardCustomersTabProps> = ({
                             className="px-2.5 py-1 rounded-lg bg-[#DD0200] hover:bg-[#B50200] text-[#FBF9F5] font-bold text-[11px] transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] flex items-center gap-1 cursor-pointer"
                             title="ختم يدوي مباشر (+1)"
                           >
-                            <Coffee className="w-3 h-3" />
+                            <Award className="w-3 h-3" />
                             <span>+1 ختم</span>
                           </button>
 

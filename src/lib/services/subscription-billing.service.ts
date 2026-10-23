@@ -17,7 +17,7 @@ export const SAAS_PLANS: SubscriptionPlan[] = [
     monthlyPrice: 390,
     annualPricePerMonth: 310,
     currency: 'SAR',
-    description: 'المثالية للمقاهي العصرية التي تبحث عن ولاء رقمي تفاعلي وتجربة ضيوف فورية بكاميرا الهاتف.',
+    description: 'المثالية للمنشآت العصرية التي تبحث عن ولاء رقمي تفاعلي وتجربة ضيوف فورية بكاميرا الهاتف.',
     popular: false,
     limits: {
       maxVisitsPerMonth: 3000,
@@ -46,7 +46,7 @@ export const SAAS_PLANS: SubscriptionPlan[] = [
     monthlyPrice: 690,
     annualPricePerMonth: 550,
     currency: 'SAR',
-    description: 'الخيار الأكثر شعبية للمتاجر، المطاعم، الصالونات والمقاهي لربط الذكريات الرقمية بطباعة فورية فاخرة.',
+    description: 'الخيار الأكثر شعبية للمتاجر، المطاعم، الصالونات والأماكن الراقية لربط الذكريات الرقمية بطباعة فورية فاخرة.',
     popular: true,
     badge: 'الأكثر طلباً للأنشطة التجارية',
     limits: {
@@ -76,7 +76,7 @@ export const SAAS_PLANS: SubscriptionPlan[] = [
     monthlyPrice: 1190,
     annualPricePerMonth: 950,
     currency: 'SAR',
-    description: 'المصممة لشركات وسلاسل المقاهي ذات الفروع المتعددة التي تحتاج لإدارة مركزية موحدة.',
+    description: 'المصممة للشركات وسلاسل العلامات التجارية ذات الفروع المتعددة التي تحتاج لإدارة مركزية موحدة.',
     popular: false,
     badge: 'للنمو والتوسع',
     limits: {
@@ -218,7 +218,7 @@ const INITIAL_SUBSCRIPTIONS: Record<string, TenantSubscription> = {
       last4: '7721',
       expiryMonth: 9,
       expiryYear: 2028,
-      cardHolderName: 'Bloom Coffee Admin',
+      cardHolderName: 'Bloom Atelier Admin',
     },
     usage: {
       currentMonthVisits: 180,

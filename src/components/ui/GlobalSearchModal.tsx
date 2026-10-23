@@ -25,7 +25,7 @@ const SEARCH_ITEMS: SearchItem[] = [
   {
     id: 'wall',
     title: 'شاشة الصالة الحية (Live TV Wall)',
-    description: 'شاشة العرض المباشر التفاعلية للبث الحي في الصالات والمتاجر والمقاهي',
+    description: 'شاشة العرض المباشر التفاعلية للبث الحي في الصالات والمتاجر والمنشآت',
     category: 'التطبيقات',
     href: '/wall/screen-1',
     icon: Tv,
@@ -73,7 +73,7 @@ const SEARCH_ITEMS: SearchItem[] = [
   {
     id: 'terms',
     title: 'شروط الخدمة والاستخدام',
-    description: 'شروط اشتراك المقاهي وحقوق الملكية والتزامات الخدمة',
+    description: 'شروط اشتراك المنشآت وحقوق الملكية والتزامات الخدمة',
     category: 'قانوني',
     href: '/terms',
     icon: FileText,

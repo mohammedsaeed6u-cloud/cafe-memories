@@ -9,7 +9,6 @@ import {
   Clock,
   Wifi,
   WifiOff,
-  Coffee,
   CheckCircle,
   CheckCircle2,
   Play,

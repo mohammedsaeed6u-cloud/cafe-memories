@@ -434,7 +434,7 @@ export default function MerchantDashboardPage() {
       freeGiftOffer: {
         title,
         subtitle,
-        icon: settings.freeGiftOffer?.icon || 'coffee',
+        icon: settings.freeGiftOffer?.icon || 'gift',
       },
     };
     handleSettingsUpdated(updated);

@@ -13,7 +13,7 @@ export interface MemoriesLogoProps {
 
 /**
  * The Arch & Dunes Iconic Vector Mark for Memories
- * Depicts the architectural arch window, morning sun, and coffee/landscape dunes.
+ * Depicts the architectural arch window, morning sun, and rolling atelier dunes.
  */
 export function MemoriesArchIcon({
   className = '',
@@ -42,16 +42,16 @@ export function MemoriesArchIcon({
         strokeLinejoin="round"
       />
 
-      {/* Sun / Moon / Coffee Bean Circle */}
+      {/* Architectural Solar Oculus */}
       <circle cx="63" cy="40" r="10" fill={color} />
 
-      {/* Rolling Dunes / Coffee Wave Silhouette */}
+      {/* Rolling Dunes / Architectural Wave Silhouette */}
       <path
         d="M17 100C17 90 26 80 39 80C50 80 57 91 67 91C75 91 80 84 83 78V100H17Z"
         fill={color}
       />
 
-      {/* Small accent pebble / coffee bean drop */}
+      {/* Small accent pebble / golden ratio drop */}
       <circle cx="65" cy="95" r="2" fill="white" opacity="0.8" />
     </svg>
   );

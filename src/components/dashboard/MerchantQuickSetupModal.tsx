@@ -22,7 +22,6 @@ import {
   Utensils,
   Ticket,
   Gamepad2,
-  Coffee,
   ShoppingBag,
   Award,
 } from 'lucide-react';
@@ -40,7 +39,7 @@ interface MerchantQuickSetupModalProps {
 }
 
 const INDUSTRY_ICONS: Record<string, any> = {
-  cafe: Coffee,
+  cafe: Store,
   restaurant: Utensils,
   retail: ShoppingBag,
   salon: Scissors,
