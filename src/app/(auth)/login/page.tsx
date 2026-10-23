@@ -7,23 +7,21 @@ import {
   AlertCircle,
   KeyRound,
   Mail,
-  Sparkles,
   CheckCircle2,
   Lock,
   ArrowRight,
-  ExternalLink,
   Store,
   ChevronLeft,
   UserPlus,
   LogIn,
+  Sparkles,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { STAFF_ROSTER } from '@/types/staff';
-import { verifyStaffPin, verifyPinOnly, setActiveStaffMember } from '@/lib/services/staff-auth.service';
+import { verifyPinOnly } from '@/lib/services/staff-auth.service';
 import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { StampyLogo, StampyApertureIcon } from '@/components/brand/StampyLogo';
-import { SlidingRateLimiter } from '@/lib/services/sliding-rate-limiter.service';
 
 function GoogleIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
@@ -48,45 +46,48 @@ function GoogleIcon({ className = 'w-4 h-4' }: { className?: string }) {
   );
 }
 
-type AuthTab = 'signup' | 'signin' | 'pin';
+type AuthMode = 'signin' | 'signup' | 'pin';
 
-export default function LoginPage() {
-  const [authTab, setAuthTab] = useState<AuthTab>('signup');
+export default function LoginPage({ initialMode = 'signin' }: { initialMode?: AuthMode }) {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Email / Password / Cafe Registration state
+  // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [cafeName, setCafeName] = useState('');
   const [cafeSlug, setCafeSlug] = useState('');
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
-
-  // Staff PIN state
-  const [selectedStaffId, setSelectedStaffId] = useState<string>(STAFF_ROSTER[0]?.id || 'staff-1');
   const [pin, setPin] = useState('');
   const [hostDomain, setHostDomain] = useState('memories-d9l.pages.dev');
 
-  // Auto-redirect if already logged in with valid session, and check tab query param
   useEffect(() => {
     try {
       if (typeof window !== 'undefined') {
         setHostDomain(window.location.host);
-      }
-      const activeSlug = localStorage.getItem('memories_active_merchant_slug');
-      if (activeSlug && document.cookie.includes('memories_staff_session=1')) {
-        // Already active session
-      }
-      const urlParams = new URLSearchParams(window.location.search);
-      const tabParam = urlParams.get('tab');
-      if (tabParam === 'signin' || tabParam === 'signup' || tabParam === 'pin') {
-        setAuthTab(tabParam);
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab');
+        if (tab === 'signup' || tab === 'signin' || tab === 'pin') {
+          setMode(tab);
+        }
       }
     } catch {}
   }, []);
 
-  // --- Real Merchant Registration & Login Handler ---
+  // Update slug automatically when store name changes
+  const handleNameChange = (val: string) => {
+    setCafeName(val);
+    const clean = val
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+    setCafeSlug(clean || '');
+  };
+
+  // Email / Password Form Submit
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -99,31 +100,28 @@ export default function LoginPage() {
     setSuccessMsg(null);
 
     try {
-      if (authTab === 'signup') {
+      if (mode === 'signup') {
         if (!cafeName.trim()) {
-          setErrorMsg('يرجى إدخال اسم المنشأة أو النشاط التجاري لإنشاء حسابك.');
+          setErrorMsg('يرجى إدخال اسم المنشأة أو العلامة التجارية.');
           setLoading(false);
           return;
         }
 
-        // Generate clean unique slug
         const rawName = cafeName.trim();
         let slug = cafeSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
         if (!slug) {
-          slug =
-            rawName
-              .toLowerCase()
-              .replace(/\s+/g, '-')
-              .replace(/[^a-z0-9-]/g, '')
-              .slice(0, 40) || `brand-${Math.floor(100 + Math.random() * 900)}`;
+          slug = rawName
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .slice(0, 40) || `brand-${Math.floor(100 + Math.random() * 900)}`;
         }
 
-        // 1. Persist real merchant identity to localStorage
+        // Persist merchant session
         localStorage.setItem('memories_active_merchant_slug', slug);
         localStorage.setItem('memories_active_merchant_name', rawName);
         localStorage.setItem('memories_active_merchant_email', email);
 
-        // Add to persistent merchant accounts registry
         try {
           const regStr = localStorage.getItem('memories_registered_merchants');
           const registeredList = JSON.parse(regStr || '[]');
@@ -137,7 +135,7 @@ export default function LoginPage() {
           localStorage.setItem('memories_registered_merchants', JSON.stringify(registeredList));
         } catch {}
 
-        // 2. Initialize real business settings for this brand (0 mock data)
+        // Initialize business settings
         const existingSettings = BusinessSettingsService.getSettings(slug);
         BusinessSettingsService.saveSettings({
           ...existingSettings,
@@ -146,22 +144,19 @@ export default function LoginPage() {
           branding: {
             ...existingSettings.branding,
             name: rawName,
-            tagline: 'Luxury Experience & Guest Memories',
+            tagline: 'تجربة ضيافة مميزة وذكريات تدوم',
             instagramHandle: `@${slug.replace(/[^a-z0-9_]/gi, '')}`,
           },
         });
 
-        // Initialize empty real CRM, empty print queue, empty wall photos for this cafe
         try {
           localStorage.setItem(`memories_crm_customers_${slug}`, JSON.stringify([]));
           localStorage.setItem(`memories_print_queue_${slug}`, JSON.stringify([]));
           localStorage.setItem(`memories_wall_photos_${slug}`, JSON.stringify([]));
         } catch {}
 
-        // 3. Set auth session cookie
         document.cookie = 'memories_staff_session=1; path=/; max-age=604800; SameSite=Lax';
 
-        // 4. Also register with Supabase in background if available
         try {
           const supabase = createClient();
           await supabase.auth.signUp({
@@ -180,7 +175,6 @@ export default function LoginPage() {
         let signedInName = '';
         let signedInSlug = '';
 
-        // Check persistent local merchant registry first
         try {
           const regStr = localStorage.getItem('memories_registered_merchants');
           const registeredList = JSON.parse(regStr || '[]');
@@ -191,15 +185,10 @@ export default function LoginPage() {
           }
         } catch {}
 
-        // Fallback: check Supabase
         if (!signedInName) {
           try {
             const supabase = createClient();
-            const { data, error } = await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
-
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (!error && data.session) {
               signedInName = data.user?.user_metadata?.cafe_name || '';
               signedInSlug = data.user?.user_metadata?.cafe_slug || '';
@@ -207,7 +196,6 @@ export default function LoginPage() {
           } catch {}
         }
 
-        // If still not found, check if this is the currently stored active merchant
         if (!signedInName) {
           const currentStoredEmail = localStorage.getItem('memories_active_merchant_email');
           if (currentStoredEmail && currentStoredEmail.toLowerCase() === email.toLowerCase()) {
@@ -216,37 +204,35 @@ export default function LoginPage() {
           }
         }
 
-        // If not found anywhere, prompt merchant to create an account
         if (!signedInName) {
-          setErrorMsg('هذا البريد غير مسجل بعد. يمكنك إنشاء حساب منشأة جديد به الآن.');
-          setAuthTab('signup');
+          setErrorMsg('هذا البريد غير مسجل بعد. يمكنك إنشاء حساب جديد مجاناً.');
+          setMode('signup');
           setLoading(false);
           return;
         }
 
-        // Set session
         document.cookie = 'memories_staff_session=1; path=/; max-age=604800; SameSite=Lax';
         localStorage.setItem('memories_active_merchant_slug', signedInSlug);
         localStorage.setItem('memories_active_merchant_name', signedInName);
         localStorage.setItem('memories_active_merchant_email', email);
 
-        setSuccessMsg(`أهلاً بعودتك! جاري الدخول للوحة تحكم (${signedInName})...`);
+        setSuccessMsg(`أهلاً بعودتك! جاري فتح لوحة التحكم (${signedInName})...`);
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 500);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'حدث خطأ أثناء المصادقة.');
+      setErrorMsg(err.message || 'حدث خطأ أثناء تسجيل الدخول.');
     } finally {
       setLoading(false);
     }
   };
 
-  // --- Real Staff / Barista PIN Authentication ---
+  // Staff PIN Auth
   const handlePinAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (pin.length !== 4) {
-      setErrorMsg('يرجى إدخال رمز الصالة المكون من 4 أرقام.');
+      setErrorMsg('يرجى إدخال رمز الموظف المكون من 4 أرقام.');
       return;
     }
 
@@ -255,7 +241,6 @@ export default function LoginPage() {
 
     try {
       const result = await verifyPinOnly(pin);
-
       if (!result.success) {
         setErrorMsg(result.error || 'الرمز السري غير صحيح.');
         setLoading(false);
@@ -274,7 +259,7 @@ export default function LoginPage() {
     }
   };
 
-  // Google OAuth Handler
+  // Google OAuth
   const handleGoogleAuth = async () => {
     setLoading(true);
     setErrorMsg(null);
@@ -294,307 +279,364 @@ export default function LoginPage() {
       });
       if (error) {
         if (error.message.includes('Unsupported provider') || error.message.includes('not enabled')) {
-          setErrorMsg('تسجيل الدخول عبر Google يتطلب التفعيل من لوحة Supabase. يمكنك إنشاء الحساب فوراً عبر البريد الإلكتروني أدناه.');
+          setErrorMsg('تسجيل الدخول عبر Google يتطلب تفعيل المزود من لوحة Supabase. يمكنك الدخول عبر البريد الإلكتروني أدناه.');
         } else {
           setErrorMsg(error.message);
         }
         setLoading(false);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'تعذر الاتصال بخدمة تسجيل الدخول عبر Google.');
+      setErrorMsg(err.message || 'تعذر الاتصال بخدمة Google.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#12100E] text-[#e6e1e1] flex flex-col justify-center items-center p-4 selection:bg-[#DFAB56] selection:text-[#12100E] selection:text-[#12100E] font-sans relative overflow-hidden">
-      {/* Ambient background glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#3D2314]/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
+    <div className="min-h-screen w-full bg-[#FAF5EB] text-[#3D2314] flex flex-col justify-center items-center p-4 sm:p-6 font-sans relative">
+      {/* Background radial glows */}
+      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[450px] h-[450px] bg-[#3D2314]/5 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Brand Back Link */}
-      <div className="w-full max-w-lg mb-4 flex items-center justify-between relative z-10">
+      {/* Back to Home Link */}
+      <div className="w-full max-w-md mb-4 flex items-center justify-between relative z-10 px-1">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-300 hover:text-[#FAF5EB] transition"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-[#63574D] hover:text-[#3D2314] transition"
         >
           <ChevronLeft className="w-4 h-4 rotate-180" />
-          <span>العودة للموقع الرئيسي</span>
+          <span>العودة للرئيسية</span>
         </Link>
-        <span className="text-[10px] font-mono font-bold text-[#FAF5EB] bg-[#3D2314]/50 px-2.5 py-0.5 rounded-md border border-[#DFAB56]/40 tracking-wider uppercase">
-          SECURE PORTAL
+        <span className="text-[10px] font-mono font-bold text-[#63574D] bg-white/80 px-2.5 py-1 rounded-md border border-[#EADDC4]">
+          STAMPY BUSINESS
         </span>
       </div>
 
-      <div className="w-full max-w-lg bg-[#181513] border border-white/10 rounded-2xl p-7 sm:p-10 shadow-2xl backdrop-blur-xl relative z-10">
+      {/* Main Tabby-Style Clean White Card */}
+      <div className="w-full max-w-md bg-white border border-[#EADDC4] rounded-2xl sm:rounded-3xl p-6 sm:p-9 shadow-[0_20px_50px_rgba(61,35,20,0.06)] relative z-10">
+        
         {/* Header */}
-        <div className="text-center mb-7">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center mx-auto mb-3.5 shadow-lg shadow-red-950/60 border border-white/20">
-            <StampyApertureIcon size={30} color="#FAF5EB" />
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center mx-auto mb-3 shadow-sm border border-[#EADDC4]/40">
+            <StampyApertureIcon size={24} color="#FAF5EB" />
           </div>
-          <h1
-            style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-            className="text-2xl sm:text-3xl font-semibold text-white tracking-tight"
-          >
+          <h1 className="text-2xl font-bold text-[#3D2314] font-serif tracking-tight">
             stampy.
           </h1>
-          <p className="text-xs sm:text-sm text-stone-300 mt-1.5 leading-relaxed">
-            بوابة أصحاب الأنشطة التجارية وإدارة تجارب الزوار والولاء التفاعلي
+          <p className="text-xs text-[#63574D] mt-1 font-medium">
+            {mode === 'pin'
+              ? 'دخول طاقم الخدمة والكاونتر عبر رمز PIN'
+              : mode === 'signup'
+              ? 'إنشاء حساب منشأة جديدة وبدء إدارة الولاء'
+              : 'تسجيل الدخول إلى لوحة تحكم المنشأة'}
           </p>
         </div>
 
-        {/* Mode Switcher Tabs */}
-        <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-[#1C1B1B] border border-white/10 mb-6">
-          <button
-            type="button"
-            onClick={() => {
-              setAuthTab('signup');
-              setErrorMsg(null);
-            }}
-            className={`py-2 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
-              authTab === 'signup'
-                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                : 'text-stone-300 hover:text-white'
-            }`}
-          >
-            <UserPlus className="w-3.5 h-3.5" />
-            <span>تسجيل منشأة</span>
-          </button>
+        {/* Tabby-style Segmented Control (Tabs) */}
+        {mode !== 'pin' && (
+          <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-[#FAF5EB] border border-[#EADDC4] mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('signin');
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
+              className={`py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                mode === 'signin'
+                  ? 'bg-white text-[#3D2314] shadow-xs border border-[#EADDC4]/60'
+                  : 'text-[#63574D] hover:text-[#3D2314]'
+              }`}
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>تسجيل الدخول</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('signup');
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
+              className={`py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                mode === 'signup'
+                  ? 'bg-white text-[#3D2314] shadow-xs border border-[#EADDC4]/60'
+                  : 'text-[#63574D] hover:text-[#3D2314]'
+              }`}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>إنشاء حساب جديد</span>
+            </button>
+          </div>
+        )}
 
-          <button
-            type="button"
-            onClick={() => {
-              setAuthTab('signin');
-              setErrorMsg(null);
-            }}
-            className={`py-2 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
-              authTab === 'signin'
-                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                : 'text-stone-300 hover:text-white'
-            }`}
-          >
-            <LogIn className="w-3.5 h-3.5" />
-            <span>دخول التاجر</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setAuthTab('pin');
-              setErrorMsg(null);
-            }}
-            className={`py-2 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center gap-1 transition cursor-pointer ${
-              authTab === 'pin'
-                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]'
-                : 'text-stone-300 hover:text-white'
-            }`}
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span>رمز الموظف</span>
-          </button>
-        </div>
-
-        {/* Error / Success Feedback */}
+        {/* Feedback Alerts */}
         {errorMsg && (
-          <div className="p-3.5 rounded-lg bg-red-950/60 border border-red-500/40 text-red-200 text-xs font-bold flex items-center gap-2 mb-4 animate-in fade-in backdrop-blur-md">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2 mb-4 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-bold flex items-center gap-2 mb-4 animate-in fade-in backdrop-blur-md">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 mb-4 animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* --- FORM 1: MERCHANT AUTH (GOOGLE & EMAIL) --- */}
-        {(authTab === 'signup' || authTab === 'signin') && (
+        {/* --- SIGN IN / SIGN UP MODES --- */}
+        {mode !== 'pin' && (
           <div className="space-y-4">
-            {/* Google Direct Sign-In / Registration Button */}
+            {/* Google Fast Action Button */}
             <button
               type="button"
               onClick={handleGoogleAuth}
               disabled={loading}
-              className="w-full py-3 px-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#DFAB56]/30 text-[#FAF5EB] font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 backdrop-blur-md"
+              className="w-full py-3 px-4 rounded-xl bg-white hover:bg-[#FAF5EB] border border-[#EADDC4] text-[#3D2314] font-semibold text-xs transition flex items-center justify-center gap-2.5 shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <GoogleIcon className="w-4 h-4 shrink-0" />
               <span>
-                {authTab === 'signup'
-                  ? 'التسجيل المباشر بحساب Google'
-                  : 'تسجيل الدخول بحساب Google'}
+                {mode === 'signup'
+                  ? 'التسجيل السريع بحساب Google'
+                  : 'المتابعة بحساب Google'}
               </span>
             </button>
 
-            {/* Modern Subtle Divider */}
-            <div className="relative flex items-center justify-center my-1">
-              <div className="w-full border-t border-white/10" />
-              <span className="absolute bg-[#181513] px-3 text-[10px] font-bold text-stone-300 select-none uppercase tracking-wider">
-                أو عبر البريد الإلكتروني
+            {/* Divider */}
+            <div className="relative flex items-center justify-center my-3">
+              <div className="w-full border-t border-[#EADDC4]" />
+              <span className="absolute bg-white px-3 text-[11px] font-medium text-[#A19E9B]">
+                أو بالبريد الإلكتروني
               </span>
             </div>
 
-            <form onSubmit={handleEmailAuth} className="space-y-4">
-              {authTab === 'signup' && (
-                <>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#e6e1e1] mb-1.5">
-                      اسم المنشأة أو العلامة التجارية:
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        required
-                        placeholder="مثال: استوديو ومحمصة صويل، بوتيك لوسيل، صالون ڤيڤا..."
-                        value={cafeName}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCafeName(val);
-                          if (!isSlugManuallyEdited) {
-                            const clean = val
-                              .toLowerCase()
-                              .trim()
-                              .replace(/[^a-z0-9\s-]/g, '')
-                              .replace(/\s+/g, '-')
-                              .replace(/-+/g, '-');
-                            setCafeSlug(clean || '');
-                          }
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-stone-300/50 focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none transition"
-                      />
-                      <Store className="w-4 h-4 text-stone-300 absolute left-3 top-3 pointer-events-none" />
-                    </div>
+            <form onSubmit={handleEmailAuth} className="space-y-3.5">
+              {/* Store Name (Sign Up only) */}
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-xs font-semibold text-[#3D2314] mb-1.5">
+                    اسم المنشأة أو العلامة التجارية:
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: استوديو صويل، لوسيل..."
+                      value={cafeName}
+                      onChange={(e) => handleNameChange(e.target.value)}
+                      className="w-full px-3.5 py-3 rounded-xl border border-[#EADDC4] bg-white text-xs text-[#3D2314] placeholder-[#A19E9B] focus:border-[#DFAB56] focus:ring-2 focus:ring-[#DFAB56]/20 focus:outline-none transition"
+                    />
+                    <Store className="w-4 h-4 text-[#A19E9B] absolute left-3 top-3.5 pointer-events-none" />
                   </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-semibold text-[#e6e1e1]">
-                        معرف رابط المنشأة المخصص (Slug):
-                      </label>
-                      <span className="text-[10px] text-stone-300 font-mono">CUSTOM URL</span>
-                    </div>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        required
-                        placeholder="soil-roastery"
-                        value={cafeSlug}
-                        dir="ltr"
-                        onChange={(e) => {
-                          setIsSlugManuallyEdited(true);
-                          setCafeSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
-                        }}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-stone-300/50 focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none transition font-mono"
-                      />
-                    </div>
-                    <p className="text-[11px] text-stone-300 mt-1.5 flex items-center gap-1 font-mono" dir="ltr">
-                      <span className="text-[#DFAB56] font-bold">Live URL:</span>
-                      <span className="text-stone-300">
-                        {hostDomain}/c/{cafeSlug || 'my-brand'}
+                  {cafeSlug && (
+                    <p className="text-[10px] text-[#63574D] mt-1.5 flex items-center gap-1 font-mono" dir="ltr">
+                      <span className="text-[#DFAB56] font-bold">URL:</span>
+                      <span className="text-[#63574D]">
+                        {hostDomain}/c/{cafeSlug}
                       </span>
                     </p>
-                  </div>
-                </>
+                  )}
+                </div>
               )}
 
+              {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-[#e6e1e1] mb-1.5">
-                  البريد الإلكتروني للتاجر:
+                <label className="block text-xs font-semibold text-[#3D2314] mb-1.5">
+                  البريد الإلكتروني:
                 </label>
                 <div className="relative">
                   <input
                     type="email"
                     required
-                    placeholder="owner@yourbrand.com"
+                    placeholder="name@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-white placeholder:text-stone-300/50 focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none transition font-mono"
+                    className="w-full px-3.5 py-3 rounded-xl border border-[#EADDC4] bg-white text-xs text-[#3D2314] placeholder-[#A19E9B] focus:border-[#DFAB56] focus:ring-2 focus:ring-[#DFAB56]/20 focus:outline-none transition font-mono"
                     dir="ltr"
                   />
-                  <Mail className="w-4 h-4 text-stone-300 absolute left-3 top-3 pointer-events-none" />
+                  <Mail className="w-4 h-4 text-[#A19E9B] absolute left-3 top-3.5 pointer-events-none" />
                 </div>
               </div>
 
+              {/* Password */}
               <div>
-                <label className="block text-xs font-semibold text-[#e6e1e1] mb-1.5">
-                  كلمة المرور:
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-[#3D2314]">
+                    كلمة المرور:
+                  </label>
+                  {mode === 'signin' && (
+                    <span className="text-[11px] text-[#DFAB56] hover:underline cursor-pointer">
+                      نسيت كلمة المرور؟
+                    </span>
+                  )}
+                </div>
                 <PasswordInput
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="bg-[#0B0A0A] border-white/10 text-xs text-white"
                 />
               </div>
 
+              {/* Submit CTA Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
+                className="w-full mt-2 py-3.5 px-4 rounded-xl bg-[#3D2314] hover:bg-[#2A180E] text-white font-bold text-xs transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
               >
                 {loading ? (
                   <span>جاري المعالجة...</span>
-                ) : authTab === 'signup' ? (
+                ) : mode === 'signup' ? (
                   <>
                     <UserPlus className="w-4 h-4" />
-                    <span>إنشاء حساب منشأة وبدء الاستخدام فوراً</span>
+                    <span>إنشاء الحساب وبدء الاستخدام</span>
                   </>
                 ) : (
                   <>
                     <LogIn className="w-4 h-4" />
-                    <span>تسجيل الدخول إلى لوحة التحكم</span>
+                    <span>تسجيل الدخول</span>
                   </>
                 )}
               </button>
             </form>
+
+            {/* Switch to Staff PIN */}
+            <div className="pt-2 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('pin');
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                }}
+                className="text-xs font-semibold text-[#63574D] hover:text-[#DFAB56] transition inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>دخول طاقم الخدمة والكاونتر عبر رمز PIN</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* --- FORM 2: BARISTA / STAFF PIN AUTH --- */}
-        {authTab === 'pin' && (
-          <form onSubmit={handlePinAuth} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#e6e1e1] mb-1.5 text-center">
-                أدخل رمز PIN الموظف المعتمد (4 أرقام):
+        {/* --- STAFF PIN MODE (TABBY STYLE CLEAN 4-DIGIT PAD) --- */}
+        {mode === 'pin' && (
+          <form onSubmit={handlePinAuth} className="space-y-5">
+            <div className="text-center">
+              <label className="block text-xs font-semibold text-[#3D2314] mb-3">
+                أدخل رمز PIN السري للكاونتر (4 أرقام):
               </label>
+
+              {/* 4 Digit Boxes */}
+              <div className="flex items-center justify-center gap-3 my-4" dir="ltr">
+                {[0, 1, 2, 3].map((index) => {
+                  const digit = pin[index] || '';
+                  const isCurrent = pin.length === index;
+                  return (
+                    <div
+                      key={index}
+                      className={`w-13 h-14 rounded-xl border flex items-center justify-center text-xl font-bold font-mono transition-all ${
+                        digit
+                          ? 'border-[#3D2314] bg-[#FAF5EB] text-[#3D2314]'
+                          : isCurrent
+                          ? 'border-[#DFAB56] bg-white ring-2 ring-[#DFAB56]/20'
+                          : 'border-[#EADDC4] bg-white text-transparent'
+                      }`}
+                    >
+                      {digit ? '•' : ''}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Hidden or real input for direct typing */}
               <input
                 type="password"
                 maxLength={4}
                 required
-                placeholder="••••"
+                autoFocus
                 value={pin}
                 onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-full px-3.5 py-3.5 rounded-lg border border-white/10 bg-[#0B0A0A] text-center text-2xl font-mono font-black tracking-[0.4em] text-white focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none transition shadow-inner"
-                autoFocus
+                className="opacity-0 absolute -z-10"
+                id="pin-direct-input"
               />
-              <p className="text-[11px] text-stone-300 mt-2 text-center font-medium">
-                دخول سريع لطاقم العمل والكاونتر بدون الحاجة لإدخال البريد الإلكتروني
-              </p>
+
+              {/* Touch Numeric Keypad */}
+              <div className="grid grid-cols-3 gap-2 max-w-[240px] mx-auto mt-4" dir="ltr">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => {
+                      if (pin.length < 4) setPin((prev) => prev + num);
+                    }}
+                    className="h-11 rounded-xl bg-[#FAF5EB] hover:bg-[#F5EFE6] active:bg-[#EADDC4] text-base font-bold font-mono text-[#3D2314] transition border border-[#EADDC4]/60 cursor-pointer"
+                  >
+                    {num}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setPin('')}
+                  className="h-11 rounded-xl bg-white hover:bg-rose-50 text-xs font-semibold text-rose-600 transition border border-[#EADDC4]/60 cursor-pointer"
+                >
+                  مسح
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (pin.length < 4) setPin((prev) => prev + '0');
+                  }}
+                  className="h-11 rounded-xl bg-[#FAF5EB] hover:bg-[#F5EFE6] active:bg-[#EADDC4] text-base font-bold font-mono text-[#3D2314] transition border border-[#EADDC4]/60 cursor-pointer"
+                >
+                  0
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPin((prev) => prev.slice(0, -1))}
+                  className="h-11 rounded-xl bg-white hover:bg-[#FAF5EB] text-xs font-semibold text-[#63574D] transition border border-[#EADDC4]/60 cursor-pointer"
+                >
+                  ←
+                </button>
+              </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
+              disabled={loading || pin.length !== 4}
+              className="w-full py-3.5 px-4 rounded-xl bg-[#3D2314] hover:bg-[#2A180E] text-white font-bold text-xs transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
             >
               {loading ? (
                 <span>جاري التحقق...</span>
               ) : (
                 <>
                   <KeyRound className="w-4 h-4" />
-                  <span>دخول محطة الموظفين والكاونتر</span>
+                  <span>دخول الكاونتر</span>
                 </>
               )}
             </button>
+
+            <div className="pt-2 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signin');
+                  setPin('');
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                }}
+                className="text-xs font-semibold text-[#63574D] hover:text-[#3D2314] transition inline-flex items-center gap-1 cursor-pointer"
+              >
+                <span>العودة لدخول المالك والمدير</span>
+                <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+              </button>
+            </div>
           </form>
         )}
 
-        {/* Footer info */}
-        <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between text-[11px] text-stone-300">
-          <span>حماية وتشفير البيانات 256-bit</span>
-          <span className="font-mono text-[#DFAB56]">ATELIER • NOSTALGIA</span>
+        {/* Footer */}
+        <div className="mt-6 pt-4 border-t border-[#EADDC4] flex items-center justify-between text-[11px] text-[#A19E9B]">
+          <span>حماية وتشفير البيانات SSL</span>
+          <span className="font-mono text-[#DFAB56] font-semibold">STAMPY SECURE</span>
         </div>
       </div>
     </div>

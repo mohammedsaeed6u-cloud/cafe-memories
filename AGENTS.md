@@ -1,4 +1,4 @@
-﻿<!-- BEGIN:nextjs-agent-rules -->
+<!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
 
@@ -60,3 +60,8 @@ Follow the complete guidelines in [ui.md](./ui.md) for:
 - **No Hallucinated APIs:** Verify package versions and existing codebase exports before importing symbols.
 - **Self-Correction:** When an error occurs, inspect the exact error log and fix the root cause rather than blindly repeating failed attempts.
 - **Preserve Existing Code:** Never delete unrelated comments, docstrings, or functioning modules unless explicitly requested.
+
+---
+
+## 4. Cloudflare CLI & Tooling
+- When interacting with Cloudflare, use the cf CLI unless the project has a Wrangler configuration file.
