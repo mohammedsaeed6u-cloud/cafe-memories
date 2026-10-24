@@ -406,71 +406,13 @@ describe('POST /api/v1/visits - Server-Verified Visit Confirmation RPC', () => {
     expect(json.rewardProgress).toBeNull();
   });
 
-  it('enforces fault isolation when reward_rules query returns an error object', async () => {
-    mocks.from.mockImplementation((table: string) => {
-      if (table === 'branches') {
-        return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: branchId, organization_id: orgId, status: 'active' },
-                  error: null,
-                }),
-              }),
-            }),
-          }),
-        };
-      }
-      if (table === 'organization_members') {
-        return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({
-                single: vi.fn().mockResolvedValue({
-                  data: { id: 'mem-1', organization_id: orgId, branch_id: null, role: 'owner' },
-                  error: null,
-                }),
-              }),
-            }),
-          }),
-        };
-      }
-      if (table === 'visits') {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockResolvedValue({ count: 3, error: null }),
-              }),
-            }),
-          }),
-        };
-      }
-      if (table === 'reward_rules') {
-        return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({
-                order: vi.fn().mockResolvedValue({
-                  data: null,
-                  error: { message: 'Failed to fetch reward rules' },
-                }),
-              }),
-            }),
-          }),
-        };
-      }
-      return {};
-    });
-
+  it('halts naive modulo calculations and explicitly returns rewardProgress as null for limited slice', async () => {
     const res = await POST(createPostRequest({ customerId, branchId, idempotencyKey }));
     expect(res.status).toBe(200);
 
     const json = await res.json();
     expect(json.success).toBe(true);
     expect(json.visitId).toBe(visitId);
-    expect(json.progressFetchFailed).toBe(true);
     expect(json.rewardProgress).toBeNull();
   });
 

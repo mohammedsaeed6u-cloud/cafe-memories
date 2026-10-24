@@ -37,6 +37,180 @@ import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-au
 import { PrintService } from '@/lib/services/print.service';
 import { StampyLogo, StampyApertureIcon } from '@/components/brand/StampyLogo';
 
+export interface UseTerminalVisitConfirmationProps {
+  merchantUser: any | null;
+  merchantBranchId: string | null;
+  cafeSlug: string;
+  selectedCustomer: RegisteredCustomer | null;
+  setSelectedCustomer: React.Dispatch<React.SetStateAction<RegisteredCustomer | null>>;
+  recordShiftStamp: () => void;
+  setErrorNotice: (msg: string | null) => void;
+  setSuccessNotice: (msg: string | null) => void;
+}
+
+export function useTerminalVisitConfirmation({
+  merchantUser,
+  merchantBranchId,
+  cafeSlug,
+  selectedCustomer,
+  setSelectedCustomer,
+  recordShiftStamp,
+  setErrorNotice,
+  setSuccessNotice,
+}: UseTerminalVisitConfirmationProps) {
+  const [isSubmittingStamp, setIsSubmittingStamp] = useState(false);
+  const isSubmittingStampRef = useRef(false);
+  const [isRefreshingProgress, setIsRefreshingProgress] = useState(false);
+  const [networkWarning, setNetworkWarning] = useState<string | null>(null);
+  const [progressWarning, setProgressWarning] = useState<string | null>(null);
+  const pendingOperationRef = useRef<{
+    idempotencyKey: string;
+    customerId: string;
+    branchId: string;
+    customerName: string;
+  } | null>(null);
+
+  const selectedCustomerRef = useRef(selectedCustomer);
+  useEffect(() => {
+    selectedCustomerRef.current = selectedCustomer;
+  }, [selectedCustomer]);
+
+  const handleAddStamp = async () => {
+    if (isSubmittingStampRef.current) {
+      return; // Immediate synchronous guard against parallel / double-click submissions
+    }
+
+    if (!selectedCustomer) return;
+
+    if (!merchantUser) {
+      setErrorNotice('يلزم تسجيل دخول تاجر معتمد لختم الزيارات خادمياً.');
+      return;
+    }
+
+    if (!merchantBranchId) {
+      setErrorNotice(`تعذر تحديد فرع التاجر المطابق للكاونتر (${cafeSlug}). يرجى التحقق من إعدادات الفروع.`);
+      return;
+    }
+
+    if (!selectedCustomer.id) {
+      setErrorNotice('معرّف العميل الموثق غير متوفر. يلزم تسجيل حضور العميل (Check-in) في هذا الفرع أولاً.');
+      return;
+    }
+
+    // Pin immutable operation payload for retries (prevents UI drift)
+    if (!pendingOperationRef.current) {
+      pendingOperationRef.current = {
+        idempotencyKey: crypto.randomUUID(),
+        customerId: selectedCustomer.id,
+        branchId: merchantBranchId,
+        customerName: selectedCustomer.name || 'العميل',
+      };
+    }
+    const operation = pendingOperationRef.current;
+
+    isSubmittingStampRef.current = true;
+    setIsSubmittingStamp(true);
+    setErrorNotice(null);
+    setNetworkWarning(null);
+    setProgressWarning(null);
+
+    try {
+      const res = await fetch('/api/v1/visits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: operation.customerId,
+          branchId: operation.branchId,
+          idempotencyKey: operation.idempotencyKey,
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        const errorMsg = data?.error || 'فشل تسجيل الزيارة في الخادم.';
+        if (res.status === 409 || res.status === 429 || res.status === 403 || res.status === 400 || res.status === 404) {
+          pendingOperationRef.current = null;
+          setErrorNotice(errorMsg);
+        } else {
+          setNetworkWarning(`حدث خطأ من الخادم (${res.status}). يمكنك إعادة المحاولة بأمان بنفس العملية.`);
+        }
+        return;
+      }
+
+      // Success: Clear pending operation
+      pendingOperationRef.current = null;
+
+      // Handle Replay vs Fresh Visit:
+      if (data.replayed) {
+        // Do NOT increment shift counter or trigger celebratory audio on duplicate replay
+        setSuccessNotice(
+          `ℹ️ تم استرجاع الزيارة المسجلة مسبقاً للعميل (${operation.customerName}) بنجاح (طلب مكرر - لم تتم مضاعفة الختم). المعرف: ${data.visitId}`
+        );
+      } else {
+        // Fresh verified visit
+        recordShiftStamp();
+        SoundEffectsService.playStampChime();
+        setSuccessNotice(
+          `✨ تم تأكيد وحفظ الزيارة بنجاح للعميل (${operation.customerName})! المعرف: ${data.visitId}`
+        );
+      }
+
+      // Strictly bind customer card mutations to the pinned operation's target customer
+      if (selectedCustomerRef.current?.id === operation.customerId) {
+        if (data.progressFetchFailed) {
+          setProgressWarning(
+            `تم تأكيد الزيارة بنجاح في قاعدة البيانات، ولكن تعذر تحديث رصيد الولاء مؤقتاً.`
+          );
+        } else if (data.currentVisits !== null && data.currentVisits !== undefined) {
+          setSelectedCustomer((prev) => (prev && prev.id === operation.customerId ? { ...prev, totalVisits: data.currentVisits } : prev));
+        }
+      }
+
+      setTimeout(() => setSuccessNotice(null), 5000);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('stampy-stamp-added'));
+      }
+    } catch (netErr: any) {
+      // Network interruption or timeout: KEEP pendingOperationRef intact for safe retry!
+      console.warn('Network error during visit confirmation:', netErr);
+      setNetworkWarning(
+        'انقطع الاتصال بالخادم أثناء تأكيد الزيارة. النتيجة غير مؤكدة — اضغط "إعادة المحاولة" لإرسال نفس العملية الموثقة بأمان دون تكرار الختم.'
+      );
+    } finally {
+      isSubmittingStampRef.current = false;
+      setIsSubmittingStamp(false);
+    }
+  };
+
+  const handleRefreshProgress = async () => {
+    if (!selectedCustomer) return;
+    setIsRefreshingProgress(true);
+    setProgressWarning(null);
+    try {
+      // In this limited slice, customer progress synchronization is decoupled.
+      // We never perform CRM phone search guessing or identity swapping.
+      setProgressWarning('مزامنة رصيد المكافآت التراكمي غير مفعلة في هذه الشريحة المحدودة. الزيارات مؤكدة ومحفوظة خادمياً.');
+    } finally {
+      setIsRefreshingProgress(false);
+    }
+  };
+
+  return {
+    isSubmittingStamp,
+    isSubmittingStampRef,
+    isRefreshingProgress,
+    networkWarning,
+    progressWarning,
+    pendingOperationRef,
+    handleAddStamp,
+    handleRefreshProgress,
+    setNetworkWarning,
+    setProgressWarning,
+  };
+}
+
 export default function StaffTerminalPage() {
   const [cafeSlug, setCafeSlug] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -91,16 +265,28 @@ export default function StaffTerminalPage() {
   const [merchantBranchId, setMerchantBranchId] = useState<string | null>(null);
   const [isCheckingMerchantAuth, setIsCheckingMerchantAuth] = useState(true);
 
-  // Visit submission & resilience states
-  const [isSubmittingStamp, setIsSubmittingStamp] = useState(false);
-  const [isRefreshingProgress, setIsRefreshingProgress] = useState(false);
-  const [networkWarning, setNetworkWarning] = useState<string | null>(null);
-  const [progressWarning, setProgressWarning] = useState<string | null>(null);
-  const pendingOperationRef = useRef<{
-    idempotencyKey: string;
-    customerId: string;
-    branchId: string;
-  } | null>(null);
+  // Verified visit confirmation controller & resilience
+  const {
+    isSubmittingStamp,
+    isSubmittingStampRef,
+    isRefreshingProgress,
+    networkWarning,
+    progressWarning,
+    pendingOperationRef,
+    handleAddStamp,
+    handleRefreshProgress,
+    setNetworkWarning,
+    setProgressWarning,
+  } = useTerminalVisitConfirmation({
+    merchantUser,
+    merchantBranchId,
+    cafeSlug,
+    selectedCustomer,
+    setSelectedCustomer,
+    recordShiftStamp: () => setShiftStampsCount((p) => p + 1),
+    setErrorNotice,
+    setSuccessNotice,
+  });
 
   const requiredVisits = settings.loyaltyMaxVisits || 5;
   const giftTitle = settings.freeGiftOffer?.title || industry.defaultGiftTitle;
@@ -225,17 +411,9 @@ export default function StaffTerminalPage() {
 
               if (branchBySlug && isMounted) {
                 setMerchantBranchId(branchBySlug.id);
-              } else {
-                const { data: defaultBranch } = await supabase
-                  .from('branches')
-                  .select('id')
-                  .eq('organization_id', membership.organization_id)
-                  .eq('status', 'active')
-                  .limit(1)
-                  .maybeSingle();
-                if (defaultBranch && isMounted) {
-                  setMerchantBranchId(defaultBranch.id);
-                }
+              } else if (isMounted) {
+                setMerchantBranchId(null);
+                setErrorNotice(`تعذر مطابقة الفرع المخصص للكاونتر (${cafeSlug}) مع فروع المنشأة المسجلة.`);
               }
             }
           }
@@ -423,133 +601,7 @@ export default function StaffTerminalPage() {
     }
   };
 
-  // Server-Verified Stamp Action (+1 Stamp)
-  const handleAddStamp = async () => {
-    if (!selectedCustomer) return;
 
-    if (!merchantUser) {
-      setErrorNotice('يلزم تسجيل دخول تاجر معتمد لختم الزيارات خادمياً.');
-      return;
-    }
-
-    if (!merchantBranchId) {
-      setErrorNotice('تعذر تحديد فرع التاجر النشط. يرجى مراجعة صلاحيات الفرع في لوحة الإدارة.');
-      return;
-    }
-
-    if (!selectedCustomer.id) {
-      setErrorNotice('معرّف العميل الموثق غير متوفر. يلزم تسجيل حضور العميل (Check-in) في هذا الفرع أولاً.');
-      return;
-    }
-
-    // Pin immutable operation payload for retries (prevents UI drift)
-    if (!pendingOperationRef.current) {
-      pendingOperationRef.current = {
-        idempotencyKey: crypto.randomUUID(),
-        customerId: selectedCustomer.id,
-        branchId: merchantBranchId,
-      };
-    }
-    const operation = pendingOperationRef.current;
-
-    setIsSubmittingStamp(true);
-    setErrorNotice(null);
-    setNetworkWarning(null);
-    setProgressWarning(null);
-
-    try {
-      const res = await fetch('/api/v1/visits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerId: operation.customerId,
-          branchId: operation.branchId,
-          idempotencyKey: operation.idempotencyKey,
-        }),
-      });
-
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok || !data?.success) {
-        const errorMsg = data?.error || 'فشل تسجيل الزيارة في الخادم.';
-        if (res.status === 409 || res.status === 429 || res.status === 403 || res.status === 400 || res.status === 404) {
-          pendingOperationRef.current = null;
-          setErrorNotice(errorMsg);
-        } else {
-          setNetworkWarning(`حدث خطأ من الخادم (${res.status}). يمكنك إعادة المحاولة بأمان بنفس العملية.`);
-        }
-        return;
-      }
-
-      // Success: Clear pending operation
-      pendingOperationRef.current = null;
-
-      // Handle Replay vs Fresh Visit:
-      if (data.replayed) {
-        // Do NOT increment shift counter or trigger celebratory audio on duplicate replay
-        setSuccessNotice(
-          `ℹ️ تم استرجاع الزيارة المسجلة مسبقاً للعميل (${selectedCustomer.name}) بنجاح (طلب مكرر - لم تتم مضاعفة الختم). المعرف: ${data.visitId}`
-        );
-      } else {
-        // Fresh verified visit
-        recordShiftStamp();
-        SoundEffectsService.playStampChime();
-        setSuccessNotice(
-          `✨ تم تأكيد وحفظ الزيارة بنجاح للعميل (${selectedCustomer.name})! المعرف: ${data.visitId}`
-        );
-      }
-
-      // Handle progress & fault isolation (No naive modulo math!)
-      if (data.progressFetchFailed) {
-        setProgressWarning(
-          `تم تأكيد الزيارة بنجاح في قاعدة البيانات، ولكن تعذر تحديث رصيد الولاء مؤقتاً.`
-        );
-      } else if (data.currentVisits !== null && data.currentVisits !== undefined) {
-        setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: data.currentVisits } : null));
-      }
-
-      setTimeout(() => setSuccessNotice(null), 5000);
-
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('stampy-stamp-added'));
-      }
-    } catch (netErr: any) {
-      // Network interruption or timeout: KEEP pendingOperationRef intact for safe retry!
-      console.warn('Network error during visit confirmation:', netErr);
-      setNetworkWarning(
-        'انقطع الاتصال بالخادم أثناء تأكيد الزيارة. النتيجة غير مؤكدة — اضغط "إعادة المحاولة" لإرسال نفس العملية الموثقة بأمان دون تكرار الختم.'
-      );
-    } finally {
-      setIsSubmittingStamp(false);
-    }
-  };
-
-  const handleRefreshProgress = async () => {
-    if (!selectedCustomer?.phone) return;
-    setIsRefreshingProgress(true);
-    setProgressWarning(null);
-    try {
-      const res = await fetch(`/api/v1/crm/customers?search=${encodeURIComponent(selectedCustomer.phone)}&format=json`);
-      if (res.ok) {
-        const data = await res.json();
-        const c = data?.customers?.[0];
-        if (c) {
-          const count = c.visitCount || c.memoryCount || selectedCustomer.totalVisits;
-          setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: count, id: c.id || prev.id } : null));
-          const lData = LoyaltyPurseService.getData(selectedCustomer.phone, cafeSlug, requiredVisits);
-          setLoyaltyData(lData);
-          setSuccessNotice('تم تحديث رصيد العميل بنجاح!');
-          setTimeout(() => setSuccessNotice(null), 3000);
-          return;
-        }
-      }
-      setProgressWarning('تعذر تحديث الرصيد حالياً، يرجى المحاولة لاحقاً.');
-    } catch {
-      setProgressWarning('تعذر الاتصال بالخادم لتحديث الرصيد.');
-    } finally {
-      setIsRefreshingProgress(false);
-    }
-  };
 
   // Instant Voucher Redemption
   const handleRedeemVoucherDirect = (voucherCode: string) => {

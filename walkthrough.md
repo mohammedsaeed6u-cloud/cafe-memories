@@ -44,54 +44,47 @@
 
 ## 2. أدلة التحقق الآلي (Automated Verification Evidence)
 
-| الفحص | الأمر المنفذ | النتيجة |
+| الفحص | الملف / الأمر | النتيجة |
 |---|---|---|
-| فحص الأنواع الصارم (TypeScript) | `pnpm exec tsc --noEmit` | **Pass (Exit Code 0 - 0 errors)** |
-| حزمة اختبارات الزيارة المؤكدة (RPC & Fault Isolation) | `pnpm test tests/unit/terminal-verified-visit.test.ts` | **Pass (13/13 tests passed)** |
-| حزمة اختبارات أمان جلسة الموظف | `pnpm test tests/unit/staff-session-hardening.test.ts` | **Pass (2/2 tests passed)** |
+| اختبارات تفاعل وتحكم الواجهة (Interaction & Concurrency Tests) | `pnpm test tests/unit/terminal-ui-interaction.test.tsx` | **Pass (7/7 tests passed)** |
+| حزمة اختبارات مسار الزيارات المعتمد (RPC Handler Unit Mocks) | `pnpm test tests/unit/terminal-verified-visit.test.ts` | **Pass (13/13 tests passed)** |
 | اختبارات PIN والتحقق | `pnpm test tests/unit/staff-pin.test.ts` | **Pass (20/20 tests passed)** |
 | اختبارات محرك المكافآت | `pnpm test tests/unit/rewards.test.ts` | **Pass (5/5 tests passed)** |
+| حزمة اختبارات أمان جلسة الموظف | `pnpm test tests/unit/staff-session-hardening.test.ts` | **Pass (2/2 tests passed)** |
+| **إجمالي اختبارات الوحدة والتفاعل** | **5 ملفات اختبار متكاملة** | **Pass (47/47 tests passed 100%)** |
 | فحص الأنواع الصارم (TypeScript) | `pnpm exec tsc --noEmit` | **Pass (Exit Code 0 - 0 errors)** |
 | فحص تنسيق الشفرة والمسافات | `git diff --check` | **Pass (Exit Code 0)** |
 | بناء تصدير الصفحات الثابتة | `pnpm run build` | **Pass (33/33 static pages generated successfully)** |
 
 ---
 
-## 3. حالات الاختبار التي تم تغطيتها في `terminal-verified-visit.test.ts` (13 اختباراً)
+## 3. حالات الاختبار التي تم تغطيتها في `terminal-ui-interaction.test.tsx` (7 اختبارات تفاعلية حقيقية)
 
-1. `rejects unauthenticated requests with HTTP 401 Unauthorized`
-2. `rejects requests with malformed or missing UUID fields with HTTP 400 Bad Request`
-3. `rejects requests targeting an inactive or non-existent branch with HTTP 404`
-4. `rejects caller if not a member of the branch organization with HTTP 403 Forbidden`
-5. `rejects caller if restricted to a different branch with HTTP 403 Forbidden`
-6. `maps RPC 42501 guest check-in failure to HTTP 403 with clear directive`
-7. `maps RPC 23514 cooldown rejection to HTTP 429 Too Many Requests`
-8. `handles replayed duplicate requests returning HTTP 200 with replayed: true`
-9. `maps RPC 22023 idempotency mismatch to HTTP 409 Conflict`
-10. `rejects caller with unauthorized role (e.g. guest or viewer) with HTTP 403 Forbidden (RBAC)`
-11. `enforces fault isolation when count query returns an error object without throwing`
-12. `enforces fault isolation when reward_rules query returns an error object`
-13. `never performs direct visits table INSERT in POST handler`
+1. `prevents double-click / parallel stamp submissions using synchronous in-flight guard`: منع تكرار النقر المزدوج المتوازي فوراً عبر حارس تزامن لحظي، وضمان استدعاء `fetch` مرة واحدة فقط.
+2. `suppresses audio chime and shift counter increment on duplicate replay (replayed: true)`: كتم صوت الاحتفال ومنع زيادة عداد الوردية عند استرجاع طلب مكرر.
+3. `triggers audio chime and increments shift counter on fresh verified visit`: تشغيل صوت الختم وزيادة عداد الوردية عند نجاح زيارة مؤكدة جديدة.
+4. `does NOT corrupt customer card if customer selection changed during in-flight submission`: حماية بيانات العميل النشط في حال قيام الكاشير باختيار عميل آخر أثناء وجود طلب قيد المعالجة (ربط الاستجابة بـ customerId المثبت للعملية فقط).
+5. `guarantees immutable retry payload with identical idempotencyKey on retry after network failure`: ثبات حمولة إعادة المحاولة بنفس المفتاح والمعرفات بالضبط دون إعادة بنائها من حالة الواجهة.
+6. `handleRefreshProgress never calls CRM search or swaps customer identity`: الامتناع التام عن البحث بالهاتف في CRM أو استبدال هوية العميل عند تحديث الرصيد.
+7. `blocks stamp dispatch when merchantBranchId is not matched to venue context`: منع إرسال الختم وإظهار خطأ صريح عند تعذر مطابقة الفرع مع سياق الكاونتر.
 
 ---
 
-## 4. معالجة ملاحظات مراجع Arena العشر (Arena Reviewer Points Remediated)
+## 4. معالجة ملاحظات مراجع Arena الإضافية المثبتة (Round 2 Remediation)
 
-1. **إلغاء تخمين رقم الهاتف (CRM phone guessing):** تم حذف مسار البحث التخميني أو اعتماد أول عميل تلقائياً عند عدم وجود معرف صريح، وفشل العملية مغلقة مع رسالة خطأ صريحة.
-2. **فحص أخطاء Supabase الصريح وعزل الأعطال:** لا تفترض استدعاءات `supabase.from()` رمي الاستثناءات عند فشل الاستعلام، بل يتم فحص `countError` و`rulesError` بشكل صريح. عند الفشل، تُرجع القيم كـ `null` دون تزييف العدادات أو إبطال الزيارة المعتمدة.
-3. **إلغاء حسابات الموديلو الساذجة:** إزالة `(visits % requiredVisits)` وبطاقات المكافآت المصطنعة بالكامل من الواجهة، والاعتماد حصرياً على بيانات الخادم الحقيقية.
-4. **تثبيت حمولة إعادة المحاولة (Immutable Pending Operation):** تم استبدال تخزين المفتاح المجرد بـ `pendingOperationRef.current = { idempotencyKey, customerId, branchId }` لضمان تطابق الحمولة عند إعادة الإرسال وعدم تأثرها بتغيير المدخلات.
-5. **سياق الفرع الحتمي:** مطابقة `branches.slug = cafeSlug` بدقة قبل اللجوء إلى أي فرع افتراضي.
-6. **إنفاذ صلاحيات الختم (Stamping RBAC):** حصر صلاحية الختم في الأدوار المعتمدة (`owner`, `admin`, `manager`, `cashier`, `staff`) ورفض ما عداها بـ `403 Forbidden`.
-7. **نظافة عداد الوردية والاحتفال عند إعادة الطلب (Replay Hygiene):** عند استلام `replayed: true`، يتم منع زيادة عداد وردية الكاشير وتخطي صوت الاحتفال، مع إظهار إشعار صريح بتكرار الطلب.
-8. **فصل استعلامات التقدم عن نتيجة الختم:** التحقق من ثبات نجاح الزيارة حتى لو فشلت أي من استعلامات القراءة اللاحقة.
-9. **حزمة اختبارات موسعة لأخطاء Supabase:** إضافة اختبارات لمحاكاة إرجاع كائن خطأ من Supabase دون رمي خطأ.
-10. **توافق كامل مع وثائق ومواصفات Arena:** اجتياز الفحوصات الآلية بنسبة 100%.
+1. **حذف تخمين CRM في `handleRefreshProgress` نهائياً:** تم إلغاء أي اتصال بـ `/api/v1/crm/customers` وإلغاء استبدال `customer.id` أو الاعتماد على `customers[0]`. تم توضيح فصل مزامنة الرصيد عن تأكيد الزيارة في هذه الشريحة المحدودة.
+2. **إلغاء البحث عن أول فرع تلقائياً (`limit(1).maybeSingle`):** حظر اعتماد أي فرع افتراضي عند عدم مطابقة `branches.slug = cafeSlug`. في حال عدم المطابقة، يتم إيقاف العملية وإظهار رسالة خطأ قطعية للكاشير.
+3. **إلغاء حسابات الموديلو الساذجة خادمياً:** تم حذف استدعاء `calculateRewardProgress` وقواعد المكافآت من مسار `/api/v1/visits`، وإرجاع `rewardProgress: null` صراحة، بما يتماشى مع فصل نموذج كروت التذكار المعتمدة.
+4. **حماية التزامن وربط الاستجابة بالعملية المثبتة:**
+   - تطبيق حارس تزامني متزامن لحظي (`isSubmittingStampRef.current`) لمنع أي نقر متوازٍ قبل تحديث حالة React.
+   - ربط تحديثات الكارت بالـ `customerId` الخاص بالعملية المثبتة عبر `selectedCustomerRef`؛ بحيث لو غيّر الكاشير العميل أثناء انتظار الرد لا تتأثر بطاقة العميل الجديد.
+5. **اختبارات تفاعل واجهة حقيقية (`terminal-ui-interaction.test.tsx`):** إضافة حزمة اختبارات كاملة باستخدام `happy-dom` و`@testing-library/react` للتحقق الحقيقي من حالات النقر المزدوج، كتم الصوت عند الـ replay، وثبات مفتاح العملية عند إعادة المحاولة.
+6. **دقة تقرير الأدلة:** تصنيف حزم الاختبارات بدقة وفصل اختبارات الواجهة والتفاعل (7 اختبارات) عن اختبارات محاكاة الـ Handler (13 اختباراً).
 
 ---
 
 ## 5. قيود وحدود التحقق (Known Limitations)
 
-1. **البيئة المستضافة (Hosted Supabase):** الاختبارات نُفذت باستخدام حزمة اختبارات وحدة صارمة تحاكي سلوك استجابات محرك Postgres وRPC `record_verified_visit`.
+1. **البيئة المستضافة (Hosted Supabase):** الاختبارات نُفذت باستخدام حزم اختبارات وحدة وتفاعل واجهة صارمة تحاكي سلوك استجابات محرك Postgres وRPC `record_verified_visit`.
 2. **عزل الفرع:** لم يتم دمج الفرع في `main` ولم يتم النشر إلى الإنتاج، التزاماً ببروتوكول Arena. تم رفع التغييرات إلى الفرع البعيد `fix/terminal-verified-visit-rpc`.
 

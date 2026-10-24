@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { calculateRewardProgress } from '@/lib/services/rewards';
 import { z } from 'zod';
 
 const recordVisitRequestSchema = z.object({
@@ -144,7 +143,6 @@ export async function POST(request: NextRequest) {
     // 5. Query updated visit stats with strict fault isolation
     // The visit has ALREADY been safely committed. Any failure reading downstream stats must not fail the request.
     let currentVisits: number | null = null;
-    let rewardProgress: any = null;
     let progressFetchFailed = false;
 
     try {
@@ -160,31 +158,6 @@ export async function POST(request: NextRequest) {
         progressFetchFailed = true;
       } else {
         currentVisits = totalVisits ?? 0;
-
-        const { data: rules, error: rulesError } = await supabase
-          .from('reward_rules')
-          .select('*')
-          .eq('organization_id', organizationId)
-          .eq('is_active', true)
-          .order('threshold', { ascending: true });
-
-        if (rulesError || !rules || rules.length === 0) {
-          console.warn('Reward rules query returned an error or was empty:', rulesError);
-          progressFetchFailed = true;
-        } else {
-          const activeRule = rules[0];
-          try {
-            rewardProgress = calculateRewardProgress({
-              currentVisitCount: currentVisits,
-              threshold: activeRule.threshold || 5,
-              rewardType: activeRule.reward_type || 'free_item',
-              ruleId: activeRule.id || 'default',
-            });
-          } catch (calcErr) {
-            console.warn('Reward calculation failed:', calcErr);
-            progressFetchFailed = true;
-          }
-        }
       }
     } catch (progressErr) {
       console.warn('Progress calculation threw after successful visit recording:', progressErr);
@@ -193,7 +166,6 @@ export async function POST(request: NextRequest) {
 
     if (progressFetchFailed) {
       currentVisits = null;
-      rewardProgress = null;
     }
 
     return NextResponse.json({
@@ -201,7 +173,7 @@ export async function POST(request: NextRequest) {
       visitId: rpcResult.visitId,
       replayed: Boolean(rpcResult.replayed),
       currentVisits,
-      rewardProgress,
+      rewardProgress: null, // Deprecated naive modulo calculation; authoritative keepsake model is decoupled
       progressFetchFailed,
     });
   } catch (err: any) {
