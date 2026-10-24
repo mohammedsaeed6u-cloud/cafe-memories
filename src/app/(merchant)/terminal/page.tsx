@@ -53,16 +53,7 @@ export default function StaffTerminalPage() {
     return 'stampy';
   });
 
-  const [settings, setSettings] = useState(() => {
-    let slug = 'stampy';
-    if (typeof window !== 'undefined') {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        slug = urlParams.get('cafe') || localStorage.getItem('memories_active_merchant_slug') || 'stampy';
-      } catch {}
-    }
-    return BusinessSettingsService.getSettings(slug);
-  });
+  const settings = BusinessSettingsService.getSettings(cafeSlug);
 
   const industry = getIndustryProfile(settings.businessType);
 
@@ -86,18 +77,29 @@ export default function StaffTerminalPage() {
 
   // Staff authentication state
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-  const [staffMember, setStaffMember] = useState<{ id: string; name: string } | null>(null);
+  const [staffMember, setStaffMember] = useState<{ id: string; name: string } | null>(() => getActiveStaff());
 
   // Merchant Supabase Session & Branch Scope
   const [merchantUser, setMerchantUser] = useState<any | null>(null);
   const [merchantBranchId, setMerchantBranchId] = useState<string | null>(null);
+  const [merchantBranchVenue, setMerchantBranchVenue] = useState<string | null>(null);
   const [isCheckingMerchantAuth, setIsCheckingMerchantAuth] = useState(true);
+
+  const recordShiftStamp = () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const next = shiftStampsCount + 1;
+      setShiftStampsCount(next);
+      localStorage.setItem(`memories_shift_stamps_${cafeSlug}_${today}`, String(next));
+    } catch {}
+  };
 
   // Verified visit confirmation controller & resilience
   const {
     isSubmittingStamp,
     isSubmittingStampRef,
     isRefreshingProgress,
+    isRetryPending,
     networkWarning,
     progressWarning,
     pendingOperationRef,
@@ -108,10 +110,12 @@ export default function StaffTerminalPage() {
   } = useTerminalVisitConfirmation({
     merchantUser,
     merchantBranchId,
+    merchantBranchVenue,
+    isCheckingMerchantAuth,
     cafeSlug,
     selectedCustomer,
     setSelectedCustomer,
-    recordShiftStamp: () => setShiftStampsCount((p) => p + 1),
+    recordShiftStamp,
     setErrorNotice,
     setSuccessNotice,
   });
@@ -199,17 +203,17 @@ export default function StaffTerminalPage() {
 
   useEffect(() => {
     let isMounted = true;
-    const s = BusinessSettingsService.getSettings(cafeSlug);
-    setSettings(s);
 
-    const active = getActiveStaff();
-    if (active) {
-      setStaffMember(active);
-    }
+
 
     // Resolve authenticated Supabase merchant session and branch scope deterministically
     const checkMerchantSession = async () => {
+      // IMMEDIATE CONTEXT DE-AUTHORIZATION:
+      // Clear previous branch context synchronously so stale branch IDs can never be read
       setIsCheckingMerchantAuth(true);
+      setMerchantBranchId(null);
+      setMerchantBranchVenue(null);
+
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -218,6 +222,7 @@ export default function StaffTerminalPage() {
 
         if (!user) {
           setMerchantBranchId(null);
+          setMerchantBranchVenue(null);
           return;
         }
 
@@ -225,6 +230,7 @@ export default function StaffTerminalPage() {
         if (!isMounted) return;
 
         setMerchantBranchId(res.branchId);
+        setMerchantBranchVenue(res.branchId ? cafeSlug : null);
         if (res.error) {
           setErrorNotice(res.error);
         }
@@ -232,6 +238,7 @@ export default function StaffTerminalPage() {
         console.warn('Failed to resolve merchant session:', err);
         if (isMounted) {
           setMerchantBranchId(null);
+          setMerchantBranchVenue(null);
         }
       } finally {
         if (isMounted) setIsCheckingMerchantAuth(false);
@@ -253,15 +260,6 @@ export default function StaffTerminalPage() {
       isMounted = false;
     };
   }, [cafeSlug]);
-
-  const recordShiftStamp = () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const next = shiftStampsCount + 1;
-      setShiftStampsCount(next);
-      localStorage.setItem(`memories_shift_stamps_${cafeSlug}_${today}`, String(next));
-    } catch {}
-  };
 
   const recordShiftRedemption = () => {
     try {
@@ -880,12 +878,14 @@ export default function StaffTerminalPage() {
                     <button
                       type="button"
                       onClick={handleAddStamp}
-                      disabled={isSubmittingStamp || !merchantUser}
+                      disabled={isSubmittingStamp || !merchantUser || (!isRetryPending && (!merchantBranchId || merchantBranchVenue !== cafeSlug || isCheckingMerchantAuth))}
                       className={`py-3.5 px-4 rounded-lg font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
                         !merchantUser
                           ? 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:border-amber-500/30'
                           : isSubmittingStamp
                           ? 'bg-[#DFAB56]/70 text-[#12100E] cursor-wait'
+                          : !isRetryPending && (!merchantBranchId || merchantBranchVenue !== cafeSlug || isCheckingMerchantAuth)
+                          ? 'bg-[#1C1B1B] text-[#A19E9B]/60 border border-white/10 cursor-not-allowed'
                           : 'bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E]'
                       }`}
                     >
@@ -898,6 +898,21 @@ export default function StaffTerminalPage() {
                         <>
                           <Unlock className="w-5 h-5 text-amber-400" />
                           <span>تسجيل الدخول مطلوب للختم</span>
+                        </>
+                      ) : isRetryPending ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 text-amber-400" />
+                          <span>إعادة محاولة العملية المعلقة</span>
+                        </>
+                      ) : isCheckingMerchantAuth ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 animate-spin text-amber-400" />
+                          <span>جاري التحقق من فرع الكاونتر...</span>
+                        </>
+                      ) : (!merchantBranchId || merchantBranchVenue !== cafeSlug) ? (
+                        <>
+                          <AlertTriangle className="w-5 h-5 text-amber-400" />
+                          <span>فرع الكاونتر غير معتمد</span>
                         </>
                       ) : (
                         <>

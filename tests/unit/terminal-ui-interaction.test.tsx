@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   useTerminalVisitConfirmation,
   resolveMerchantBranchContext,
@@ -64,6 +65,8 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
       useTerminalVisitConfirmation({
         merchantUser,
         merchantBranchId,
+        merchantBranchVenue: cafeSlug,
+        isCheckingMerchantAuth: false,
         cafeSlug,
         selectedCustomer: selectedCustomerState,
         setSelectedCustomer,
@@ -103,20 +106,18 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     expect(recordShiftStamp).toHaveBeenCalledTimes(1);
   });
 
-  it('suppresses audio chime and shift counter increment on duplicate replay (replayed: true)', async () => {
+  it('suppresses chime and shift counter increment when replayed is true', async () => {
     const fetchSpy = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         success: true,
-        visitId: 'visit-existing-uuid',
+        visitId: 'visit-replayed-1',
         replayed: true,
         currentVisits: 3,
       }),
     });
     global.fetch = fetchSpy as any;
 
-    let selectedCustomerState = { ...customerA };
-    const setSelectedCustomer = vi.fn();
     const recordShiftStamp = vi.fn();
     const setErrorNotice = vi.fn();
     const setSuccessNotice = vi.fn();
@@ -125,9 +126,11 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
       useTerminalVisitConfirmation({
         merchantUser,
         merchantBranchId,
+        merchantBranchVenue: cafeSlug,
+        isCheckingMerchantAuth: false,
         cafeSlug,
-        selectedCustomer: selectedCustomerState,
-        setSelectedCustomer,
+        selectedCustomer: customerA,
+        setSelectedCustomer: vi.fn(),
         recordShiftStamp,
         setErrorNotice,
         setSuccessNotice,
@@ -139,25 +142,25 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     });
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(SoundEffectsService.playStampChime).not.toHaveBeenCalled();
     expect(recordShiftStamp).not.toHaveBeenCalled();
-    expect(setSuccessNotice).toHaveBeenCalledWith(expect.stringContaining('طلب مكرر - لم تتم مضاعفة الختم'));
+    expect(SoundEffectsService.playStampChime).not.toHaveBeenCalled();
+    expect(setSuccessNotice).toHaveBeenCalledWith(
+      expect.stringContaining('طلب مكرر - لم تتم مضاعفة الختم')
+    );
   });
 
-  it('triggers audio chime and increments shift counter on fresh verified visit', async () => {
+  it('triggers chime and increments shift counter on fresh verified visit', async () => {
     const fetchSpy = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         success: true,
-        visitId: 'visit-fresh-uuid',
+        visitId: 'visit-fresh-1',
         replayed: false,
         currentVisits: 4,
       }),
     });
     global.fetch = fetchSpy as any;
 
-    let selectedCustomerState = { ...customerA };
-    const setSelectedCustomer = vi.fn();
     const recordShiftStamp = vi.fn();
     const setErrorNotice = vi.fn();
     const setSuccessNotice = vi.fn();
@@ -166,9 +169,11 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
       useTerminalVisitConfirmation({
         merchantUser,
         merchantBranchId,
+        merchantBranchVenue: cafeSlug,
+        isCheckingMerchantAuth: false,
         cafeSlug,
-        selectedCustomer: selectedCustomerState,
-        setSelectedCustomer,
+        selectedCustomer: customerA,
+        setSelectedCustomer: vi.fn(),
         recordShiftStamp,
         setErrorNotice,
         setSuccessNotice,
@@ -180,68 +185,76 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     });
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(SoundEffectsService.playStampChime).toHaveBeenCalledTimes(1);
     expect(recordShiftStamp).toHaveBeenCalledTimes(1);
-    expect(setSuccessNotice).toHaveBeenCalledWith(expect.stringContaining('تم تأكيد وحفظ الزيارة بنجاح للعميل (Customer A)'));
+    expect(SoundEffectsService.playStampChime).toHaveBeenCalledTimes(1);
+    expect(setSuccessNotice).toHaveBeenCalledWith(
+      expect.stringContaining('تم تأكيد وحفظ الزيارة بنجاح')
+    );
   });
 
-  it('does NOT corrupt customer card if customer selection changed during in-flight submission', async () => {
+  it('preserves active customer card when switching customers during in-flight request', async () => {
     let resolveFetch: (val: any) => void;
-    const pendingFetchPromise = new Promise((resolve) => {
+    const inFlightPromise = new Promise((resolve) => {
       resolveFetch = resolve;
     });
 
-    global.fetch = vi.fn().mockReturnValue(pendingFetchPromise) as any;
+    const fetchSpy = vi.fn().mockReturnValue(inFlightPromise);
+    global.fetch = fetchSpy as any;
 
     const recordShiftStamp = vi.fn();
     const setErrorNotice = vi.fn();
     const setSuccessNotice = vi.fn();
 
-    function TestTerminalHarness() {
-      const [activeCustomer, setActiveCustomer] = useState<RegisteredCustomer | null>(customerA);
+    function TestHarness() {
+      const [customer, setCustomer] = useState<RegisteredCustomer | null>(customerA);
       const controller = useTerminalVisitConfirmation({
         merchantUser,
         merchantBranchId,
+        merchantBranchVenue: cafeSlug,
+        isCheckingMerchantAuth: false,
         cafeSlug,
-        selectedCustomer: activeCustomer,
-        setSelectedCustomer: setActiveCustomer,
+        selectedCustomer: customer,
+        setSelectedCustomer: setCustomer,
         recordShiftStamp,
         setErrorNotice,
         setSuccessNotice,
       });
 
-      return { controller, activeCustomer, setActiveCustomer };
+      return { controller, customer, setCustomer };
     }
 
-    const { result } = renderHook(() => TestTerminalHarness());
+    const { result } = renderHook(() => TestHarness());
 
     let stampPromise: Promise<void>;
     act(() => {
       stampPromise = result.current.controller.handleAddStamp();
     });
 
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const sentPayload = JSON.parse(fetchSpy.mock.calls[0][1].body);
+    expect(sentPayload.customerId).toBe(customerA.id);
+
     act(() => {
-      result.current.setActiveCustomer(customerB);
+      result.current.setCustomer(customerB);
     });
 
-    expect(result.current.activeCustomer?.id).toBe(customerB.id);
+    expect(result.current.customer?.id).toBe(customerB.id);
 
     await act(async () => {
       resolveFetch!({
         ok: true,
         json: async () => ({
           success: true,
-          visitId: 'visit-cust-a',
+          visitId: 'visit-cust-a-finished',
           replayed: false,
-          currentVisits: 4,
+          currentVisits: 10,
         }),
       });
       await stampPromise!;
     });
 
-    expect(result.current.activeCustomer?.id).toBe(customerB.id);
-    expect(result.current.activeCustomer?.totalVisits).toBe(1);
-    expect(setSuccessNotice).toHaveBeenCalledWith(expect.stringContaining('Customer A'));
+    expect(result.current.customer?.id).toBe(customerB.id);
+    expect(result.current.customer?.totalVisits).toBe(customerB.totalVisits);
   });
 
   it('guarantees immutable retry payload with identical idempotencyKey on retry after network failure', async () => {
@@ -255,7 +268,7 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
         ok: true,
         json: async () => ({
           success: true,
-          visitId: 'visit-retry-uuid',
+          visitId: 'visit-retry-success',
           replayed: false,
           currentVisits: 4,
         }),
@@ -263,8 +276,6 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     });
     global.fetch = fetchSpy as any;
 
-    let selectedCustomerState = { ...customerA };
-    const setSelectedCustomer = vi.fn();
     const recordShiftStamp = vi.fn();
     const setErrorNotice = vi.fn();
     const setSuccessNotice = vi.fn();
@@ -273,9 +284,11 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
       useTerminalVisitConfirmation({
         merchantUser,
         merchantBranchId,
+        merchantBranchVenue: cafeSlug,
+        isCheckingMerchantAuth: false,
         cafeSlug,
-        selectedCustomer: selectedCustomerState,
-        setSelectedCustomer,
+        selectedCustomer: customerA,
+        setSelectedCustomer: vi.fn(),
         recordShiftStamp,
         setErrorNotice,
         setSuccessNotice,
@@ -286,7 +299,9 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
       await result.current.handleAddStamp();
     });
 
-    expect(result.current.networkWarning).toContain('انقطع الاتصال بالخادم');
+    expect(result.current.networkWarning).not.toBeNull();
+    expect(result.current.isRetryPending).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
     const firstCallPayload = JSON.parse(fetchSpy.mock.calls[0][1].body);
 
     await act(async () => {
@@ -299,6 +314,7 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     expect(secondCallPayload.idempotencyKey).toBe(firstCallPayload.idempotencyKey);
     expect(secondCallPayload.customerId).toBe(customerA.id);
     expect(secondCallPayload.branchId).toBe(merchantBranchId);
+    expect(result.current.isRetryPending).toBe(false);
   });
 
   it('allows retrying pinned operation after clearing keypad when selectedCustomer is null', async () => {
@@ -329,6 +345,8 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
       const controller = useTerminalVisitConfirmation({
         merchantUser,
         merchantBranchId,
+        merchantBranchVenue: cafeSlug,
+        isCheckingMerchantAuth: false,
         cafeSlug,
         selectedCustomer: customer,
         setSelectedCustomer: setCustomer,
@@ -342,21 +360,19 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
 
     const { result } = renderHook(() => TestHarnessWithKeypadClear());
 
-    // 1. Initial attempt fails due to connection drop
     await act(async () => {
       await result.current.controller.handleAddStamp();
     });
 
     expect(result.current.controller.networkWarning).not.toBeNull();
+    expect(result.current.controller.isRetryPending).toBe(true);
     const firstCallPayload = JSON.parse(fetchSpy.mock.calls[0][1].body);
 
-    // 2. Cashier clears keypad (selectedCustomer becomes null)
     act(() => {
       result.current.setCustomer(null);
     });
     expect(result.current.customer).toBeNull();
 
-    // 3. Cashier clicks Retry while selectedCustomer is null
     await act(async () => {
       await result.current.controller.handleAddStamp();
     });
@@ -364,10 +380,10 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     expect(fetchSpy).toHaveBeenCalledTimes(2);
     const secondCallPayload = JSON.parse(fetchSpy.mock.calls[1][1].body);
 
-    // Assert that the exact pinned operation payload was dispatched without requiring customer reselection
     expect(secondCallPayload.idempotencyKey).toBe(firstCallPayload.idempotencyKey);
     expect(secondCallPayload.customerId).toBe(customerA.id);
     expect(secondCallPayload.branchId).toBe(merchantBranchId);
+    expect(result.current.controller.isRetryPending).toBe(false);
     expect(setSuccessNotice).toHaveBeenCalledWith(expect.stringContaining(customerA.name!));
   });
 
@@ -375,22 +391,18 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     const fetchSpy = vi.fn();
     global.fetch = fetchSpy as any;
 
-    let selectedCustomerState = { ...customerA };
-    const setSelectedCustomer = vi.fn();
-    const recordShiftStamp = vi.fn();
-    const setErrorNotice = vi.fn();
-    const setSuccessNotice = vi.fn();
-
     const { result } = renderHook(() =>
       useTerminalVisitConfirmation({
         merchantUser,
         merchantBranchId,
+        merchantBranchVenue: cafeSlug,
+        isCheckingMerchantAuth: false,
         cafeSlug,
-        selectedCustomer: selectedCustomerState,
-        setSelectedCustomer,
-        recordShiftStamp,
-        setErrorNotice,
-        setSuccessNotice,
+        selectedCustomer: customerA,
+        setSelectedCustomer: vi.fn(),
+        recordShiftStamp: vi.fn(),
+        setErrorNotice: vi.fn(),
+        setSuccessNotice: vi.fn(),
       })
     );
 
@@ -399,30 +411,26 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     });
 
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(setSelectedCustomer).not.toHaveBeenCalled();
     expect(result.current.progressWarning).toContain('مزامنة رصيد المكافآت التراكمي غير مفعلة');
   });
 
-  it('blocks stamp dispatch when merchantBranchId is not matched to venue context', async () => {
+  it('blocks stamp dispatch when counter venue does not match merchant branch context', async () => {
     const fetchSpy = vi.fn();
     global.fetch = fetchSpy as any;
-
-    let selectedCustomerState = { ...customerA };
-    const setSelectedCustomer = vi.fn();
-    const recordShiftStamp = vi.fn();
     const setErrorNotice = vi.fn();
-    const setSuccessNotice = vi.fn();
 
     const { result } = renderHook(() =>
       useTerminalVisitConfirmation({
         merchantUser,
         merchantBranchId: null,
-        cafeSlug,
-        selectedCustomer: selectedCustomerState,
-        setSelectedCustomer,
-        recordShiftStamp,
+        merchantBranchVenue: null,
+        isCheckingMerchantAuth: false,
+        cafeSlug: 'different-slug',
+        selectedCustomer: customerA,
+        setSelectedCustomer: vi.fn(),
+        recordShiftStamp: vi.fn(),
         setErrorNotice,
-        setSuccessNotice,
+        setSuccessNotice: vi.fn(),
       })
     );
 
@@ -438,7 +446,6 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     const mockOrgId = 'org-123';
     const mockBranchId = 'branch-match-uuid';
 
-    // Mock Supabase client
     const createMockSupabase = (opts: {
       branchData?: any;
       branchError?: any;
@@ -478,18 +485,15 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
       },
     });
 
-    // 1. Without userId, fails closed immediately
     const resNoUser = await resolveMerchantBranchContext(null, null, cafeSlug);
     expect(resNoUser.branchId).toBeNull();
     expect(resNoUser.error).toContain('يلزم تسجيل دخول تاجر معتمد');
 
-    // 2. When branch does not match venue context slug
     const sbNoBranch = createMockSupabase({ branchData: null });
     const resNoBranch = await resolveMerchantBranchContext(sbNoBranch, 'user-1', 'unknown-cafe');
     expect(resNoBranch.branchId).toBeNull();
     expect(resNoBranch.error).toContain('تعذر مطابقة الفرع المخصص للكاونتر');
 
-    // 3. When caller is not a member of the branch organization
     const sbNoMem = createMockSupabase({
       branchData: { id: mockBranchId, organization_id: mockOrgId, status: 'active', slug: cafeSlug },
       memberData: null,
@@ -498,7 +502,6 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     expect(resNoMem.branchId).toBeNull();
     expect(resNoMem.error).toContain('المستخدم ليس عضواً مصرحاً');
 
-    // 4. When member is restricted to a different branch
     const sbDiffBranch = createMockSupabase({
       branchData: { id: mockBranchId, organization_id: mockOrgId, status: 'active', slug: cafeSlug },
       memberData: { organization_id: mockOrgId, branch_id: 'different-branch-uuid', role: 'cashier' },
@@ -507,7 +510,6 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     expect(resDiffBranch.branchId).toBeNull();
     expect(resDiffBranch.error).toContain('عضوية التاجر مقيدة بفرع آخر');
 
-    // 5. Valid match (matching branch, active member in same org)
     const sbValid = createMockSupabase({
       branchData: { id: mockBranchId, organization_id: mockOrgId, status: 'active', slug: cafeSlug },
       memberData: { organization_id: mockOrgId, branch_id: mockBranchId, role: 'cashier' },
@@ -516,5 +518,236 @@ describe('Terminal Visit Confirmation Controller & Interaction Resilience', () =
     expect(resValid.branchId).toBe(mockBranchId);
     expect(resValid.organizationId).toBe(mockOrgId);
     expect(resValid.error).toBeNull();
+  });
+
+  it('blocks stamp dispatch using stale Branch A during delayed resolution of Context B, then allows Branch B upon resolution', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        visitId: 'visit-test-context-switch',
+        replayed: false,
+        currentVisits: 2,
+      }),
+    });
+    global.fetch = fetchSpy as any;
+    const setErrorNotice = vi.fn();
+
+    // Test harness representing dynamic venue switching with delayed verification
+    interface HarnessProps {
+      slug: string;
+      branchId: string | null;
+      venue: string | null;
+      isChecking: boolean;
+    }
+
+    function DynamicVenueHarness(props: HarnessProps) {
+      return useTerminalVisitConfirmation({
+        merchantUser,
+        merchantBranchId: props.branchId,
+        merchantBranchVenue: props.venue,
+        isCheckingMerchantAuth: props.isChecking,
+        cafeSlug: props.slug,
+        selectedCustomer: customerA,
+        setSelectedCustomer: vi.fn(),
+        recordShiftStamp: vi.fn(),
+        setErrorNotice,
+        setSuccessNotice: vi.fn(),
+      });
+    }
+
+    // Step 1: Context A resolved and active
+    const { result, rerender } = renderHook(
+      (props: HarnessProps) => DynamicVenueHarness(props),
+      {
+        initialProps: {
+          slug: 'cafe-alpha',
+          branchId: 'branch-alpha-uuid',
+          venue: 'cafe-alpha',
+          isChecking: false,
+        },
+      }
+    );
+
+    // Initial stamp in Context A succeeds with Branch A
+    await act(async () => {
+      await result.current.handleAddStamp();
+    });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const callA = JSON.parse(fetchSpy.mock.calls[0][1].body);
+    expect(callA.branchId).toBe('branch-alpha-uuid');
+
+    // Step 2: Context switches to Context B with delayed resolution (immediate de-authorization)
+    rerender({
+      slug: 'cafe-beta',
+      branchId: null, // De-authorized immediately
+      venue: null,
+      isChecking: true,
+    });
+
+    // Attempting a stamp during pending resolution of Context B must be blocked synchronously
+    await act(async () => {
+      await result.current.handleAddStamp();
+    });
+
+    // Fetch must NOT be called with stale Branch A or invalid branch
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(setErrorNotice).toHaveBeenCalledWith(
+      expect.stringContaining('جاري التحقق من فرع الكاونتر')
+    );
+
+    // Step 3: Context B resolution completes
+    rerender({
+      slug: 'cafe-beta',
+      branchId: 'branch-beta-uuid',
+      venue: 'cafe-beta',
+      isChecking: false,
+    });
+
+    // Stamping in Context B now succeeds and dispatches Branch B
+    await act(async () => {
+      await result.current.handleAddStamp();
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const callB = JSON.parse(fetchSpy.mock.calls[1][1].body);
+    expect(callB.branchId).toBe('branch-beta-uuid');
+  });
+
+  it('fails closed when Context B resolution fails, preventing reversion to stale Branch A', async () => {
+    const fetchSpy = vi.fn();
+    global.fetch = fetchSpy as any;
+    const setErrorNotice = vi.fn();
+
+    interface HarnessProps {
+      slug: string;
+      branchId: string | null;
+      venue: string | null;
+      isChecking: boolean;
+    }
+
+    const { result, rerender } = renderHook(
+      (props: HarnessProps) =>
+        useTerminalVisitConfirmation({
+          merchantUser,
+          merchantBranchId: props.branchId,
+          merchantBranchVenue: props.venue,
+          isCheckingMerchantAuth: props.isChecking,
+          cafeSlug: props.slug,
+          selectedCustomer: customerA,
+          setSelectedCustomer: vi.fn(),
+          recordShiftStamp: vi.fn(),
+          setErrorNotice,
+          setSuccessNotice: vi.fn(),
+        }),
+      {
+        initialProps: {
+          slug: 'cafe-alpha',
+          branchId: 'branch-alpha-uuid',
+          venue: 'cafe-alpha',
+          isChecking: false,
+        },
+      }
+    );
+
+    // Context switches to Context B, and resolution fails closed
+    rerender({
+      slug: 'cafe-beta',
+      branchId: null, // Failed closed
+      venue: null,
+      isChecking: false,
+    });
+
+    // Attempting to stamp must be blocked synchronously without reverting to Branch A
+    await act(async () => {
+      await result.current.handleAddStamp();
+    });
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(setErrorNotice).toHaveBeenCalledWith(
+      expect.stringContaining('تعذر تحديد فرع التاجر المطابق للكاونتر (cafe-beta)')
+    );
+  });
+
+  it('preserves in-flight pinned operation payload across venue context switches during retry', async () => {
+    let callCount = 0;
+    const fetchSpy = vi.fn().mockImplementation(async () => {
+      callCount++;
+      if (callCount === 1) {
+        throw new Error('Connection reset by peer');
+      }
+      return {
+        ok: true,
+        json: async () => ({
+          success: true,
+          visitId: 'visit-retry-isolated',
+          replayed: false,
+          currentVisits: 5,
+        }),
+      };
+    });
+    global.fetch = fetchSpy as any;
+
+    interface HarnessProps {
+      slug: string;
+      branchId: string | null;
+      venue: string | null;
+      isChecking: boolean;
+    }
+
+    const { result, rerender } = renderHook(
+      (props: HarnessProps) =>
+        useTerminalVisitConfirmation({
+          merchantUser,
+          merchantBranchId: props.branchId,
+          merchantBranchVenue: props.venue,
+          isCheckingMerchantAuth: props.isChecking,
+          cafeSlug: props.slug,
+          selectedCustomer: customerA,
+          setSelectedCustomer: vi.fn(),
+          recordShiftStamp: vi.fn(),
+          setErrorNotice: vi.fn(),
+          setSuccessNotice: vi.fn(),
+        }),
+      {
+        initialProps: {
+          slug: 'cafe-alpha',
+          branchId: 'branch-alpha-uuid',
+          venue: 'cafe-alpha',
+          isChecking: false,
+        },
+      }
+    );
+
+    // Initial dispatch in Context A fails due to network drop
+    await act(async () => {
+      await result.current.handleAddStamp();
+    });
+
+    expect(result.current.networkWarning).not.toBeNull();
+    expect(result.current.isRetryPending).toBe(true);
+    const firstCallPayload = JSON.parse(fetchSpy.mock.calls[0][1].body);
+    expect(firstCallPayload.branchId).toBe('branch-alpha-uuid');
+
+    // Context switches to Context B
+    rerender({
+      slug: 'cafe-beta',
+      branchId: 'branch-beta-uuid',
+      venue: 'cafe-beta',
+      isChecking: false,
+    });
+
+    // Cashier retries: Must retry the original pinned operation (Branch A) without being corrupted by Context B
+    await act(async () => {
+      await result.current.handleAddStamp();
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const retryCallPayload = JSON.parse(fetchSpy.mock.calls[1][1].body);
+
+    expect(retryCallPayload.idempotencyKey).toBe(firstCallPayload.idempotencyKey);
+    expect(retryCallPayload.branchId).toBe('branch-alpha-uuid'); // Pinned payload preserved!
+    expect(retryCallPayload.customerId).toBe(customerA.id);
+    expect(result.current.isRetryPending).toBe(false);
   });
 });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -10,16 +11,29 @@ export interface BranchResolutionResult {
   error: string | null;
 }
 
+export interface SupabaseLikeClient {
+  from(table: string): {
+    select(columns: string): {
+      eq(col: string, val: string): {
+        eq(col: string, val: string): {
+          maybeSingle(): Promise<{ data: Record<string, unknown> | null; error: unknown | null }>;
+        };
+        maybeSingle?(): Promise<{ data: Record<string, unknown> | null; error: unknown | null }>;
+      };
+    };
+  };
+}
+
 /**
  * Deterministically resolves the active branch context for a merchant user against the counter venue context (cafeSlug).
  * Never uses arbitrary limit(1) fallbacks.
  */
 export async function resolveMerchantBranchContext(
-  supabase: any,
+  supabase: any | null | undefined,
   userId: string | null | undefined,
   cafeSlug: string
 ): Promise<BranchResolutionResult> {
-  if (!userId) {
+  if (!userId || !supabase) {
     return {
       branchId: null,
       organizationId: null,
@@ -28,12 +42,14 @@ export async function resolveMerchantBranchContext(
   }
 
   // 1. Resolve branch strictly by venue context (cafeSlug)
-  const { data: branch, error: branchError } = await supabase
+  const { data: branchData, error: branchError } = await supabase
     .from('branches')
     .select('id, organization_id, status, slug')
     .eq('slug', cafeSlug)
     .eq('status', 'active')
     .maybeSingle();
+
+  const branch = branchData as { id: string; organization_id: string; status: string; slug: string } | null;
 
   if (branchError || !branch) {
     return {
@@ -44,12 +60,14 @@ export async function resolveMerchantBranchContext(
   }
 
   // 2. Resolve caller membership strictly in the branch's organization
-  const { data: member, error: memberError } = await supabase
+  const { data: memberData, error: memberError } = await supabase
     .from('organization_members')
     .select('organization_id, branch_id, role')
     .eq('user_id', userId)
     .eq('organization_id', branch.organization_id)
     .maybeSingle();
+
+  const member = memberData as { organization_id: string; branch_id: string | null; role: string } | null;
 
   if (memberError || !member) {
     return {
@@ -76,8 +94,10 @@ export async function resolveMerchantBranchContext(
 }
 
 export interface UseTerminalVisitConfirmationProps {
-  merchantUser: any | null;
+  merchantUser: { id: string; email?: string } | null;
   merchantBranchId: string | null;
+  merchantBranchVenue?: string | null;
+  isCheckingMerchantAuth?: boolean;
   cafeSlug: string;
   selectedCustomer: RegisteredCustomer | null;
   setSelectedCustomer: React.Dispatch<React.SetStateAction<RegisteredCustomer | null>>;
@@ -89,6 +109,8 @@ export interface UseTerminalVisitConfirmationProps {
 export function useTerminalVisitConfirmation({
   merchantUser,
   merchantBranchId,
+  merchantBranchVenue,
+  isCheckingMerchantAuth = false,
   cafeSlug,
   selectedCustomer,
   setSelectedCustomer,
@@ -101,6 +123,7 @@ export function useTerminalVisitConfirmation({
   const [isRefreshingProgress, setIsRefreshingProgress] = useState(false);
   const [networkWarning, setNetworkWarning] = useState<string | null>(null);
   const [progressWarning, setProgressWarning] = useState<string | null>(null);
+  const [isRetryPending, setIsRetryPending] = useState(false);
   const pendingOperationRef = useRef<{
     idempotencyKey: string;
     customerId: string;
@@ -127,13 +150,19 @@ export function useTerminalVisitConfirmation({
     let operation = pendingOperationRef.current;
 
     if (!operation) {
-      // Starting a NEW operation: require active customer in UI and active branch
-      if (!selectedCustomer) return;
+      // 1. Immediate synchronous context readiness guard: block new stamp while checking auth/branch
+      if (isCheckingMerchantAuth) {
+        setErrorNotice('جاري التحقق من فرع الكاونتر، يرجى الانتظار لحظات.');
+        return;
+      }
 
-      if (!merchantBranchId) {
+      // 2. Strict venue-to-branch binding check
+      if (!merchantBranchId || (merchantBranchVenue !== undefined && merchantBranchVenue !== cafeSlug)) {
         setErrorNotice(`تعذر تحديد فرع التاجر المطابق للكاونتر (${cafeSlug}). يرجى التحقق من إعدادات الفروع.`);
         return;
       }
+
+      if (!selectedCustomer) return;
 
       if (!selectedCustomer.id) {
         setErrorNotice('معرّف العميل الموثق غير متوفر. يلزم تسجيل حضور العميل (Check-in) في هذا الفرع أولاً.');
@@ -172,8 +201,10 @@ export function useTerminalVisitConfirmation({
         const errorMsg = data?.error || 'فشل تسجيل الزيارة في الخادم.';
         if (res.status === 409 || res.status === 429 || res.status === 403 || res.status === 400 || res.status === 404) {
           pendingOperationRef.current = null;
+          setIsRetryPending(false);
           setErrorNotice(errorMsg);
         } else {
+          setIsRetryPending(true);
           setNetworkWarning(`حدث خطأ من الخادم (${res.status}). يمكنك إعادة المحاولة بأمان بنفس العملية.`);
         }
         return;
@@ -181,6 +212,7 @@ export function useTerminalVisitConfirmation({
 
       // Success: Clear pending operation
       pendingOperationRef.current = null;
+      setIsRetryPending(false);
 
       // Handle Replay vs Fresh Visit:
       if (data.replayed) {
@@ -201,7 +233,7 @@ export function useTerminalVisitConfirmation({
       if (selectedCustomerRef.current?.id === operation.customerId) {
         if (data.progressFetchFailed) {
           setProgressWarning(
-            `تم تأكيد الزيارة بنجاح في قاعدة البيانات، ولكن تعذر تحديث رصيد الولاء مؤقتاً.`
+            'تم تأكيد الزيارة بنجاح في قاعدة البيانات، ولكن تعذر تحديث رصيد الولاء مؤقتاً.'
           );
         } else if (data.currentVisits !== null && data.currentVisits !== undefined) {
           setSelectedCustomer((prev) => (prev && prev.id === operation.customerId ? { ...prev, totalVisits: data.currentVisits } : prev));
@@ -213,9 +245,10 @@ export function useTerminalVisitConfirmation({
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('stampy-stamp-added'));
       }
-    } catch (netErr: any) {
+    } catch (netErr: unknown) {
       // Network interruption or timeout: KEEP pendingOperationRef intact for safe retry!
       console.warn('Network error during visit confirmation:', netErr);
+      setIsRetryPending(true);
       setNetworkWarning(
         'انقطع الاتصال بالخادم أثناء تأكيد الزيارة. النتيجة غير مؤكدة — اضغط "إعادة المحاولة" لإرسال نفس العملية الموثقة بأمان دون تكرار الختم.'
       );
@@ -242,6 +275,7 @@ export function useTerminalVisitConfirmation({
     isSubmittingStamp,
     isSubmittingStampRef,
     isRefreshingProgress,
+    isRetryPending,
     networkWarning,
     progressWarning,
     pendingOperationRef,
