@@ -27,12 +27,14 @@ import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
 
 export type DashboardTab =
   | 'overview'
-  | 'print'
-  | 'memories'
+  | 'card_studio'
   | 'customers'
-  | 'wall'
+  | 'staff'
   | 'rewards'
   | 'qrcodes'
+  | 'memories'
+  | 'wall'
+  | 'print'
   | 'frames'
   | 'analytics'
   | 'settings'
@@ -96,7 +98,7 @@ export const DashboardNavBar: React.FC<DashboardNavBarProps> = ({
   ];
 
   return (
-    <header className="bg-[#141212]/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-30 shadow-md text-[#e6e1e1]">
+    <header className="bg-white/95 backdrop-blur-md border-b-2 border-[#3D2314] sticky top-0 z-30 shadow-xs text-[#3D2314]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <CoBrandingLogos

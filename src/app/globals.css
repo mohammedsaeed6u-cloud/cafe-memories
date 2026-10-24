@@ -7,10 +7,24 @@
   --color-surface-dim: #F5EFE6;
   --color-surface-bright: #FFFFFF;
 
-  --color-primary: #DFAB56;
-  --color-primary-container: #DFAB56;
+  --color-primary: #B83A26;
+  --color-primary-container: #B83A26;
   --color-secondary: #3D2314;
   --color-secondary-container: #7C2D26;
+
+  /* Official stampy-design-system tokens */
+  --color-stampy-earth: #3D2314;
+  --color-stampy-sienna: #B83A26;
+  --color-stampy-orange: #D97328;
+  --color-stampy-ochre: #E5A836;
+  --color-stampy-teal: #527E78;
+  --color-stampy-blue: #1F617E;
+  --color-stampy-sandpaper: #EADDC4;
+  --color-stampy-surface: #FAF5EB;
+
+  --shadow-stamp-resting: 3px 3px 0px #3D2314;
+  --shadow-stamp-hover: 5px 5px 0px #3D2314;
+  --shadow-stamp-pressed: 1px 1px 0px #3D2314;
 
   --color-alabaster: #FAF5EB;
   --color-alabaster-muted: #D9D9D9;
@@ -22,6 +36,18 @@
   --font-playfair: var(--font-playfair), 'Playfair Display', Georgia, serif;
   --font-jakarta: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
   --font-cairo: var(--font-cairo), 'Cairo', sans-serif;
+}
+
+@utility shadow-stamp-resting {
+  box-shadow: 3px 3px 0px #3D2314;
+}
+
+@utility shadow-stamp-hover {
+  box-shadow: 5px 5px 0px #3D2314;
+}
+
+@utility shadow-stamp-pressed {
+  box-shadow: 1px 1px 0px #3D2314;
 }
 
 @layer base {

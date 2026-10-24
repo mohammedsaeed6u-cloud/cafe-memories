@@ -102,6 +102,11 @@ export class LoyaltyPurseService {
     }
   }
 
+  public static addStamp(customerPhone: string, cafeSlug: string, reason?: string, maxSlots = 5): CustomerLoyaltyData {
+    this.addDirectStamp(customerPhone, cafeSlug, maxSlots);
+    return this.getData(customerPhone, cafeSlug, maxSlots);
+  }
+
   public static canCustomerShoot(customerPhone?: string, cafeSlug?: string, currentPhotosCount?: number): boolean {
     return true;
   }

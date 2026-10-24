@@ -18,6 +18,9 @@ import { DashboardWallTab, ScreenRecord } from '@/components/dashboard/Dashboard
 import { DashboardRewardsTab } from '@/components/dashboard/DashboardRewardsTab';
 import { DashboardQrTab } from '@/components/dashboard/DashboardQrTab';
 import { DashboardSettingsTab } from '@/components/dashboard/DashboardSettingsTab';
+import { StaffManagementTab } from '@/components/dashboard/StaffManagementTab';
+import { CardStudioTab } from '@/components/dashboard/CardStudioTab';
+import { CustomerCRMTab } from '@/components/dashboard/CustomerCRMTab';
 
 // Lazy Loaded Heavy Tabs
 const PrintStationTab = dynamic(
@@ -497,7 +500,19 @@ export default function MerchantDashboardPage() {
           />
         )}
 
+        {activeTab === 'card_studio' && (
+          <CardStudioTab businessSlug={settings.cafeSlug} />
+        )}
+
+        {activeTab === 'staff' && (
+          <StaffManagementTab businessSlug={settings.cafeSlug} />
+        )}
+
         {activeTab === 'customers' && (
+          <CustomerCRMTab />
+        )}
+
+        {/* Legacy Customer Table Fallback */ false && (
           <DashboardCustomersTab
             customers={customers}
             isLoadingCustomers={isLoadingCustomers}

@@ -12,6 +12,7 @@ import { CustomerRegistryService } from '@/lib/services/customer-registry.servic
 import { PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
 import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
 import { PasswordInput } from '@/components/ui/PasswordInput';
+import { TicketButton } from '@/components/ui/TicketButton';
 
 // Dedicated Feature Slices
 import { CoBrandingHeader } from '@/features/co-branding/CoBrandingHeader';
@@ -166,6 +167,28 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
   const [isStickerTrayOpen, setIsStickerTrayOpen] = useState(false);
   const [activeCaptureSlot, setActiveCaptureSlot] = useState<number | null>(null);
 
+  // Total slots authoritative from merchant
+  const totalCardSlots = Math.max(selectedFrame.shotCount || 3, 1);
+  const loyaltyMaxVisits = settings.loyaltyMaxVisits || 5;
+
+  // Real-time synchronization of stamps across tabs & devices
+  useEffect(() => {
+    const handleSync = () => {
+      if (customerPhone) {
+        const fresh = LoyaltyPurseService.getData(customerPhone, cafeSlug, loyaltyMaxVisits);
+        setLoyaltyData(fresh);
+      }
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('stampy-stamp-added', handleSync);
+    const interval = setInterval(handleSync, 2000);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('stampy-stamp-added', handleSync);
+      clearInterval(interval);
+    };
+  }, [customerPhone, cafeSlug, loyaltyMaxVisits]);
+
   const handleAddSticker = (emoji: string) => {
     if (!emoji.trim()) return;
     const randomOffset = (Math.random() - 0.5) * 20;
@@ -184,10 +207,6 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regSuccessNotice, setRegSuccessNotice] = useState<string | null>(null);
-
-  // Total slots authoritative from merchant
-  const totalCardSlots = Math.max(selectedFrame.shotCount || 3, 1);
-  const loyaltyMaxVisits = settings.loyaltyMaxVisits || 5;
 
   // Hydrate persisted session from storage
   useEffect(() => {
@@ -477,14 +496,14 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
         )}
 
         {/* TOP LEVEL SEGMENTED NAVIGATION: Clear separation between Photobooth Studio and Loyalty Pass */}
-        <div className="w-full grid grid-cols-2 p-1.5 bg-[#141212] rounded-xl border border-white/10 shadow-2xl backdrop-blur-xl">
+        <div className="w-full grid grid-cols-2 p-1.5 bg-white rounded-xl border border-[#EADDC4] shadow-2xl backdrop-blur-xl">
           <button
             type="button"
             onClick={() => setActiveTab('studio')}
             className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'studio'
                 ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] font-black'
-                : 'text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-white/[0.04]'
+                : 'text-[#3D2314]/70 hover:text-[#FAF5EB] hover:bg-white/[0.04]'
             }`}
           >
             <Camera className="w-4 h-4 text-[#FAF5EB]" />
@@ -497,7 +516,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'loyalty'
                 ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] font-black'
-                : 'text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-white/[0.04]'
+                : 'text-[#3D2314]/70 hover:text-[#FAF5EB] hover:bg-white/[0.04]'
             }`}
           >
             <Award className="w-4 h-4 text-[#FAF5EB]" />
@@ -588,7 +607,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                       className={`px-3 py-2 rounded-lg border text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
                         isActive
                           ? 'bg-[#DFAB56] text-[#12100E] border-[#DFAB56] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_6px_16px_-4px_rgba(221,2,0,0.5)] font-black'
-                          : 'bg-[#1C1B1B]/70 hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FAF5EB] border-white/10'
+                          : 'bg-[#1C1B1B]/70 hover:bg-[#211F1F] text-[#3D2314]/70 hover:text-[#FAF5EB] border-[#EADDC4]'
                       }`}
                     >
                       <span className="text-sm">{mode.icon}</span>
@@ -600,9 +619,9 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
 
               {/* Sub-customizer for Spotify */}
               {cardMode === 'spotify_player' && (
-                <div className="p-4 bg-[#141212] border border-white/10 rounded-2xl space-y-3 text-xs shadow-2xl">
+                <div className="p-4 bg-white border border-[#EADDC4] rounded-2xl space-y-3 text-xs shadow-2xl">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11px] font-bold text-[#e6e1e1]">لون الخلفية:</span>
+                    <span className="text-[11px] font-bold text-[#3D2314]">لون الخلفية:</span>
                     {[
                       { id: '#384C5A', name: 'Slate Blue', hex: '#384C5A' },
                       { id: '#4E483E', name: 'Warm Taupe', hex: '#4E483E' },
@@ -614,7 +633,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                         type="button"
                         onClick={() => setSpotifyBg(c.hex)}
                         className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold transition cursor-pointer ${
-                          spotifyBg === c.hex ? 'border-[#DFAB56] ring-1 ring-[#DFAB56]/40 text-[#FAF5EB] bg-[#3D2314]/30' : 'border-white/10 text-[#A19E9B] bg-[#1C1B1B]'
+                          spotifyBg === c.hex ? 'border-[#DFAB56] ring-1 ring-[#DFAB56]/40 text-[#FAF5EB] bg-[#3D2314]/30' : 'border-[#EADDC4] text-[#3D2314]/70 bg-[#1C1B1B]'
                         }`}
                       >
                         <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c.hex }} />
@@ -623,9 +642,9 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                     ))}
                   </div>
 
-                  <div className="space-y-2 pt-2 border-t border-white/10">
+                  <div className="space-y-2 pt-2 border-t border-[#EADDC4]">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#e6e1e1]">الأغنية المفضلة للكارت:</span>
+                      <span className="text-[11px] font-bold text-[#3D2314]">الأغنية المفضلة للكارت:</span>
                       <span className="text-[10px] text-[#DFAB56] font-mono font-bold">SPOTIFY DOCK</span>
                     </div>
 
@@ -644,7 +663,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                           className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
                             spotifyTrack.title === preset.title
                               ? 'bg-[#3D2314]/60 text-[#FAF5EB] border-[#DFAB56]/50 font-black'
-                              : 'bg-[#1C1B1B] border-white/10 text-[#A19E9B] hover:text-[#FAF5EB]'
+                              : 'bg-[#1C1B1B] border-[#EADDC4] text-[#3D2314]/70 hover:text-[#FAF5EB]'
                           }`}
                         >
                           🎵 {preset.title}
@@ -658,14 +677,14 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                         value={spotifyTrack.title}
                         onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, title: e.target.value }))}
                         placeholder="اسم الأغنية..."
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FAF5EB] focus:bg-[#0E0D0D] focus:outline-none focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 font-bold placeholder-[#A19E9B]/50"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-[#FAF5EB] focus:bg-white focus:outline-none focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 font-bold placeholder-[#A19E9B]/50"
                       />
                       <input
                         type="text"
                         value={spotifyTrack.artist}
                         onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, artist: e.target.value }))}
                         placeholder="اسم الفنان / الألبوم..."
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FAF5EB] focus:bg-[#0E0D0D] focus:outline-none focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 font-bold placeholder-[#A19E9B]/50"
+                        className="w-full px-3 py-2 text-xs rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-[#FAF5EB] focus:bg-white focus:outline-none focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 font-bold placeholder-[#A19E9B]/50"
                       />
                     </div>
                   </div>
@@ -674,9 +693,9 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
 
               {/* Sub-customizer for Location / Seat */}
               {cardMode === 'ticket_express' && (
-                <div className="p-4 bg-[#141212] border border-white/10 rounded-2xl space-y-2 text-xs shadow-2xl">
+                <div className="p-4 bg-white border border-[#EADDC4] rounded-2xl space-y-2 text-xs shadow-2xl">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#e6e1e1]">موقع الجلسة أو الركن:</span>
+                    <span className="text-[11px] font-bold text-[#3D2314]">موقع الجلسة أو الركن:</span>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {['طاولة 04 • صالة', 'جلسة VIP', 'ركن الاستقبال', 'الفرع الرئيسي'].map((seat) => (
                         <button
@@ -686,7 +705,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                           className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
                             ticketSeat === seat
                               ? 'bg-[#3D2314]/60 text-[#FAF5EB] border-[#DFAB56]/50 font-black'
-                              : 'bg-[#1C1B1B] border-white/10 text-[#A19E9B] hover:text-[#FAF5EB]'
+                              : 'bg-[#1C1B1B] border-[#EADDC4] text-[#3D2314]/70 hover:text-[#FAF5EB]'
                           }`}
                         >
                           {seat}
@@ -699,7 +718,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                     value={ticketSeat}
                     onChange={(e) => setTicketSeat(e.target.value)}
                     placeholder="رقم الطاولة أو الموقع (مثال: طاولة VIP 12 أو الركن 03)..."
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-white/10 bg-[#0B0A0A] text-[#FAF5EB] focus:bg-[#0E0D0D] focus:outline-none focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 font-bold placeholder-[#A19E9B]/50"
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-[#FAF5EB] focus:bg-white focus:outline-none focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 font-bold placeholder-[#A19E9B]/50"
                   />
                 </div>
               )}
@@ -710,7 +729,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
               <button
                 type="button"
                 onClick={() => setIsStickerTrayOpen(!isStickerTrayOpen)}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 text-[#FAF5EB] font-bold text-xs shadow-xl transition flex items-center justify-between cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#1C1B1B] border border-[#EADDC4] text-[#FAF5EB] font-bold text-xs shadow-xl transition flex items-center justify-between cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-[#DFAB56]" />
@@ -736,7 +755,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             <button
               type="button"
               onClick={handlePrintOrDownload}
-              className="w-full max-w-md py-3 px-4 rounded-lg bg-[#141212] hover:bg-[#1C1B1B] border border-white/10 hover:border-[#DFAB56]/30 text-[#FAF5EB] font-bold text-xs shadow-xl transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+              className="w-full max-w-md py-3 px-4 rounded-lg bg-white hover:bg-[#1C1B1B] border border-[#EADDC4] hover:border-[#DFAB56]/30 text-[#FAF5EB] font-bold text-xs shadow-xl transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
               <Download className="w-4 h-4 text-[#DFAB56]" />
               <span>تحميل شريط الذكريات عالي الدقة (300 DPI)</span>
@@ -749,14 +768,14 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             />
 
             {/* Contextual Link to Loyalty */}
-            <div className="w-full p-4 rounded-2xl bg-[#141212] border border-white/10 flex items-center justify-between gap-3 text-right shadow-2xl mt-2">
+            <div className="w-full p-4 rounded-2xl bg-white border border-[#EADDC4] flex items-center justify-between gap-3 text-right shadow-2xl mt-2">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center shrink-0 font-bold shadow-xs">
                   <Award className="w-5 h-5 text-[#DFAB56]" />
                 </div>
                 <div>
                   <p className="text-xs font-black text-[#FAF5EB]">هل أنت من رواد {settings.branding.name}؟</p>
-                  <p className="text-[11px] text-[#A19E9B]">اجمع أختام زياراتك واستلم هديتك المجانية في كارت ولاء هاتفك</p>
+                  <p className="text-[11px] text-[#3D2314]/70">اجمع أختام زياراتك واستلم هديتك المجانية في كارت ولاء هاتفك</p>
                 </div>
               </div>
               <button
@@ -779,7 +798,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                 <h2 className="text-sm sm:text-base font-bold text-[#FAF5EB]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
                   كارت الولاء والمحفظة الرقمية
                 </h2>
-                <p className="text-[11px] text-[#A19E9B]">
+                <p className="text-[11px] text-[#3D2314]/70">
                   أختام زياراتك المعتمدة وهديتك الفورية في {settings.branding.name}
                 </p>
               </div>
@@ -793,20 +812,20 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             <div className="w-full">
               {customerPhone ? (
                 <div className="space-y-3">
-                  <div className="w-full p-3 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl flex items-center justify-between text-xs">
+                  <div className="w-full p-3 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-lg bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center font-bold">
                         <CheckCircle className="w-4 h-4 text-[#DFAB56]" />
                       </div>
                       <div>
                         <span className="font-bold text-[#FAF5EB]">{customerName || 'ضيف مميز'}</span>
-                        <span className="text-[10px] text-[#A19E9B] font-mono block" dir="ltr">{customerPhone}</span>
+                        <span className="text-[10px] text-[#3D2314]/70 font-mono block" dir="ltr">{customerPhone}</span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={handleClearCustomer}
-                      className="text-[10px] text-[#A19E9B] hover:text-[#FAF5EB] underline cursor-pointer"
+                      className="text-[10px] text-[#3D2314]/70 hover:text-[#FAF5EB] underline cursor-pointer"
                     >
                       تغيير الحساب
                     </button>
@@ -821,8 +840,8 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                   />
                 </div>
               ) : (
-                <div className="w-full p-4 sm:p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl text-[#e6e1e1] space-y-3">
-                  <div className="flex items-center gap-2.5 border-b border-white/10 pb-2.5">
+                <div className="w-full p-4 sm:p-5 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl text-[#3D2314] space-y-3">
+                  <div className="flex items-center gap-2.5 border-b border-[#EADDC4] pb-2.5">
                     <div className="w-8 h-8 rounded-lg bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center font-bold shadow-xs">
                       <UserCheck className="w-4 h-4 text-[#DFAB56]" />
                     </div>
@@ -830,7 +849,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                       <h3 className="font-bold text-sm text-[#FAF5EB]">
                         احفظ أختامك وصورك في محفظة هاتفك
                       </h3>
-                      <p className="text-[11px] text-[#A19E9B]">
+                      <p className="text-[11px] text-[#3D2314]/70">
                         سجّل رقمك لحفظ أختام كارتك واستلام هديتك الفورية عند اكتماله
                       </p>
                     </div>
@@ -838,25 +857,25 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
 
                   <form onSubmit={handleRegisterCustomer} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div>
-                      <label className="text-[11px] font-bold text-[#e6e1e1] block mb-1">الاسم أو اللقب:</label>
+                      <label className="text-[11px] font-bold text-[#3D2314] block mb-1">الاسم أو اللقب:</label>
                       <input
                         type="text"
                         required
                         placeholder="مثال: أحمد، سارة، ضيفنا المميز..."
                         value={regName}
                         onChange={(e) => setRegName(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FAF5EB] focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none placeholder-[#A19E9B]/50"
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#FAF5EB] focus:bg-white focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none placeholder-[#A19E9B]/50"
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold text-[#e6e1e1] block mb-1">رقم الموبايل:</label>
+                      <label className="text-[11px] font-bold text-[#3D2314] block mb-1">رقم الموبايل:</label>
                       <input
                         type="tel"
                         required
                         placeholder="01xxxxxxxxx"
                         value={regPhone}
                         onChange={(e) => setRegPhone(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] text-xs text-[#FAF5EB] focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none font-mono placeholder-[#A19E9B]/50"
+                        className="w-full px-3 py-2 rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#FAF5EB] focus:bg-white focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none font-mono placeholder-[#A19E9B]/50"
                         dir="ltr"
                       />
                     </div>
@@ -875,14 +894,14 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
             </div>
 
             {/* Contextual Link to Studio */}
-            <div className="w-full p-4 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl flex items-center justify-between gap-3 text-right mt-2">
+            <div className="w-full p-4 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl flex items-center justify-between gap-3 text-right mt-2">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center shrink-0">
                   <Camera className="w-5 h-5 text-[#DFAB56]" />
                 </div>
                 <div>
                   <p className="text-xs font-black text-[#FAF5EB]">وثّق زيارتك الحالية بصورة في الاستوديو</p>
-                  <p className="text-[11px] text-[#A19E9B]">التقط لقطة تذكارية بالكاميرا وأضف نغمتك والملصقات المفضلة</p>
+                  <p className="text-[11px] text-[#3D2314]/70">التقط لقطة تذكارية بالكاميرا وأضف نغمتك والملصقات المفضلة</p>
                 </div>
               </div>
               <button
@@ -898,14 +917,103 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
       </main>
 
       {/* 9. MODALS */}
+      {/* First-Visit Customer Onboarding Modal (Phone then Name) */}
+      {!customerPhone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3D2314]/70 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-sm bg-white rounded-2xl p-6 border-2 border-[#3D2314] shadow-stamp-hover relative text-center">
+            <div className="w-12 h-12 rounded-xl bg-[#E5A836] border-2 border-[#3D2314] shadow-stamp-resting flex items-center justify-center mx-auto mb-3">
+              <span className="text-xl">🎟️</span>
+            </div>
+            <h3 className="text-xl font-black text-[#3D2314]">
+              أهلاً بك في {settings.branding.name || 'المنشأة'}!
+            </h3>
+            <p className="text-xs text-[#3D2314]/70 mt-1 mb-5 font-semibold">
+              أدخل رقم جوالك واسمك لإنشاء كرتك الرقمي وبدء جمع الأختام والمكافآت
+            </p>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!regPhone.trim()) return;
+                const phone = regPhone.trim();
+                const name = regName.trim() || 'عميل مميز';
+                setCustomerPhone(phone);
+                setCustomerName(name);
+
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('memories_customer_phone', phone);
+                  localStorage.setItem('memories_customer_name', name);
+
+                  // Register in CRM
+                  try {
+                    const crmRaw = localStorage.getItem('stampy_crm_customers');
+                    let list = crmRaw ? JSON.parse(crmRaw) : [];
+                    if (!list.some((c: any) => c.phone === phone)) {
+                      list.unshift({
+                        id: `cust-${Date.now()}`,
+                        name,
+                        phone,
+                        stamps: 1, // Welcome initial stamp!
+                        totalGoal: loyaltyMaxVisits,
+                        redeemedCount: 0,
+                        firstVisit: 'اليوم',
+                        lastVisit: 'الآن',
+                      });
+                      localStorage.setItem('stampy_crm_customers', JSON.stringify(list));
+                    }
+                  } catch {}
+                }
+
+                const fresh = LoyaltyPurseService.addStamp(phone, cafeSlug, 'ختم الانضمام والترحيب', loyaltyMaxVisits);
+                setLoyaltyData(fresh);
+              }}
+              className="space-y-3.5 text-right"
+            >
+              <div>
+                <label className="block text-xs font-bold text-[#3D2314] mb-1">
+                  1. رقم الجوال:
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="05xxxxxxxx"
+                  value={regPhone}
+                  onChange={(e) => setRegPhone(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#3D2314] focus:border-[#B83A26] focus:bg-white focus:outline-none font-mono"
+                  dir="ltr"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#3D2314] mb-1">
+                  2. اسمك الكريم:
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="مثال: عبدالله"
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#3D2314] focus:border-[#B83A26] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <TicketButton type="submit" variant="primary" size="md" className="w-full mt-2">
+                <span>تفعيل كرت الأختام وبدء الزيارة ✦</span>
+              </TicketButton>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Live Camera Viewfinder Modal */}
       {isCameraModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md bg-[#141212] rounded-2xl p-4 overflow-hidden border border-white/10 shadow-[0_0_50px_-10px_rgba(221,2,0,0.3)] relative">
+          <div className="w-full max-w-md bg-white rounded-2xl p-4 overflow-hidden border border-[#EADDC4] shadow-[0_0_50px_-10px_rgba(221,2,0,0.3)] relative">
             <button
               type="button"
               onClick={() => setIsCameraModalOpen(false)}
-              className="absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-black/60 hover:bg-[#DFAB56] text-[#12100E] flex items-center justify-center transition cursor-pointer border border-white/10"
+              className="absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-black/60 hover:bg-[#DFAB56] text-[#12100E] flex items-center justify-center transition cursor-pointer border border-[#EADDC4]"
             >
               <X className="w-4 h-4" />
             </button>

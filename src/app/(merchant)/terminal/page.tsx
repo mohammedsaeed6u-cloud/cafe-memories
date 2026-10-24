@@ -376,9 +376,33 @@ export default function StaffTerminalPage() {
     setLoyaltyData(updatedLoyalty);
     setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: (prev.totalVisits || 0) + 1 } : null));
 
+    // Update CRM list in localStorage for real-time dashboard sync
+    try {
+      const crmRaw = localStorage.getItem('stampy_crm_customers');
+      if (crmRaw) {
+        let list = JSON.parse(crmRaw);
+        list = list.map((c: any) => {
+          if (c.phone === selectedCustomer.phone) {
+            return {
+              ...c,
+              stamps: updatedLoyalty.stampedCount,
+              lastVisit: 'الآن',
+            };
+          }
+          return c;
+        });
+        localStorage.setItem('stampy_crm_customers', JSON.stringify(list));
+      }
+    } catch {}
+
+    // Dispatch real-time stamp event
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('stampy-stamp-added'));
+    }
+
     recordShiftStamp();
     SoundEffectsService.playStampChime();
-    setSuccessNotice(`تم ختم زيارة جديدة بنجاح للعميل (${selectedCustomer.name})! الرصيد الحالي: ${updatedLoyalty.stampedCount}/${requiredVisits}`);
+    setSuccessNotice(`✨ تم ختم زيارة جديدة بنجاح للعميل (${selectedCustomer.name})! الرصيد الحالي: ${updatedLoyalty.stampedCount}/${requiredVisits}`);
     setTimeout(() => setSuccessNotice(null), 4000);
   };
 
