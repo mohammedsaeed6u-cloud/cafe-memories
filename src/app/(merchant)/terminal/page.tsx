@@ -96,7 +96,11 @@ export default function StaffTerminalPage() {
   const [isRefreshingProgress, setIsRefreshingProgress] = useState(false);
   const [networkWarning, setNetworkWarning] = useState<string | null>(null);
   const [progressWarning, setProgressWarning] = useState<string | null>(null);
-  const pendingIdempotencyKeyRef = useRef<string | null>(null);
+  const pendingOperationRef = useRef<{
+    idempotencyKey: string;
+    customerId: string;
+    branchId: string;
+  } | null>(null);
 
   const requiredVisits = settings.loyaltyMaxVisits || 5;
   const giftTitle = settings.freeGiftOffer?.title || industry.defaultGiftTitle;
@@ -210,15 +214,28 @@ export default function StaffTerminalPage() {
             if (membership.branch_id) {
               setMerchantBranchId(membership.branch_id);
             } else {
-              const { data: branch } = await supabase
+              // Deterministically match active counter venue context (cafeSlug)
+              const { data: branchBySlug } = await supabase
                 .from('branches')
                 .select('id')
                 .eq('organization_id', membership.organization_id)
+                .eq('slug', cafeSlug)
                 .eq('status', 'active')
-                .limit(1)
                 .maybeSingle();
-              if (branch && isMounted) {
-                setMerchantBranchId(branch.id);
+
+              if (branchBySlug && isMounted) {
+                setMerchantBranchId(branchBySlug.id);
+              } else {
+                const { data: defaultBranch } = await supabase
+                  .from('branches')
+                  .select('id')
+                  .eq('organization_id', membership.organization_id)
+                  .eq('status', 'active')
+                  .limit(1)
+                  .maybeSingle();
+                if (defaultBranch && isMounted) {
+                  setMerchantBranchId(defaultBranch.id);
+                }
               }
             }
           }
@@ -379,38 +396,9 @@ export default function StaffTerminalPage() {
           setRedeemedCount(0);
         }
       } else {
-        // Query server CRM database for cross-device customer registration
-        fetch(`/api/v1/crm/customers?search=${encodeURIComponent(clean)}&format=json`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data && Array.isArray(data.customers) && data.customers.length > 0) {
-              const c = data.customers[0];
-              const cust: RegisteredCustomer = {
-                id: c.id,
-                phone: clean,
-                name: c.name || 'ضيف مميز',
-                role: c.role || 'vip_guest',
-                registeredAt: c.createdAt || new Date().toISOString(),
-                lastVisit: new Date().toISOString(),
-                totalVisits: c.visitCount || c.memoryCount || 1,
-              };
-              setSelectedCustomer(cust);
-              const lData = LoyaltyPurseService.getData(clean, cafeSlug, requiredVisits);
-              setLoyaltyData(lData);
-              const vList = VoucherService.getCustomerVouchers(clean, cafeSlug);
-              setCustomerVouchers(vList);
-              setErrorNotice(null);
-            } else {
-              setSelectedCustomer(null);
-              setLoyaltyData(null);
-              setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
-            }
-          })
-          .catch(() => {
-            setSelectedCustomer(null);
-            setLoyaltyData(null);
-            setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
-          });
+        setSelectedCustomer(null);
+        setLoyaltyData(null);
+        setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
       }
     }
   };
@@ -429,9 +417,10 @@ export default function StaffTerminalPage() {
     setLoyaltyData(null);
     setErrorNotice(null);
     setSuccessNotice(null);
-    setNetworkWarning(null);
-    setProgressWarning(null);
-    pendingIdempotencyKeyRef.current = null;
+    // Never wipe in-flight pending operation on keypad clearing if a retry is pending
+    if (!networkWarning && !isSubmittingStamp) {
+      pendingOperationRef.current = null;
+    }
   };
 
   // Server-Verified Stamp Action (+1 Stamp)
@@ -448,34 +437,20 @@ export default function StaffTerminalPage() {
       return;
     }
 
-    // If customer has no resolved database UUID yet, attempt quick resolution from CRM
-    let customerUuid = selectedCustomer.id;
-    if (!customerUuid) {
-      try {
-        const crmRes = await fetch(`/api/v1/crm/customers?search=${encodeURIComponent(selectedCustomer.phone)}&format=json`);
-        if (crmRes.ok) {
-          const crmJson = await crmRes.json();
-          const matched = crmJson?.customers?.[0];
-          if (matched?.id) {
-            customerUuid = matched.id;
-            setSelectedCustomer((prev) => (prev ? { ...prev, id: matched.id } : null));
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to resolve customer UUID:', e);
-      }
-    }
-
-    if (!customerUuid) {
-      setErrorNotice('معرّف العميل غير متوفر في قاعدة البيانات. يلزم تسجيل حضور العميل في الفرع أولاً.');
+    if (!selectedCustomer.id) {
+      setErrorNotice('معرّف العميل الموثق غير متوفر. يلزم تسجيل حضور العميل (Check-in) في هذا الفرع أولاً.');
       return;
     }
 
-    // Reuse pending key if retrying an unconfirmed request; otherwise generate new UUID
-    if (!pendingIdempotencyKeyRef.current) {
-      pendingIdempotencyKeyRef.current = crypto.randomUUID();
+    // Pin immutable operation payload for retries (prevents UI drift)
+    if (!pendingOperationRef.current) {
+      pendingOperationRef.current = {
+        idempotencyKey: crypto.randomUUID(),
+        customerId: selectedCustomer.id,
+        branchId: merchantBranchId,
+      };
     }
-    const idempotencyKey = pendingIdempotencyKeyRef.current;
+    const operation = pendingOperationRef.current;
 
     setIsSubmittingStamp(true);
     setErrorNotice(null);
@@ -487,9 +462,9 @@ export default function StaffTerminalPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: customerUuid,
-          branchId: merchantBranchId,
-          idempotencyKey,
+          customerId: operation.customerId,
+          branchId: operation.branchId,
+          idempotencyKey: operation.idempotencyKey,
         }),
       });
 
@@ -498,56 +473,51 @@ export default function StaffTerminalPage() {
       if (!res.ok || !data?.success) {
         const errorMsg = data?.error || 'فشل تسجيل الزيارة في الخادم.';
         if (res.status === 409 || res.status === 429 || res.status === 403 || res.status === 400 || res.status === 404) {
-          pendingIdempotencyKeyRef.current = null;
+          pendingOperationRef.current = null;
           setErrorNotice(errorMsg);
         } else {
-          setNetworkWarning(`حدث خطأ من الخادم (${res.status}). يمكنك إعادة المحاولة بأمان بنفس المفتاح.`);
+          setNetworkWarning(`حدث خطأ من الخادم (${res.status}). يمكنك إعادة المحاولة بأمان بنفس العملية.`);
         }
         return;
       }
 
-      // Success: Clear pending key
-      pendingIdempotencyKeyRef.current = null;
+      // Success: Clear pending operation
+      pendingOperationRef.current = null;
 
-      // Play success chime ONLY after HTTP 200
-      SoundEffectsService.playStampChime();
-      recordShiftStamp();
-
-      // Check if progress calculation succeeded or had a fault
-      if (data.progressFetchFailed) {
-        setProgressWarning(
-          `تم تسجيل الزيارة بنجاح في قاعدة البيانات (المعرّف: ${data.visitId})، ولكن تعذر تحديث رصيد الولاء مؤقتاً.`
+      // Handle Replay vs Fresh Visit:
+      if (data.replayed) {
+        // Do NOT increment shift counter or trigger celebratory audio on duplicate replay
+        setSuccessNotice(
+          `ℹ️ تم استرجاع الزيارة المسجلة مسبقاً للعميل (${selectedCustomer.name}) بنجاح (طلب مكرر - لم تتم مضاعفة الختم). المعرف: ${data.visitId}`
         );
       } else {
-        const newVisits = data.currentVisits ?? ((selectedCustomer.totalVisits || 0) + 1);
-        setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: newVisits } : null));
-
-        if (data.rewardProgress) {
-          const baseLoyalty = LoyaltyPurseService.getData(selectedCustomer.phone, cafeSlug, requiredVisits);
-          const updatedLoyalty: CustomerLoyaltyData = {
-            ...baseLoyalty,
-            stampedCount: (data.currentVisits ?? 0) % requiredVisits,
-            completedCardsCount: Math.floor((data.currentVisits ?? 0) / requiredVisits),
-            lastStampedAt: new Date().toISOString(),
-          };
-          setLoyaltyData(updatedLoyalty);
-        }
-
-        const replayTag = data.replayed ? ' (تم استرجاع الزيارة المسجلة مسبقاً - مكرر)' : '';
+        // Fresh verified visit
+        recordShiftStamp();
+        SoundEffectsService.playStampChime();
         setSuccessNotice(
-          `✨ تم تأكيد وحفظ الزيارة بنجاح للعميل (${selectedCustomer.name})!${replayTag}`
+          `✨ تم تأكيد وحفظ الزيارة بنجاح للعميل (${selectedCustomer.name})! المعرف: ${data.visitId}`
         );
-        setTimeout(() => setSuccessNotice(null), 5000);
       }
+
+      // Handle progress & fault isolation (No naive modulo math!)
+      if (data.progressFetchFailed) {
+        setProgressWarning(
+          `تم تأكيد الزيارة بنجاح في قاعدة البيانات، ولكن تعذر تحديث رصيد الولاء مؤقتاً.`
+        );
+      } else if (data.currentVisits !== null && data.currentVisits !== undefined) {
+        setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: data.currentVisits } : null));
+      }
+
+      setTimeout(() => setSuccessNotice(null), 5000);
 
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('stampy-stamp-added'));
       }
     } catch (netErr: any) {
-      // Network interruption or timeout: DO NOT clear idempotency key!
+      // Network interruption or timeout: KEEP pendingOperationRef intact for safe retry!
       console.warn('Network error during visit confirmation:', netErr);
       setNetworkWarning(
-        'انقطع الاتصال بالخادم أثناء تأكيد الزيارة. النتيجة غير مؤكدة — يمكنك الضغط على "إعادة المحاولة" لإرسال نفس مفتاح التأكيد بأمان دون تكرار الختم.'
+        'انقطع الاتصال بالخادم أثناء تأكيد الزيارة. النتيجة غير مؤكدة — اضغط "إعادة المحاولة" لإرسال نفس العملية الموثقة بأمان دون تكرار الختم.'
       );
     } finally {
       setIsSubmittingStamp(false);

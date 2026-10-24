@@ -305,8 +305,50 @@ describe('POST /api/v1/visits - Server-Verified Visit Confirmation RPC', () => {
     expect(json.error).toContain('Idempotency key belongs to a different visit');
   });
 
-  it('enforces fault isolation: visit remains committed if progress fetch fails', async () => {
-    // Visits query throws an exception during progress count
+  it('rejects caller with unauthorized role (e.g. guest or viewer) with HTTP 403 Forbidden', async () => {
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'branches') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: branchId, organization_id: orgId, status: 'active' },
+                  error: null,
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === 'organization_members') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: 'mem-1', organization_id: orgId, branch_id: null, role: 'viewer' },
+                  error: null,
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+      return {};
+    });
+
+    const res = await POST(createPostRequest({ customerId, branchId, idempotencyKey }));
+    expect(res.status).toBe(403);
+
+    const json = await res.json();
+    expect(json.success).toBe(false);
+    expect(json.error).toContain('does not have visit stamping permissions');
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it('enforces fault isolation when count query returns an error object without throwing', async () => {
+    // Supabase returns { data: null, count: null, error: { message: 'Database connection failed' } }
     mocks.from.mockImplementation((table: string) => {
       if (table === 'branches') {
         return {
@@ -338,8 +380,15 @@ describe('POST /api/v1/visits - Server-Verified Visit Confirmation RPC', () => {
       }
       if (table === 'visits') {
         return {
-          select: vi.fn().mockImplementation(() => {
-            throw new Error('Database read timeout');
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({
+                  count: null,
+                  error: { code: '500', message: 'Downstream visits count timeout' },
+                }),
+              }),
+            }),
           }),
         };
       }
@@ -353,6 +402,76 @@ describe('POST /api/v1/visits - Server-Verified Visit Confirmation RPC', () => {
     expect(json.success).toBe(true);
     expect(json.visitId).toBe(visitId);
     expect(json.progressFetchFailed).toBe(true);
+    expect(json.currentVisits).toBeNull();
+    expect(json.rewardProgress).toBeNull();
+  });
+
+  it('enforces fault isolation when reward_rules query returns an error object', async () => {
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'branches') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: branchId, organization_id: orgId, status: 'active' },
+                  error: null,
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === 'organization_members') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { id: 'mem-1', organization_id: orgId, branch_id: null, role: 'owner' },
+                  error: null,
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === 'visits') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                eq: vi.fn().mockResolvedValue({ count: 3, error: null }),
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === 'reward_rules') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                order: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'Failed to fetch reward rules' },
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+      return {};
+    });
+
+    const res = await POST(createPostRequest({ customerId, branchId, idempotencyKey }));
+    expect(res.status).toBe(200);
+
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.visitId).toBe(visitId);
+    expect(json.progressFetchFailed).toBe(true);
+    expect(json.rewardProgress).toBeNull();
   });
 
   it('never performs direct visits table INSERT in POST handler', async () => {

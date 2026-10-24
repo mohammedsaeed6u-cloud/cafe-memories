@@ -76,6 +76,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const ALLOWED_STAMPING_ROLES = new Set(['owner', 'admin', 'manager', 'cashier', 'staff']);
+    const callerRole = (member.role || '').toLowerCase();
+    if (!ALLOWED_STAMPING_ROLES.has(callerRole)) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Caller role does not have visit stamping permissions' },
+        { status: 403 }
+      );
+    }
+
     // 4. Call atomic record_verified_visit RPC with caller's Supabase context
     const { data: rpcResult, error: rpcError } = await supabase.rpc('record_verified_visit', {
       p_customer_id: customerId,
@@ -132,39 +141,59 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Query updated visit stats with fault isolation
+    // 5. Query updated visit stats with strict fault isolation
     // The visit has ALREADY been safely committed. Any failure reading downstream stats must not fail the request.
     let currentVisits: number | null = null;
     let rewardProgress: any = null;
     let progressFetchFailed = false;
 
     try {
-      const { count: totalVisits } = await supabase
+      const { count: totalVisits, error: countError } = await supabase
         .from('visits')
         .select('*', { count: 'exact', head: true })
         .eq('customer_id', customerId)
         .eq('branch_id', branchId)
         .eq('verification_status', 'verified');
 
-      currentVisits = totalVisits ?? 1;
+      if (countError) {
+        console.warn('Visits count query returned an error:', countError);
+        progressFetchFailed = true;
+      } else {
+        currentVisits = totalVisits ?? 0;
 
-      const { data: rules } = await supabase
-        .from('reward_rules')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .eq('is_active', true)
-        .order('threshold', { ascending: true });
+        const { data: rules, error: rulesError } = await supabase
+          .from('reward_rules')
+          .select('*')
+          .eq('organization_id', organizationId)
+          .eq('is_active', true)
+          .order('threshold', { ascending: true });
 
-      const activeRule = rules && rules.length > 0 ? rules[0] : { id: 'default', threshold: 5, reward_type: 'free_item' };
-      rewardProgress = calculateRewardProgress({
-        currentVisitCount: currentVisits,
-        threshold: activeRule.threshold || 5,
-        rewardType: activeRule.reward_type || 'free_item',
-        ruleId: activeRule.id || 'default',
-      });
+        if (rulesError || !rules || rules.length === 0) {
+          console.warn('Reward rules query returned an error or was empty:', rulesError);
+          progressFetchFailed = true;
+        } else {
+          const activeRule = rules[0];
+          try {
+            rewardProgress = calculateRewardProgress({
+              currentVisitCount: currentVisits,
+              threshold: activeRule.threshold || 5,
+              rewardType: activeRule.reward_type || 'free_item',
+              ruleId: activeRule.id || 'default',
+            });
+          } catch (calcErr) {
+            console.warn('Reward calculation failed:', calcErr);
+            progressFetchFailed = true;
+          }
+        }
+      }
     } catch (progressErr) {
-      console.warn('Progress calculation failed after successful visit recording:', progressErr);
+      console.warn('Progress calculation threw after successful visit recording:', progressErr);
       progressFetchFailed = true;
+    }
+
+    if (progressFetchFailed) {
+      currentVisits = null;
+      rewardProgress = null;
     }
 
     return NextResponse.json({
