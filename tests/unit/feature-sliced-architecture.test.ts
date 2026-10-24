@@ -74,4 +74,45 @@ describe('Feature-Sliced Architecture & New Requirements', () => {
       expect(isCompletedAfter).toBe(true);
     });
   });
+
+  describe('Feature 5: Clean Architecture Modular Feature Slices', () => {
+    it('exports complete super-admin feature slice with hook and components', async () => {
+      const superAdmin = await import('@/features/super-admin');
+      expect(typeof superAdmin.SuperAdminContent).toBe('function');
+      expect(typeof superAdmin.useSuperAdmin).toBe('function');
+      expect(typeof superAdmin.AdminHeader).toBe('function');
+      expect(typeof superAdmin.AdminFinancialMetrics).toBe('function');
+      expect(typeof superAdmin.AdminSubscriptionsTable).toBe('function');
+    });
+
+    it('exports complete dashboard-shell feature slice with hook and components', async () => {
+      const dashboardShell = await import('@/features/dashboard-shell');
+      expect(typeof dashboardShell.DashboardShellContent).toBe('function');
+      expect(typeof dashboardShell.useDashboardShell).toBe('function');
+      expect(typeof dashboardShell.DashboardTabRenderer).toBe('function');
+      expect(typeof dashboardShell.DashboardModals).toBe('function');
+    }, 45000);
+
+    it('exports complete live-wall feature slice with hook and components', async () => {
+      const liveWall = await import('@/features/live-wall');
+      expect(typeof liveWall.WallContent).toBe('function');
+      expect(typeof liveWall.useLiveWall).toBe('function');
+      expect(typeof liveWall.WallStageView).toBe('function');
+    }, 60000);
+
+    it('exports complete customer-experience feature slice with hook and components', async () => {
+      const custExp = await import('@/features/customer-experience');
+      expect(typeof custExp.CustomerExperienceContent).toBe('function');
+      expect(typeof custExp.useCustomerExperience).toBe('function');
+    }, 60000);
+
+    it('exports complete settings, billing, and frame-studio feature slices', async () => {
+      const settings = await import('@/features/settings');
+      const billing = await import('@/features/billing');
+      const frameStudio = await import('@/features/frame-studio');
+      expect(typeof settings.DashboardSettingsContent).toBe('function');
+      expect(typeof billing.SubscriptionBillingContent).toBe('function');
+      expect(typeof frameStudio.FrameStudioContent).toBe('function');
+    }, 60000);
+  });
 });

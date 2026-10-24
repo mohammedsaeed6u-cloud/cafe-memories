@@ -22,6 +22,24 @@ export interface DigitalWalletPassData {
   instagramHandle?: string;
   primaryColor?: string;
   backgroundColor?: string;
+  colorPreset?: string;
+  color?: string;
+  barcodeFormat?: 'QR' | 'PDF417' | 'Aztec' | 'Code128';
+  barcodeAltText?: string;
+  customerTitle?: string;
+  stampIcon?: string;
+  locations?: Array<{
+    latitude: number;
+    longitude: number;
+    altitude?: number;
+    relevantText?: string;
+  }>;
+  sharingProhibited?: boolean;
+  expirationDays?: number;
+  logoUrl?: string;
+  iconUrl?: string;
+  stripUrl?: string;
+  backgroundUrl?: string;
 }
 
 // CRC32 calculation table for standard zip creation

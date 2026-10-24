@@ -27,14 +27,14 @@ describe('Apple Luxury Theme & Palette Presets', () => {
     const luxuryMode = PHOTOBOOTH_CARD_MODES.find((m) => m.id === 'luxury_glass');
     expect(luxuryMode).toBeDefined();
     expect(luxuryMode?.defaultBg).toBe('#D9D9D9');
-    expect(luxuryMode?.defaultAccent).toBe('#DD0200');
+    expect(luxuryMode?.defaultAccent).toBe('#c92a54');
     expect(luxuryMode?.defaultText).toBe('#1A0706');
   });
 
   it('contains luxury-glass-cherry palette in PRESET_COLOR_PALETTES', () => {
     const palette = PRESET_COLOR_PALETTES.find((p) => p.id === 'luxury-glass-cherry');
     expect(palette).toBeDefined();
-    expect(palette?.accentColor).toBe('#DD0200');
+    expect(palette?.accentColor).toBe('#c92a54');
     expect(palette?.textColor).toBe('#1A0706');
   });
 
@@ -47,7 +47,7 @@ describe('Apple Luxury Theme & Palette Presets', () => {
   it('provides loyalty card preset luxury_glass_crimson', () => {
     const loyaltyPreset = LOYALTY_CARD_PRESETS['luxury_glass_crimson'];
     expect(loyaltyPreset).toBeDefined();
-    expect(loyaltyPreset.theme.accentColor).toBe('#DD0200');
+    expect(loyaltyPreset.theme.accentColor).toBe('#c92a54');
     expect(loyaltyPreset.theme.textColor).toBe('#D9D9D9');
   });
 

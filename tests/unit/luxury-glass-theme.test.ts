@@ -6,7 +6,7 @@ describe('Luxury Glass Crimson & Alabaster Theme Suite', () => {
   it('registers luxury_glass in PHOTOBOOTH_CARD_MODES with exact hex palette', () => {
     const mode = PHOTOBOOTH_CARD_MODES.find((m) => m.id === 'luxury_glass');
     expect(mode).toBeDefined();
-    expect(mode?.defaultAccent).toBe('#DD0200'); // Racing Red
+    expect(mode?.defaultAccent).toBe('#c92a54'); // Racing Red
     expect(mode?.defaultText).toBe('#1A0706');   // Coffee Bean
     expect(mode?.defaultBg).toBe('#D9D9D9');     // Alabaster Grey (Light background per user specification)
   });
@@ -14,7 +14,7 @@ describe('Luxury Glass Crimson & Alabaster Theme Suite', () => {
   it('includes luxury-glass-cherry in PRESET_COLOR_PALETTES', () => {
     const palette = PRESET_COLOR_PALETTES.find((p) => p.id === 'luxury-glass-cherry');
     expect(palette).toBeDefined();
-    expect(palette?.accentColor).toBe('#DD0200');
+    expect(palette?.accentColor).toBe('#c92a54');
     expect(palette?.textColor).toBe('#1A0706');
     expect(palette?.bgColor).toBe('#D9D9D9');
   });
@@ -28,9 +28,9 @@ describe('Luxury Glass Crimson & Alabaster Theme Suite', () => {
   it('provides luxury_glass_crimson in LOYALTY_CARD_PRESETS with glass styling', () => {
     const preset = LOYALTY_CARD_PRESETS['luxury_glass_crimson'];
     expect(preset).toBeDefined();
-    expect(preset.theme.accentColor).toBe('#DD0200');
+    expect(preset.theme.accentColor).toBe('#c92a54');
     expect(preset.theme.textColor).toBe('#D9D9D9');
-    expect(preset.theme.background).toContain('rgba(221, 2, 0');
+    expect(preset.theme.background).toContain('rgba(201, 42, 84');
     expect(preset.theme.background).toContain('rgba(217, 217, 217');
   });
 });

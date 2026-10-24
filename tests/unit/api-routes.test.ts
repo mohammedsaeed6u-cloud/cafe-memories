@@ -35,6 +35,7 @@ function createMockQueryBuilder(result: { data?: any; error?: any; count?: numbe
     eq: vi.fn().mockImplementation(() => builder),
     limit: vi.fn().mockImplementation(() => builder),
     order: vi.fn().mockImplementation(() => builder),
+    in: vi.fn().mockImplementation(() => builder),
     maybeSingle: vi.fn().mockImplementation(async () => queryResult),
     single: vi.fn().mockImplementation(async () => queryResult),
     then: (resolve: any, reject: any) => Promise.resolve(queryResult).then(resolve, reject),
@@ -264,7 +265,9 @@ describe('API Route: POST /api/v1/photobooth/capture', () => {
           },
         ],
         visits: [
-          // 1. Visit insert
+          // 1. Recent visits for fraud check
+          { data: [], error: null },
+          // 2. Visit insert
           {
             data: {
               id: 'visit-uuid-1',
@@ -272,9 +275,10 @@ describe('API Route: POST /api/v1/photobooth/capture', () => {
             },
             error: null,
           },
-          // 2. Count query
+          // 3. Count query
           { data: null, error: null, count: 1 },
         ],
+        reward_events: { data: { id: 'gift-uuid-1' }, error: null },
         memories: {
           data: {
             id: 'mem-uuid-1',
@@ -301,9 +305,8 @@ describe('API Route: POST /api/v1/photobooth/capture', () => {
       }),
       headers: { 'Content-Type': 'application/json' },
     });
-
     const response = await POST(request);
-    expect(response.status).toBe(200);
+    expect(response.status, await response.clone().text()).toBe(200);
 
     const json = await response.json();
     expect(json.success).toBe(true);
@@ -345,9 +348,11 @@ describe('API Route: POST /api/v1/photobooth/capture', () => {
           },
         ],
         visits: [
+          { data: [], error: null },
           { data: { id: 'visit-uuid-2', created_at: '2026-09-21T18:00:00.000Z' }, error: null },
           { data: null, error: null, count: 4 },
         ],
+        reward_events: { data: { id: 'gift-uuid-2' }, error: null },
         memories: {
           data: {
             id: 'mem-uuid-2',
@@ -403,9 +408,11 @@ describe('API Route: POST /api/v1/photobooth/capture', () => {
           },
         ],
         visits: [
+          { data: [], error: null },
           { data: { id: 'visit-slug-1', created_at: '2026-09-21T18:00:00.000Z' }, error: null },
           { data: null, error: null, count: 1 },
         ],
+        reward_events: { data: { id: 'gift-uuid-3' }, error: null },
       })
     );
 
