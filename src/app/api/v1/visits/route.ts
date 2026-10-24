@@ -1,121 +1,181 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { evaluateVisitEligibility } from '@/lib/services/anti-fraud';
+import { createClient } from '@/lib/supabase/server';
 import { calculateRewardProgress } from '@/lib/services/rewards';
 import { z } from 'zod';
 
-const createVisitRequestSchema = z.object({
+const recordVisitRequestSchema = z.object({
   customerId: z.string().uuid(),
   branchId: z.string().uuid(),
-  organizationId: z.string().uuid(),
-  qrCodeId: z.string().uuid().optional().nullable(),
-  deviceFingerprint: z.string().max(128).optional().nullable(),
-  source: z.string().default('qr_scan'),
+  idempotencyKey: z.string().uuid(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.json();
-    const parsed = createVisitRequestSchema.safeParse(rawBody);
+    const parsed = recordVisitRequestSchema.safeParse(rawBody);
 
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
-
-    const { customerId, branchId, organizationId, qrCodeId, deviceFingerprint, source } = parsed.data;
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || '127.0.0.1';
-
-    const supabase = createAdminClient();
-
-    // 1. Fetch recent visits for anti-fraud evaluation
-    const { data: recentVisitsData } = await supabase
-      .from('visits')
-      .select('created_at, device_fingerprint, ip_hash')
-      .eq('customer_id', customerId)
-      .eq('branch_id', branchId)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    const mappedVisits = (recentVisitsData || []).map(v => ({
-      createdAt: v.created_at,
-      deviceFingerprint: v.device_fingerprint,
-      ipHash: v.ip_hash,
-    }));
-
-    // 2. Evaluate Anti-Fraud Rules
-    const fraudEvaluation = evaluateVisitEligibility({
-      customerId,
-      branchId,
-      deviceFingerprint,
-      ipAddress: clientIp,
-      recentVisits: mappedVisits,
-    });
-
-    if (fraudEvaluation.status === 'cooldown_rejected') {
       return NextResponse.json(
-        {
-          success: false,
-          error: fraudEvaluation.reason,
-          cooldownRemainingMinutes: fraudEvaluation.cooldownRemainingMinutes,
-        },
-        { status: 429 }
+        { success: false, error: 'Invalid payload', details: parsed.error.format() },
+        { status: 400 }
       );
     }
 
-    // 3. Record visit
-    const { data: newVisit, error: visitError } = await supabase
-      .from('visits')
-      .insert({
-        customer_id: customerId,
-        branch_id: branchId,
-        organization_id: organizationId,
-        qr_code_id: qrCodeId || null,
-        source,
-        verification_status: fraudEvaluation.status,
-        device_fingerprint: deviceFingerprint || null,
-        ip_hash: fraudEvaluation.ipHash,
-      })
-      .select()
-      .single();
+    const { customerId, branchId, idempotencyKey } = parsed.data;
 
-    if (visitError) {
-      return NextResponse.json({ error: 'Failed to record visit', details: visitError.message }, { status: 500 });
+    // 1. Authenticate caller via Supabase server session (cookies)
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Merchant authentication session required' },
+        { status: 401 }
+      );
     }
 
-    // 4. Calculate loyalty progression & active rewards
-    const { count: totalVisits } = await supabase
-      .from('visits')
-      .select('*', { count: 'exact', head: true })
-      .eq('customer_id', customerId)
-      .eq('branch_id', branchId)
-      .eq('verification_status', 'verified');
+    // 2. Fetch active branch and derive organizationId on server (never trust client)
+    const { data: branch, error: branchError } = await supabase
+      .from('branches')
+      .select('id, organization_id, status')
+      .eq('id', branchId)
+      .eq('status', 'active')
+      .single();
 
-    const visitCount = totalVisits || 1;
+    if (branchError || !branch) {
+      return NextResponse.json(
+        { success: false, error: 'Branch not found or inactive' },
+        { status: 404 }
+      );
+    }
 
-    // Check branch reward rules
-    const { data: rules } = await supabase
-      .from('reward_rules')
-      .select('*')
+    const organizationId = branch.organization_id;
+
+    // 3. Verify caller membership in organization and branch scope
+    const { data: member, error: memberError } = await supabase
+      .from('organization_members')
+      .select('id, organization_id, branch_id, role')
+      .eq('user_id', user.id)
       .eq('organization_id', organizationId)
-      .eq('is_active', true)
-      .order('threshold', { ascending: true });
+      .single();
 
-    const activeRule = rules && rules.length > 0 ? rules[0] : { id: 'default', threshold: 5, reward_type: 'free_item' };
-    const rewardProgress = calculateRewardProgress({
-      currentVisitCount: visitCount,
-      threshold: activeRule.threshold || 5,
-      rewardType: activeRule.reward_type || 'free_item',
-      ruleId: activeRule.id || 'default',
+    if (memberError || !member) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: User is not a member of this organization' },
+        { status: 403 }
+      );
+    }
+
+    if (member.branch_id && member.branch_id !== branchId) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Member is restricted to a different branch' },
+        { status: 403 }
+      );
+    }
+
+    // 4. Call atomic record_verified_visit RPC with caller's Supabase context
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('record_verified_visit', {
+      p_customer_id: customerId,
+      p_branch_id: branchId,
+      p_idempotency_key: idempotencyKey,
     });
+
+    if (rpcError) {
+      const code = rpcError.code;
+      const message = rpcError.message || '';
+
+      if (code === '42501') {
+        if (message.includes('Guest check-in required')) {
+          return NextResponse.json(
+            { success: false, error: 'Guest check-in required for this branch within the last 2 hours' },
+            { status: 403 }
+          );
+        }
+        return NextResponse.json(
+          { success: false, error: message || 'Forbidden: Not authorized for this branch' },
+          { status: 403 }
+        );
+      }
+
+      if (code === '22023') {
+        if (message.includes('different visit')) {
+          return NextResponse.json(
+            { success: false, error: 'Idempotency key belongs to a different visit' },
+            { status: 409 }
+          );
+        }
+        if (message.includes('Customer not found')) {
+          return NextResponse.json(
+            { success: false, error: 'Customer not found' },
+            { status: 404 }
+          );
+        }
+        return NextResponse.json(
+          { success: false, error: message || 'Bad Request' },
+          { status: 400 }
+        );
+      }
+
+      if (code === '23514') {
+        return NextResponse.json(
+          { success: false, error: 'Visit cooldown active: 1 hour required between verified visits' },
+          { status: 429 }
+        );
+      }
+
+      return NextResponse.json(
+        { success: false, error: message || 'Failed to record visit' },
+        { status: 500 }
+      );
+    }
+
+    // 5. Query updated visit stats with fault isolation
+    // The visit has ALREADY been safely committed. Any failure reading downstream stats must not fail the request.
+    let currentVisits: number | null = null;
+    let rewardProgress: any = null;
+    let progressFetchFailed = false;
+
+    try {
+      const { count: totalVisits } = await supabase
+        .from('visits')
+        .select('*', { count: 'exact', head: true })
+        .eq('customer_id', customerId)
+        .eq('branch_id', branchId)
+        .eq('verification_status', 'verified');
+
+      currentVisits = totalVisits ?? 1;
+
+      const { data: rules } = await supabase
+        .from('reward_rules')
+        .select('*')
+        .eq('organization_id', organizationId)
+        .eq('is_active', true)
+        .order('threshold', { ascending: true });
+
+      const activeRule = rules && rules.length > 0 ? rules[0] : { id: 'default', threshold: 5, reward_type: 'free_item' };
+      rewardProgress = calculateRewardProgress({
+        currentVisitCount: currentVisits,
+        threshold: activeRule.threshold || 5,
+        rewardType: activeRule.reward_type || 'free_item',
+        ruleId: activeRule.id || 'default',
+      });
+    } catch (progressErr) {
+      console.warn('Progress calculation failed after successful visit recording:', progressErr);
+      progressFetchFailed = true;
+    }
 
     return NextResponse.json({
       success: true,
-      visitId: newVisit.id,
-      verificationStatus: fraudEvaluation.status,
-      currentVisits: visitCount,
+      visitId: rpcResult.visitId,
+      replayed: Boolean(rpcResult.replayed),
+      currentVisits,
       rewardProgress,
+      progressFetchFailed,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: err.message || 'Internal server error' }, { status: 500 });
   }
 }

@@ -26,11 +26,14 @@ export interface StaffSessionClaims {
 }
 
 function getAuthSecret(): string {
-  return (
-    process.env.BETTER_AUTH_SECRET ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    'development-secret-entropy-key-32-chars-long-cafe-memories'
-  );
+  const secret = process.env.BETTER_AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Staff session signing secret is missing in production environment');
+    }
+    return 'development-secret-entropy-key-32-chars-long-cafe-memories';
+  }
+  return secret;
 }
 
 async function signPayload(payload: string): Promise<string> {

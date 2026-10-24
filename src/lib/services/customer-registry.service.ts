@@ -1,4 +1,5 @@
 export interface RegisteredCustomer {
+  id?: string;
   phone: string;
   name: string;
   role?: string;

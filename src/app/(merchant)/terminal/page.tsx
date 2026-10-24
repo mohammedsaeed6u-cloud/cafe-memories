@@ -22,7 +22,9 @@ import {
   Bell,
   BellOff,
   Scissors,
+  AlertTriangle,
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { CustomerRegistryService, RegisteredCustomer } from '@/lib/services/customer-registry.service';
 import { LoyaltyPurseService, CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
 import { VoucherService, IssuedVoucher } from '@/lib/services/voucher.service';
@@ -83,6 +85,18 @@ export default function StaffTerminalPage() {
   // Staff authentication state
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [staffMember, setStaffMember] = useState<{ id: string; name: string } | null>(null);
+
+  // Merchant Supabase Session & Branch Scope
+  const [merchantUser, setMerchantUser] = useState<any | null>(null);
+  const [merchantBranchId, setMerchantBranchId] = useState<string | null>(null);
+  const [isCheckingMerchantAuth, setIsCheckingMerchantAuth] = useState(true);
+
+  // Visit submission & resilience states
+  const [isSubmittingStamp, setIsSubmittingStamp] = useState(false);
+  const [isRefreshingProgress, setIsRefreshingProgress] = useState(false);
+  const [networkWarning, setNetworkWarning] = useState<string | null>(null);
+  const [progressWarning, setProgressWarning] = useState<string | null>(null);
+  const pendingIdempotencyKeyRef = useRef<string | null>(null);
 
   const requiredVisits = settings.loyaltyMaxVisits || 5;
   const giftTitle = settings.freeGiftOffer?.title || industry.defaultGiftTitle;
@@ -166,6 +180,7 @@ export default function StaffTerminalPage() {
   }, [cafeSlug, soundAlertEnabled]);
 
   useEffect(() => {
+    let isMounted = true;
     const s = BusinessSettingsService.getSettings(cafeSlug);
     setSettings(s);
 
@@ -173,6 +188,49 @@ export default function StaffTerminalPage() {
     if (active) {
       setStaffMember(active);
     }
+
+    // Resolve authenticated Supabase merchant session and branch scope
+    const checkMerchantSession = async () => {
+      setIsCheckingMerchantAuth(true);
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!isMounted) return;
+        setMerchantUser(user);
+
+        if (user) {
+          const { data: membership } = await supabase
+            .from('organization_members')
+            .select('organization_id, branch_id, role')
+            .eq('user_id', user.id)
+            .limit(1)
+            .maybeSingle();
+
+          if (membership && isMounted) {
+            if (membership.branch_id) {
+              setMerchantBranchId(membership.branch_id);
+            } else {
+              const { data: branch } = await supabase
+                .from('branches')
+                .select('id')
+                .eq('organization_id', membership.organization_id)
+                .eq('status', 'active')
+                .limit(1)
+                .maybeSingle();
+              if (branch && isMounted) {
+                setMerchantBranchId(branch.id);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to resolve merchant session:', err);
+      } finally {
+        if (isMounted) setIsCheckingMerchantAuth(false);
+      }
+    };
+
+    checkMerchantSession();
 
     // Load shift stats
     try {
@@ -182,6 +240,10 @@ export default function StaffTerminalPage() {
       if (shiftStamps) setShiftStampsCount(Number(shiftStamps));
       if (shiftRedeemed) setShiftRedeemedCount(Number(shiftRedeemed));
     } catch {}
+
+    return () => {
+      isMounted = false;
+    };
   }, [cafeSlug]);
 
   const recordShiftStamp = () => {
@@ -324,6 +386,7 @@ export default function StaffTerminalPage() {
             if (data && Array.isArray(data.customers) && data.customers.length > 0) {
               const c = data.customers[0];
               const cust: RegisteredCustomer = {
+                id: c.id,
                 phone: clean,
                 name: c.name || 'ضيف مميز',
                 role: c.role || 'vip_guest',
@@ -366,44 +429,156 @@ export default function StaffTerminalPage() {
     setLoyaltyData(null);
     setErrorNotice(null);
     setSuccessNotice(null);
+    setNetworkWarning(null);
+    setProgressWarning(null);
+    pendingIdempotencyKeyRef.current = null;
   };
 
-  // Stamp Action (+1 Stamp)
-  const handleAddStamp = () => {
+  // Server-Verified Stamp Action (+1 Stamp)
+  const handleAddStamp = async () => {
     if (!selectedCustomer) return;
-    LoyaltyPurseService.addDirectStamp(selectedCustomer.phone, cafeSlug, requiredVisits);
-    const updatedLoyalty = LoyaltyPurseService.getData(selectedCustomer.phone, cafeSlug, requiredVisits);
-    setLoyaltyData(updatedLoyalty);
-    setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: (prev.totalVisits || 0) + 1 } : null));
 
-    // Update CRM list in localStorage for real-time dashboard sync
-    try {
-      const crmRaw = localStorage.getItem('stampy_crm_customers');
-      if (crmRaw) {
-        let list = JSON.parse(crmRaw);
-        list = list.map((c: any) => {
-          if (c.phone === selectedCustomer.phone) {
-            return {
-              ...c,
-              stamps: updatedLoyalty.stampedCount,
-              lastVisit: 'الآن',
-            };
-          }
-          return c;
-        });
-        localStorage.setItem('stampy_crm_customers', JSON.stringify(list));
-      }
-    } catch {}
-
-    // Dispatch real-time stamp event
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('stampy-stamp-added'));
+    if (!merchantUser) {
+      setErrorNotice('يلزم تسجيل دخول تاجر معتمد لختم الزيارات خادمياً.');
+      return;
     }
 
-    recordShiftStamp();
-    SoundEffectsService.playStampChime();
-    setSuccessNotice(`✨ تم ختم زيارة جديدة بنجاح للعميل (${selectedCustomer.name})! الرصيد الحالي: ${updatedLoyalty.stampedCount}/${requiredVisits}`);
-    setTimeout(() => setSuccessNotice(null), 4000);
+    if (!merchantBranchId) {
+      setErrorNotice('تعذر تحديد فرع التاجر النشط. يرجى مراجعة صلاحيات الفرع في لوحة الإدارة.');
+      return;
+    }
+
+    // If customer has no resolved database UUID yet, attempt quick resolution from CRM
+    let customerUuid = selectedCustomer.id;
+    if (!customerUuid) {
+      try {
+        const crmRes = await fetch(`/api/v1/crm/customers?search=${encodeURIComponent(selectedCustomer.phone)}&format=json`);
+        if (crmRes.ok) {
+          const crmJson = await crmRes.json();
+          const matched = crmJson?.customers?.[0];
+          if (matched?.id) {
+            customerUuid = matched.id;
+            setSelectedCustomer((prev) => (prev ? { ...prev, id: matched.id } : null));
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to resolve customer UUID:', e);
+      }
+    }
+
+    if (!customerUuid) {
+      setErrorNotice('معرّف العميل غير متوفر في قاعدة البيانات. يلزم تسجيل حضور العميل في الفرع أولاً.');
+      return;
+    }
+
+    // Reuse pending key if retrying an unconfirmed request; otherwise generate new UUID
+    if (!pendingIdempotencyKeyRef.current) {
+      pendingIdempotencyKeyRef.current = crypto.randomUUID();
+    }
+    const idempotencyKey = pendingIdempotencyKeyRef.current;
+
+    setIsSubmittingStamp(true);
+    setErrorNotice(null);
+    setNetworkWarning(null);
+    setProgressWarning(null);
+
+    try {
+      const res = await fetch('/api/v1/visits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: customerUuid,
+          branchId: merchantBranchId,
+          idempotencyKey,
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        const errorMsg = data?.error || 'فشل تسجيل الزيارة في الخادم.';
+        if (res.status === 409 || res.status === 429 || res.status === 403 || res.status === 400 || res.status === 404) {
+          pendingIdempotencyKeyRef.current = null;
+          setErrorNotice(errorMsg);
+        } else {
+          setNetworkWarning(`حدث خطأ من الخادم (${res.status}). يمكنك إعادة المحاولة بأمان بنفس المفتاح.`);
+        }
+        return;
+      }
+
+      // Success: Clear pending key
+      pendingIdempotencyKeyRef.current = null;
+
+      // Play success chime ONLY after HTTP 200
+      SoundEffectsService.playStampChime();
+      recordShiftStamp();
+
+      // Check if progress calculation succeeded or had a fault
+      if (data.progressFetchFailed) {
+        setProgressWarning(
+          `تم تسجيل الزيارة بنجاح في قاعدة البيانات (المعرّف: ${data.visitId})، ولكن تعذر تحديث رصيد الولاء مؤقتاً.`
+        );
+      } else {
+        const newVisits = data.currentVisits ?? ((selectedCustomer.totalVisits || 0) + 1);
+        setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: newVisits } : null));
+
+        if (data.rewardProgress) {
+          const baseLoyalty = LoyaltyPurseService.getData(selectedCustomer.phone, cafeSlug, requiredVisits);
+          const updatedLoyalty: CustomerLoyaltyData = {
+            ...baseLoyalty,
+            stampedCount: (data.currentVisits ?? 0) % requiredVisits,
+            completedCardsCount: Math.floor((data.currentVisits ?? 0) / requiredVisits),
+            lastStampedAt: new Date().toISOString(),
+          };
+          setLoyaltyData(updatedLoyalty);
+        }
+
+        const replayTag = data.replayed ? ' (تم استرجاع الزيارة المسجلة مسبقاً - مكرر)' : '';
+        setSuccessNotice(
+          `✨ تم تأكيد وحفظ الزيارة بنجاح للعميل (${selectedCustomer.name})!${replayTag}`
+        );
+        setTimeout(() => setSuccessNotice(null), 5000);
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('stampy-stamp-added'));
+      }
+    } catch (netErr: any) {
+      // Network interruption or timeout: DO NOT clear idempotency key!
+      console.warn('Network error during visit confirmation:', netErr);
+      setNetworkWarning(
+        'انقطع الاتصال بالخادم أثناء تأكيد الزيارة. النتيجة غير مؤكدة — يمكنك الضغط على "إعادة المحاولة" لإرسال نفس مفتاح التأكيد بأمان دون تكرار الختم.'
+      );
+    } finally {
+      setIsSubmittingStamp(false);
+    }
+  };
+
+  const handleRefreshProgress = async () => {
+    if (!selectedCustomer?.phone) return;
+    setIsRefreshingProgress(true);
+    setProgressWarning(null);
+    try {
+      const res = await fetch(`/api/v1/crm/customers?search=${encodeURIComponent(selectedCustomer.phone)}&format=json`);
+      if (res.ok) {
+        const data = await res.json();
+        const c = data?.customers?.[0];
+        if (c) {
+          const count = c.visitCount || c.memoryCount || selectedCustomer.totalVisits;
+          setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: count, id: c.id || prev.id } : null));
+          const lData = LoyaltyPurseService.getData(selectedCustomer.phone, cafeSlug, requiredVisits);
+          setLoyaltyData(lData);
+          setSuccessNotice('تم تحديث رصيد العميل بنجاح!');
+          setTimeout(() => setSuccessNotice(null), 3000);
+          return;
+        }
+      }
+      setProgressWarning('تعذر تحديث الرصيد حالياً، يرجى المحاولة لاحقاً.');
+    } catch {
+      setProgressWarning('تعذر الاتصال بالخادم لتحديث الرصيد.');
+    } finally {
+      setIsRefreshingProgress(false);
+    }
   };
 
   // Instant Voucher Redemption
@@ -577,6 +752,60 @@ export default function StaffTerminalPage() {
             </div>
           </div>
         </div>
+
+        {/* Merchant Auth Requirement Banner */}
+        {!isCheckingMerchantAuth && !merchantUser && (
+          <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs font-bold flex items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+              <span>تنبيه: أنت غير مسجل الدخول كتاجر. لتأكيد وحفظ الأختام في قاعدة البيانات، يلزم تسجيل الدخول.</span>
+            </div>
+            <a
+              href="/auth/login?redirect=/terminal"
+              className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold shrink-0 transition"
+            >
+              تسجيل الدخول
+            </a>
+          </div>
+        )}
+
+        {/* Network Disruption / Safe Retry Banner */}
+        {networkWarning && (
+          <div className="p-4 rounded-xl bg-amber-950/60 border border-amber-500/50 text-amber-100 text-xs font-bold flex items-center justify-between gap-3 shadow-md animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+              <span>{networkWarning}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddStamp}
+              disabled={isSubmittingStamp}
+              className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold shrink-0 flex items-center gap-1.5 transition cursor-pointer"
+            >
+              {isSubmittingStamp ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              <span>إعادة المحاولة</span>
+            </button>
+          </div>
+        )}
+
+        {/* Fault Isolation: Progress Fetch Warning */}
+        {progressWarning && (
+          <div className="p-4 rounded-xl bg-sky-950/60 border border-sky-500/50 text-sky-100 text-xs font-bold flex items-center justify-between gap-3 shadow-md animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle className="w-5 h-5 text-sky-400 shrink-0" />
+              <span>{progressWarning}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleRefreshProgress}
+              disabled={isRefreshingProgress}
+              className="px-3.5 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-black text-xs font-bold shrink-0 flex items-center gap-1.5 transition cursor-pointer"
+            >
+              {isRefreshingProgress ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              <span>تحديث الرصيد الآن</span>
+            </button>
+          </div>
+        )}
 
         {/* Success or Error Notice */}
         {successNotice && (
@@ -816,10 +1045,31 @@ export default function StaffTerminalPage() {
                     <button
                       type="button"
                       onClick={handleAddStamp}
-                      className="py-3.5 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                      disabled={isSubmittingStamp || !merchantUser}
+                      className={`py-3.5 px-4 rounded-lg font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
+                        !merchantUser
+                          ? 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:border-amber-500/30'
+                          : isSubmittingStamp
+                          ? 'bg-[#DFAB56]/70 text-[#12100E] cursor-wait'
+                          : 'bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E]'
+                      }`}
                     >
-                      <Award className="w-5 h-5" />
-                      <span>ختم زيارة جديدة (+1)</span>
+                      {isSubmittingStamp ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                          <span>جاري التأكيد في الخادم...</span>
+                        </>
+                      ) : !merchantUser ? (
+                        <>
+                          <Unlock className="w-5 h-5 text-amber-400" />
+                          <span>تسجيل الدخول مطلوب للختم</span>
+                        </>
+                      ) : (
+                        <>
+                          <Award className="w-5 h-5" />
+                          <span>ختم زيارة جديدة (+1)</span>
+                        </>
+                      )}
                     </button>
 
                     <button
