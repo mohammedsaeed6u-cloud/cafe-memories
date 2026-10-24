@@ -33,7 +33,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://memories-d9l.pages.dev'),
+  metadataBase: new URL('https://stampy-86j.pages.dev'),
   title: 'استامبي (Stampy) • منصة كروت التصوير التفاعلية وبرامج الولاء الذكية',
   description: 'تحويل كل زيارة في منشأتك إلى شريط ذكريات يدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوتوبوث تفاعلي عبر الهاتف، شاشات صالة حية، وأختام ولاء رقمية لمحفظة Apple و Google Wallet.',
   keywords: ['فوتوبوث رقمي', 'ولاء العملاء', 'استوديو تصوير للأنشطة التجارية', 'شاشات الصالة الذكية', 'بطاقات ولاء رقمية', 'تجربة العميل', 'Apple Wallet', 'Google Wallet'],
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'استامبي (Stampy) • منصة كروت التصوير التفاعلية وبرامج الولاء الذكية',
     description: 'تحويل كل زيارة في منشأتك إلى شريط ذكريات يدوم — وكل ذكرى إلى دافع حقيقي للعودة. استوديو تصوير فوتوبوث تفاعلي عبر الهاتف، شاشات صالة حية، وأختام ولاء رقمية لمحفظة Apple و Google Wallet.',
-    url: 'https://memories-d9l.pages.dev',
+    url: 'https://stampy-86j.pages.dev',
     siteName: 'Stampy استامبي',
     locale: 'ar_SA',
     type: 'website',
