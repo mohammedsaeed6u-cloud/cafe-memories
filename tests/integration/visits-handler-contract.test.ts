@@ -4,16 +4,18 @@ import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/v1/visits/route';
 
 /**
- * STAGING RUNTIME VERIFICATION SUITE
+ * MOCKED ROUTE HANDLER INTEGRATION SUITE (Local Contract Verification)
  * 
- * Demonstrates live API runtime execution of POST /api/v1/visits:
- * 1. Authentic merchant session verification (401 when missing).
- * 2. Authentic merchant role verification (403 on non-stamping roles).
- * 3. Guest check-in validation (403 when check-in is missing/expired).
- * 4. Fresh visit commitment via record_verified_visit RPC.
- * 5. Atomic idempotency replay with identical key -> returns replayed: true and maintains count = 1.
- * 6. Conflict rejection (409) when key is reused with mismatched payload.
- * 7. Rate-limit / cooldown rejection (429).
+ * Tests the Next.js API route handler (POST /api/v1/visits) in Vitest using mocked Supabase dependencies:
+ * 1. Unauthenticated request rejection (401 Unauthorized).
+ * 2. Unauthorized role rejection (403 Forbidden).
+ * 3. Fresh visit recording contract and atomic replay handling (200 OK with replayed: true).
+ * 4. Idempotency key conflict mapping (409 Conflict).
+ * 5. Guest check-in requirement mapping (403 Forbidden).
+ * 6. Rate-limit / cooldown mapping (429 Too Many Requests).
+ * 
+ * NOTE: This suite tests application controller contracts and error code mappings in Vitest.
+ * It is NOT a live staging environment test against a deployed PostgreSQL/Supabase database.
  */
 
 const mocks = vi.hoisted(() => ({
@@ -30,7 +32,7 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }));
 
-describe('Staging Runtime Verification - POST /api/v1/visits Live API Execution', () => {
+describe('POST /api/v1/visits - Mocked Route Handler Integration Tests (Contract Verification)', () => {
   const merchantId = '11111111-1111-4111-8111-111111111111';
   const orgId = '22222222-2222-4222-8222-222222222222';
   const branchId = '33333333-3333-4333-8333-333333333333';
@@ -160,7 +162,7 @@ describe('Staging Runtime Verification - POST /api/v1/visits Live API Execution'
     });
   });
 
-  it('Stage 1: Rejects unauthenticated caller with 401 Unauthorized', async () => {
+  it('Contract 1: Rejects unauthenticated caller with 401 Unauthorized', async () => {
     mocks.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
 
     const req = new NextRequest('https://stampy.test/api/v1/visits', {
@@ -176,7 +178,7 @@ describe('Staging Runtime Verification - POST /api/v1/visits Live API Execution'
     expect(body.error).toContain('Unauthorized');
   });
 
-  it('Stage 2: Rejects unauthorized organization role with 403 Forbidden', async () => {
+  it('Contract 2: Rejects unauthorized organization role with 403 Forbidden', async () => {
     mocks.from.mockImplementationOnce((table: string) => {
       if (table === 'branches') {
         return {
@@ -224,7 +226,7 @@ describe('Staging Runtime Verification - POST /api/v1/visits Live API Execution'
     expect(body.error).toContain('does not have visit stamping permissions');
   });
 
-  it('Stage 3: End-to-End Staging Run — Commits fresh visit, replays same key, and verifies EXACTLY 1 visit stored', async () => {
+  it('Contract 3: Route Handler Contract — Validates fresh visit handling and idempotent replay with single-record contract', async () => {
     // 1. Initial attempt: Fresh verified visit
     const freshReq = new NextRequest('https://stampy.test/api/v1/visits', {
       method: 'POST',
@@ -270,7 +272,7 @@ describe('Staging Runtime Verification - POST /api/v1/visits Live API Execution'
     expect(committedVisits.length).toBe(1);
   });
 
-  it('Stage 4: Enforces 409 Conflict when key is reused with different customer payload', async () => {
+  it('Contract 4: Enforces 409 Conflict when key is reused with different customer payload', async () => {
     committedVisits.push({
       id: visitId,
       customerId: validGuestId,
@@ -294,7 +296,7 @@ describe('Staging Runtime Verification - POST /api/v1/visits Live API Execution'
     expect(body.error).toContain('Idempotency key belongs to a different visit');
   });
 
-  it('Stage 5: Enforces 403 Forbidden when guest has no check-in within 2 hours', async () => {
+  it('Contract 5: Enforces 403 Forbidden when guest has no check-in within 2 hours', async () => {
     const noCheckinReq = new NextRequest('https://stampy.test/api/v1/visits', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -311,7 +313,7 @@ describe('Staging Runtime Verification - POST /api/v1/visits Live API Execution'
     expect(body.error).toContain('Guest check-in required');
   });
 
-  it('Stage 6: Enforces 429 Too Many Requests when cooldown period is violated', async () => {
+  it('Contract 6: Enforces 429 Too Many Requests when cooldown period is violated', async () => {
     const cooldownReq = new NextRequest('https://stampy.test/api/v1/visits', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
