@@ -31,3 +31,16 @@ index c847154da1464b71bbd871ba668336ae0078cfed..52eea86c815c678c85aff7bd302d51d7
                  }
              }
          }
+diff --git a/dist/core/util.js b/dist/core/util.js
+index 4558e65..6779b2a 100644
+--- a/dist/core/util.js
++++ b/dist/core/util.js
+@@ -17,5 +17,8 @@ applyNextjsRequireHooksOverride();
+ const cacheHandlerPath = require.resolve("./cache.cjs");
+ const composableCacheHandlerPath = require.resolve("./composable-cache.cjs");
+ // @ts-ignore
++NextServer.default.prototype.getMiddlewareManifest = function() {
++    return { version: 3, middleware: {}, sortedMiddleware: [], functions: {} };
++};
+ const nextServer = new NextServer.default({
+     //#override requestHandlerHost

@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "cafe-memories",
+  "account_id": "43b83bf4153a4dabda7562e63232952b",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-08-25",
   "compatibility_flags": [
