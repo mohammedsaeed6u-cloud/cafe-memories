@@ -116,7 +116,10 @@ export async function POST(request: NextRequest) {
 
   return jsonOk({
     duplicate: Boolean(result.duplicate),
+    replayed: Boolean(result.duplicate),
     visit: result.visit ?? null,
+    visitId: result.visit?.id ?? null,
     verificationStatus: result.visit?.verification_status ?? 'verified',
   });
 }
+

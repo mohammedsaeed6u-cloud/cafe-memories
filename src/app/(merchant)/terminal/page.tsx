@@ -26,6 +26,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { PrintService, type PrintFormat } from '@/lib/services/print.service';
+import { SoundEffectsService } from '@/lib/services/sound-effects.service';
 import type { BusinessSettings } from '@/types/photobooth';
 
 /* -------------------------------------------------------------------------- */
@@ -196,6 +197,21 @@ export default function TerminalPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
+  const isSubmittingVisitRef = useRef(false);
+  const [retryState, setRetryState] = useState<{
+    customerId: string;
+    branchId: string;
+    idempotencyKey: string;
+  } | null>(null);
+
+  const activeBranchId = branchId || (context?.branch?.id ?? '');
+  const canRetryVisit = Boolean(
+    retryState &&
+      card &&
+      retryState.customerId === card.customer.id &&
+      retryState.branchId === activeBranchId
+  );
+
   const branchQuery = branchId ? `branchId=${encodeURIComponent(branchId)}` : '';
 
   const handleUnauthorized = useCallback((status: number) => {
@@ -356,11 +372,23 @@ export default function TerminalPage() {
 
   /* -------------------------------- actions -------------------------------- */
 
-  const registerVisit = async () => {
+  const registerVisit = async (isRetry = false) => {
     if (!card) return;
+    if (isSubmittingVisitRef.current) return;
+    isSubmittingVisitRef.current = true;
+
+    let payloadIdempotencyKey: string;
+
+    if (isRetry && retryState) {
+      payloadIdempotencyKey = retryState.idempotencyKey;
+    } else {
+      payloadIdempotencyKey = crypto.randomUUID();
+    }
+
     setBusyAction('visit');
     setActionError(null);
     setNotice(null);
+
     try {
       const response = await fetch('/api/v1/visits', {
         method: 'POST',
@@ -368,23 +396,53 @@ export default function TerminalPage() {
         body: JSON.stringify({
           customerId: card.customer.id,
           source: 'staff',
-          ...(branchId ? { branchId } : {}),
-          idempotencyKey: crypto.randomUUID(),
+          ...(activeBranchId ? { branchId: activeBranchId } : {}),
+          idempotencyKey: payloadIdempotencyKey,
         }),
       });
+
       const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
         duplicate?: boolean;
+        replayed?: boolean;
       };
-      if (handleUnauthorized(response.status)) return;
+
+      if (handleUnauthorized(response.status)) {
+        setRetryState(null);
+        return;
+      }
+
       if (response.status === 429) {
+        setRetryState(null);
         throw new Error('تم تسجيل زيارة لهذا العميل خلال الساعة الأخيرة');
       }
-      if (!response.ok) throw new Error(body.error || 'تعذر تسجيل الزيارة');
-      setNotice(body.duplicate ? 'الزيارة مسجلة مسبقاً' : 'تم تسجيل الزيارة بنجاح');
+
+      if (!response.ok) {
+        throw new Error(body.error || 'تعذر تسجيل الزيارة');
+      }
+
+      // Successful response
+      setRetryState(null);
+
+      const isDuplicate = Boolean(body.duplicate || body.replayed);
+      if (isDuplicate) {
+        setNotice('الزيارة مسجلة مسبقاً (مكررة)');
+      } else {
+        SoundEffectsService.playStampChime();
+        setNotice('تم تسجيل الزيارة بنجاح');
+      }
+
       await loadCard(card.customer.id);
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : 'تعذر تسجيل الزيارة');
+      const message = error instanceof Error ? error.message : 'تعذر تسجيل الزيارة';
+      setActionError(message);
+      setRetryState({
+        customerId: card.customer.id,
+        branchId: activeBranchId,
+        idempotencyKey: payloadIdempotencyKey,
+      });
+      setNotice('حدث خطأ بالاتصال، النتيجة غير مؤكدة. يمكنك إعادة المحاولة بأمان بنفس مفتاح العملية.');
     } finally {
+      isSubmittingVisitRef.current = false;
       setBusyAction(null);
     }
   };
@@ -967,19 +1025,36 @@ export default function TerminalPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => void registerVisit()}
-                      disabled={busyAction === 'visit'}
-                      className="flex items-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2 text-xs font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
-                    >
-                      {busyAction === 'visit' ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Plus className="h-4 w-4" />
+                    <div className="flex flex-wrap items-center gap-2">
+                      {canRetryVisit && (
+                        <button
+                          type="button"
+                          onClick={() => void registerVisit(true)}
+                          disabled={busyAction === 'visit'}
+                          className="flex items-center gap-1.5 rounded-lg border border-amber-500/50 bg-amber-500/20 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-amber-500/30 disabled:opacity-50"
+                        >
+                          {busyAction === 'visit' ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-4 w-4" />
+                          )}
+                          إعادة المحاولة بنفس المفتاح
+                        </button>
                       )}
-                      تسجيل زيارة
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => void registerVisit(false)}
+                        disabled={busyAction === 'visit'}
+                        className="flex items-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2 text-xs font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
+                      >
+                        {busyAction === 'visit' ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Plus className="h-4 w-4" />
+                        )}
+                        تسجيل زيارة
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mt-4 rounded-xl border border-white/10 bg-[#1C1B1B] p-3.5">

@@ -24,6 +24,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     ".next/**",
     ".open-next/**",
+    ".vercel/**",
+    ".agents/**",
     ".wrangler/**",
     ".wrangler-*/**",
     "out/**",
