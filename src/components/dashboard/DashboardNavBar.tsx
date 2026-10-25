@@ -17,6 +17,7 @@ import {
   X,
   ExternalLink,
   UserCog,
+  Sparkles,
 } from 'lucide-react';
 import { BusinessSettings } from '@/types/photobooth';
 import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
@@ -27,6 +28,7 @@ export type DashboardTab =
   | 'customers'
   | 'wall'
   | 'rewards'
+  | 'growth'
   | 'staff'
   | 'print'
   | 'qrcodes'
@@ -48,6 +50,7 @@ const TABS: Array<{ id: DashboardTab; label: string; icon: React.ElementType }> 
   { id: 'customers', label: 'العملاء', icon: Users },
   { id: 'wall', label: 'شاشات الصالة', icon: Tv },
   { id: 'rewards', label: 'المكافآت', icon: Gift },
+  { id: 'growth', label: 'النمو والولاء', icon: Sparkles },
   { id: 'staff', label: 'الموظفون', icon: UserCog },
   { id: 'print', label: 'محطة الطباعة', icon: Printer },
   { id: 'qrcodes', label: 'رموز QR', icon: QrCode },

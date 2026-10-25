@@ -4,6 +4,8 @@ export type WalletBranch = { latitude: number | null; longitude: number | null }
 export type WalletPassInput = {
   organizationId: string; organizationSlug: string; customerId: string;
   brand: PublicBrand; verifiedVisits: number; usedVisits: number;
+  /** Stamps currently on the open card. Falls back to visits - usedVisits. */
+  openStamps?: number;
   threshold: number | null; rewardName: string | null;
   marketingOptIn: boolean; nearbyOptIn: boolean; lastCampaignMessage: string;
   plan: 'free' | 'pro' | 'business'; verifiedAt: string | null;
@@ -13,8 +15,9 @@ export type WalletPassInput = {
 /** A provider sees loyalty basics only: never customer photos, phone, or email. */
 export function walletPassPayload(input: WalletPassInput) {
   const brandedName = `stampy. × ${input.brand.name}`.slice(0, 64);
+  const openStamps = input.openStamps ?? Math.max(0, input.verifiedVisits - input.usedVisits);
   const stamps = input.threshold
-    ? `${Math.min(input.threshold, Math.max(0, input.verifiedVisits - input.usedVisits))}/${input.threshold}`
+    ? `${Math.min(input.threshold, Math.max(0, openStamps))}/${input.threshold}`
     : 'البرنامج قيد الإعداد';
   // The free plan has color presets, but custom logos/colors/locations require
   // an actually verified Pro/Business subscription in the provider account.

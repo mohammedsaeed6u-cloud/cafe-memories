@@ -2,17 +2,22 @@ import React from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
+import { requireSuperAdminPage } from '@/lib/server/page-auth';
 
 export const metadata: Metadata = {
   title: 'stampy. • بوابة الإدارة المركزية (Super Admin)',
   description: 'إدارة الفروع المركزية، الاشتراكات المتكررة، ومؤشرات الـ SaaS.',
 };
 
-export default function AdminLayout({
+export const dynamic = 'force-dynamic';
+
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await requireSuperAdminPage();
+
   return (
     <div className="flex min-h-screen bg-[#FAF5EB] text-[#3D2314]">
       <aside className="w-64 bg-white border-l border-[#EADDC4] text-[#3D2314] flex-shrink-0 flex flex-col justify-between">

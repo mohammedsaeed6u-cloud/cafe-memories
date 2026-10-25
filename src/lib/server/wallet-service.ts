@@ -25,6 +25,36 @@ function platformKey(): string {
   return key;
 }
 
+/**
+ * Whether this venue's wallet plan renders the notification/message field.
+ *
+ * A nudge only changes that field, so running one on a free plan would update
+ * the pass and still show nothing to the customer. Campaign creation is gated
+ * on this instead of silently recording a delivery that never happened.
+ */
+export async function walletMessagingAvailable(organizationId: string): Promise<boolean> {
+  const admin = createAdminClient();
+  const { data: org, error } = await admin
+    .from('organizations')
+    .select('wallet_connector_id')
+    .eq('id', organizationId)
+    .maybeSingle();
+  if (error || !org) return false;
+  if (!org.wallet_connector_id) return platformPlan() !== 'free';
+
+  const { data: connector, error: connectorError } = await admin
+    .from('wallet_connectors')
+    .select('plan,verified_at,enabled')
+    .eq('id', org.wallet_connector_id)
+    .maybeSingle();
+  if (connectorError || !connector || !connector.enabled) return false;
+  return (
+    (connector.plan === 'pro' || connector.plan === 'business') &&
+    connector.verified_at !== null &&
+    Date.now() - new Date(connector.verified_at).getTime() < 24 * 60 * 60_000
+  );
+}
+
 interface PayloadOptions {
   apiKey: string;
   plan: WalletPlan;
@@ -145,6 +175,7 @@ export async function payloadForWalletPass(
   }
 
   const usedVisits = (balance.data as { usedVisits?: unknown }).usedVisits;
+  const openStamps = (balance.data as { openStamps?: unknown }).openStamps;
   if (typeof usedVisits !== 'number' || !Number.isSafeInteger(usedVisits)) {
     throw new Error('Wallet balance unavailable');
   }
@@ -157,6 +188,8 @@ export async function payloadForWalletPass(
     brand: publicBrand(org.data),
     verifiedVisits: visits.count ?? 0,
     usedVisits,
+    openStamps:
+      typeof openStamps === 'number' && Number.isSafeInteger(openStamps) ? openStamps : undefined,
     threshold: rule?.threshold ?? null,
     rewardName: rule?.name ?? null,
     marketingOptIn: Boolean(preferences.data?.wallet_opt_in && preferences.data.marketing_opt_in),

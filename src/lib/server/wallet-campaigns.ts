@@ -1,14 +1,31 @@
-import 'server-only';
+﻿import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { payloadForWalletPass } from '@/lib/server/wallet-service';
 import { updateWalletWalletPass } from '@/lib/server/walletwallet';
 
-export type WalletAudience = 'all' | 'returning' | 'inactive30';
+export type WalletAudience =
+  | 'all'
+  | 'returning'
+  | 'inactive30'
+  | 'reward_ready'
+  | 'almost_there'
+  | 'winback';
+
+const AUDIENCES: readonly WalletAudience[] = [
+  'all',
+  'returning',
+  'inactive30',
+  'reward_ready',
+  'almost_there',
+  'winback',
+];
 export type WalletCampaignConfig = { channel: 'wallet'; audience: WalletAudience; message: string };
 export function walletCampaignConfig(value: unknown): WalletCampaignConfig | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const config = value as Record<string, unknown>;
-  if (config.channel !== 'wallet' || !['all','returning','inactive30'].includes(String(config.audience)) ||
+  if (
+    config.channel !== 'wallet' ||
+    !AUDIENCES.includes(String(config.audience) as WalletAudience) ||
     typeof config.message !== 'string' || config.message.length < 3 || config.message.length > 110) return null;
   return { channel: 'wallet', audience: config.audience as WalletAudience, message: config.message };
 }

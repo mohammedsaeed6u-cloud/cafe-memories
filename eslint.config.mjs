@@ -25,6 +25,7 @@ const eslintConfig = defineConfig([
     ".next/**",
     ".open-next/**",
     ".wrangler/**",
+    ".wrangler-*/**",
     "out/**",
     "build/**",
     "coverage/**",

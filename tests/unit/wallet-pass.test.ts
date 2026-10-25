@@ -123,7 +123,7 @@ describe('safeSiteOrigin', () => {
 const mockReadCustomerSession = vi.fn();
 const mockLoadPublicVenue = vi.fn();
 const mockIssuePlatformWalletPass = vi.fn();
-const mockMaybeSingle = vi.fn();
+const mockCustomerRows = vi.fn();
 
 vi.mock('@/lib/customer-session', () => ({
   readCustomerSession: (...args: unknown[]) => mockReadCustomerSession(...args),
@@ -141,9 +141,7 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
     from: () => ({
       select: () => ({
-        eq: () => ({
-          is: () => ({ maybeSingle: mockMaybeSingle }),
-        }),
+        in: () => ({ is: mockCustomerRows }),
       }),
     }),
   }),
@@ -171,13 +169,16 @@ function requestFor(query: string) {
 describe('GET /api/v1/wallet/pass', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockReadCustomerSession.mockResolvedValue({ customerId: baseInput.customerId });
+    mockReadCustomerSession.mockResolvedValue({
+      customerId: baseInput.customerId,
+      customerIds: [baseInput.customerId],
+    });
     mockLoadPublicVenue.mockResolvedValue({
       organization: { id: orgId },
       branch: { id: '33333333-3333-3333-3333-333333333333' },
     });
-    mockMaybeSingle.mockResolvedValue({
-      data: { id: baseInput.customerId, organization_id: orgId },
+    mockCustomerRows.mockResolvedValue({
+      data: [{ id: baseInput.customerId, organization_id: orgId }],
       error: null,
     });
   });
@@ -210,14 +211,41 @@ describe('GET /api/v1/wallet/pass', () => {
   });
 
   it('answers 403 when the customer belongs to another organization', async () => {
-    mockMaybeSingle.mockResolvedValue({
-      data: { id: baseInput.customerId, organization_id: '99999999-9999-9999-9999-999999999999' },
+    mockCustomerRows.mockResolvedValue({
+      data: [
+        { id: baseInput.customerId, organization_id: '99999999-9999-9999-9999-999999999999' },
+      ],
       error: null,
     });
     const res = await GET(requestFor('cafeSlug=demo'));
     expect(res.status).toBe(403);
     const json = await res.json();
     expect(json.code).toBe('customer_scope');
+  });
+
+  it('finds the venue card even when another card is the active one', async () => {
+    const otherCard = '44444444-4444-4444-8444-444444444444';
+    mockReadCustomerSession.mockResolvedValue({
+      customerId: otherCard,
+      customerIds: [otherCard, baseInput.customerId],
+    });
+    mockCustomerRows.mockResolvedValue({
+      data: [
+        { id: otherCard, organization_id: '99999999-9999-9999-9999-999999999999' },
+        { id: baseInput.customerId, organization_id: orgId },
+      ],
+      error: null,
+    });
+    mockIssuePlatformWalletPass.mockResolvedValue({
+      id: 'pass-1',
+      serialNumber: 'sn-123',
+      shareUrl: 'https://api.walletwallet.dev/p/sn-123',
+      reused: true,
+    });
+
+    const res = await GET(requestFor('cafeSlug=demo'));
+    expect(res.status).toBe(200);
+    expect(mockIssuePlatformWalletPass).toHaveBeenCalledWith(orgId, baseInput.customerId);
   });
 
   it('returns the provider install URL without exposing the API key', async () => {

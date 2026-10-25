@@ -1,8 +1,10 @@
 # Café Memories / Stampy
 
 The digital memory & loyalty layer for cafés: a guest photobooth, a live wall,
-a staff terminal, a merchant dashboard, and a Super Admin portal — backed by
-Supabase and deployed to **Cloudflare Workers** with OpenNext.
+a staff terminal, a merchant dashboard, and a Super Admin portal — plus NFC
+tap-to-stamp loyalty, a multi-tier reward ladder, Apple/Google Wallet passes,
+wallet nudges, and a public venue directory. Backed by Supabase and deployed to
+**Cloudflare Workers** with OpenNext.
 
 ## Stack
 
@@ -35,7 +37,7 @@ The app runs at <http://localhost:3000>.
 
 ### Database
 
-Apply the SQL migrations in `supabase/migrations` **in order** (00001 → 00013)
+Apply the SQL migrations in `supabase/migrations` **in order** (00001 → 00015)
 through the Supabase SQL editor, or link the project and push:
 
 ```bash
@@ -43,9 +45,17 @@ pnpm dlx supabase link --project-ref <project-ref>
 pnpm db:push
 ```
 
-Migration `00013_production_hardening.sql` adds the tables and RPCs the current
-code depends on (staff PIN credentials, print jobs, paired screens, QR scans,
-rate limiting, verified visits, keepsake cards). Do not skip it.
+The last three migrations carry the behaviour the current code depends on:
+
+- `00013_production_hardening.sql` — staff PIN credentials, print jobs, paired
+  screens, QR scans, rate limiting, verified visits, keepsake cards.
+- `00014_stamp_ledger_and_promotions.sql` — the stamp ledger (the loyalty
+  currency), reward-ladder tiers, stamp promotions, vouchers and the rewritten
+  visit/balance RPCs.
+- `00015_nfc_taps_and_discovery.sql` — NFC readers and tap events, tap-to-redeem,
+  merchant insights, wallet-nudge audiences, and the public venue directory.
+
+Do not skip any of them; the API calls RPCs that only exist after they run.
 
 ## Scripts
 
@@ -114,13 +124,20 @@ build on Linux or WSL.
   receive an HMAC-signed, HttpOnly session cookie.
 - **Guest identity:** a signed `stampy_customer_session` cookie. Phone numbers
   are contact data, never an identity key.
+- **NFC tags:** a passive tag carries a bearer secret in the URL fragment, so it
+  never reaches request logs. The database stores only SHA-256 of the secret;
+  rotating a reader invalidates every printed tag instantly. Taps require the
+  signed customer session, a per-customer/branch cooldown, and velocity limits.
 - **Tenant isolation:** every server route resolves the operator from the
   session and scopes queries by `organization_id`; RLS is enabled in Postgres.
+  Branch managers are additionally scoped to their own branch.
 - **Uploads:** magic-byte validation, 10 MB cap, rate limiting, EXIF/XMP
   stripping, private buckets served through short-lived signed URLs.
 - **Headers:** CSP, HSTS, `X-Frame-Options`, `X-Content-Type-Options`,
-  `Referrer-Policy`, and `Permissions-Policy` are set in `next.config.ts`,
-  `src/proxy.ts`, and `public/_headers`.
+  `Referrer-Policy`, and `Permissions-Policy` are set in `next.config.ts` and
+  `public/_headers`. Authorization is enforced in each server component and
+  route handler (`src/lib/server/page-auth.ts`), not in middleware — Next 16
+  middleware would force a second Node runtime into the Worker.
 - **No demo data:** QR slugs, venue slugs, and wallet passes are resolved from
   the database; unknown codes fall back to `/c` instead of a fake venue.
 

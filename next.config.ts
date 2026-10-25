@@ -5,8 +5,10 @@ import type { NextConfig } from 'next';
  *
  * The previous STATIC_EXPORT branch deleted src/app/api before building, so the
  * deployed site had no API at all while every page called /api/v1/*. It is gone.
- * Security headers are declared here as well as in proxy.ts so they survive
- * platforms that bypass the proxy for static assets.
+ * Security headers are declared here and in public/_headers. There is no
+ * proxy.ts: Next 16 proxies always run on Node, and OpenNext would ship a
+ * second Next runtime (plus @vercel/og wasm) to the Worker, which does not fit
+ * the free plan. Page authorization happens in server components instead.
  */
 
 const CSP = [
@@ -38,6 +40,10 @@ const nextConfig: NextConfig = {
       '**/node_modules/@img/**',
       '**/node_modules/.pnpm/sharp@*/**',
       '**/node_modules/.pnpm/@img+*/**',
+      // `next/og` ships 1.4 MB of resvg/yoga wasm. This app has no
+      // opengraph-image or ImageResponse route, so it is dead weight in the
+      // Worker (and the free plan has no room for it).
+      '**/node_modules/next/dist/compiled/@vercel/og/**',
     ],
   },
   // No server-side image codecs: Workers cannot load native modules, and the
@@ -69,6 +75,28 @@ const nextConfig: NextConfig = {
           },
           { key: 'X-DNS-Prefetch-Control', value: 'off' },
         ],
+      },
+    ];
+  },
+  /**
+   * OAuth providers may land on `/` or `/login` with `?code=`. Proxy used to
+   * forward that to the PKCE handler; a config redirect does the same job with
+   * no Worker runtime cost (Next 16 proxies always run on Node, which would
+   * ship a second Next runtime to the edge).
+   */
+  async redirects() {
+    return [
+      {
+        source: '/',
+        has: [{ type: 'query', key: 'code' }],
+        destination: '/auth/callback',
+        permanent: false,
+      },
+      {
+        source: '/login',
+        has: [{ type: 'query', key: 'code' }],
+        destination: '/auth/callback',
+        permanent: false,
       },
     ];
   },

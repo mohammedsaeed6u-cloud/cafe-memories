@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import {
   BusinessSettings,
   PhotoboothFrame,
@@ -36,6 +37,7 @@ import {
   Award,
   Loader2,
   AlertCircle,
+  MapPin,
 } from 'lucide-react';
 
 /* -------------------------------------------------------------------------- */
@@ -1154,6 +1156,25 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
           </div>
         )}
       </main>
+
+      <footer className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-6 pb-2">
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            href="/cards"
+            className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-bold text-[#D9D9D9] transition hover:border-[#DFAB56]/50 hover:text-[#DFAB56]"
+          >
+            <Award className="h-3.5 w-3.5" />
+            بطاقاتي
+          </Link>
+          <Link
+            href="/discover"
+            className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-[11px] font-bold text-[#D9D9D9] transition hover:border-[#DFAB56]/50 hover:text-[#DFAB56]"
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            اكتشف أماكن قريبة
+          </Link>
+        </div>
+      </footer>
 
       {isCameraModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md">

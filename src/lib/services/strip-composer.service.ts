@@ -6,6 +6,8 @@ import {
   PlacedSticker,
 } from '@/types/photobooth';
 import { PHOTOBOOTH_CARD_MODES } from '@/lib/constants/photobooth-presets';
+import { drawCoverImage, roundRect } from '@/lib/services/canvas-primitives';
+import { resolveStripTheme } from '@/lib/services/strip-theme';
 
 export interface ComposeStripOptions {
   photos: string[]; // Base64 data URLs
@@ -60,69 +62,27 @@ export class StripComposerService {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get 2d context for canvas');
 
-    // Theme identification
-    const isLuxuryGlass = cardMode === 'luxury_glass';
-    const isTicketExpress = cardMode === 'ticket_express';
-    const isSpotifyPlayer = cardMode === 'spotify_player';
-    const isIosGalleryLight = cardMode === 'ios_gallery_light';
-    const isIosGalleryDark = cardMode === 'ios_gallery_dark';
-    const isIosGallery = isIosGalleryLight || isIosGalleryDark;
-    const isIosCamera = cardMode === 'ios_camera';
-    const isIosIMessage = cardMode === 'ios_imessage';
-
-    const isKorean = cardMode === 'korean_noir';
-    const isRetro = cardMode === 'retro_film' || cardMode === 'film_35mm';
-    const isPolaroid = cardMode === 'polaroid_classic' || cardMode === 'polaroid_vintage' || frame.frameShape === 'polaroid';
-    const isTokyo = cardMode === 'tokyo_pastel';
-    const isKinfolk = cardMode === 'kinfolk_minimal';
-    const isArabicaGold = cardMode === 'arabica_luxury_gold';
-
-    // Base effective colors
-    const effectiveBg = isLuxuryGlass
-      ? '#08080B'
-      : isTicketExpress
-      ? '#FAF5EC'
-      : isSpotifyPlayer
-      ? frame.bgColor || '#384C5A'
-      : isIosGalleryLight
-      ? '#F2F2F7'
-      : isIosGalleryDark || isIosCamera
-      ? '#000000'
-      : isIosIMessage
-      ? '#FFFFFF'
-      : frame.bgColor || modeInfo.defaultBg;
-
-    const effectiveBorder = isTicketExpress
-      ? '#4A121A'
-      : isSpotifyPlayer
-      ? frame.borderColor || '#2E2E34'
-      : isIosGalleryLight
-      ? '#D1D1D6'
-      : isIosGalleryDark || isIosCamera
-      ? '#1C1C1E'
-      : isIosIMessage
-      ? '#E5E5EA'
-      : frame.borderColor || modeInfo.defaultBorder;
-
-    const effectiveText = isTicketExpress
-      ? '#381016'
-      : isSpotifyPlayer || isIosGalleryDark || isIosCamera
-      ? '#FFFFFF'
-      : isIosGalleryLight || isIosIMessage
-      ? '#000000'
-      : frame.textColor || modeInfo.defaultText;
-
-    const effectiveAccent = isTicketExpress
-      ? '#8B2635'
-      : isSpotifyPlayer
-      ? '#1DB954'
-      : isIosGallery
-      ? '#007AFF'
-      : isIosCamera
-      ? '#FFCC00'
-      : isIosIMessage
-      ? '#34C759'
-      : frame.accentColor || modeInfo.defaultAccent;
+    const theme = resolveStripTheme({ frame, cardMode, modeInfo });
+    const {
+      isLuxuryGlass,
+      isTicketExpress,
+      isSpotifyPlayer,
+      isIosGalleryLight,
+      isIosGalleryDark,
+      isIosGallery,
+      isIosCamera,
+      isIosIMessage,
+      isKorean,
+      isRetro,
+      isPolaroid,
+      isTokyo,
+      isKinfolk,
+      isArabicaGold,
+      effectiveBg,
+      effectiveBorder,
+      effectiveText,
+      effectiveAccent,
+    } = theme;
 
     // 1. Draw frame background
     ctx.fillStyle = effectiveBg;
@@ -131,7 +91,7 @@ export class StripComposerService {
     // Outer border
     ctx.strokeStyle = isArabicaGold ? '#D4AF37' : effectiveBorder;
     ctx.lineWidth = isTicketExpress ? 8 : isArabicaGold ? 8 : 6;
-    this.roundRect(
+    roundRect(
       ctx,
       16,
       16,
@@ -145,13 +105,13 @@ export class StripComposerService {
       // Inner thin ticket border
       ctx.strokeStyle = 'rgba(74, 18, 26, 0.4)';
       ctx.lineWidth = 2;
-      this.roundRect(ctx, 24, 24, width - 48, height - 48, 20);
+      roundRect(ctx, 24, 24, width - 48, height - 48, 20);
       ctx.stroke();
     } else if (isArabicaGold) {
       // Inner luxury gold filigree line
       ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
       ctx.lineWidth = 2;
-      this.roundRect(ctx, 24, 24, width - 48, height - 48, 22);
+      roundRect(ctx, 24, 24, width - 48, height - 48, 22);
       ctx.stroke();
     }
 
@@ -164,9 +124,9 @@ export class StripComposerService {
       const step = (height - 80) / count;
       for (let i = 0; i < count; i++) {
         const sy = 40 + i * step;
-        this.roundRect(ctx, 24, sy, sprocketW, sprocketH, 4);
+        roundRect(ctx, 24, sy, sprocketW, sprocketH, 4);
         ctx.fill();
-        this.roundRect(ctx, width - 24 - sprocketW, sy, sprocketW, sprocketH, 4);
+        roundRect(ctx, width - 24 - sprocketW, sy, sprocketW, sprocketH, 4);
         ctx.fill();
       }
     }
@@ -209,7 +169,7 @@ export class StripComposerService {
       // Outer ticket header box
       ctx.strokeStyle = '#4A121A';
       ctx.lineWidth = 4;
-      this.roundRect(ctx, 42, headerBoxY, width - 84, 110, 16);
+      roundRect(ctx, 42, headerBoxY, width - 84, 110, 16);
       ctx.stroke();
 
       ctx.fillStyle = '#4A121A';
@@ -299,7 +259,7 @@ export class StripComposerService {
 
       // Reactions Drawer
       ctx.fillStyle = '#F2F2F7';
-      this.roundRect(ctx, width / 2 - 120, 64, 240, 36, 18);
+      roundRect(ctx, width / 2 - 120, 64, 240, 36, 18);
       ctx.fill();
       ctx.font = '18px sans-serif';
       ctx.textAlign = 'center';
@@ -417,21 +377,21 @@ export class StripComposerService {
       if (photo && photo.width) {
         // Filled Photo Slot
         ctx.save();
-        this.roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
+        roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
         ctx.clip();
-        this.drawCoverImage(ctx, photo, slotX, slotY, slotW, slotH);
+        drawCoverImage(ctx, photo, slotX, slotY, slotW, slotH);
         ctx.restore();
 
         // Photo border
         ctx.strokeStyle = isTicketExpress ? '#4A121A' : effectiveBorder;
         ctx.lineWidth = isTicketExpress ? 4 : 3;
-        this.roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
+        roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
         ctx.stroke();
 
         // Slot badge
         if (!isIosGallery && !isSpotifyPlayer) {
           ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-          this.roundRect(ctx, slotX + 10, slotY + 10, 52, 24, 6);
+          roundRect(ctx, slotX + 10, slotY + 10, 52, 24, 6);
           ctx.fill();
 
           ctx.fillStyle = '#FFFFFF';
@@ -442,13 +402,13 @@ export class StripComposerService {
       } else if (isLastSlot) {
         // Milestone / Last slot
         ctx.fillStyle = isTicketExpress ? '#FAF5EC' : isSpotifyPlayer ? 'rgba(255,255,255,0.08)' : '#FFFDF7';
-        this.roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
+        roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
         ctx.fill();
 
         ctx.strokeStyle = effectiveAccent;
         ctx.lineWidth = 3;
         if (typeof ctx.setLineDash === 'function') ctx.setLineDash([8, 6]);
-        this.roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
+        roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
         ctx.stroke();
         if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
 
@@ -466,13 +426,13 @@ export class StripComposerService {
       } else {
         // Empty upcoming slot
         ctx.fillStyle = isSpotifyPlayer ? 'rgba(255,255,255,0.05)' : effectiveBg;
-        this.roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
+        roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
         ctx.fill();
 
         ctx.strokeStyle = effectiveBorder;
         ctx.lineWidth = 2;
         if (typeof ctx.setLineDash === 'function') ctx.setLineDash([6, 6]);
-        this.roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
+        roundRect(ctx, slotX, slotY, slotW, slotH, slotCornerRadius);
         ctx.stroke();
         if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
 
@@ -526,7 +486,7 @@ export class StripComposerService {
       ctx.fillStyle = '#FAF5EC';
       ctx.strokeStyle = '#4A121A';
       ctx.lineWidth = 3;
-      this.roundRect(ctx, pillX, pillY, pillW, pillH, 21);
+      roundRect(ctx, pillX, pillY, pillW, pillH, 21);
       ctx.fill();
       ctx.stroke();
 
@@ -565,7 +525,7 @@ export class StripComposerService {
       // [E] Explicit Badge
       const titleW = ctx.measureText(songTitle).width;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-      this.roundRect(ctx, 42 + titleW + 8, dockY + 12, 16, 16, 3);
+      roundRect(ctx, 42 + titleW + 8, dockY + 12, 16, 16, 3);
       ctx.fill();
       ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 10px monospace';
@@ -587,13 +547,13 @@ export class StripComposerService {
       // Timeline Scrubber Bar
       const scrubY = dockY + 68;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-      this.roundRect(ctx, 42, scrubY, width - 84, 6, 3);
+      roundRect(ctx, 42, scrubY, width - 84, 6, 3);
       ctx.fill();
 
       // Progress filled line & dot
       const progressW = (width - 84) * 0.42;
       ctx.fillStyle = '#FFFFFF';
-      this.roundRect(ctx, 42, scrubY, progressW, 6, 3);
+      roundRect(ctx, 42, scrubY, progressW, 6, 3);
       ctx.fill();
       ctx.beginPath();
       ctx.arc(42 + progressW, scrubY + 3, 6, 0, Math.PI * 2);
@@ -673,7 +633,7 @@ export class StripComposerService {
 
       // Thumbnail & lens flip
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-      this.roundRect(ctx, 60, camY + 30, 36, 36, 8);
+      roundRect(ctx, 60, camY + 30, 36, 36, 8);
       ctx.fill();
 
       ctx.beginPath();
@@ -688,7 +648,7 @@ export class StripComposerService {
       const msgY = height - 70;
       ctx.save();
       ctx.fillStyle = '#F2F2F7';
-      this.roundRect(ctx, 42, msgY, width - 84, 44, 22);
+      roundRect(ctx, 42, msgY, width - 84, 44, 22);
       ctx.fill();
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
@@ -775,46 +735,4 @@ export class StripComposerService {
     return canvas.toDataURL('image/png', 0.95);
   }
 
-  private static roundRect(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    radius: number
-  ) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.arcTo(x + w, y, x + w, y + h, radius);
-    ctx.arcTo(x + w, y + h, x, y + h, radius);
-    ctx.arcTo(x, y + h, x, y, radius);
-    ctx.arcTo(x, y, x + w, y, radius);
-    ctx.closePath();
-  }
-
-  private static drawCoverImage(
-    ctx: CanvasRenderingContext2D,
-    img: HTMLImageElement,
-    x: number,
-    y: number,
-    w: number,
-    h: number
-  ) {
-    const imgRatio = img.width / img.height;
-    const boxRatio = w / h;
-    let sx = 0,
-      sy = 0,
-      sw = img.width,
-      sh = img.height;
-
-    if (imgRatio > boxRatio) {
-      sw = img.height * boxRatio;
-      sx = (img.width - sw) / 2;
-    } else {
-      sh = img.width / boxRatio;
-      sy = (img.height - sh) / 2;
-    }
-
-    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-  }
 }

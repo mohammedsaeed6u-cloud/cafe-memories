@@ -30,14 +30,19 @@ export async function GET(request: NextRequest) {
   if (!venue) return jsonError(404, 'venue_not_found', 'Venue not available');
 
   const admin = createAdminClient();
-  const { data: customer } = await admin
+  // The cookie keeps every venue card; the last one is not necessarily the
+  // venue the customer is asking about.
+  const { data: customers } = await admin
     .from('customers')
     .select('id,organization_id')
-    .eq('id', session.customerId)
-    .is('deleted_at', null)
-    .maybeSingle();
+    .in('id', session.customerIds)
+    .is('deleted_at', null);
 
-  if (!customer || customer.organization_id !== venue.organization.id) {
+  const customer = (customers ?? []).find(
+    (row) => row.organization_id === venue.organization.id
+  );
+
+  if (!customer) {
     return jsonError(403, 'customer_scope', 'Session does not belong to this venue');
   }
 

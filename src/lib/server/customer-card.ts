@@ -17,11 +17,32 @@ export interface CustomerCardStamp {
 }
 
 export interface CustomerCardVoucher {
+  id: string;
   code: string;
   title: string;
+  description: string | null;
   status: string;
+  source: string;
   expiresAt: string | null;
   createdAt: string;
+}
+
+export interface CustomerCardTier {
+  id: string;
+  threshold: number;
+  title: string;
+  description: string | null;
+  rewardKind: 'voucher' | 'card';
+  unlocked: boolean;
+  isNext: boolean;
+}
+
+export interface CustomerCardPromotion {
+  id: string;
+  title: string;
+  description: string | null;
+  multiplier: number;
+  endsAt: string;
 }
 
 export interface CustomerCardMemory {
@@ -49,10 +70,13 @@ export interface CustomerCard {
     totalVerifiedVisits: number;
     lastStampedAt: string | null;
     rewardName: string | null;
+    nextTier: { threshold: number; title: string; remaining: number } | null;
   };
   rewards: CustomerCardReward[];
   stamps: CustomerCardStamp[];
   vouchers: CustomerCardVoucher[];
+  ladder: CustomerCardTier[];
+  promotion: CustomerCardPromotion | null;
   memories: CustomerCardMemory[];
   walletPass: { status: string; shareUrl: string | null } | null;
 }
@@ -79,6 +103,9 @@ export async function loadCustomerCard(
     memoriesResult,
     vouchersResult,
     walletResult,
+    openStampsResult,
+    tiersResult,
+    promotionResult,
   ] = await Promise.all([
     admin
       .from('customers')
@@ -110,8 +137,8 @@ export async function loadCustomerCard(
       .select('id,reward_name,threshold,unlocked_at,redeemed_at')
       .eq('customer_id', customerId)
       .eq('organization_id', organizationId)
-      .is('redeemed_at', null)
-      .order('sequence_number', { ascending: true }),
+      .order('sequence_number', { ascending: true })
+      .limit(60),
     admin
       .from('memories')
       .select('id,original_url,optimized_url,thumbnail_url,caption,status,visibility,created_at')
@@ -123,18 +150,35 @@ export async function loadCustomerCard(
       .limit(24),
     admin
       .from('vouchers')
-      .select('code,title,status,expires_at,created_at')
+      .select('id,code,title,description,status,source,expires_at,created_at')
       .eq('customer_id', customerId)
       .eq('organization_id', organizationId)
       .eq('status', 'issued')
       .order('created_at', { ascending: false })
-      .limit(10),
+      .limit(12),
     admin
       .from('wallet_passes')
       .select('status,share_url')
       .eq('customer_id', customerId)
       .eq('organization_id', organizationId)
       .maybeSingle(),
+    admin
+      .from('stamp_ledger')
+      .select('id', { head: true, count: 'exact' })
+      .eq('customer_id', customerId)
+      .eq('organization_id', organizationId)
+      .is('card_id', null),
+    admin
+      .from('reward_ladder_tiers')
+      .select('id,threshold,title,description,reward_kind')
+      .eq('organization_id', organizationId)
+      .eq('is_active', true)
+      .order('threshold', { ascending: true }),
+    admin.rpc('active_stamp_multiplier', {
+      p_organization_id: organizationId,
+      p_branch_id: null,
+      p_at: new Date().toISOString(),
+    }),
   ]);
 
   if (customerResult.error) throw new Error('Customer lookup failed');
@@ -152,6 +196,8 @@ export async function loadCustomerCard(
   if (cardsResult.error) throw new Error('Reward lookup failed');
   if (memoriesResult.error) throw new Error('Memory lookup failed');
   if (vouchersResult.error) throw new Error('Voucher lookup failed');
+  if (openStampsResult.error) throw new Error('Stamp balance lookup failed');
+  if (tiersResult.error) throw new Error('Reward ladder lookup failed');
 
   const settings = mergeOrganizationSettings(
     organizationResult.data?.settings as Record<string, unknown> | null | undefined
@@ -164,11 +210,48 @@ export async function loadCustomerCard(
     reward_name: string;
     threshold: number;
     unlocked_at: string;
+    redeemed_at: string | null;
   }>;
-  const usedVisits = cards.reduce((total, card) => total + (card.threshold || 0), 0);
+  const openRewards = cards.filter((card) => !card.redeemed_at);
   const totalVerifiedVisits = visitsResult.count ?? 0;
-  const stampedCount = Math.max(0, Math.min(maxSlots, totalVerifiedVisits - usedVisits));
+  const stampedCount = Math.max(0, Math.min(maxSlots, openStampsResult.count ?? 0));
   const lastVerifiedAt = (visitsResult.data ?? [])[0]?.verified_at ?? null;
+
+  const tiers = (tiersResult.data ?? []) as Array<{
+    id: string;
+    threshold: number;
+    title: string;
+    description: string | null;
+    reward_kind: 'voucher' | 'card';
+  }>;
+  const nextTierRow = tiers.find((tier) => tier.threshold > stampedCount) ?? null;
+  const ladder: CustomerCardTier[] = tiers.map((tier) => ({
+    id: tier.id,
+    threshold: tier.threshold,
+    title: tier.title,
+    description: tier.description,
+    rewardKind: tier.reward_kind,
+    unlocked: stampedCount >= tier.threshold,
+    isNext: nextTierRow?.id === tier.id,
+  }));
+
+  const promotionRow = promotionResult.data as {
+    id?: string;
+    title?: string;
+    description?: string | null;
+    multiplier?: number;
+    endsAt?: string;
+  } | null;
+  const promotion: CustomerCardPromotion | null =
+    promotionRow && promotionRow.id && promotionRow.title && promotionRow.multiplier
+      ? {
+          id: promotionRow.id,
+          title: promotionRow.title,
+          description: promotionRow.description ?? null,
+          multiplier: promotionRow.multiplier,
+          endsAt: promotionRow.endsAt ?? '',
+        }
+      : null;
 
   const memories = (memoriesResult.data ?? []) as Array<{
     id: string;
@@ -201,9 +284,16 @@ export async function loadCustomerCard(
       completedCardsCount: cards.length,
       totalVerifiedVisits,
       lastStampedAt: lastVerifiedAt,
-      rewardName: cards[0]?.reward_name ?? rule?.name ?? null,
+      rewardName: rule?.name ?? cards[0]?.reward_name ?? null,
+      nextTier: nextTierRow
+        ? {
+            threshold: nextTierRow.threshold,
+            title: nextTierRow.title,
+            remaining: Math.max(0, nextTierRow.threshold - stampedCount),
+          }
+        : null,
     },
-    rewards: cards.map((card) => ({
+    rewards: openRewards.map((card) => ({
       id: card.id,
       name: card.reward_name,
       threshold: card.threshold,
@@ -225,12 +315,17 @@ export async function loadCustomerCard(
       }))
       .filter((stamp) => stamp.thumbnailUrl.length > 0),
     vouchers: (vouchersResult.data ?? []).map((voucher) => ({
+      id: voucher.id,
       code: voucher.code,
       title: voucher.title,
+      description: voucher.description ?? null,
       status: voucher.status,
+      source: voucher.source ?? 'manual',
       expiresAt: voucher.expires_at ?? null,
       createdAt: voucher.created_at,
     })),
+    ladder,
+    promotion,
     memories: memories.slice(0, 12).map((memory) => ({
       id: memory.id,
       originalUrl: pickSigned(memoryUrls, memory.original_url, memory.optimized_url),

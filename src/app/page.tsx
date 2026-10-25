@@ -261,7 +261,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between border-b border-[#EADDC4] pb-3 mb-4">
                 <span className="text-xs font-mono font-bold text-[#527E78]">COUNTER POS TERMINAL</span>
                 <span className="text-[10px] font-bold bg-[#E5A836]/20 text-[#3D2314] px-2.5 py-0.5 rounded-full border border-[#3D2314]/20">
-                  الكاشير: أحمد • PIN: 1234
+                  الكاشير: فريق الاستقبال • PIN: ••••
                 </span>
               </div>
 
@@ -269,13 +269,13 @@ export default function HomePage() {
               <div className="bg-[#FAF5EB] border-2 border-[#3D2314] rounded-xl p-4 shadow-stamp-resting space-y-3">
                 <div className="flex items-center justify-between text-xs font-bold text-[#3D2314]">
                   <span>بحث سريع بالهاتف:</span>
-                  <span className="font-mono text-[#B83A26]">0551234567</span>
+                  <span className="font-mono text-[#B83A26]">05X XXX XXXX</span>
                 </div>
 
                 <div className="bg-white p-3 rounded-lg border border-[#EADDC4] flex items-center justify-between">
                   <div>
-                    <h5 className="font-black text-xs text-[#3D2314]">عبدالله السعد</h5>
-                    <span className="text-[10px] text-[#3D2314]/60">عميل منتظم • 4 زيارات</span>
+                    <h5 className="font-black text-xs text-[#3D2314]">عميل يزور بانتظام</h5>
+                    <span className="text-[10px] text-[#3D2314]/60">4 زيارات موثّقة</span>
                   </div>
                   <span className="text-xs font-mono font-black text-[#527E78]">4 / 5</span>
                 </div>

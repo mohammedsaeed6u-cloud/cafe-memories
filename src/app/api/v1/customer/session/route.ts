@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Customer identity for the public photobooth.
  *
  * POST   create or refresh the guest session. The server mints the customer
@@ -100,16 +100,19 @@ export async function POST(request: NextRequest) {
   let created = false;
 
   if (claims) {
-    const { data: existing } = await admin
+    // A customer row is tenant-scoped. Reuse the card for this venue from any
+    // card in the cookie, so switching venues never mints a duplicate.
+    const { data: rows } = await admin
       .from('customers')
       .select('id,organization_id,phone')
-      .eq('id', claims.customerId)
-      .is('deleted_at', null)
-      .maybeSingle();
+      .in('id', claims.customerIds)
+      .is('deleted_at', null);
 
-    // A customer row is tenant-scoped. Visiting another venue starts a new
-    // card rather than sharing one identity across businesses.
-    if (existing && (!existing.organization_id || existing.organization_id === organizationId)) {
+    const existing = (rows ?? []).find(
+      (row) => !row.organization_id || row.organization_id === organizationId
+    );
+
+    if (existing) {
       customerId = existing.id;
 
       if (phone && existing.phone && existing.phone !== phone) {
@@ -212,12 +215,14 @@ export async function POST(request: NextRequest) {
     rewards: card.rewards,
     stamps: card.stamps,
     vouchers: card.vouchers,
+    ladder: card.ladder,
+    promotion: card.promotion,
     memories: card.memories,
     walletPass: card.walletPass,
     venue,
   });
 
-  const value = await createCustomerSessionValue(customerId);
+  const value = await createCustomerSessionValue(customerId, claims?.customerIds ?? []);
   response.cookies.set(CUSTOMER_SESSION_COOKIE, value, customerSessionCookieOptions());
   return response;
 }
@@ -249,6 +254,8 @@ export async function GET(request: NextRequest) {
     rewards: card.rewards,
     stamps: card.stamps,
     vouchers: card.vouchers,
+    ladder: card.ladder,
+    promotion: card.promotion,
     memories: card.memories,
     walletPass: card.walletPass,
     venue,

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { Suspense } from 'react';
+import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { CustomerClient } from '@/components/customer/CustomerClient';
 
@@ -17,6 +19,13 @@ function CustomerQueryWrapper() {
             هذا الرابط يحتاج إلى رمز المنشأة. امسح رمز QR الموجود على طاولتك أو عند الكاونتر
             لبدء تجربة الذكريات.
           </p>
+          <Link
+            href="/discover"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[#3D2314]/20 bg-white px-3 py-2 text-xs font-bold text-[#3D2314] hover:border-[#DFAB56]"
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            اكتشف أماكن قريبة
+          </Link>
         </div>
       </div>
     );

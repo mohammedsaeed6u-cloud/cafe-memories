@@ -2,13 +2,11 @@ import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import nextConfig from '@/../next.config';
-import { proxy as middleware } from '@/proxy';
-import { NextRequest } from 'next/server';
 
 describe('Content Security Policy & HTTP Security Headers', () => {
   const headersFilePath = path.join(process.cwd(), 'public', '_headers');
 
-  it('provides public/_headers file with complete CSP and defense-in-depth headers for Cloudflare Pages', () => {
+  it('ships public/_headers with CSP and defense-in-depth headers for static assets', () => {
     expect(fs.existsSync(headersFilePath)).toBe(true);
     const content = fs.readFileSync(headersFilePath, 'utf8');
 
@@ -39,24 +37,29 @@ describe('Content Security Policy & HTTP Security Headers', () => {
       expect(headerKeys).toContain('X-Frame-Options');
       expect(headerKeys).toContain('X-Content-Type-Options');
       expect(headerKeys).toContain('Permissions-Policy');
+      expect(headerKeys).toContain('Strict-Transport-Security');
+      expect(headerKeys).toContain('Referrer-Policy');
     }
   });
 
-  it('handles CORS OPTIONS preflight requests for API routes in middleware', async () => {
-    const req = new NextRequest('http://localhost:3000/api/v1/health', {
-      method: 'OPTIONS',
-    });
-    const res = await middleware(req);
-    expect(res.status).toBe(204);
-    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
-    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('GET');
-    expect(res.headers.get('Access-Control-Allow-Methods')).toContain('POST');
+  it('forwards OAuth codes landing on / or /login to the PKCE handler', async () => {
+    expect(nextConfig.redirects).toBeDefined();
+    const redirects = (await nextConfig.redirects?.()) ?? [];
+
+    for (const source of ['/', '/login']) {
+      const rule = redirects.find((entry) => entry.source === source);
+      expect(rule, `missing redirect for ${source}`).toBeDefined();
+      expect(rule?.destination).toBe('/auth/callback');
+      expect(rule?.has).toEqual([{ type: 'query', key: 'code' }]);
+      expect(rule?.permanent).toBe(false);
+    }
   });
 
-  it('attaches Content-Security-Policy header to public routes in middleware', async () => {
-    const req = new NextRequest('http://localhost:3000/c/stampy');
-    const res = await middleware(req);
-    expect(res.headers.get('Content-Security-Policy')).toContain("default-src 'self'");
-    expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
+  it('does not ship a Node middleware bundle', () => {
+    // Next 16 proxies always run on the Node runtime, which makes OpenNext
+    // bundle a second copy of Next (~0.65 MB gzip + 0.54 MB wasm). The free
+    // plan cannot fit that, so authorization lives in server components.
+    expect(fs.existsSync(path.join(process.cwd(), 'src', 'proxy.ts'))).toBe(false);
+    expect(fs.existsSync(path.join(process.cwd(), 'src', 'middleware.ts'))).toBe(false);
   });
 });

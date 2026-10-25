@@ -35,6 +35,22 @@ export function hashIpAddress(ip: string): string {
   return crypto.createHmac('sha256', salt).update(ip.trim()).digest('hex');
 }
 
+/**
+ * Keyed hash of a device fingerprint (user agent). Same salt as the IP hash so
+ * the two can be correlated inside one venue but not reversed from a leak.
+ */
+export function hashUserAgent(userAgent: string): string {
+  const salt = secret(
+    'ANTI_FRAUD_SALT',
+    'development-anti-fraud-salt-not-for-production',
+    16
+  );
+  return crypto
+    .createHmac('sha256', salt)
+    .update(`ua:${userAgent.trim().slice(0, 512)}`)
+    .digest('hex');
+}
+
 export function evaluateVisitEligibility(params: AntiFraudCheckParams): AntiFraudResult {
   const now = Date.now();
   const currentIpHash = params.ipAddress ? hashIpAddress(params.ipAddress) : 'unknown_ip';
