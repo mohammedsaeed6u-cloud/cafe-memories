@@ -176,7 +176,8 @@ export async function POST(request: NextRequest) {
       rewardProgress: null, // Deprecated naive modulo calculation; authoritative keepsake model is decoupled
       progressFetchFailed,
     });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: err.message || 'Internal server error' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal server error';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

@@ -39,6 +39,38 @@ import { StampyLogo, StampyApertureIcon } from '@/components/brand/StampyLogo';
 
 import { useTerminalVisitConfirmation, resolveMerchantBranchContext } from '@/hooks/useTerminalVisitConfirmation';
 
+interface PrintJobItem {
+  id: string;
+  name?: string;
+  phone?: string;
+  format?: string;
+  photoStripUrl?: string;
+  [key: string]: unknown;
+}
+
+function createRedemptionAudit(
+  cafeSlug: string,
+  phone: string,
+  customerName: string,
+  rewardTitle: string,
+  staffName?: string
+) {
+  if (typeof window === 'undefined') return;
+  const logKey = `memories_redemption_audit_${cafeSlug}`;
+  try {
+    const existing = JSON.parse(localStorage.getItem(logKey) || '[]');
+    const newAudit = {
+      id: `red_${Date.now()}`,
+      phone,
+      customerName,
+      rewardTitle,
+      redeemedAt: new Date().toISOString(),
+      baristaName: staffName,
+    };
+    localStorage.setItem(logKey, JSON.stringify([newAudit, ...existing].slice(0, 50)));
+  } catch {}
+}
+
 export default function StaffTerminalPage() {
   const [cafeSlug, setCafeSlug] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -58,7 +90,7 @@ export default function StaffTerminalPage() {
   const industry = getIndustryProfile(settings.businessType);
 
   const [terminalTab, setTerminalTab] = useState<'queue' | 'stamps'>('queue');
-  const [printQueue, setPrintQueue] = useState<any[]>([]);
+  const [printQueue, setPrintQueue] = useState<PrintJobItem[]>([]);
   const [soundAlertEnabled, setSoundAlertEnabled] = useState(true);
   const prevQueueLengthRef = useRef(0);
 
@@ -72,15 +104,33 @@ export default function StaffTerminalPage() {
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
   // Shift telemetry state
-  const [shiftStampsCount, setShiftStampsCount] = useState(0);
-  const [shiftRedeemedCount, setShiftRedeemedCount] = useState(0);
+  const [shiftStampsCount, setShiftStampsCount] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const val = localStorage.getItem(`memories_shift_stamps_${cafeSlug}_${today}`);
+      return val ? Number(val) : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [shiftRedeemedCount, setShiftRedeemedCount] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const val = localStorage.getItem(`memories_shift_redeemed_${cafeSlug}_${today}`);
+      return val ? Number(val) : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   // Staff authentication state
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [staffMember, setStaffMember] = useState<{ id: string; name: string } | null>(() => getActiveStaff());
 
   // Merchant Supabase Session & Branch Scope
-  const [merchantUser, setMerchantUser] = useState<any | null>(null);
+  const [merchantUser, setMerchantUser] = useState<{ id: string; email?: string } | null>(null);
   const [merchantBranchId, setMerchantBranchId] = useState<string | null>(null);
   const [merchantBranchVenue, setMerchantBranchVenue] = useState<string | null>(null);
   const [isCheckingMerchantAuth, setIsCheckingMerchantAuth] = useState(true);
@@ -134,8 +184,8 @@ export default function StaffTerminalPage() {
             const serverJobs = data.jobs;
             setPrintQueue((prev) => {
               const map = new Map();
-              serverJobs.forEach((j: any) => map.set(j.id, j));
-              prev.forEach((j: any) => {
+              serverJobs.forEach((j: PrintJobItem) => map.set(j.id, j));
+              prev.forEach((j: PrintJobItem) => {
                 if (!map.has(j.id)) map.set(j.id, j);
               });
               const combined = Array.from(map.values());
@@ -247,14 +297,7 @@ export default function StaffTerminalPage() {
 
     checkMerchantSession();
 
-    // Load shift stats
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const shiftStamps = localStorage.getItem(`memories_shift_stamps_${cafeSlug}_${today}`);
-      const shiftRedeemed = localStorage.getItem(`memories_shift_redeemed_${cafeSlug}_${today}`);
-      if (shiftStamps) setShiftStampsCount(Number(shiftStamps));
-      if (shiftRedeemed) setShiftRedeemedCount(Number(shiftRedeemed));
-    } catch {}
+
 
     return () => {
       isMounted = false;
@@ -271,7 +314,7 @@ export default function StaffTerminalPage() {
   };
 
   // Instant Print Action
-  const handlePrintItem = (item: any, format: 'standard-2x6' | 'dual-4x6' | 'thermal-80mm' = 'standard-2x6') => {
+  const handlePrintItem = (item: PrintJobItem, format: 'standard-2x6' | 'dual-4x6' | 'thermal-80mm' = 'standard-2x6') => {
     if (item.photoStripUrl) {
       PrintService.printStripImage(item.photoStripUrl, {
         format,
@@ -443,17 +486,13 @@ export default function StaffTerminalPage() {
       setRedeemedCount(nextRedeemed);
       localStorage.setItem(`memories_redemptions_${cafeSlug}_${selectedCustomer.phone}`, String(nextRedeemed));
 
-      const logKey = `memories_redemption_audit_${cafeSlug}`;
-      const existing = JSON.parse(localStorage.getItem(logKey) || '[]');
-      const newAudit = {
-        id: `red_${Date.now()}`,
-        phone: selectedCustomer.phone,
-        customerName: selectedCustomer.name,
-        rewardTitle: giftTitle,
-        redeemedAt: new Date().toISOString(),
-        baristaName: staffMember?.name || `${industry.staffLabel} المعتمد`,
-      };
-      localStorage.setItem(logKey, JSON.stringify([newAudit, ...existing].slice(0, 50)));
+      createRedemptionAudit(
+        cafeSlug,
+        selectedCustomer.phone,
+        selectedCustomer.name,
+        giftTitle,
+        staffMember?.name || `${industry.staffLabel} المعتمد`
+      );
 
       recordShiftRedemption();
       SoundEffectsService.playRewardCelebration();

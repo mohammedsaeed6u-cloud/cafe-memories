@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it } from 'vitest';
 import { createStaffSessionValue, verifyStaffSessionValue } from '@/lib/staff-session';
 
