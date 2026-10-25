@@ -22,7 +22,9 @@ import {
   Bell,
   BellOff,
   Scissors,
+  AlertTriangle,
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { CustomerRegistryService, RegisteredCustomer } from '@/lib/services/customer-registry.service';
 import { LoyaltyPurseService, CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
 import { VoucherService, IssuedVoucher } from '@/lib/services/voucher.service';
@@ -34,6 +36,40 @@ import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
 import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-auth.service';
 import { PrintService } from '@/lib/services/print.service';
 import { StampyLogo, StampyApertureIcon } from '@/components/brand/StampyLogo';
+
+import { useTerminalVisitConfirmation, resolveMerchantBranchContext } from '@/hooks/useTerminalVisitConfirmation';
+
+interface PrintJobItem {
+  id: string;
+  name?: string;
+  phone?: string;
+  format?: string;
+  photoStripUrl?: string;
+  [key: string]: unknown;
+}
+
+function createRedemptionAudit(
+  cafeSlug: string,
+  phone: string,
+  customerName: string,
+  rewardTitle: string,
+  staffName?: string
+) {
+  if (typeof window === 'undefined') return;
+  const logKey = `memories_redemption_audit_${cafeSlug}`;
+  try {
+    const existing = JSON.parse(localStorage.getItem(logKey) || '[]');
+    const newAudit = {
+      id: `red_${Date.now()}`,
+      phone,
+      customerName,
+      rewardTitle,
+      redeemedAt: new Date().toISOString(),
+      baristaName: staffName,
+    };
+    localStorage.setItem(logKey, JSON.stringify([newAudit, ...existing].slice(0, 50)));
+  } catch {}
+}
 
 export default function StaffTerminalPage() {
   const [cafeSlug, setCafeSlug] = useState(() => {
@@ -49,21 +85,12 @@ export default function StaffTerminalPage() {
     return 'stampy';
   });
 
-  const [settings, setSettings] = useState(() => {
-    let slug = 'stampy';
-    if (typeof window !== 'undefined') {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        slug = urlParams.get('cafe') || localStorage.getItem('memories_active_merchant_slug') || 'stampy';
-      } catch {}
-    }
-    return BusinessSettingsService.getSettings(slug);
-  });
+  const settings = BusinessSettingsService.getSettings(cafeSlug);
 
   const industry = getIndustryProfile(settings.businessType);
 
   const [terminalTab, setTerminalTab] = useState<'queue' | 'stamps'>('queue');
-  const [printQueue, setPrintQueue] = useState<any[]>([]);
+  const [printQueue, setPrintQueue] = useState<PrintJobItem[]>([]);
   const [soundAlertEnabled, setSoundAlertEnabled] = useState(true);
   const prevQueueLengthRef = useRef(0);
 
@@ -77,12 +104,71 @@ export default function StaffTerminalPage() {
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
   // Shift telemetry state
-  const [shiftStampsCount, setShiftStampsCount] = useState(0);
-  const [shiftRedeemedCount, setShiftRedeemedCount] = useState(0);
+  const [shiftStampsCount, setShiftStampsCount] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const val = localStorage.getItem(`memories_shift_stamps_${cafeSlug}_${today}`);
+      return val ? Number(val) : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [shiftRedeemedCount, setShiftRedeemedCount] = useState(() => {
+    if (typeof window === 'undefined') return 0;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const val = localStorage.getItem(`memories_shift_redeemed_${cafeSlug}_${today}`);
+      return val ? Number(val) : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   // Staff authentication state
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-  const [staffMember, setStaffMember] = useState<{ id: string; name: string } | null>(null);
+  const [staffMember, setStaffMember] = useState<{ id: string; name: string } | null>(() => getActiveStaff());
+
+  // Merchant Supabase Session & Branch Scope
+  const [merchantUser, setMerchantUser] = useState<{ id: string; email?: string } | null>(null);
+  const [merchantBranchId, setMerchantBranchId] = useState<string | null>(null);
+  const [merchantBranchVenue, setMerchantBranchVenue] = useState<string | null>(null);
+  const [isCheckingMerchantAuth, setIsCheckingMerchantAuth] = useState(true);
+
+  const recordShiftStamp = () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const next = shiftStampsCount + 1;
+      setShiftStampsCount(next);
+      localStorage.setItem(`memories_shift_stamps_${cafeSlug}_${today}`, String(next));
+    } catch {}
+  };
+
+  // Verified visit confirmation controller & resilience
+  const {
+    isSubmittingStamp,
+    isSubmittingStampRef,
+    isRefreshingProgress,
+    isRetryPending,
+    networkWarning,
+    progressWarning,
+    pendingOperationRef,
+    handleAddStamp,
+    handleRefreshProgress,
+    setNetworkWarning,
+    setProgressWarning,
+  } = useTerminalVisitConfirmation({
+    merchantUser,
+    merchantBranchId,
+    merchantBranchVenue,
+    isCheckingMerchantAuth,
+    cafeSlug,
+    selectedCustomer,
+    setSelectedCustomer,
+    recordShiftStamp,
+    setErrorNotice,
+    setSuccessNotice,
+  });
 
   const requiredVisits = settings.loyaltyMaxVisits || 5;
   const giftTitle = settings.freeGiftOffer?.title || industry.defaultGiftTitle;
@@ -98,8 +184,8 @@ export default function StaffTerminalPage() {
             const serverJobs = data.jobs;
             setPrintQueue((prev) => {
               const map = new Map();
-              serverJobs.forEach((j: any) => map.set(j.id, j));
-              prev.forEach((j: any) => {
+              serverJobs.forEach((j: PrintJobItem) => map.set(j.id, j));
+              prev.forEach((j: PrintJobItem) => {
                 if (!map.has(j.id)) map.set(j.id, j);
               });
               const combined = Array.from(map.values());
@@ -166,32 +252,57 @@ export default function StaffTerminalPage() {
   }, [cafeSlug, soundAlertEnabled]);
 
   useEffect(() => {
-    const s = BusinessSettingsService.getSettings(cafeSlug);
-    setSettings(s);
+    let isMounted = true;
 
-    const active = getActiveStaff();
-    if (active) {
-      setStaffMember(active);
-    }
 
-    // Load shift stats
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const shiftStamps = localStorage.getItem(`memories_shift_stamps_${cafeSlug}_${today}`);
-      const shiftRedeemed = localStorage.getItem(`memories_shift_redeemed_${cafeSlug}_${today}`);
-      if (shiftStamps) setShiftStampsCount(Number(shiftStamps));
-      if (shiftRedeemed) setShiftRedeemedCount(Number(shiftRedeemed));
-    } catch {}
+
+    // Resolve authenticated Supabase merchant session and branch scope deterministically
+    const checkMerchantSession = async () => {
+      // IMMEDIATE CONTEXT DE-AUTHORIZATION:
+      // Clear previous branch context synchronously so stale branch IDs can never be read
+      setIsCheckingMerchantAuth(true);
+      setMerchantBranchId(null);
+      setMerchantBranchVenue(null);
+
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!isMounted) return;
+        setMerchantUser(user);
+
+        if (!user) {
+          setMerchantBranchId(null);
+          setMerchantBranchVenue(null);
+          return;
+        }
+
+        const res = await resolveMerchantBranchContext(supabase, user.id, cafeSlug);
+        if (!isMounted) return;
+
+        setMerchantBranchId(res.branchId);
+        setMerchantBranchVenue(res.branchId ? cafeSlug : null);
+        if (res.error) {
+          setErrorNotice(res.error);
+        }
+      } catch (err) {
+        console.warn('Failed to resolve merchant session:', err);
+        if (isMounted) {
+          setMerchantBranchId(null);
+          setMerchantBranchVenue(null);
+        }
+      } finally {
+        if (isMounted) setIsCheckingMerchantAuth(false);
+      }
+    };
+
+    checkMerchantSession();
+
+
+
+    return () => {
+      isMounted = false;
+    };
   }, [cafeSlug]);
-
-  const recordShiftStamp = () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const next = shiftStampsCount + 1;
-      setShiftStampsCount(next);
-      localStorage.setItem(`memories_shift_stamps_${cafeSlug}_${today}`, String(next));
-    } catch {}
-  };
 
   const recordShiftRedemption = () => {
     try {
@@ -203,7 +314,7 @@ export default function StaffTerminalPage() {
   };
 
   // Instant Print Action
-  const handlePrintItem = (item: any, format: 'standard-2x6' | 'dual-4x6' | 'thermal-80mm' = 'standard-2x6') => {
+  const handlePrintItem = (item: PrintJobItem, format: 'standard-2x6' | 'dual-4x6' | 'thermal-80mm' = 'standard-2x6') => {
     if (item.photoStripUrl) {
       PrintService.printStripImage(item.photoStripUrl, {
         format,
@@ -317,37 +428,9 @@ export default function StaffTerminalPage() {
           setRedeemedCount(0);
         }
       } else {
-        // Query server CRM database for cross-device customer registration
-        fetch(`/api/v1/crm/customers?search=${encodeURIComponent(clean)}&format=json`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data && Array.isArray(data.customers) && data.customers.length > 0) {
-              const c = data.customers[0];
-              const cust: RegisteredCustomer = {
-                phone: clean,
-                name: c.name || 'ضيف مميز',
-                role: c.role || 'vip_guest',
-                registeredAt: c.createdAt || new Date().toISOString(),
-                lastVisit: new Date().toISOString(),
-                totalVisits: c.visitCount || c.memoryCount || 1,
-              };
-              setSelectedCustomer(cust);
-              const lData = LoyaltyPurseService.getData(clean, cafeSlug, requiredVisits);
-              setLoyaltyData(lData);
-              const vList = VoucherService.getCustomerVouchers(clean, cafeSlug);
-              setCustomerVouchers(vList);
-              setErrorNotice(null);
-            } else {
-              setSelectedCustomer(null);
-              setLoyaltyData(null);
-              setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
-            }
-          })
-          .catch(() => {
-            setSelectedCustomer(null);
-            setLoyaltyData(null);
-            setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
-          });
+        setSelectedCustomer(null);
+        setLoyaltyData(null);
+        setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
       }
     }
   };
@@ -366,45 +449,13 @@ export default function StaffTerminalPage() {
     setLoyaltyData(null);
     setErrorNotice(null);
     setSuccessNotice(null);
-  };
-
-  // Stamp Action (+1 Stamp)
-  const handleAddStamp = () => {
-    if (!selectedCustomer) return;
-    LoyaltyPurseService.addDirectStamp(selectedCustomer.phone, cafeSlug, requiredVisits);
-    const updatedLoyalty = LoyaltyPurseService.getData(selectedCustomer.phone, cafeSlug, requiredVisits);
-    setLoyaltyData(updatedLoyalty);
-    setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: (prev.totalVisits || 0) + 1 } : null));
-
-    // Update CRM list in localStorage for real-time dashboard sync
-    try {
-      const crmRaw = localStorage.getItem('stampy_crm_customers');
-      if (crmRaw) {
-        let list = JSON.parse(crmRaw);
-        list = list.map((c: any) => {
-          if (c.phone === selectedCustomer.phone) {
-            return {
-              ...c,
-              stamps: updatedLoyalty.stampedCount,
-              lastVisit: 'الآن',
-            };
-          }
-          return c;
-        });
-        localStorage.setItem('stampy_crm_customers', JSON.stringify(list));
-      }
-    } catch {}
-
-    // Dispatch real-time stamp event
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('stampy-stamp-added'));
+    // Never wipe in-flight pending operation on keypad clearing if a retry is pending
+    if (!networkWarning && !isSubmittingStamp) {
+      pendingOperationRef.current = null;
     }
-
-    recordShiftStamp();
-    SoundEffectsService.playStampChime();
-    setSuccessNotice(`✨ تم ختم زيارة جديدة بنجاح للعميل (${selectedCustomer.name})! الرصيد الحالي: ${updatedLoyalty.stampedCount}/${requiredVisits}`);
-    setTimeout(() => setSuccessNotice(null), 4000);
   };
+
+
 
   // Instant Voucher Redemption
   const handleRedeemVoucherDirect = (voucherCode: string) => {
@@ -435,17 +486,13 @@ export default function StaffTerminalPage() {
       setRedeemedCount(nextRedeemed);
       localStorage.setItem(`memories_redemptions_${cafeSlug}_${selectedCustomer.phone}`, String(nextRedeemed));
 
-      const logKey = `memories_redemption_audit_${cafeSlug}`;
-      const existing = JSON.parse(localStorage.getItem(logKey) || '[]');
-      const newAudit = {
-        id: `red_${Date.now()}`,
-        phone: selectedCustomer.phone,
-        customerName: selectedCustomer.name,
-        rewardTitle: giftTitle,
-        redeemedAt: new Date().toISOString(),
-        baristaName: staffMember?.name || `${industry.staffLabel} المعتمد`,
-      };
-      localStorage.setItem(logKey, JSON.stringify([newAudit, ...existing].slice(0, 50)));
+      createRedemptionAudit(
+        cafeSlug,
+        selectedCustomer.phone,
+        selectedCustomer.name,
+        giftTitle,
+        staffMember?.name || `${industry.staffLabel} المعتمد`
+      );
 
       recordShiftRedemption();
       SoundEffectsService.playRewardCelebration();
@@ -577,6 +624,60 @@ export default function StaffTerminalPage() {
             </div>
           </div>
         </div>
+
+        {/* Merchant Auth Requirement Banner */}
+        {!isCheckingMerchantAuth && !merchantUser && (
+          <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 text-xs font-bold flex items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+              <span>تنبيه: أنت غير مسجل الدخول كتاجر. لتأكيد وحفظ الأختام في قاعدة البيانات، يلزم تسجيل الدخول.</span>
+            </div>
+            <a
+              href="/auth/login?redirect=/terminal"
+              className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold shrink-0 transition"
+            >
+              تسجيل الدخول
+            </a>
+          </div>
+        )}
+
+        {/* Network Disruption / Safe Retry Banner */}
+        {networkWarning && (
+          <div className="p-4 rounded-xl bg-amber-950/60 border border-amber-500/50 text-amber-100 text-xs font-bold flex items-center justify-between gap-3 shadow-md animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+              <span>{networkWarning}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddStamp}
+              disabled={isSubmittingStamp}
+              className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold shrink-0 flex items-center gap-1.5 transition cursor-pointer"
+            >
+              {isSubmittingStamp ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              <span>إعادة المحاولة</span>
+            </button>
+          </div>
+        )}
+
+        {/* Fault Isolation: Progress Fetch Warning */}
+        {progressWarning && (
+          <div className="p-4 rounded-xl bg-sky-950/60 border border-sky-500/50 text-sky-100 text-xs font-bold flex items-center justify-between gap-3 shadow-md animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle className="w-5 h-5 text-sky-400 shrink-0" />
+              <span>{progressWarning}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleRefreshProgress}
+              disabled={isRefreshingProgress}
+              className="px-3.5 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-black text-xs font-bold shrink-0 flex items-center gap-1.5 transition cursor-pointer"
+            >
+              {isRefreshingProgress ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              <span>تحديث الرصيد الآن</span>
+            </button>
+          </div>
+        )}
 
         {/* Success or Error Notice */}
         {successNotice && (
@@ -816,10 +917,48 @@ export default function StaffTerminalPage() {
                     <button
                       type="button"
                       onClick={handleAddStamp}
-                      className="py-3.5 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                      disabled={isSubmittingStamp || !merchantUser || (!isRetryPending && (!merchantBranchId || merchantBranchVenue !== cafeSlug || isCheckingMerchantAuth))}
+                      className={`py-3.5 px-4 rounded-lg font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
+                        !merchantUser
+                          ? 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:border-amber-500/30'
+                          : isSubmittingStamp
+                          ? 'bg-[#DFAB56]/70 text-[#12100E] cursor-wait'
+                          : !isRetryPending && (!merchantBranchId || merchantBranchVenue !== cafeSlug || isCheckingMerchantAuth)
+                          ? 'bg-[#1C1B1B] text-[#A19E9B]/60 border border-white/10 cursor-not-allowed'
+                          : 'bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E]'
+                      }`}
                     >
-                      <Award className="w-5 h-5" />
-                      <span>ختم زيارة جديدة (+1)</span>
+                      {isSubmittingStamp ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                          <span>جاري التأكيد في الخادم...</span>
+                        </>
+                      ) : !merchantUser ? (
+                        <>
+                          <Unlock className="w-5 h-5 text-amber-400" />
+                          <span>تسجيل الدخول مطلوب للختم</span>
+                        </>
+                      ) : isRetryPending ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 text-amber-400" />
+                          <span>إعادة محاولة العملية المعلقة</span>
+                        </>
+                      ) : isCheckingMerchantAuth ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 animate-spin text-amber-400" />
+                          <span>جاري التحقق من فرع الكاونتر...</span>
+                        </>
+                      ) : (!merchantBranchId || merchantBranchVenue !== cafeSlug) ? (
+                        <>
+                          <AlertTriangle className="w-5 h-5 text-amber-400" />
+                          <span>فرع الكاونتر غير معتمد</span>
+                        </>
+                      ) : (
+                        <>
+                          <Award className="w-5 h-5" />
+                          <span>ختم زيارة جديدة (+1)</span>
+                        </>
+                      )}
                     </button>
 
                     <button
