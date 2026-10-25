@@ -1,0 +1,33 @@
+diff --git a/dist/build/copyTracedFiles.js b/dist/build/copyTracedFiles.js
+index c847154da1464b71bbd871ba668336ae0078cfed..52eea86c815c678c85aff7bd302d51d77dceb2b7 100644
+--- a/dist/build/copyTracedFiles.js	
++++ b/dist/build/copyTracedFiles.js	
+@@ -1,5 +1,5 @@
+ import url from "node:url";
+-import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, readlinkSync, statSync, symlinkSync, writeFileSync, } from "node:fs";
++import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, readlinkSync, realpathSync, statSync, symlinkSync, writeFileSync, } from "node:fs";
+ import path from "node:path";
+ import { loadAppPathsManifest, loadBuildId, loadConfig, loadFunctionsConfigManifest, loadMiddlewareManifest, loadPagesManifest, loadPrerenderManifest, } from "../adapters/config/util.js";
+ import { getCrossPlatformPathRegex } from "../utils/regex.js";
+@@ -238,7 +238,20 @@ File ${serverPath} does not exist
+             }
+             catch (e) {
+                 if (e.code !== "EEXIST") {
+-                    throw e;
++                    // Windows without SeCreateSymbolicLinkPrivilege: materialise the
++                    // link target as a real file/directory instead of failing.
++                    try {
++                        const real = realpathSync(from);
++                        if (statSync(real).isDirectory()) {
++                            cpSync(real, to, { recursive: true });
++                        }
++                        else {
++                            copyFileAndMakeOwnerWritable(real, to);
++                        }
++                    }
++                    catch {
++                        throw e;
++                    }
+                 }
+             }
+         }

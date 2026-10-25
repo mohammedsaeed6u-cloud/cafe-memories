@@ -240,7 +240,7 @@ export class BusinessSettingsService {
   static saveCustomFrame(cafeSlug: string, frame: PhotoboothFrame): BusinessSettings {
     const current = this.getSettings(cafeSlug);
     const existingIndex = current.frames.findIndex((f) => f.id === frame.id);
-    let newFrames = [...current.frames];
+    const newFrames = [...current.frames];
 
     if (existingIndex >= 0) {
       newFrames[existingIndex] = frame;

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { CustomerLoyaltyData } from './loyalty-purse.service';
-import { ShieldCheck, Sparkles, Award, Gift, Check, Download } from 'lucide-react';
+import { Sparkles, Award, Gift, Check, Download } from 'lucide-react';
 import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
 import { AddToWalletButtons } from '@/components/wallet/AddToWalletButtons';
 import { CardCanvasExportService } from '@/lib/services/card-canvas-export.service';
@@ -15,7 +15,6 @@ interface CustomerLoyaltyCardProps {
   brandName?: string;
   customerName?: string;
   instagramHandle?: string;
-  onOpenStaffStamp: () => void;
   className?: string;
 }
 
@@ -25,16 +24,16 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
   brandName = 'stampy.',
   customerName = 'ضيف مميز',
   instagramHandle = '@memories',
-  onOpenStaffStamp,
   className = '',
 }) => {
   const { stampedCount, maxSlots, customerPhone, cafeSlug } = loyaltyData;
   const [isExporting, setIsExporting] = useState(false);
   const [iosModalImage, setIosModalImage] = useState<string | null>(null);
 
-  const cleanPhone = encodeURIComponent(customerPhone || 'guest');
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://memories-d9l.pages.dev';
-  const stampQrValue = `${origin}/c/${cafeSlug || 'memories'}?action=stamp&customer=${cleanPhone}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  // The QR points at the venue, never at a phone number. A phone is contact
+  // data, not an identity token, so it must not travel inside a scannable code.
+  const venueQrValue = `${origin}/c/${cafeSlug || ''}`;
 
   const handleSaveCardToDevice = async () => {
     setIsExporting(true);
@@ -89,7 +88,8 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
           </div>
 
           <p className="text-xs text-[#A19E9B] leading-relaxed">
-            امسح الرمز عند كل زيارة ليختم لك فريق الخدمة وتفتح لقطاتك وتستلم <span className="font-bold text-[#FAF5EB]">{giftTitle}</span>.
+            اطلب من فريق الخدمة تسجيل زيارتك من محطة الكاونتر لتُضاف ختمة جديدة، وعند اكتمال
+            البطاقة تستلم <span className="font-bold text-[#FAF5EB]">{giftTitle}</span>.
           </p>
 
           {/* Stamp Rings */}
@@ -123,14 +123,6 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
           <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <button
               type="button"
-              onClick={onOpenStaffStamp}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-[#FAF5EB] text-[11px] font-bold border border-white/10 hover:border-[#DFAB56]/30 transition cursor-pointer backdrop-blur-md"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#DFAB56]" />
-              <span>ختم مباشر للموظف (PIN)</span>
-            </button>
-            <button
-              type="button"
               onClick={handleSaveCardToDevice}
               disabled={isExporting}
               className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-[11px] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-6px_rgba(221,2,0,0.4)] transition cursor-pointer active:scale-95 disabled:opacity-50"
@@ -159,14 +151,14 @@ export const CustomerLoyaltyCard: React.FC<CustomerLoyaltyCardProps> = ({
         <div className="flex flex-col items-center justify-center p-3.5 bg-[#1C1B1B] rounded-xl border border-white/10 shadow-lg shrink-0 text-center">
           <div className="w-24 h-24 bg-white p-1 rounded-lg border border-white/20 flex items-center justify-center shadow-xs overflow-hidden">
             <RealOutsourcedQr
-              value={stampQrValue}
+              value={venueQrValue}
               size={84}
-              alt="QR ختم الولاء الحقيقي"
+              alt="رمز المنشأة"
               className="w-full h-full object-contain"
             />
           </div>
           <span className="text-[9px] font-mono text-[#A19E9B] font-bold mt-2 uppercase tracking-wider">
-            QR الختم الفوري
+            رمز المنشأة
           </span>
         </div>
       </div>

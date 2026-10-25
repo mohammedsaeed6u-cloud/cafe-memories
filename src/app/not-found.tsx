@@ -31,23 +31,23 @@ export default function NotFoundPage() {
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const boot = async () => {
       const pathname = window.location.pathname;
       if (pathname.startsWith('/c/')) {
         const rawSlug = pathname.replace('/c/', '').split('/')[0].split('?')[0];
         if (rawSlug && rawSlug !== dynamicRoute.param) {
           setDynamicRoute({ type: 'customer', param: decodeURIComponent(rawSlug) });
-          return;
         }
+        return;
       }
       if (pathname.startsWith('/wall/')) {
         const rawScreen = pathname.replace('/wall/', '').split('/')[0].split('?')[0];
         if (rawScreen && rawScreen !== dynamicRoute.param) {
           setDynamicRoute({ type: 'wall', param: decodeURIComponent(rawScreen) });
-          return;
         }
       }
-    }
+    };
+    void boot();
   }, [dynamicRoute.param]);
 
   if (dynamicRoute.type === 'customer' && dynamicRoute.param) {

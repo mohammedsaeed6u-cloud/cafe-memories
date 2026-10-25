@@ -16,6 +16,7 @@ import {
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { TicketButton } from '@/components/ui/TicketButton';
 import { StampyApertureIcon } from '@/components/brand/StampyLogo';
+import { createClient } from '@/lib/supabase/client';
 
 const CATEGORIES = [
   'استوديو تصوير وفوتوبوث',
@@ -45,7 +46,6 @@ export default function SignUpPage() {
   // Step 3: Loyalty Card Program
   const [totalStamps, setTotalStamps] = useState<number>(5);
   const [rewardTitle, setRewardTitle] = useState('هدية تذكارية مجانية عند اكتمال الأختام');
-  const [stampIcon, setStampIcon] = useState<'shutter' | 'heart' | 'star'>('shutter');
 
   const handleBusinessNameChange = (val: string) => {
     setBusinessName(val);
@@ -87,30 +87,42 @@ export default function SignUpPage() {
     setErrorMsg(null);
 
     try {
-      // Save newly provisioned business profile to localStorage and session
-      const newBusiness = {
-        name: businessName,
-        slug: slug || 'store',
-        category,
-        branchName,
-        owner: { name, email },
-        program: {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } },
+      });
+      if (error) throw new Error(error.message);
+      if (!data.session) {
+        setErrorMsg('تم إنشاء الحساب. افتح رسالة التأكيد في بريدك ثم سجّل الدخول لإكمال تجهيز المنشأة.');
+        return;
+      }
+
+      const response = await fetch('/api/v1/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
+        body: JSON.stringify({
+          name,
+          businessName,
+          slug: slug || 'store',
+          branchName,
+          category,
           totalStamps,
           rewardTitle,
-          stampIcon,
-        },
-        createdAt: new Date().toISOString(),
-      };
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('stampy_active_business', JSON.stringify(newBusiness));
-        localStorage.setItem('stampy_slug', slug || 'store');
-        document.cookie = 'memories_merchant_session=1; path=/; max-age=86400; SameSite=Lax';
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        throw new Error(body.error || 'تعذر تجهيز المنشأة');
       }
 
       setStep(4);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'تعذر إكمال التسجيل.');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'تعذر إكمال التسجيل.');
     } finally {
       setLoading(false);
     }
@@ -301,7 +313,7 @@ export default function SignUpPage() {
                   رابط صفحة كرت العميل الخاصة بك:
                 </span>
                 <span className="font-mono text-xs text-[#B83A26] font-bold" dir="ltr">
-                  stampy.pages.dev/c/{slug}
+                  /c/{slug}
                 </span>
               </div>
             )}
@@ -440,11 +452,11 @@ export default function SignUpPage() {
               أهلاً بك في stampy.! 🎉
             </h2>
             <p className="text-xs text-[#3D2314]/80 max-w-sm mx-auto">
-              تم إنشاء حساب منشأة <span className="font-bold text-[#B83A26]">"{businessName}"</span> وتجهيز كرت الولاء وبرنامج الأختام بنجاح.
+              تم إنشاء حساب منشأة <span className="font-bold text-[#B83A26]">«{businessName}»</span> وتجهيز كرت الولاء وبرنامج الأختام بنجاح.
             </p>
 
             <div className="p-3.5 rounded-xl bg-[#FAF5EB] border border-[#EADDC4] text-xs font-mono text-right" dir="ltr">
-              <div><span className="font-bold text-[#3D2314]">URL:</span> stampy.pages.dev/c/{slug}</div>
+              <div><span className="font-bold text-[#3D2314]">URL:</span> /c/{slug}</div>
               <div><span className="font-bold text-[#3D2314]">Program:</span> {totalStamps} Stamps → {rewardTitle}</div>
             </div>
 
@@ -453,7 +465,7 @@ export default function SignUpPage() {
               size="lg"
               className="w-full mt-4"
               onClick={() => {
-                window.location.href = '/dashboard';
+                window.location.assign('/dashboard');
               }}
             >
               الانتقال إلى لوحة التحكم (Dashboard)

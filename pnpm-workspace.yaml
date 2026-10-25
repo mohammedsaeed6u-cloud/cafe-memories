@@ -1,5 +1,11 @@
 allowBuilds:
   esbuild: true
+  # sharp is only an optional dependency of Next; this app ships no native
+  # image codecs to Workers, so its build script is not needed.
   sharp: false
   unrs-resolver: false
   workerd: true
+patchedDependencies:
+  # OpenNext cannot create symlinks on Windows without Developer Mode; the
+  # patch materialises the link target instead of failing (no-op elsewhere).
+  '@opennextjs/aws@4.1.4': patches/@opennextjs__aws@4.1.4.patch

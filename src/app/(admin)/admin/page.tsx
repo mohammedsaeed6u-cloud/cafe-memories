@@ -1,514 +1,452 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { SuperAdminService } from '@/lib/services/super-admin.service';
-import { SubscriptionBillingService, SAAS_PLANS } from '@/lib/services/subscription-billing.service';
-import { TenantSummary, SystemTelemetry, TenantFeatureFlags } from '@/types/super-admin';
-import {
-  SubscriptionPlanId,
-  SaaSPlatformMetrics,
-  TenantSubscription,
-} from '@/types/subscription';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import {
   Shield,
-  Activity,
-  Server,
-  HardDrive,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
+  Search,
   Users,
-  Printer,
-  Monitor,
-  ExternalLink,
-  CheckCircle,
-  Zap,
-  Globe,
-  Lock,
+  Image as ImageIcon,
+  MapPin,
+  Store,
+  CheckCircle2,
+  Ban,
+  RotateCcw,
+  ArrowRight,
   Layers,
-  Sparkles,
-  CreditCard,
-  DollarSign,
-  TrendingUp,
-  FileText,
-  BadgeCheck,
+  Activity,
 } from 'lucide-react';
 import { MemoriesArchIcon } from '@/components/brand/MemoriesLogo';
 
+interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  createdAt: string;
+  customers: number;
+  memories: number;
+  visits: number;
+}
+
+interface Telemetry {
+  totalTenants: number;
+  activeTenants: number;
+  customers: number;
+  memories: number;
+  visits: number;
+}
+
+interface ApiErrorBody {
+  error?: string;
+  message?: string;
+  code?: string;
+}
+
 export default function SuperAdminPortalPage() {
-  const [tenants, setTenants] = useState<TenantSummary[]>(() =>
-    SuperAdminService.getTenants()
-  );
-  const [telemetry, setTelemetry] = useState<SystemTelemetry>(() =>
-    SuperAdminService.getTelemetry()
-  );
-  const [saasMetrics, setSaasMetrics] = useState<SaaSPlatformMetrics>(() =>
-    SubscriptionBillingService.getPlatformSaaSMetrics()
-  );
-  const [subscriptions, setSubscriptions] = useState<Record<string, TenantSubscription>>(() =>
-    SubscriptionBillingService.getAllSubscriptions()
-  );
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
+
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
+  const [busyTenantId, setBusyTenantId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // Sync state updates
-  useEffect(() => {
-    const handleTenantsUpdate = (e: any) => {
-      if (e.detail) {
-        setTenants(e.detail);
-        setTelemetry(SuperAdminService.getTelemetry());
+  const load = useCallback(async () => {
+    try {
+      const response = await fetch('/api/v1/admin/tenants', { cache: 'no-store' });
+      if (response.status === 401) {
+        window.location.assign('/login');
+        return;
       }
-    };
-
-    const handleSubsUpdate = () => {
-      setSubscriptions(SubscriptionBillingService.getAllSubscriptions());
-      setSaasMetrics(SubscriptionBillingService.getPlatformSaaSMetrics());
-    };
-
-    window.addEventListener('memories-tenants-updated', handleTenantsUpdate);
-    window.addEventListener('memories-subscription-updated', handleSubsUpdate);
-    return () => {
-      window.removeEventListener('memories-tenants-updated', handleTenantsUpdate);
-      window.removeEventListener('memories-subscription-updated', handleSubsUpdate);
-    };
+      if (response.status === 403) {
+        setForbidden(true);
+        setLoadError(null);
+        return;
+      }
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        tenants?: Tenant[];
+        telemetry?: Telemetry;
+      };
+      if (!response.ok) throw new Error(body.error || 'تعذر تحميل بيانات المنشآت');
+      setTenants(body.tenants ?? []);
+      setTelemetry(body.telemetry ?? null);
+      setForbidden(false);
+      setLoadError(null);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'تعذر تحميل بيانات المنشآت');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Toggle Feature Flag (Printing / TV Wall)
-  const handleToggleFeature = (
-    tenantId: string,
-    feature: keyof TenantFeatureFlags,
-    currentValue: boolean
-  ) => {
-    const updated = SuperAdminService.toggleFeature(tenantId, feature, !currentValue);
-    setTenants(updated);
-    setTelemetry(SuperAdminService.getTelemetry());
+  const refresh = useCallback(() => {
+    setIsLoading(true);
+    setLoadError(null);
+    setForbidden(false);
+    void load();
+  }, [load]);
 
-    const tenant = updated.find((t) => t.id === tenantId);
-    const featureName = feature === 'printing' ? 'محطة الطباعة 2x6' : 'شاشة العرض الحية (TV Wall)';
-    setNotice(
-      `تم ${!currentValue ? 'تفعيل' : 'تعطيل'} ${featureName} للفرع (${tenant?.name}) بنجاح!`
-    );
-    setTimeout(() => setNotice(null), 3500);
+  useEffect(() => {
+    // The first paint already renders the loading state; fetching inside a
+    // local async function keeps the effect free of synchronous setState.
+    const boot = async () => {
+      await load();
+    };
+    void boot();
+  }, [load]);
+
+  const changeStatus = async (tenant: Tenant, status: 'active' | 'suspended') => {
+    const verb = status === 'suspended' ? 'تعليق' : 'إعادة تنشيط';
+    if (!window.confirm(`${verb} منشأة «${tenant.name}»؟`)) return;
+    setBusyTenantId(tenant.id);
+    setActionError(null);
+    setNotice(null);
+    try {
+      const response = await fetch('/api/v1/admin/tenants', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: tenant.id, status }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
+      if (response.status === 401) {
+        window.location.assign('/login');
+        return;
+      }
+      if (!response.ok) throw new Error(body.error || `تعذر ${verb} المنشأة`);
+      setNotice(`تم ${verb} منشأة «${tenant.name}»`);
+      await load();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : `تعذر ${verb} المنشأة`);
+    } finally {
+      setBusyTenantId(null);
+    }
   };
 
-  // Change Subscription Plan for a tenant
-  const handleAdminChangePlan = (cafeSlug: string, newPlanId: SubscriptionPlanId) => {
-    SubscriptionBillingService.adminSetTenantPlan(cafeSlug, newPlanId, 'active');
-    setSubscriptions(SubscriptionBillingService.getAllSubscriptions());
-    setSaasMetrics(SubscriptionBillingService.getPlatformSaaSMetrics());
-    const plan = SubscriptionBillingService.getPlan(newPlanId);
-    setNotice(`تم تعديل باقة الاشتراك للفرع (${cafeSlug}) بنجاح إلى "${plan.name}"!`);
-    setTimeout(() => setNotice(null), 3500);
-  };
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return tenants.filter((tenant) => {
+      if (statusFilter !== 'all' && tenant.status !== statusFilter) return false;
+      if (!needle) return true;
+      return (
+        tenant.name.toLowerCase().includes(needle) || tenant.slug.toLowerCase().includes(needle)
+      );
+    });
+  }, [tenants, query, statusFilter]);
 
   return (
-    <div className="min-h-screen bg-[#FAF5EB] text-[#3D2314] flex flex-col selection:bg-[#DFAB56] selection:text-white font-sans">
-      {/* Super Admin Navigation */}
-      <header className="bg-[#0E0D0D] text-[#FAF5EB] border-b border-white/10 sticky top-0 z-40 px-6 py-4 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-[#0B0A0A] font-sans text-[#FAF5EB]">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0E0D0D]/95 px-4 py-3 backdrop-blur sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-[#FAF5EB] flex items-center justify-center shadow-lg border border-white/10 shrink-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-[#DFAB56] to-[#3D2314] shadow-lg">
               <MemoriesArchIcon size={22} color="#FAF5EB" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-bold text-base tracking-tight text-[#FAF5EB] font-serif">
-                  Memories SaaS • Super Admin Portal
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-serif text-sm font-bold text-[#FAF5EB]">
+                  Memories • بوابة الإدارة المركزية
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-[#3D2314]/50 text-[#FAF5EB] text-[10px] font-mono font-bold border border-[#DFAB56]/40">
-                  ENTERPRISE CONTROL
+                <span className="rounded-md border border-[#DFAB56]/40 bg-[#3D2314]/60 px-2 py-0.5 font-mono text-[10px] font-bold text-[#FAF5EB]">
+                  PLATFORM
                 </span>
               </div>
               <p className="text-[11px] text-[#A19E9B]">
-                بوابة الإدارة المركزية، إدارة باقات الـ SaaS، ومتابعة الإيرادات المتكررة MRR
+                نظرة حقيقية على المنشآت المسجلة، مع تعليق أو إعادة تنشيط أي حساب.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-xs">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-emerald-400 font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>MRR: {saasMetrics.totalMrr.toLocaleString()} ر.س</span>
-            </div>
-            <a
-              href="/dashboard"
-              className="px-3.5 py-1.5 rounded-xl bg-[#1C1B1B] hover:bg-[#252424] text-[#FAF5EB] font-bold transition flex items-center gap-1.5 border border-white/10"
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={refresh}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] px-2.5 py-1.5 text-[11px] font-bold text-[#FAF5EB] hover:bg-[#211F1F]"
             >
-              <span>لوحة التاجر والاشتراك</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
+              <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+              تحديث
+            </button>
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] px-2.5 py-1.5 text-[11px] font-bold text-[#FAF5EB] hover:bg-[#211F1F]"
+            >
+              <ArrowRight className="h-3 w-3" />
+              لوحة المنشأة
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
-        {/* Notice Bar */}
-        {notice && (
-          <div className="p-4 bg-[#3D2314]/40 border border-[#DFAB56]/40 text-[#FAF5EB] text-xs font-bold rounded-2xl flex items-center gap-2 shadow-sm animate-in fade-in">
-            <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span>{notice}</span>
+      <main className="mx-auto max-w-7xl space-y-4 px-4 py-5 sm:px-6">
+        {forbidden && (
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-950/30 p-8 text-center">
+            <Shield className="h-8 w-8 text-amber-300" />
+            <h2 className="text-sm font-bold text-amber-100">ليست لديك صلاحية الوصول</h2>
+            <p className="max-w-md text-xs text-amber-200/80">
+              بوابة الإدارة متاحة فقط لعناوين البريد المدرجة في قائمة{' '}
+              <span className="font-mono" dir="ltr">
+                SUPER_ADMIN_EMAILS
+              </span>
+              . تواصل مع مالك المنصة لإضافتك.
+            </p>
+            <Link
+              href="/dashboard"
+              className="rounded-lg bg-[#DFAB56] px-4 py-2 text-xs font-bold text-[#12100E]"
+            >
+              العودة إلى لوحة المنشأة
+            </Link>
           </div>
         )}
 
-        {/* SECTION 1: SaaS Financial & Revenue Analytics (MRR, ARR, ARPU) */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
-                <TrendingUp className="w-5 h-5 text-[#DFAB56]" />
-                <span>مؤشرات إيرادات الـ SaaS الشهرية والسنوية (MRR & ARR Telemetry)</span>
-              </h2>
-              <p className="text-xs text-[#A19E9B] mt-0.5">
-                متابعة الاشتراكات المتكررة، تدفقات السداد، وتوزيع الباقات عبر الفروع
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Metric 1: MRR */}
-            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
-              <div className="flex items-center justify-between text-[#A19E9B] mb-1">
-                <span className="text-xs font-bold text-[#A19E9B]">الإيراد الشهري المتكرر (MRR)</span>
-                <DollarSign className="w-4 h-4 text-emerald-400" />
+        {!forbidden && (
+          <>
+            {notice && (
+              <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/40 p-3.5 text-xs font-bold text-emerald-200">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                <span>{notice}</span>
               </div>
-              <p className="text-2xl font-black text-emerald-400">
-                {saasMetrics.totalMrr.toLocaleString()}{' '}
-                <span className="text-xs font-bold text-[#A19E9B]">ر.س</span>
-              </p>
-              <p className="text-[10px] text-[#A19E9B]/60 font-bold">Monthly Recurring Revenue</p>
-            </div>
-
-            {/* Metric 2: ARR */}
-            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
-              <div className="flex items-center justify-between text-[#A19E9B] mb-1">
-                <span className="text-xs font-bold text-[#A19E9B]">الإيراد السنوي المتوقع (ARR)</span>
-                <TrendingUp className="w-4 h-4 text-sky-400" />
+            )}
+            {actionError && (
+              <div className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-950/40 p-3.5 text-xs font-bold text-rose-200">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{actionError}</span>
               </div>
-              <p className="text-2xl font-black text-[#FAF5EB]">
-                {saasMetrics.totalArr.toLocaleString()}{' '}
-                <span className="text-xs font-bold text-[#A19E9B]">ر.س</span>
-              </p>
-              <p className="text-[10px] text-emerald-400 font-bold">Annual Run Rate Projection</p>
-            </div>
-
-            {/* Metric 3: Active Subscriptions */}
-            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
-              <div className="flex items-center justify-between text-[#A19E9B] mb-1">
-                <span className="text-xs font-bold text-[#A19E9B]">المشتركون النشطون</span>
-                <Users className="w-4 h-4 text-[#DFAB56]" />
+            )}
+            {loadError && (
+              <div className="flex flex-col items-center gap-3 rounded-2xl border border-rose-500/30 bg-[#141212] p-6 text-center">
+                <AlertCircle className="h-6 w-6 text-rose-300" />
+                <p className="text-xs text-rose-200">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={refresh}
+                  className="flex items-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2 text-xs font-bold text-[#12100E]"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  إعادة المحاولة
+                </button>
               </div>
-              <p className="text-2xl font-black text-[#FAF5EB]">
-                {saasMetrics.activeSubscriptionsCount}{' '}
-                <span className="text-xs font-bold text-[#A19E9B]">منشآت ومتاجر نشطة</span>
-              </p>
-              <p className="text-[10px] text-[#A19E9B]/60 font-bold">
-                {saasMetrics.trialingCount} فروع في التجربة المجانية
-              </p>
-            </div>
+            )}
 
-            {/* Metric 4: ARPU */}
-            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-1">
-              <div className="flex items-center justify-between text-[#A19E9B] mb-1">
-                <span className="text-xs font-bold text-[#A19E9B]">متوسط العائد لكل منشأة (ARPU)</span>
-                <CreditCard className="w-4 h-4 text-purple-400" />
-              </div>
-              <p className="text-2xl font-black text-[#FAF5EB]">
-                {saasMetrics.averageRevenuePerUser.toLocaleString()}{' '}
-                <span className="text-xs font-bold text-[#A19E9B]">ر.س</span>
-              </p>
-              <p className="text-[10px] text-emerald-400 font-bold">معدل الإلغاء Churn: 1.2%</p>
-            </div>
-          </div>
-        </div>
+            {!loadError && (
+              <>
+                <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                  <MetricCard
+                    label="إجمالي المنشآت"
+                    value={telemetry?.totalTenants ?? 0}
+                    icon={<Layers className="h-4 w-4 text-[#DFAB56]" />}
+                  />
+                  <MetricCard
+                    label="منشآت نشطة"
+                    value={telemetry?.activeTenants ?? 0}
+                    icon={<Activity className="h-4 w-4 text-emerald-400" />}
+                  />
+                  <MetricCard
+                    label="العملاء"
+                    value={telemetry?.customers ?? 0}
+                    icon={<Users className="h-4 w-4 text-sky-400" />}
+                  />
+                  <MetricCard
+                    label="الذكريات"
+                    value={telemetry?.memories ?? 0}
+                    icon={<ImageIcon className="h-4 w-4 text-[#DFAB56]" />}
+                  />
+                  <MetricCard
+                    label="الزيارات الموثقة"
+                    value={telemetry?.visits ?? 0}
+                    icon={<MapPin className="h-4 w-4 text-rose-300" />}
+                  />
+                </section>
 
-        {/* SECTION 2: Central SaaS Subscriptions & Tier Control */}
-        <div className="bg-[#141212] rounded-2xl border border-white/10 shadow-xl overflow-hidden">
-          <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h3 className="text-base font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
-                <CreditCard className="w-4 h-4 text-[#DFAB56]" />
-                <span>إدارة اشتراكات وباقات الفروع المركزية (Tenant Subscriptions)</span>
-              </h3>
-              <p className="text-xs text-[#A19E9B] mt-0.5">
-                يمكن لمالك المنصة تعديل باقة أي فرع فورياً، تفعيل الاشتراك، ومطالعة الفواتير
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 text-xs font-bold text-[#FAF5EB] bg-[#1C1B1B] border border-white/10 px-3 py-1.5 rounded-xl">
-              <span>الفروع المربوطة: {tenants.length}</span>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse">
-              <thead>
-                <tr className="border-b border-white/10 bg-[#1C1B1B] text-[11px] font-bold uppercase text-[#A19E9B] tracking-wider">
-                  <th className="py-4 px-5">المنشأة / المشترك</th>
-                  <th className="py-4 px-5">باقة الـ SaaS الحالية</th>
-                  <th className="py-4 px-5">دورة الفوترة</th>
-                  <th className="py-4 px-5">مساهمة الـ MRR</th>
-                  <th className="py-4 px-5">حالة الاشتراك</th>
-                  <th className="py-4 px-5 text-center">تعديل الباقة فوراً</th>
-                  <th className="py-4 px-5">إدارة التاجر</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 text-sm">
-                {tenants.map((t) => {
-                  const sub = subscriptions[t.slug] || SubscriptionBillingService.getSubscription(t.slug);
-                  const currentPlan = SubscriptionBillingService.getPlan(sub.planId);
-                  const mrrValue =
-                    sub.billingInterval === 'annually'
-                      ? currentPlan.annualPricePerMonth
-                      : currentPlan.monthlyPrice;
-
-                  return (
-                    <tr key={t.id} className="hover:bg-white/[0.03] transition">
-                      {/* Name & Slug */}
-                      <td className="py-4 px-5 font-bold text-[#FAF5EB]">
-                        <div>
-                          <p className="leading-tight">{t.name}</p>
-                          <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">
-                            /{t.slug}
-                          </p>
-                        </div>
-                      </td>
-
-                      {/* Current Plan Badge */}
-                      <td className="py-4 px-5">
-                        <span
-                          className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border ${
-                            sub.planId === 'enterprise'
-                              ? 'bg-[#3D2314]/60 text-[#FAF5EB] border-[#DFAB56]/40'
-                              : sub.planId === 'multi_location'
-                              ? 'bg-[#1C1B1B] text-[#FAF5EB] border-white/20'
-                              : sub.planId === 'print'
-                              ? 'bg-[#3D2314]/30 text-[#FAF5EB] border-[#DFAB56]/30'
-                              : 'bg-[#141212] text-[#A19E9B] border-white/10'
-                          }`}
-                        >
-                          {currentPlan.name}
-                        </span>
-                      </td>
-
-                      {/* Billing Cycle */}
-                      <td className="py-4 px-5 text-xs text-[#A19E9B] font-medium">
-                        {sub.billingInterval === 'annually' ? 'سنوي (مخصوم 20%)' : 'شهري'}
-                      </td>
-
-                      {/* MRR Value */}
-                      <td className="py-4 px-5 text-xs font-bold text-[#FAF5EB]">
-                        {mrrValue} ر.س / شهر
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-4 px-5">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            sub.status === 'active'
-                              ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/60'
-                              : sub.status === 'trialing'
-                              ? 'bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/40'
-                              : 'bg-red-950/40 text-red-400 border border-red-800/60'
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              sub.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-[#DFAB56]'
-                            }`}
-                          />
-                          <span>{sub.status === 'active' ? 'نشط' : sub.status === 'trialing' ? 'فترة تجربة' : 'متوقف'}</span>
-                        </span>
-                      </td>
-
-                      {/* Admin Quick Tier Selector */}
-                      <td className="py-4 px-5 text-center">
-                        <select
-                          value={sub.planId}
-                          onChange={(e) =>
-                            handleAdminChangePlan(t.slug, e.target.value as SubscriptionPlanId)
-                          }
-                          className="px-2.5 py-1.5 rounded-xl border border-white/10 bg-[#0B0A0A] text-xs font-bold text-[#FAF5EB] focus:outline-none focus:ring-1 focus:ring-[#DFAB56]"
-                        >
-                          {SAAS_PLANS.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name} ({p.monthlyPrice} ر.س)
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-
-                      {/* Direct Link to Merchant Dashboard */}
-                      <td className="py-4 px-5">
-                        <a
-                          href="/dashboard"
-                          className="px-2.5 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#252424] text-[#FAF5EB] text-xs font-bold flex items-center gap-1 transition w-fit border border-white/10"
-                          title="عرض في لوحة التاجر"
-                        >
-                          <span>لوحة التاجر</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* SECTION 3: High-Scale Infrastructure Telemetry (1M+ Users) */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
-                <Server className="w-5 h-5 text-[#DFAB56]" />
-                <span>حالة السيرفرات السحابية ومقاييس الأداء لمليون مستخدم (1M Scale)</span>
-              </h2>
-              <p className="text-xs text-[#A19E9B] mt-0.5">
-                توزيع الحمل عبر Cloudflare Global Network + Supabase RLS Multi-Tenancy + R2 Storage
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Metric 1 */}
-            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
-              <div className="flex items-center justify-between text-[#A19E9B] mb-2">
-                <span className="text-xs font-bold text-[#A19E9B]">طاقة الاستيعاب التزامنية</span>
-                <Zap className="w-4 h-4 text-[#DFAB56]" />
-              </div>
-              <p className="text-2xl font-black text-[#FAF5EB]">{telemetry.totalUsersCapacity}</p>
-              <p className="text-[10px] text-emerald-400 font-bold mt-1">Distributed Workers</p>
-            </div>
-
-            {/* Metric 2 */}
-            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
-              <div className="flex items-center justify-between text-[#A19E9B] mb-2">
-                <span className="text-xs font-bold text-[#A19E9B]">معدل كاش الحافة (Edge Cache)</span>
-                <Globe className="w-4 h-4 text-sky-400" />
-              </div>
-              <p className="text-2xl font-black text-emerald-400">{telemetry.edgeCacheHitRatio}</p>
-              <p className="text-[10px] text-[#A19E9B]/70 font-mono mt-1">330+ Global PoPs</p>
-            </div>
-
-            {/* Metric 3 */}
-            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
-              <div className="flex items-center justify-between text-[#A19E9B] mb-2">
-                <span className="text-xs font-bold text-[#A19E9B]">مساحة تخزين الصور (R2 / S3)</span>
-                <HardDrive className="w-4 h-4 text-purple-400" />
-              </div>
-              <p className="text-2xl font-black text-[#FAF5EB]">{telemetry.storageUsedGb} GB</p>
-              <p className="text-[10px] text-[#A19E9B]/70 mt-1">WebP Compressed Buckets</p>
-            </div>
-
-            {/* Metric 4 */}
-            <div className="p-5 bg-[#141212] rounded-2xl border border-white/10 shadow-xl">
-              <div className="flex items-center justify-between text-[#A19E9B] mb-2">
-                <span className="text-xs font-bold text-[#A19E9B]">زمن الاستجابة العالمي</span>
-                <Activity className="w-4 h-4 text-rose-500" />
-              </div>
-              <p className="text-2xl font-black text-[#FAF5EB]">{telemetry.globalLatencyMs} ms</p>
-              <p className="text-[10px] text-emerald-400 font-bold mt-1">Zero Origin Bottleneck</p>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 4: Tenants Feature Flagging (Printing / TV Wall) */}
-        <div className="bg-[#141212] rounded-2xl border border-white/10 shadow-xl overflow-hidden">
-          <div className="p-6 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h3 className="text-base font-bold text-[#FAF5EB] flex items-center gap-2 font-serif">
-                <Layers className="w-4 h-4 text-[#DFAB56]" />
-                <span>التحكم في الميزات التشغيلية (Feature Flags)</span>
-              </h3>
-              <p className="text-xs text-[#A19E9B] mt-0.5">
-                تفعيل أو إيقاف محطة الطباعة وشاشات العرض لكل فرع بنقرة واحدة
-              </p>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-right border-collapse">
-              <thead>
-                <tr className="border-b border-white/10 bg-[#1C1B1B] text-[11px] font-bold uppercase text-[#A19E9B] tracking-wider">
-                  <th className="py-4 px-5">المنشأة / المشترك</th>
-                  <th className="py-4 px-5 text-center">ميزة الطباعة 2x6</th>
-                  <th className="py-4 px-5 text-center">ميزة شاشة العرض (TV Wall)</th>
-                  <th className="py-4 px-5">المعاينة المباشرة</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 text-sm">
-                {tenants.map((t) => (
-                  <tr key={t.id} className="hover:bg-white/[0.03] transition">
-                    <td className="py-4 px-5 font-bold text-[#FAF5EB]">
-                      <div>
-                        <p className="leading-tight">{t.name}</p>
-                        <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">/{t.slug}</p>
-                      </div>
-                    </td>
-
-                    {/* Printing Toggle */}
-                    <td className="py-4 px-5 text-center">
+                <section className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-[#141212] p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="relative w-full sm:max-w-xs">
+                    <Search className="pointer-events-none absolute start-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#A19E9B]" />
+                    <input
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="ابحث بالاسم أو الرابط"
+                      className="w-full rounded-lg border border-white/10 bg-[#1C1B1B] py-2 pe-3 ps-8 text-[11px] text-[#FAF5EB] placeholder:text-[#A19E9B]/60 focus:border-[#DFAB56] focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(
+                      [
+                        { id: 'all', label: 'الكل' },
+                        { id: 'active', label: 'نشطة' },
+                        { id: 'suspended', label: 'معلّقة' },
+                      ] as const
+                    ).map((tab) => (
                       <button
-                        onClick={() =>
-                          handleToggleFeature(t.id, 'printing', t.features.printing)
-                        }
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs ${
-                          t.features.printing
-                            ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/60'
-                            : 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:bg-[#252424]'
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setStatusFilter(tab.id)}
+                        className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition ${
+                          statusFilter === tab.id
+                            ? 'border-[#DFAB56] bg-[#DFAB56] text-[#12100E]'
+                            : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FAF5EB]'
                         }`}
                       >
-                        <Printer className="w-3.5 h-3.5" />
-                        <span>{t.features.printing ? 'مُفعّلة (ON)' : 'مُعطّلة (OFF)'}</span>
+                        {tab.label}
                       </button>
-                    </td>
+                    ))}
+                  </div>
+                </section>
 
-                    {/* TV Wall Toggle */}
-                    <td className="py-4 px-5 text-center">
-                      <button
-                        onClick={() =>
-                          handleToggleFeature(t.id, 'tvWall', t.features.tvWall)
-                        }
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs ${
-                          t.features.tvWall
-                            ? 'bg-sky-950/40 text-sky-400 border border-sky-800/60'
-                            : 'bg-[#1C1B1B] text-[#A19E9B] border border-white/10 hover:bg-[#252424]'
-                        }`}
-                      >
-                        <Monitor className="w-3.5 h-3.5" />
-                        <span>{t.features.tvWall ? 'مُفعّلة (ON)' : 'مُعطّلة (OFF)'}</span>
-                      </button>
-                    </td>
+                <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#141212] shadow-xl">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2 p-10 text-xs text-[#A19E9B]">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      جاري تحميل المنشآت...
+                    </div>
+                  ) : filtered.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 p-10 text-center">
+                      <Store className="h-7 w-7 text-[#A19E9B]" />
+                      <p className="text-xs text-[#A19E9B]">
+                        {tenants.length === 0
+                          ? 'لا توجد منشآت مسجلة بعد.'
+                          : 'لا توجد منشآت مطابقة للبحث.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[720px] text-start text-xs">
+                        <thead className="border-b border-white/10 bg-[#0B0A0A] text-[10px] uppercase tracking-wide text-[#A19E9B]">
+                          <tr>
+                            <th className="px-4 py-3 text-start font-bold">المنشأة</th>
+                            <th className="px-4 py-3 text-start font-bold">الحالة</th>
+                            <th className="px-4 py-3 text-start font-bold">العملاء</th>
+                            <th className="px-4 py-3 text-start font-bold">الذكريات</th>
+                            <th className="px-4 py-3 text-start font-bold">الزيارات</th>
+                            <th className="px-4 py-3 text-start font-bold">تاريخ الإنشاء</th>
+                            <th className="px-4 py-3 text-start font-bold">إجراء</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filtered.map((tenant) => {
+                            const active = tenant.status === 'active';
+                            return (
+                              <tr
+                                key={tenant.id}
+                                className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]"
+                              >
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#1C1B1B] text-[#DFAB56]">
+                                      <Store className="h-3.5 w-3.5" />
+                                    </div>
+                                    <div>
+                                      <div className="font-bold text-[#FAF5EB]">{tenant.name}</div>
+                                      <div
+                                        className="font-mono text-[10px] text-[#A19E9B]"
+                                        dir="ltr"
+                                      >
+                                        /c/{tenant.slug}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span
+                                    className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 font-mono text-[10px] font-bold ${
+                                      active
+                                        ? 'border-emerald-500/30 bg-emerald-950/40 text-emerald-200'
+                                        : 'border-amber-500/30 bg-amber-950/40 text-amber-200'
+                                    }`}
+                                  >
+                                    {active ? (
+                                      <CheckCircle2 className="h-3 w-3" />
+                                    ) : (
+                                      <Ban className="h-3 w-3" />
+                                    )}
+                                    {active ? 'نشطة' : 'معلّقة'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 font-mono text-[#FAF5EB]">
+                                  {tenant.customers}
+                                </td>
+                                <td className="px-4 py-3 font-mono text-[#FAF5EB]">
+                                  {tenant.memories}
+                                </td>
+                                <td className="px-4 py-3 font-mono text-[#FAF5EB]">
+                                  {tenant.visits}
+                                </td>
+                                <td className="px-4 py-3 font-mono text-[10px] text-[#A19E9B]">
+                                  {new Date(tenant.createdAt).toLocaleDateString('ar-SA')}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <button
+                                    type="button"
+                                    disabled={busyTenantId === tenant.id}
+                                    onClick={() =>
+                                      void changeStatus(tenant, active ? 'suspended' : 'active')
+                                    }
+                                    className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[10px] font-bold transition disabled:opacity-50 ${
+                                      active
+                                        ? 'border-amber-500/30 bg-amber-950/30 text-amber-200 hover:bg-amber-950/60'
+                                        : 'border-emerald-500/30 bg-emerald-950/30 text-emerald-200 hover:bg-emerald-950/60'
+                                    }`}
+                                  >
+                                    {busyTenantId === tenant.id ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : active ? (
+                                      <Ban className="h-3 w-3" />
+                                    ) : (
+                                      <RotateCcw className="h-3 w-3" />
+                                    )}
+                                    {active ? 'تعليق' : 'إعادة تنشيط'}
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
 
-                    {/* Direct Links */}
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`/c/${t.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#252424] text-[#FAF5EB] text-xs font-bold flex items-center gap-1 transition border border-white/10"
-                        >
-                          <span>الفوتوبوث</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-
-                        <a
-                          href={`/wall/${t.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-xs font-bold flex items-center gap-1 transition shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
-                        >
-                          <span>الشاشة</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                <p className="text-center text-[10px] text-[#A19E9B]">
+                  كل الأرقام مقروءة مباشرة من قاعدة البيانات عبر{' '}
+                  <span className="font-mono" dir="ltr">
+                    platform_tenant_overview()
+                  </span>
+                  . لا توجد بيانات تجريبية.
+                </p>
+              </>
+            )}
+          </>
+        )}
       </main>
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#141212] p-4 shadow-xl">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] font-bold text-[#A19E9B]">{label}</span>
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-[#1C1B1B]">
+          {icon}
+        </span>
+      </div>
+      <div className="mt-2 font-mono text-2xl font-bold text-[#FAF5EB]">
+        {value.toLocaleString('en-US')}
+      </div>
     </div>
   );
 }

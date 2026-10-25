@@ -1,57 +1,65 @@
-export function generateStaticParams() {
-  return [{ slug: 'table-01' }, { slug: 'counter' }, { slug: 'main' }];
-}
+/**
+ * GET /api/v1/qr/[slug]
+ *
+ * Public QR landing lookup. The scan counter is incremented atomically in SQL
+ * and the response tells the client where to send the guest. Only active codes
+ * are returned; a deactivated code is indistinguishable from a missing one.
+ */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { loadPublicVenue } from '@/lib/server/public-venue';
+import { jsonError } from '@/lib/server/route-helpers';
+import { consumeRateLimit, rateLimitKey, rateLimitResponse } from '@/lib/rate-limit';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+export const runtime = 'nodejs';
+
+const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,79}$/i;
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  if (!slug) {
-    return NextResponse.json({ error: 'Slug parameter is required' }, { status: 400 });
+  if (!slug || !SLUG_PATTERN.test(slug)) {
+    return jsonError(400, 'invalid_slug', 'A valid QR slug is required');
   }
 
-  const supabase = createAdminClient();
+  const limit = await consumeRateLimit(rateLimitKey(request, 'qr-scan'), 60, 60);
+  if (!limit.allowed) return rateLimitResponse(limit);
 
-  // 1. Fetch QR code details
-  const { data: qrCode, error } = await supabase
-    .from('qr_codes')
-    .select('id, organization_id, branch_id, source, label, is_active, scan_count')
-    .eq('slug', slug)
-    .single();
-
-  if (error || !qrCode) {
-    return NextResponse.json({ error: 'QR Code not found' }, { status: 404 });
+  const { data, error } = await createAdminClient().rpc('increment_qr_scan', { p_slug: slug });
+  if (error) {
+    console.error('increment_qr_scan failed:', error.code ?? 'unknown');
+    return jsonError(503, 'qr_unavailable', 'QR lookup is temporarily unavailable');
   }
 
-  if (!qrCode.is_active) {
-    return NextResponse.json({ error: 'QR Code is deactivated' }, { status: 410 });
+  const scan = (data ?? null) as
+    | { qr_id: string; branch_id: string; branch_slug: string | null; source: string; scan_count: number }
+    | null;
+
+  if (!scan || !scan.branch_slug) {
+    return jsonError(404, 'qr_not_found', 'QR code not found');
   }
 
-  // 2. Fetch associated branch
-  const { data: branch } = await supabase
-    .from('branches')
-    .select('id, name, slug, organization_id')
-    .eq('id', qrCode.branch_id)
-    .single();
+  const venue = await loadPublicVenue(scan.branch_slug).catch(() => null);
+  if (!venue) return jsonError(404, 'venue_not_found', 'Venue not available');
 
-  // 3. Atomically increment scan_count
-  await supabase
-    .from('qr_codes')
-    .update({ scan_count: qrCode.scan_count + 1, updated_at: new Date().toISOString() })
-    .eq('id', qrCode.id);
-
-  const destination = branch ? `/c/${branch.slug}?ref=${slug}&src=${qrCode.source}` : `/c/memories?ref=${slug}`;
-
-  return NextResponse.json({
-    success: true,
-    qrCodeId: qrCode.id,
-    branchId: qrCode.branch_id,
-    organizationId: qrCode.organization_id,
-    source: qrCode.source,
-    destinationUrl: destination,
-  });
+  return Response.json(
+    {
+      ok: true,
+      qr: {
+        id: scan.qr_id,
+        source: scan.source,
+        scanCount: scan.scan_count,
+      },
+      venue: {
+        organizationId: venue.organization.id,
+        organizationSlug: venue.organization.slug,
+        organizationName: venue.organization.name,
+        branchId: venue.branch.id,
+        branchSlug: venue.branch.slug,
+        branchName: venue.branch.name,
+      },
+      redirectTo: `/c/${encodeURIComponent(venue.branch.slug)}?qr=${encodeURIComponent(slug)}`,
+    },
+    { headers: { 'Cache-Control': 'no-store' } }
+  );
 }

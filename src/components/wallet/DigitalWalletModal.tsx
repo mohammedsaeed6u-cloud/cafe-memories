@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useSyncExternalStore, useState } from 'react';
 import {
   X,
   Smartphone,
@@ -30,6 +30,16 @@ interface DigitalWalletModalProps {
   passData: DigitalWalletPassData;
 }
 
+const noopSubscribe = () => () => {};
+
+function detectIOS(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+}
+
 export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
   isOpen,
   onClose,
@@ -40,16 +50,9 @@ export const DigitalWalletModal: React.FC<DigitalWalletModalProps> = ({
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [iosSaveModalImage, setIosSaveModalImage] = useState<string | null>(null);
-  const [isIOS, setIsIOS] = useState(false);
-
-  React.useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      const isApple =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      setIsIOS(isApple);
-    }
-  }, []);
+  // `useSyncExternalStore` gives a hydration-safe client-only value without a
+  // setState-in-effect round trip.
+  const isIOS = useSyncExternalStore(noopSubscribe, detectIOS, () => false);
 
   if (!isOpen) return null;
 

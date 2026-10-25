@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import crypto from 'node:crypto';
 import { NextRequest } from 'next/server';
 
 /**
@@ -104,7 +105,6 @@ describe('signed staff session cookie', () => {
     claims.exp = Date.now() - 1000;
     const expiredPayload = Buffer.from(JSON.stringify(claims)).toString('base64url');
     // re-sign with the same secret to isolate expiry rejection
-    const crypto = require('crypto');
     const secret =
       process.env.BETTER_AUTH_SECRET ||
       process.env.SUPABASE_SERVICE_ROLE_KEY ||

@@ -3,13 +3,45 @@ import { NextRequest } from 'next/server';
 import { POST, normalizePhoneNumber, captureSchema } from '@/app/api/v1/photobooth/capture/route';
 import { GET as healthGET } from '@/app/api/health/route';
 
-// Clean isolated mock handles
-const mockAdminFrom = vi.fn();
+const ORG_ID = '123e4567-e89b-42d3-a456-426614174000';
+const BRANCH_ID = '987fcdeb-51a2-43f7-9876-543210987654';
+const CUSTOMER_ID = '22222222-2222-4222-8222-222222222222';
+const IDEMPOTENCY_KEY = '33333333-3333-4333-8333-333333333333';
+
+const mockReadCustomerSession = vi.fn();
+const mockLoadPublicVenue = vi.fn();
+const mockRpc = vi.fn();
+const mockMaybeSingle = vi.fn();
+const mockAuditInsert = vi.fn();
 const mockServerFrom = vi.fn();
+
+vi.mock('@/lib/customer-session', () => ({
+  readCustomerSession: (...args: unknown[]) => mockReadCustomerSession(...args),
+}));
+
+vi.mock('@/lib/server/public-venue', () => ({
+  loadPublicVenue: (...args: unknown[]) => mockLoadPublicVenue(...args),
+}));
+
+vi.mock('@/lib/server/memory-urls', () => ({
+  signedMemoryUrl: vi.fn(async (key: string) => `https://signed.example/${key}`),
+}));
 
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
-    from: mockAdminFrom,
+    from: (table: string) => {
+      if (table === 'audit_logs') {
+        return { insert: mockAuditInsert };
+      }
+      return {
+        select: () => ({
+          eq: () => ({
+            is: () => ({ maybeSingle: mockMaybeSingle }),
+          }),
+        }),
+      };
+    },
+    rpc: mockRpc,
   }),
 }));
 
@@ -19,51 +51,40 @@ vi.mock('@/lib/supabase/server', () => ({
   })),
 }));
 
-// Helper to construct chainable query builder mocks
-function createMockQueryBuilder(result: { data?: any; error?: any; count?: number | null } = {}) {
+vi.mock('@/lib/rate-limit', () => ({
+  consumeRateLimit: vi.fn(async () => ({
+    allowed: true,
+    limit: 12,
+    remaining: 11,
+    resetAt: Date.now() + 3_600_000,
+  })),
+  rateLimitKey: vi.fn(() => 'photobooth-capture:test'),
+  rateLimitResponse: vi.fn(),
+}));
+
+function createMockQueryBuilder(result: { data?: unknown; error?: unknown; count?: number | null } = {}) {
   const queryResult = {
     data: result.data ?? null,
     error: result.error ?? null,
     count: result.count ?? null,
   };
 
-  const builder: any = {
-    select: vi.fn().mockImplementation(() => builder),
-    insert: vi.fn().mockImplementation(() => builder),
-    update: vi.fn().mockImplementation(() => builder),
-    delete: vi.fn().mockImplementation(() => builder),
-    eq: vi.fn().mockImplementation(() => builder),
-    limit: vi.fn().mockImplementation(() => builder),
-    order: vi.fn().mockImplementation(() => builder),
-    in: vi.fn().mockImplementation(() => builder),
-    maybeSingle: vi.fn().mockImplementation(async () => queryResult),
-    single: vi.fn().mockImplementation(async () => queryResult),
-    then: (resolve: any, reject: any) => Promise.resolve(queryResult).then(resolve, reject),
+  const builder: Record<string, unknown> = {
+    select: vi.fn(() => builder),
+    insert: vi.fn(() => builder),
+    update: vi.fn(() => builder),
+    delete: vi.fn(() => builder),
+    eq: vi.fn(() => builder),
+    limit: vi.fn(() => builder),
+    order: vi.fn(() => builder),
+    in: vi.fn(() => builder),
+    maybeSingle: vi.fn(async () => queryResult),
+    single: vi.fn(async () => queryResult),
+    then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
+      Promise.resolve(queryResult).then(resolve, reject),
   };
 
   return builder;
-}
-
-// Helper to configure per-table mock behavior
-function mockSupabaseTables(config: Record<string, any>) {
-  const callCounts: Record<string, number> = {};
-
-  return (tableName: string) => {
-    callCounts[tableName] = (callCounts[tableName] || 0) + 1;
-    const tableSetting = config[tableName];
-    let result = { data: null, error: null, count: null };
-
-    if (Array.isArray(tableSetting)) {
-      const idx = callCounts[tableName] - 1;
-      result = tableSetting[idx] ?? tableSetting[tableSetting.length - 1] ?? result;
-    } else if (typeof tableSetting === 'function') {
-      result = tableSetting();
-    } else if (tableSetting !== undefined) {
-      result = tableSetting;
-    }
-
-    return createMockQueryBuilder(result);
-  };
 }
 
 describe('API Routes: Arabic Digit Normalization', () => {
@@ -94,389 +115,231 @@ describe('API Routes: Arabic Digit Normalization', () => {
 });
 
 describe('API Routes: Capture Schema Zod Validation', () => {
-  const validOrgId = '123e4567-e89b-42d3-a456-426614174000';
-  const validBranchId = '987fcdeb-51a2-43f7-9876-543210987654';
+  it('requires a venue slug and an idempotency key', () => {
+    expect(captureSchema.safeParse({}).success).toBe(false);
+    expect(captureSchema.safeParse({ cafeSlug: 'demo' }).success).toBe(false);
+    expect(
+      captureSchema.safeParse({ cafeSlug: 'demo', idempotencyKey: IDEMPOTENCY_KEY }).success
+    ).toBe(true);
+  });
 
-  it('accepts an empty payload using defaults', () => {
-    const result = captureSchema.safeParse({});
+  it('defaults every consent flag to false', () => {
+    const result = captureSchema.safeParse({
+      cafeSlug: 'espresso-lab',
+      idempotencyKey: IDEMPOTENCY_KEY,
+    });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.role).toBe('ضيف مميز');
-      expect(result.data.frameId).toBe('ivory');
-      expect(result.data.liveWallConsent).toBe(true);
+      expect(result.data.liveWallConsent).toBe(false);
+      expect(result.data.socialShareConsent).toBe(false);
+      expect(result.data.marketingConsent).toBe(false);
     }
   });
 
-  it('accepts a fully populated valid payload with Arabic content', () => {
-    const payload = {
-      name: 'محمد عبدالله',
-      phone: '٠٥٠١٢٣٤٥٦٧',
-      role: 'عاشق اسبريسو',
-      caption: 'أجمل قهوة صباحية في الرياض ☕️',
-      frameId: 'vintage_wood',
-      organizationId: validOrgId,
-      branchId: validBranchId,
+  it('accepts a fully populated payload with Arabic content', () => {
+    const result = captureSchema.safeParse({
       cafeSlug: 'espresso-lab',
-      liveWallConsent: false,
-    };
-    const result = captureSchema.safeParse(payload);
+      caption: 'أجمل قهوة صباحية في الرياض ☕️',
+      storageKey: `${ORG_ID}/memories/photo.webp`,
+      liveWallConsent: true,
+      socialShareConsent: true,
+      marketingConsent: true,
+      deviceFingerprint: 'device-abc',
+      idempotencyKey: IDEMPOTENCY_KEY,
+    });
     expect(result.success).toBe(true);
   });
 
-  describe('Name validation edge cases', () => {
-    it('rejects empty string name', () => {
-      const result = captureSchema.safeParse({ name: '' });
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects name exceeding 100 characters', () => {
-      const longName = 'أ'.repeat(101);
-      const result = captureSchema.safeParse({ name: longName });
-      expect(result.success).toBe(false);
-    });
-
-    it('accepts name of exactly 100 characters', () => {
-      const boundaryName = 'أ'.repeat(100);
-      const result = captureSchema.safeParse({ name: boundaryName });
-      expect(result.success).toBe(true);
-    });
+  it('rejects unsafe storage keys and accepts tenant-scoped keys', () => {
+    expect(
+      captureSchema.safeParse({
+        cafeSlug: 'demo',
+        idempotencyKey: IDEMPOTENCY_KEY,
+        storageKey: '../escape.webp',
+      }).success
+    ).toBe(false);
+    expect(
+      captureSchema.safeParse({
+        cafeSlug: 'demo',
+        idempotencyKey: IDEMPOTENCY_KEY,
+        storageKey: '/absolute.webp',
+      }).success
+    ).toBe(false);
+    expect(
+      captureSchema.safeParse({
+        cafeSlug: 'demo',
+        idempotencyKey: IDEMPOTENCY_KEY,
+        storageKey: `${ORG_ID}/memories/photo.webp`,
+      }).success
+    ).toBe(true);
   });
 
-  describe('Customer nested object validation', () => {
-    it('accepts valid nested customer object', () => {
-      const result = captureSchema.safeParse({
-        customer: {
-          name: 'سارة خالد',
-          phone: '0555555555',
-          role: 'باريستا المستقبل',
-        },
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('rejects empty customer.name', () => {
-      const result = captureSchema.safeParse({
-        customer: { name: '' },
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects customer.phone under 4 characters', () => {
-      const result = captureSchema.safeParse({
-        customer: { phone: '123' },
-      });
-      expect(result.success).toBe(false);
-    });
+  it('enforces the caption boundary at 280 characters', () => {
+    expect(
+      captureSchema.safeParse({
+        cafeSlug: 'demo',
+        idempotencyKey: IDEMPOTENCY_KEY,
+        caption: null,
+      }).success
+    ).toBe(true);
+    expect(
+      captureSchema.safeParse({
+        cafeSlug: 'demo',
+        idempotencyKey: IDEMPOTENCY_KEY,
+        caption: 'ق'.repeat(280),
+      }).success
+    ).toBe(true);
+    expect(
+      captureSchema.safeParse({
+        cafeSlug: 'demo',
+        idempotencyKey: IDEMPOTENCY_KEY,
+        caption: 'ق'.repeat(281),
+      }).success
+    ).toBe(false);
   });
 
-  describe('Caption length edge cases', () => {
-    it('accepts null caption', () => {
-      const result = captureSchema.safeParse({ caption: null });
-      expect(result.success).toBe(true);
-    });
-
-    it('accepts caption of exactly 280 characters', () => {
-      const caption280 = 'ق'.repeat(280);
-      const result = captureSchema.safeParse({ caption: caption280 });
-      expect(result.success).toBe(true);
-    });
-
-    it('rejects caption exceeding 280 characters', () => {
-      const caption281 = 'ق'.repeat(281);
-      const result = captureSchema.safeParse({ caption: caption281 });
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe('Phone number validation edge cases', () => {
-    it('rejects phone numbers shorter than 4 characters', () => {
-      const result = captureSchema.safeParse({ phone: '123' });
-      expect(result.success).toBe(false);
-    });
-
-    it('accepts phone number with minimum 4 characters', () => {
-      const result = captureSchema.safeParse({ phone: '1234' });
-      expect(result.success).toBe(true);
-    });
-
-    it('accepts phone number up to 30 characters', () => {
-      const phone30 = '1'.repeat(30);
-      const result = captureSchema.safeParse({ phone: phone30 });
-      expect(result.success).toBe(true);
-    });
-
-    it('rejects phone numbers longer than 30 characters', () => {
-      const phone31 = '1'.repeat(31);
-      const result = captureSchema.safeParse({ phone: phone31 });
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe('UUID edge cases', () => {
-    it('rejects non-UUID organizationId and branchId', () => {
-      expect(captureSchema.safeParse({ organizationId: 'not-a-uuid' }).success).toBe(false);
-      expect(captureSchema.safeParse({ branchId: '123-abc' }).success).toBe(false);
-    });
-
-    it('accepts valid UUIDs', () => {
-      expect(
-        captureSchema.safeParse({
-          organizationId: validOrgId,
-          branchId: validBranchId,
-        }).success
-      ).toBe(true);
-    });
+  it('rejects invalid UUIDs and overlong legacy phone fields', () => {
+    expect(
+      captureSchema.safeParse({ cafeSlug: 'demo', idempotencyKey: 'not-a-uuid' }).success
+    ).toBe(false);
+    expect(
+      captureSchema.safeParse({
+        cafeSlug: 'demo',
+        idempotencyKey: IDEMPOTENCY_KEY,
+        phone: '1'.repeat(31),
+      }).success
+    ).toBe(false);
   });
 });
 
 describe('API Route: POST /api/v1/photobooth/capture', () => {
-  const orgId = '123e4567-e89b-42d3-a456-426614174000';
-  const branchId = '987fcdeb-51a2-43f7-9876-543210987654';
-
   beforeEach(() => {
     vi.clearAllMocks();
+    mockReadCustomerSession.mockResolvedValue({ customerId: CUSTOMER_ID });
+    mockLoadPublicVenue.mockResolvedValue({
+      organization: { id: ORG_ID },
+      branch: { id: BRANCH_ID },
+    });
+    mockMaybeSingle.mockResolvedValue({
+      data: { id: CUSTOMER_ID, organization_id: ORG_ID },
+      error: null,
+    });
+    mockAuditInsert.mockResolvedValue({ error: null });
+    mockRpc.mockResolvedValue({
+      data: {
+        status: 'verified',
+        duplicate: false,
+        visit: { id: 'visit-1', created_at: '2026-10-25T10:00:00.000Z' },
+        memory: {
+          id: 'memory-1',
+          status: 'approved',
+          visibility: 'live_wall',
+          caption: 'أحلى فلات وايت',
+          created_at: '2026-10-25T10:00:00.000Z',
+        },
+        balance: { usedVisits: 1, availableRewards: 0, oldestRewardName: null },
+      },
+      error: null,
+    });
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('successfully captures photo, normalizes Arabic phone, and creates new customer', async () => {
-    const rawArabicPhone = '٠٥٠١٢٣٤٥٦٧';
-    const expectedNormalizedPhone = '0501234567';
+  function captureRequest(body: Record<string, unknown>) {
+    return new NextRequest('http://localhost:3000/api/v1/photobooth/capture', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
-    mockAdminFrom.mockImplementation(
-      mockSupabaseTables({
-        organizations: { data: { id: orgId } },
-        branches: { data: { id: branchId, organization_id: orgId } },
-        customers: [
-          // 1. Customer lookup by normalized anonymous_id (not found)
-          { data: null, error: null },
-          // 2. Customer insert
-          {
-            data: {
-              id: 'cust-uuid-1',
-              display_name: 'أحمد التميمي',
-              anonymous_id: expectedNormalizedPhone,
-              email: 'زائر ومحب للقهوة@persona.memories',
-              created_at: '2026-09-21T18:00:00.000Z',
-            },
-            error: null,
-          },
-        ],
-        visits: [
-          // 1. Recent visits for fraud check
-          { data: [], error: null },
-          // 2. Visit insert
-          {
-            data: {
-              id: 'visit-uuid-1',
-              created_at: '2026-09-21T18:00:00.000Z',
-            },
-            error: null,
-          },
-          // 3. Count query
-          { data: null, error: null, count: 1 },
-        ],
-        reward_events: { data: { id: 'gift-uuid-1' }, error: null },
-        memories: {
-          data: {
-            id: 'mem-uuid-1',
-            status: 'approved',
-            visibility: 'live_wall',
-            caption: 'أحلى فلات وايت',
-            created_at: '2026-09-21T18:00:00.000Z',
-          },
-          error: null,
-        },
-      })
+  it('answers 401 without a signed customer session', async () => {
+    mockReadCustomerSession.mockResolvedValue(null);
+    const response = await POST(
+      captureRequest({ cafeSlug: 'demo', idempotencyKey: IDEMPOTENCY_KEY })
     );
-
-    const request = new NextRequest('http://localhost:3000/api/v1/photobooth/capture', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: 'أحمد التميمي',
-        phone: rawArabicPhone,
-        originalUrl: 'https://example.com/photo.jpg',
-        caption: 'أحلى فلات وايت',
-        organizationId: orgId,
-        branchId: branchId,
-        liveWallConsent: true,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const response = await POST(request);
-    expect(response.status, await response.clone().text()).toBe(200);
-
+    expect(response.status).toBe(401);
     const json = await response.json();
-    expect(json.success).toBe(true);
-    expect(json.customer.name).toBe('أحمد التميمي');
-    expect(json.customer.phone).toBe(expectedNormalizedPhone);
-    expect(json.visit.id).toBe('visit-uuid-1');
-    expect(json.memory.id).toBe('mem-uuid-1');
-    expect(json.memory.visibility).toBe('live_wall');
-    expect(json.freeGift.code).toMatch(/^GIFT-\d{4}$/);
+    expect(json.code).toBe('unauthenticated');
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
-  it('updates an existing customer profile when customer is already registered', async () => {
-    mockAdminFrom.mockImplementation(
-      mockSupabaseTables({
-        organizations: { data: { id: orgId } },
-        branches: { data: { id: branchId, organization_id: orgId } },
-        customers: [
-          // 1. Existing customer found
-          {
-            data: {
-              id: 'cust-uuid-existing',
-              display_name: 'الاسم القديم',
-              anonymous_id: '0509998877',
-              email: 'old@persona.memories',
-              created_at: '2026-09-20T10:00:00.000Z',
-            },
-            error: null,
-          },
-          // 2. Updated customer returned
-          {
-            data: {
-              id: 'cust-uuid-existing',
-              display_name: 'ريم القحطاني',
-              anonymous_id: '0509998877',
-              email: 'عاشق كيمكس@persona.memories',
-              created_at: '2026-09-20T10:00:00.000Z',
-            },
-            error: null,
-          },
-        ],
-        visits: [
-          { data: [], error: null },
-          { data: { id: 'visit-uuid-2', created_at: '2026-09-21T18:00:00.000Z' }, error: null },
-          { data: null, error: null, count: 4 },
-        ],
-        reward_events: { data: { id: 'gift-uuid-2' }, error: null },
-        memories: {
-          data: {
-            id: 'mem-uuid-2',
-            status: 'approved',
-            visibility: 'private',
-            caption: 'قهوة مميزة',
-            created_at: '2026-09-21T18:00:00.000Z',
-          },
-          error: null,
-        },
-      })
-    );
-
-    const request = new NextRequest('http://localhost:3000/api/v1/photobooth/capture', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: 'ريم القحطاني',
-        phone: '0509998877',
-        role: 'عاشق كيمكس',
-        originalUrl: 'https://example.com/v60.jpg',
-        organizationId: orgId,
-        branchId: branchId,
-        liveWallConsent: false,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const response = await POST(request);
-    expect(response.status).toBe(200);
-
-    const json = await response.json();
-    expect(json.success).toBe(true);
-    expect(json.customer.id).toBe('cust-uuid-existing');
-    expect(json.customer.name).toBe('ريم القحطاني');
-    expect(json.customer.visitsCount).toBe(4);
-    expect(json.memory.visibility).toBe('private');
-  });
-
-  it('resolves branch and organization via cafeSlug when IDs are omitted', async () => {
-    mockAdminFrom.mockImplementation(
-      mockSupabaseTables({
-        branches: { data: { id: branchId, organization_id: orgId } },
-        customers: [
-          { data: null, error: null },
-          {
-            data: {
-              id: 'cust-slug-1',
-              display_name: 'زائر مميز',
-              anonymous_id: '01000000000',
-              created_at: '2026-09-21T18:00:00.000Z',
-            },
-            error: null,
-          },
-        ],
-        visits: [
-          { data: [], error: null },
-          { data: { id: 'visit-slug-1', created_at: '2026-09-21T18:00:00.000Z' }, error: null },
-          { data: null, error: null, count: 1 },
-        ],
-        reward_events: { data: { id: 'gift-uuid-3' }, error: null },
-      })
-    );
-
-    const request = new NextRequest('http://localhost:3000/api/v1/photobooth/capture', {
-      method: 'POST',
-      body: JSON.stringify({
-        cafeSlug: 'espresso-lab',
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const response = await POST(request);
-    expect(response.status).toBe(200);
-    const json = await response.json();
-    expect(json.success).toBe(true);
-    expect(json.customer.name).toBe('زائر مميز');
-  });
-
-  it('rejects invalid payload with status 400 when validation fails', async () => {
-    const request = new NextRequest('http://localhost:3000/api/v1/photobooth/capture', {
-      method: 'POST',
-      body: JSON.stringify({
-        caption: 'X'.repeat(300), // Exceeds 280 characters
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const response = await POST(request);
+  it('rejects an invalid payload with status 400', async () => {
+    const response = await POST(captureRequest({ cafeSlug: 'demo' }));
     expect(response.status).toBe(400);
-
     const json = await response.json();
-    expect(json.error).toBe('Invalid payload');
-    expect(json.details).toBeDefined();
+    expect(json.code).toBe('invalid_payload');
   });
 
-  it('returns 500 when Supabase customer insert fails', async () => {
-    mockAdminFrom.mockImplementation(
-      mockSupabaseTables({
-        organizations: { data: { id: orgId } },
-        branches: { data: { id: branchId, organization_id: orgId } },
-        customers: [
-          { data: null, error: null },
-          { data: null, error: { message: 'Database connection failed' } },
-        ],
+  it('records the memory for the session customer, never a body-supplied identity', async () => {
+    const response = await POST(
+      captureRequest({
+        cafeSlug: 'espresso-lab',
+        caption: 'أحلى فلات وايت',
+        storageKey: `${ORG_ID}/memories/photo.webp`,
+        liveWallConsent: true,
+        idempotencyKey: IDEMPOTENCY_KEY,
+        // Legacy identity fields must be ignored.
+        customerId: '99999999-9999-4999-8999-999999999999',
+        phone: '0501234567',
       })
     );
 
-    const request = new NextRequest('http://localhost:3000/api/v1/photobooth/capture', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: 'عميل جديد',
-        phone: '0501112233',
-        organizationId: orgId,
-        branchId: branchId,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const response = await POST(request);
-    expect(response.status).toBe(500);
-
+    expect(response.status, await response.clone().text()).toBe(200);
     const json = await response.json();
-    expect(json.error).toBe('Failed to create customer profile');
-    expect(json.details).toBe('Database connection failed');
+    expect(json.ok).toBe(true);
+    expect(json.duplicate).toBe(false);
+    expect(json.visit.id).toBe('visit-1');
+    expect(json.memory.id).toBe('memory-1');
+    expect(json.memory.visibility).toBe('live_wall');
+    expect(json.memory.imageUrl).toContain('https://signed.example/');
+
+    expect(mockRpc).toHaveBeenCalledWith(
+      'capture_guest_memory',
+      expect.objectContaining({
+        p_customer_id: CUSTOMER_ID,
+        p_organization_id: ORG_ID,
+        p_branch_id: BRANCH_ID,
+        p_original_url: `${ORG_ID}/memories/photo.webp`,
+        p_live_wall_consent: true,
+        p_idempotency_key: IDEMPOTENCY_KEY,
+      })
+    );
+  });
+
+  it('answers 429 while the 60-minute visit cooldown is active', async () => {
+    mockRpc.mockResolvedValue({
+      data: { status: 'cooldown', cooldownMinutes: 42 },
+      error: null,
+    });
+    const response = await POST(
+      captureRequest({
+        cafeSlug: 'demo',
+        storageKey: `${ORG_ID}/memories/photo.webp`,
+        idempotencyKey: IDEMPOTENCY_KEY,
+      })
+    );
+    expect(response.status).toBe(429);
+    const json = await response.json();
+    expect(json.code).toBe('visit_cooldown');
+    expect(json.error).toContain('42');
+  });
+
+  it('answers 503 without leaking database details when the transaction fails', async () => {
+    mockRpc.mockResolvedValue({ data: null, error: { code: 'XX000', message: 'internal detail' } });
+    const response = await POST(
+      captureRequest({
+        cafeSlug: 'demo',
+        storageKey: `${ORG_ID}/memories/photo.webp`,
+        idempotencyKey: IDEMPOTENCY_KEY,
+      })
+    );
+    expect(response.status).toBe(503);
+    const json = await response.json();
+    expect(json.code).toBe('capture_unavailable');
+    expect(JSON.stringify(json)).not.toContain('internal detail');
   });
 });
 
@@ -486,7 +349,7 @@ describe('API Route: GET /api/health', () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   it('returns 200 with healthy status when database check succeeds', async () => {

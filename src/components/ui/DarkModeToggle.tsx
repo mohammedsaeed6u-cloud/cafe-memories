@@ -1,38 +1,44 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { Sun, Moon } from 'lucide-react';
 
+const THEME_STORAGE_KEY = 'memories_theme';
+
+const noopSubscribe = () => () => {};
+
+function readInitialTheme(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved) return saved === 'dark';
+  } catch {
+    /* storage may be unavailable (private mode) */
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 export function DarkModeToggle({ className = '' }: { className?: string }) {
-  const [isDark, setIsDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // Hydration-safe "is the client mounted" flag without a setState-in-effect.
+  const isClient = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const [isDark, setIsDark] = useState(readInitialTheme);
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem('memories_theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const shouldBeDark = saved ? saved === 'dark' : prefersDark;
-    setIsDark(shouldBeDark);
-    if (shouldBeDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
+    document.documentElement.classList.toggle('dark', isDark);
+  }, [isDark]);
 
   const toggleTheme = () => {
     const nextDark = !isDark;
     setIsDark(nextDark);
-    if (nextDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('memories_theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('memories_theme', 'light');
+    document.documentElement.classList.toggle('dark', nextDark);
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextDark ? 'dark' : 'light');
+    } catch {
+      /* storage may be unavailable (private mode) */
     }
   };
 
-  if (!mounted) {
+  if (!isClient) {
     return (
       <button
         aria-label="تبديل الوضع الداكن"

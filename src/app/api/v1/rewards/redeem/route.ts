@@ -1,118 +1,110 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { z } from 'zod';
+/**
+ * POST /api/v1/rewards/redeem
+ *
+ * A signed staff tablet (or merchant) consumes the customer's oldest earned
+ * keepsake card. `redeem_customer_reward_service` locks the card, records the
+ * reward event, and marks the card redeemed in one transaction.
+ *
+ * The organization and branch come from the operator session. The client only
+ * names the customer, the active reward rule, and an idempotency key.
+ */
 
-const redeemRewardSchema = z.object({
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { requireOperator, defaultBranchId } from '@/lib/server/context';
+import { contextFailure, jsonError, jsonOk, readJson, writeAuditLog } from '@/lib/server/route-helpers';
+
+export const runtime = 'nodejs';
+
+const schema = z.object({
   customerId: z.string().uuid(),
-  organizationId: z.string().uuid(),
-  branchId: z.string().uuid().optional().nullable(),
   rewardRuleId: z.string().uuid(),
-  idempotencyKey: z.string().min(8).max(128),
+  idempotencyKey: z.string().uuid(),
+  branchId: z.string().uuid().optional(),
 });
 
 export async function POST(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = redeemRewardSchema.safeParse(rawBody);
+  const parsed = schema.safeParse(await readJson(request));
+  if (!parsed.success) return jsonError(400, 'invalid_payload', 'Invalid redemption payload');
 
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
+  const result = await requireOperator(request, { branchId: parsed.data.branchId });
+  if (!result.context) return contextFailure(result.error!);
+  const operator = result.context;
 
-    const { customerId, organizationId, branchId, rewardRuleId, idempotencyKey } = parsed.data;
-    const supabase = createAdminClient();
-
-    // 1. Idempotency Check: Return prior transaction if already processed
-    const { data: existingEvent } = await supabase
-      .from('reward_events')
-      .select('*')
-      .eq('idempotency_key', idempotencyKey)
-      .maybeSingle();
-
-    if (existingEvent) {
-      return NextResponse.json({
-        success: true,
-        replayed: true,
-        rewardEventId: existingEvent.id,
-        redeemedAt: existingEvent.created_at,
-      });
-    }
-
-    // 2. Fetch reward rule
-    const { data: rule, error: ruleError } = await supabase
-      .from('reward_rules')
-      .select('*')
-      .eq('id', rewardRuleId)
-      .eq('organization_id', organizationId)
-      .eq('is_active', true)
-      .single();
-
-    if (ruleError || !rule) {
-      return NextResponse.json({ error: 'Reward rule not found or inactive' }, { status: 404 });
-    }
-
-    // 3. Strict Server-Side Eligibility Verification
-    const { count: verifiedVisits } = await supabase
-      .from('visits')
-      .select('*', { count: 'exact', head: true })
-      .eq('customer_id', customerId)
-      .eq('organization_id', organizationId)
-      .eq('verification_status', 'verified');
-
-    const totalVisits = verifiedVisits || 0;
-
-    // Check past redemptions count for this rule
-    const { count: pastRedemptions } = await supabase
-      .from('reward_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('customer_id', customerId)
-      .eq('organization_id', organizationId)
-      .eq('reference_id', rule.id)
-      .eq('type', 'reward_redeemed');
-
-    const redeemedCount = pastRedemptions || 0;
-    const eligibleRedemptions = Math.floor(totalVisits / (rule.threshold || 5));
-
-    if (redeemedCount >= eligibleRedemptions) {
-      return NextResponse.json(
-        {
-          error: 'العميل لا يمتلك زيارات كافية لصرف هذه المكافأة',
-          requiredVisits: rule.threshold,
-          currentVisits: totalVisits,
-          redeemedCount,
-        },
-        { status: 403 }
-      );
-    }
-
-    // 4. Atomically record redemption event
-    const { data: newEvent, error: insertError } = await supabase
-      .from('reward_events')
-      .insert({
-        customer_id: customerId,
-        organization_id: organizationId,
-        branch_id: branchId || null,
-        type: 'reward_redeemed',
-        value: 1,
-        reference_type: 'reward_rules',
-        reference_id: rule.id,
-        idempotency_key: idempotencyKey,
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      return NextResponse.json({ error: 'Redemption failed', details: insertError.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      rewardEventId: newEvent.id,
-      rewardName: rule.name,
-      rewardValue: rule.reward_value,
-      redeemedAt: newEvent.created_at,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  if (!operator.memberId) {
+    return jsonError(403, 'membership_required', 'A staff membership is required');
   }
+
+  const admin = createAdminClient();
+  const { data: customer } = await admin
+    .from('customers')
+    .select('id,organization_id')
+    .eq('id', parsed.data.customerId)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (!customer || customer.organization_id !== operator.organization.id) {
+    return jsonError(404, 'customer_not_found', 'Customer not found');
+  }
+
+  const branchId = await defaultBranchId(
+    operator.organization.id,
+    parsed.data.branchId ?? operator.branchId
+  );
+  if (!branchId) return jsonError(409, 'branch_required', 'No active branch');
+
+  const { data, error } = await admin.rpc('redeem_customer_reward_service', {
+    p_customer_id: customer.id,
+    p_branch_id: branchId,
+    p_reward_rule_id: parsed.data.rewardRuleId,
+    p_idempotency_key: parsed.data.idempotencyKey,
+    p_staff_member_id: operator.memberId,
+  });
+
+  if (error) {
+    if (error.code === '42501') {
+      return jsonError(403, 'not_authorized', 'Not authorized for this branch');
+    }
+    if (error.code === '23514') {
+      return jsonError(409, 'insufficient_visits', 'العميل لا يمتلك زيارات كافية لصرف هذه المكافأة');
+    }
+    if (error.code === '22023') {
+      return jsonError(409, 'redemption_rejected', 'The reward or idempotency key is not valid');
+    }
+    console.error('redeem_customer_reward_service failed:', error.code ?? 'unknown');
+    return jsonError(503, 'redemption_unavailable', 'Redemption is temporarily unavailable');
+  }
+
+  const payload = (data ?? {}) as {
+    rewardEventId?: string;
+    keepsakeCardId?: string;
+    replayed?: boolean;
+    rewardName?: string;
+    redeemedAt?: string;
+  };
+
+  if (!payload.replayed) {
+    await writeAuditLog({
+      actorId: operator.memberId,
+      organizationId: operator.organization.id,
+      action: 'reward.redeemed',
+      entityType: 'reward_events',
+      entityId: payload.rewardEventId ?? null,
+      metadata: {
+        customerId: customer.id,
+        branchId,
+        keepsakeCardId: payload.keepsakeCardId ?? null,
+        source: operator.source,
+      },
+    });
+  }
+
+  return jsonOk({
+    replayed: Boolean(payload.replayed),
+    rewardEventId: payload.rewardEventId ?? null,
+    keepsakeCardId: payload.keepsakeCardId ?? null,
+    rewardName: payload.rewardName ?? null,
+    redeemedAt: payload.redeemedAt ?? null,
+  });
 }

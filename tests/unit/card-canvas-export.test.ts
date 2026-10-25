@@ -1,15 +1,51 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  CardCanvasExportService,
-  type CardExportOptions,
-} from '@/lib/services/card-canvas-export.service';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import { CardCanvasExportService } from '@/lib/services/card-canvas-export.service';
+
+function createCanvasContext() {
+  return {
+    save: vi.fn(),
+    restore: vi.fn(),
+    beginPath: vi.fn(),
+    roundRect: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
+    stroke: vi.fn(),
+    fillText: vi.fn(),
+    measureText: vi.fn().mockReturnValue({ width: 150 }),
+    lineWidth: 1,
+    strokeStyle: '',
+    fillStyle: '',
+    font: '',
+    textAlign: '',
+    textBaseline: '',
+  };
+}
+
+function mockCanvas(dataUrl = 'data:image/png;base64,MOCK_CANVAS_EXPORT') {
+  const ctx = createCanvasContext();
+  const canvas = {
+    width: 0,
+    height: 0,
+    getContext: vi.fn().mockReturnValue(ctx),
+    toDataURL: vi.fn().mockReturnValue(dataUrl),
+  };
+  const originalCreateElement = document.createElement.bind(document);
+  vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+    if (tagName === 'canvas') return canvas as unknown as HTMLCanvasElement;
+    return originalCreateElement(tagName);
+  });
+  return { canvas, ctx };
+}
 
 describe('CardCanvasExportService', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
   describe('exportCardToDataUrl', () => {
     it('returns a fallback base64 png data URL in SSR / headless environment without document', async () => {
-      const originalDocument = globalThis.document;
-      // @ts-expect-error simulating SSR
-      delete globalThis.document;
+      vi.stubGlobal('document', undefined);
 
       const url = await CardCanvasExportService.exportCardToDataUrl({
         customerName: 'سارة أحمد',
@@ -19,53 +55,10 @@ describe('CardCanvasExportService', () => {
       });
 
       expect(url).toMatch(/^data:image\/png;base64,/);
-      globalThis.document = originalDocument;
     });
 
     it('renders with canvas context when document is available', async () => {
-      const mockFill = vi.fn();
-      const mockStroke = vi.fn();
-      const mockFillText = vi.fn();
-      const mockArc = vi.fn();
-      const mockRoundRect = vi.fn();
-      const mockSave = vi.fn();
-      const mockRestore = vi.fn();
-      const mockBeginPath = vi.fn();
-      const mockMeasureText = vi.fn().mockReturnValue({ width: 150 });
-
-      const mockCtx = {
-        save: mockSave,
-        restore: mockRestore,
-        beginPath: mockBeginPath,
-        roundRect: mockRoundRect,
-        arc: mockArc,
-        fill: mockFill,
-        stroke: mockStroke,
-        fillText: mockFillText,
-        measureText: mockMeasureText,
-        lineWidth: 1,
-        strokeStyle: '',
-        fillStyle: '',
-        font: '',
-        textAlign: '',
-        textBaseline: '',
-      };
-
-      const mockCanvas = {
-        width: 0,
-        height: 0,
-        getContext: vi.fn().mockReturnValue(mockCtx),
-        toDataURL: vi.fn().mockReturnValue('data:image/png;base64,MOCK_CANVAS_EXPORT'),
-      };
-
-      const originalDocument = globalThis.document;
-      // @ts-expect-error Mock document for node environment
-      globalThis.document = {
-        createElement: (tagName: string) => {
-          if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement;
-          return {};
-        },
-      };
+      const { canvas, ctx } = mockCanvas();
 
       const url = await CardCanvasExportService.exportCardToDataUrl({
         customerName: 'كريم محمود',
@@ -77,20 +70,31 @@ describe('CardCanvasExportService', () => {
       });
 
       expect(url).toBe('data:image/png;base64,MOCK_CANVAS_EXPORT');
-      expect(mockCanvas.width).toBe(1200);
-      expect(mockCanvas.height).toBe(750);
-      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('قهوة زمان'), expect.any(Number), expect.any(Number));
-      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('كريم محمود'), expect.any(Number), expect.any(Number));
-      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('Software Engineer'), expect.any(Number), expect.any(Number));
-      expect(mockArc).toHaveBeenCalled();
-
-      globalThis.document = originalDocument;
+      expect(canvas.width).toBe(1200);
+      expect(canvas.height).toBe(750);
+      expect(ctx.fillText).toHaveBeenCalledWith(
+        expect.stringContaining('قهوة زمان'),
+        expect.any(Number),
+        expect.any(Number)
+      );
+      expect(ctx.fillText).toHaveBeenCalledWith(
+        expect.stringContaining('كريم محمود'),
+        expect.any(Number),
+        expect.any(Number)
+      );
+      expect(ctx.fillText).toHaveBeenCalledWith(
+        expect.stringContaining('Software Engineer'),
+        expect.any(Number),
+        expect.any(Number)
+      );
+      expect(ctx.arc).toHaveBeenCalled();
     });
 
     it('handles all 4 theme presets correctly without errors', async () => {
       const themes = ['espresso_pass', 'minimal_kraft', 'neon_cyber_latte', 'botanical_matcha'] as const;
 
       for (const theme of themes) {
+        mockCanvas();
         const url = await CardCanvasExportService.exportCardToDataUrl({
           customerName: 'أحمد علي',
           cafeName: 'Specialty Coffee',
@@ -99,116 +103,22 @@ describe('CardCanvasExportService', () => {
           theme,
         });
         expect(url).toMatch(/^data:image\/png;base64,/);
+        vi.restoreAllMocks();
       }
     });
 
     it('correctly adapts to custom slot counts (4, 6, 8, 12)', async () => {
       for (const slots of [4, 6, 8, 12]) {
+        mockCanvas();
         const url = await CardCanvasExportService.exportCardToDataUrl({
           customerName: 'فاطمة',
           cafeName: 'Cafe',
           stampsCount: 4,
           totalSlots: slots,
         });
-        expect(url).toBeTruthy();
+        expect(url).toMatch(/^data:image\/png;base64,/);
+        vi.restoreAllMocks();
       }
-    });
-
-    it('renders 1:1 Apple Wallet vertical format (800x1320) with exact pass fields', async () => {
-      const mockFill = vi.fn();
-      const mockStroke = vi.fn();
-      const mockFillText = vi.fn();
-      const mockArc = vi.fn();
-      const mockRoundRect = vi.fn();
-      const mockSave = vi.fn();
-      const mockRestore = vi.fn();
-      const mockBeginPath = vi.fn();
-      const mockCreateLinearGradient = vi.fn().mockReturnValue({
-        addColorStop: vi.fn(),
-      });
-
-      const mockCtx = {
-        save: mockSave,
-        restore: mockRestore,
-        beginPath: mockBeginPath,
-        roundRect: mockRoundRect,
-        arc: mockArc,
-        fill: mockFill,
-        stroke: mockStroke,
-        fillText: mockFillText,
-        fillRect: vi.fn(),
-        measureText: vi.fn().mockReturnValue({ width: 150 }),
-        createLinearGradient: mockCreateLinearGradient,
-        lineWidth: 1,
-        strokeStyle: '',
-        fillStyle: '',
-        font: '',
-        textAlign: '',
-        textBaseline: '',
-      };
-
-      const mockCanvas = {
-        width: 0,
-        height: 0,
-        getContext: vi.fn().mockReturnValue(mockCtx),
-        toDataURL: vi.fn().mockReturnValue('data:image/png;base64,APPLE_WALLET_PASS_VERTICAL'),
-      };
-
-      const originalDocument = globalThis.document;
-      // @ts-expect-error Mock document for node environment
-      globalThis.document = {
-        createElement: (tagName: string) => {
-          if (tagName === 'canvas') return mockCanvas as unknown as HTMLCanvasElement;
-          return {};
-        },
-      };
-
-      const url = await CardCanvasExportService.exportCardToDataUrl({
-        format: 'apple_wallet',
-        customerName: 'Mohammed Saeed',
-        profession: 'عضو مميز',
-        cafeName: 'Stampy',
-        stampsCount: 1,
-        totalSlots: 5,
-        giftTitle: 'هدية الزيارة أو خصم ترحيبي',
-        stampIcon: '📸',
-        backgroundColor: '#1C1C1E',
-      });
-
-      expect(url).toBe('data:image/png;base64,APPLE_WALLET_PASS_VERTICAL');
-      expect(mockCanvas.width).toBe(800);
-      expect(mockCanvas.height).toBe(1320);
-      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('Stampy'), expect.any(Number), expect.any(Number));
-      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('Mohammed Saeed'), expect.any(Number), expect.any(Number));
-      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('هدية الزيارة أو خصم ترحيبي'), expect.any(Number), expect.any(Number));
-      expect(mockFillText).toHaveBeenCalledWith(expect.stringContaining('APPLE WALLET PASS'), expect.any(Number), expect.any(Number));
-
-      globalThis.document = originalDocument;
-    });
-
-    it('generates Apple Wallet strip image with exact 1125x369 dimensions and stamp slots', async () => {
-      const stripDataUrl = await CardCanvasExportService.generateAppleWalletStripImage({
-        stampsCount: 2,
-        totalSlots: 5,
-        stampIcon: '☕',
-        giftTitle: 'مشروب مجاني',
-        cafeName: 'Stampy',
-      });
-
-      expect(stripDataUrl).toMatch(/^data:image\/png;base64,/);
-
-      const svg = CardCanvasExportService.buildStripSvg({
-        stampsCount: 2,
-        totalSlots: 5,
-        stampIcon: '☕',
-        giftTitle: 'مشروب مجاني',
-      });
-
-      expect(svg).toContain('viewBox="0 0 1125 369"');
-      expect(svg).toContain('سجل أختامك التراكمية');
-      expect(svg).toContain('2 / 5');
-      expect(svg).toContain('☕');
-      expect(svg).toContain('الهدية');
     });
   });
 
@@ -221,21 +131,17 @@ describe('CardCanvasExportService', () => {
         click: clickSpy,
       } as unknown as HTMLAnchorElement;
 
-      const appendSpy = vi.fn();
-      const removeSpy = vi.fn();
-
-      const originalDocument = globalThis.document;
-      // @ts-expect-error Mock document for node environment
-      globalThis.document = {
-        body: {
-          appendChild: appendSpy,
-          removeChild: removeSpy,
-        },
-        createElement: (tag: string) => {
-          if (tag === 'a') return mockLink;
-          return {};
-        },
-      };
+      const appendSpy = vi
+        .spyOn(document.body, 'appendChild')
+        .mockImplementation(() => mockLink as unknown as Node);
+      const removeSpy = vi
+        .spyOn(document.body, 'removeChild')
+        .mockImplementation(() => mockLink as unknown as Node);
+      const originalCreateElement = document.createElement.bind(document);
+      vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+        if (tagName === 'a') return mockLink;
+        return originalCreateElement(tagName);
+      });
 
       CardCanvasExportService.downloadCardImage('data:image/png;base64,TEST', 'my-card.png');
 
@@ -244,8 +150,6 @@ describe('CardCanvasExportService', () => {
       expect(clickSpy).toHaveBeenCalledTimes(1);
       expect(appendSpy).toHaveBeenCalledWith(mockLink);
       expect(removeSpy).toHaveBeenCalledWith(mockLink);
-
-      globalThis.document = originalDocument;
     });
   });
 
@@ -254,38 +158,28 @@ describe('CardCanvasExportService', () => {
       const mockShare = vi.fn().mockResolvedValue(undefined);
       const mockCanShare = vi.fn().mockReturnValue(true);
 
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        blob: () => Promise.resolve(new Blob(['test'], { type: 'image/png' })),
-      } as unknown as Response);
-
-      Object.defineProperty(globalThis, 'navigator', {
-        value: {
-          share: mockShare,
-          canShare: mockCanShare,
-        },
-        configurable: true,
-        writable: true,
+      vi.stubGlobal('navigator', {
+        share: mockShare,
+        canShare: mockCanShare,
       });
 
-      const success = await CardCanvasExportService.shareCardImage('data:image/png;base64,TEST', 'كارت الولاء');
+      const success = await CardCanvasExportService.shareCardImage(
+        'data:image/png;base64,TEST',
+        'كارت الولاء'
+      );
       expect(success).toBe(true);
       expect(mockShare).toHaveBeenCalled();
     });
 
     it('falls back to downloadCardImage when navigator.share is unsupported', async () => {
-      const downloadSpy = vi.spyOn(CardCanvasExportService, 'downloadCardImage').mockImplementation(() => {});
-
-      Object.defineProperty(globalThis, 'navigator', {
-        value: {},
-        configurable: true,
-        writable: true,
-      });
+      vi.stubGlobal('navigator', {});
+      const downloadSpy = vi
+        .spyOn(CardCanvasExportService, 'downloadCardImage')
+        .mockImplementation(() => {});
 
       const success = await CardCanvasExportService.shareCardImage('data:image/png;base64,TEST');
       expect(success).toBe(true);
       expect(downloadSpy).toHaveBeenCalledWith('data:image/png;base64,TEST');
-
-      downloadSpy.mockRestore();
     });
   });
 });

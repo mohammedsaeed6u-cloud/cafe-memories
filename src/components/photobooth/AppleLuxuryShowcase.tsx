@@ -157,7 +157,6 @@ export function AppleLuxuryShowcase({
                   brandName="stampy."
                   customerName="سارة أحمد"
                   instagramHandle="@memories_studio"
-                  onOpenStaffStamp={() => {}}
                 />
 
                 <div className="mt-6 text-center">

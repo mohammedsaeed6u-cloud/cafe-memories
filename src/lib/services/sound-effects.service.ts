@@ -80,12 +80,22 @@ export class SoundEffectsService {
 
   /**
    * Resets internal mute, volume, and context state (useful for test isolation).
+   * Persisted preferences are cleared too so a previous test cannot leak a
+   * muted flag into the next one through localStorage.
    */
   public static resetState(): void {
     this.audioCtx = null;
     this.muted = false;
     this.volume = 0.8;
     this.initializedFromStorage = false;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(MUTED_STORAGE_KEY);
+        window.localStorage.removeItem(VOLUME_STORAGE_KEY);
+      }
+    } catch {
+      // Storage access restricted or unavailable
+    }
   }
 
   /**

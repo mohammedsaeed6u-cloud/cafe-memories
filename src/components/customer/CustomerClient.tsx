@@ -1,25 +1,20 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { BusinessSettings, PhotoboothFrame, CardColorPalette, PhotoboothCardMode, PlacedSticker } from '@/types/photobooth';
-import { BusinessSettingsService } from '@/lib/services/business-settings.service';
-import { CooldownService } from '@/lib/services/cooldown.service';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  BusinessSettings,
+  PhotoboothFrame,
+  PhotoboothCardMode,
+  PlacedSticker,
+} from '@/types/photobooth';
+import { DEFAULT_BUSINESS_SETTINGS } from '@/lib/constants/photobooth-presets';
 import { PrintService } from '@/lib/services/print.service';
 import { CameraViewfinder } from '@/components/photobooth/CameraViewfinder';
-import { CardColorPicker } from '@/components/photobooth/CardColorPicker';
 import { StripComposerService } from '@/lib/services/strip-composer.service';
-import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
-import { PRESET_COLOR_PALETTES, PHOTOBOOTH_CARD_MODES, PHOTOBOOTH_FRAME_TEMPLATES } from '@/lib/constants/photobooth-presets';
 import { StickerControlTray } from '@/components/photobooth/DraggableStickerLayer';
-import { PasswordInput } from '@/components/ui/PasswordInput';
 import { TicketButton } from '@/components/ui/TicketButton';
-
-// Dedicated Feature Slices
 import { CoBrandingHeader } from '@/features/co-branding/CoBrandingHeader';
 import { CustomerLoyaltyCard } from '@/features/loyalty/CustomerLoyaltyCard';
-import { StaffQuickStampModal } from '@/features/loyalty/StaffQuickStampModal';
-import { LoyaltyPurseService, CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
-import { VoucherService } from '@/lib/services/voucher.service';
 import { PhotoboothResponsiveCard } from '@/features/photobooth/PhotoboothResponsiveCard';
 import { PhotoCaptureOrUpload } from '@/features/photobooth/PhotoCaptureOrUpload';
 import { InstagramMentionPrompt } from '@/features/social/InstagramMentionPrompt';
@@ -27,525 +22,680 @@ import { WallConsentModal } from '@/features/wall-consent/WallConsentModal';
 import { CompletionGiftRewardModal } from '@/features/rewards/CompletionGiftRewardModal';
 import { ImageSaveService } from '@/lib/services/image-save.service';
 import { IosSaveImageModal } from '@/components/photobooth/IosSaveImageModal';
-
 import {
   Sparkles,
   Gift,
   CheckCircle,
   CheckCircle2,
-  ArrowRight,
   ShieldCheck,
-  RotateCcw,
   Clock,
-  Heart,
   X,
   UserCheck,
-  Lock,
   Download,
   Camera,
-  Share2,
   Award,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 
-const createGiftCode = () => `GIFT-${Math.floor(1000 + Math.random() * 9000)}`;
-const createTrackedId = (prefix: string) =>
-  `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+/* -------------------------------------------------------------------------- */
+/* API types                                                                  */
+/* -------------------------------------------------------------------------- */
+
+interface Venue {
+  organization: {
+    id: string;
+    slug: string;
+    name: string;
+    logoUrl: string | null;
+    tagline: string | null;
+    primaryColor: string | null;
+    secondaryColor: string | null;
+    socialLinks: Record<string, unknown>;
+  };
+  branch: { id: string; slug: string; name: string; address: string | null };
+  settings: Record<string, unknown>;
+}
+
+interface CustomerCard {
+  customer: {
+    id: string;
+    displayName: string;
+    phone: string | null;
+    persona: string | null;
+    createdAt: string;
+  };
+  loyalty: {
+    stampedCount: number;
+    maxSlots: number;
+    completedCardsCount: number;
+    totalVerifiedVisits: number;
+    rewardName: string | null;
+    lastStampedAt: string | null;
+  };
+  rewards: Array<{ id: string; name: string; threshold: number; unlockedAt: string }>;
+  stamps: Array<{ memoryId: string; takenAt: string; thumbnailUrl: string }>;
+  vouchers: Array<{
+    code: string;
+    title: string;
+    status: string;
+    expiresAt: string | null;
+    createdAt: string;
+  }>;
+  memories: Array<{
+    id: string;
+    originalUrl: string;
+    thumbnailUrl: string;
+    caption: string | null;
+    status: string;
+    visibility: string;
+    createdAt: string;
+  }>;
+  walletPass: { status: string; shareUrl: string | null } | null;
+}
+
+interface ApiEnvelope<T> {
+  ok?: boolean;
+  code?: string;
+  error?: string;
+  [key: string]: unknown;
+}
+
+async function readApi<T>(response: Response): Promise<ApiEnvelope<T> & T> {
+  const body = (await response.json().catch(() => ({}))) as ApiEnvelope<T> & T;
+  if (!response.ok) {
+    const error = new Error(body.error || 'تعذر إكمال الطلب');
+    (error as Error & { code?: string; status?: number }).code = body.code;
+    (error as Error & { status?: number }).status = response.status;
+    throw error;
+  }
+  return body;
+}
+
+function publicSettingsFromVenue(venue: Venue): BusinessSettings {
+  const raw = venue.settings ?? {};
+  const social = venue.organization.socialLinks ?? {};
+  const instagram = typeof social.instagram === 'string' ? social.instagram : '';
+  const storedFrames = Array.isArray(raw.frames) ? (raw.frames as Partial<PhotoboothFrame>[]) : [];
+  const frames = storedFrames.length
+    ? storedFrames.map((frame, index) => ({
+        ...DEFAULT_BUSINESS_SETTINGS.frames[index % DEFAULT_BUSINESS_SETTINGS.frames.length],
+        ...frame,
+        cornerEmojis: frame.cornerEmojis ?? { topRight: '', bottomLeft: '', enabled: false },
+      })) as PhotoboothFrame[]
+    : DEFAULT_BUSINESS_SETTINGS.frames;
+
+  return {
+    ...DEFAULT_BUSINESS_SETTINGS,
+    cafeSlug: venue.organization.slug,
+    cafeName: venue.organization.name,
+    branding: {
+      name: venue.organization.name,
+      logoUrl: venue.organization.logoUrl ?? undefined,
+      tagline: venue.organization.tagline ?? undefined,
+      instagramHandle: instagram || undefined,
+    },
+    defaultShotCount: typeof raw.shotCount === 'number' ? raw.shotCount : DEFAULT_BUSINESS_SETTINGS.defaultShotCount,
+    defaultOrientation: raw.orientation === 'horizontal' ? 'horizontal' : 'vertical',
+    defaultFrameShape: (raw.frameShape as BusinessSettings['defaultFrameShape']) ?? 'rounded',
+    defaultBorderRadius: typeof raw.borderRadius === 'number' ? raw.borderRadius : 22,
+    defaultDimensionsPreset: typeof raw.dimensionsPreset === 'string' ? raw.dimensionsPreset : 'strip_2x6',
+    defaultCardMode: (raw.cardMode as PhotoboothCardMode) ?? 'luxury_glass',
+    defaultTemplateId: typeof raw.templateId === 'string' ? raw.templateId : undefined,
+    defaultLayoutType: raw.layoutType as BusinessSettings['defaultLayoutType'],
+    defaultWidthCm: typeof raw.widthCm === 'number' ? raw.widthCm : undefined,
+    defaultHeightCm: typeof raw.heightCm === 'number' ? raw.heightCm : undefined,
+    loyaltyMaxVisits: typeof raw.loyaltyMaxVisits === 'number' ? raw.loyaltyMaxVisits : 5,
+    freeGiftOffer: raw.freeGiftOffer as BusinessSettings['freeGiftOffer'],
+    activeFrameId: typeof raw.activeFrameId === 'string' ? raw.activeFrameId : frames[0]?.id ?? '',
+    activeColorPaletteId:
+      typeof raw.activeColorPaletteId === 'string'
+        ? raw.activeColorPaletteId
+        : DEFAULT_BUSINESS_SETTINGS.activeColorPaletteId,
+    allowCustomerColorChoice: raw.allowCustomerColorChoice !== false,
+    allowedColorIds: Array.isArray(raw.allowedColorIds) ? (raw.allowedColorIds as string[]) : [],
+    allowCustomerStickers: raw.allowCustomerStickers !== false,
+    allowCustomerModeChoice: raw.allowCustomerModeChoice === true,
+    allowedModes: Array.isArray(raw.allowedModes)
+      ? (raw.allowedModes as PhotoboothCardMode[])
+      : [],
+    lockFrameForCustomers: raw.lockFrameForCustomers !== false,
+    businessType: (raw.businessType as BusinessSettings['businessType']) ?? 'general',
+    wallSettings: raw.wallSettings as BusinessSettings['wallSettings'],
+    frames,
+  };
+}
+
+async function dataUrlToImageFile(dataUrl: string, baseName: string): Promise<File> {
+  const source = await fetch(dataUrl);
+  const blob = await source.blob();
+  if (blob.type === 'image/webp') {
+    return new File([blob], `${baseName}.webp`, { type: 'image/webp' });
+  }
+
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('تعذر تجهيز الصورة');
+    context.drawImage(bitmap, 0, 0);
+    bitmap.close();
+
+    const webp = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/webp', 0.9)
+    );
+    // Safari's canvas cannot encode WebP and silently returns PNG.
+    if (webp && webp.type === 'image/webp') {
+      return new File([webp], `${baseName}.webp`, { type: 'image/webp' });
+    }
+  } catch {
+    // Fall through to the original bytes; the server accepts PNG and JPEG too.
+  }
+
+  const type = blob.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+  const extension = type === 'image/jpeg' ? 'jpg' : 'png';
+  return new File([blob], `${baseName}.${extension}`, { type });
+}
+
+/* -------------------------------------------------------------------------- */
+/* Component                                                                  */
+/* -------------------------------------------------------------------------- */
 
 export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string }) {
-  // Resolve authoritative cafe slug from query params, pathname, or prop
-  const [cafeSlug, setCafeSlug] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryCafe = urlParams.get('cafe') || urlParams.get('slug');
-      if (queryCafe) return decodeURIComponent(queryCafe);
+  const cafeSlug = propCafeSlug.trim() || 'memories';
 
-      const match = window.location.pathname.match(/\/c\/([^/?#]+)/);
-      if (match && match[1]) {
-        return decodeURIComponent(match[1]);
-      }
-    }
-    return propCafeSlug || 'memories';
-  });
+  const [venue, setVenue] = useState<Venue | null>(null);
+  const [settings, setSettings] = useState<BusinessSettings | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [card, setCard] = useState<CustomerCard | null>(null);
+  const [isSessionLoading, setIsSessionLoading] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryCafe = urlParams.get('cafe') || urlParams.get('slug');
-      if (queryCafe) {
-        const resolved = decodeURIComponent(queryCafe);
-        if (resolved !== cafeSlug) {
-          setCafeSlug(resolved);
-          return;
-        }
-      }
-      const match = window.location.pathname.match(/\/c\/([^/?#]+)/);
-      if (match && match[1]) {
-        const resolved = decodeURIComponent(match[1]);
-        if (resolved !== cafeSlug) {
-          setCafeSlug(resolved);
-        }
-      }
-    }
-  }, [propCafeSlug, cafeSlug]);
-
-  // Business settings state
-  const [settings, setSettings] = useState<BusinessSettings>(() =>
-    BusinessSettingsService.getSettings(cafeSlug)
-  );
-
-  const [selectedPaletteId, setSelectedPaletteId] = useState<string>(() => {
-    return settings.activeColorPaletteId || 'memories-signature';
-  });
-
-  const staffLabel =
-    settings.businessType === 'restaurant'
-      ? 'الكاشير أو طاقم الخدمة'
-      : settings.businessType === 'retail'
-      ? 'الكاشير وفريق المبيعات'
-      : settings.businessType === 'salon'
-      ? 'فريق الاستقبال'
-      : settings.businessType === 'events'
-      ? 'منظم الفعالية'
-      : 'موظف الكاونتر / الخدمة';
-
-  // Frame selection
-  const [selectedFrame, setSelectedFrame] = useState<PhotoboothFrame>(() => {
+  const [selectedFrame] = useState<PhotoboothFrame>(() => {
     const base =
-      settings.frames.find((f) => f.id === settings.activeFrameId) ||
-      settings.frames[0];
+      DEFAULT_BUSINESS_SETTINGS.frames.find((f) => f.id === DEFAULT_BUSINESS_SETTINGS.activeFrameId) ??
+      DEFAULT_BUSINESS_SETTINGS.frames[0];
     return {
       ...base,
-      templateId: settings.defaultTemplateId || base?.templateId || 'korean_noir_2x6',
-      layoutType: settings.defaultLayoutType || base?.layoutType,
-      shotCount: settings.defaultShotCount || base?.shotCount || 3,
-      orientation: settings.defaultOrientation || base?.orientation || 'vertical',
-      frameShape: settings.defaultFrameShape || 'rounded',
-      dimensionsPreset: (settings.defaultDimensionsPreset as any) || 'strip_2x6',
+      templateId: DEFAULT_BUSINESS_SETTINGS.defaultTemplateId,
+      layoutType: DEFAULT_BUSINESS_SETTINGS.defaultLayoutType,
+      shotCount: DEFAULT_BUSINESS_SETTINGS.defaultShotCount,
+      orientation: DEFAULT_BUSINESS_SETTINGS.defaultOrientation,
+      frameShape: DEFAULT_BUSINESS_SETTINGS.defaultFrameShape,
+      dimensionsPreset: 'strip_2x6',
     };
   });
 
-  const [cardMode, setCardMode] = useState<PhotoboothCardMode>(
-    settings.defaultCardMode || 'polaroid_vintage'
-  );
-
-  // Sub-customizer states for viral frames
-  const [spotifyBg, setSpotifyBg] = useState<string>('#384C5A');
-  const [spotifyTrack, setSpotifyTrack] = useState<{ title: string; artist: string }>({
-    title: 'Nobody Gets Me',
-    artist: 'SZA • SOS',
-  });
-  const [ticketSeat, setTicketSeat] = useState<string>('ROW 15 • SEAT A33');
+  const [cardMode, setCardMode] = useState<PhotoboothCardMode>('polaroid_vintage');
+  const [spotifyBg, setSpotifyBg] = useState('#384C5A');
+  const [spotifyTrack, setSpotifyTrack] = useState({ title: 'Nobody Gets Me', artist: 'SZA • SOS' });
+  const [ticketSeat, setTicketSeat] = useState('طاولة 04 • صالة');
   const [activeTab, setActiveTab] = useState<'studio' | 'loyalty'>('studio');
 
-  // Customer session state
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerProfession, setCustomerProfession] = useState('');
+  const [regName, setRegName] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regNotice, setRegNotice] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  // Loyalty purse state
-  const [loyaltyData, setLoyaltyData] = useState<CustomerLoyaltyData>(() =>
-    LoyaltyPurseService.getData(customerPhone, cafeSlug, 5)
-  );
-
-  // Modals & Flows
-  const [isStaffStampModalOpen, setIsStaffStampModalOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
-  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isWallConsentModalOpen, setIsWallConsentModalOpen] = useState(false);
   const [isCompletionRewardOpen, setIsCompletionRewardOpen] = useState(false);
-  const [hasAnsweredWallConsent, setHasAnsweredWallConsent] = useState(false);
   const [iosSaveModalImage, setIosSaveModalImage] = useState<string | null>(null);
+  const [completionTitle, setCompletionTitle] = useState<string>('');
 
-  // Card photos state
   const [accumulatedPhotos, setAccumulatedPhotos] = useState<string[]>([]);
-  const [todayPhoto, setTodayPhoto] = useState<string | null>(null);
-  const [composedStripUrl, setComposedStripUrl] = useState<string | undefined>(undefined);
-  const [giftCode, setGiftCode] = useState('');
-  const [liveWallConsent, setLiveWallConsent] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [stickers, setStickers] = useState<PlacedSticker[]>([]);
   const [isStickerTrayOpen, setIsStickerTrayOpen] = useState(false);
   const [activeCaptureSlot, setActiveCaptureSlot] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pendingConsent, setPendingConsent] = useState(false);
 
-  // Total slots authoritative from merchant
-  const totalCardSlots = Math.max(selectedFrame.shotCount || 3, 1);
-  const loyaltyMaxVisits = settings.loyaltyMaxVisits || 5;
+  const capturedMemoryRef = useRef<{ memoryId: string; storageKey: string } | null>(null);
+  const captureIdempotencyRef = useRef<string>(crypto.randomUUID());
 
-  // Real-time synchronization of stamps across tabs & devices
+  const totalCardSlots = Math.max(settings?.defaultShotCount ?? selectedFrame.shotCount ?? 3, 1);
+  const loyaltyMaxVisits = settings?.loyaltyMaxVisits ?? card?.loyalty.maxSlots ?? 5;
+
+  /* ----------------------------- bootstrap -------------------------------- */
+
   useEffect(() => {
-    const handleSync = () => {
-      if (customerPhone) {
-        const fresh = LoyaltyPurseService.getData(customerPhone, cafeSlug, loyaltyMaxVisits);
-        setLoyaltyData(fresh);
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch(
+          `/api/v1/public/settings?cafeSlug=${encodeURIComponent(cafeSlug)}`,
+          { cache: 'no-store' }
+        );
+        const body = await readApi<{ venue: Venue }>(response);
+        if (cancelled) return;
+        setVenue(body.venue);
+        const mapped = publicSettingsFromVenue(body.venue);
+        setSettings(mapped);
+        setCardMode(mapped.defaultCardMode ?? 'polaroid_vintage');
+
+        const sessionResponse = await fetch(
+          `/api/v1/customer/session?cafeSlug=${encodeURIComponent(cafeSlug)}`,
+          { cache: 'no-store' }
+        );
+        if (sessionResponse.ok) {
+          const session = (await sessionResponse.json()) as CustomerCard & { ok: true };
+          if (!cancelled) {
+            setCard(session);
+            setCustomerName(session.customer.displayName ?? '');
+            setCustomerPhone(session.customer.phone ?? '');
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : 'تعذر تحميل المنشأة');
+        }
       }
-    };
-    window.addEventListener('storage', handleSync);
-    window.addEventListener('stampy-stamp-added', handleSync);
-    const interval = setInterval(handleSync, 2000);
+    })();
     return () => {
-      window.removeEventListener('storage', handleSync);
-      window.removeEventListener('stampy-stamp-added', handleSync);
-      clearInterval(interval);
+      cancelled = true;
     };
-  }, [customerPhone, cafeSlug, loyaltyMaxVisits]);
+  }, [cafeSlug]);
+
+  const refreshCard = useCallback(async () => {
+    const response = await fetch(
+      `/api/v1/customer/session?cafeSlug=${encodeURIComponent(cafeSlug)}`,
+      { cache: 'no-store' }
+    );
+    if (!response.ok) return null;
+    const session = (await response.json()) as CustomerCard & { ok: true };
+    setCard(session);
+    setCustomerName(session.customer.displayName ?? '');
+    setCustomerPhone(session.customer.phone ?? '');
+    return session;
+  }, [cafeSlug]);
+
+  const ensureSession = useCallback(
+    async (profile?: { displayName?: string; phone?: string }) => {
+      if (card) {
+        if (!profile?.displayName && !profile?.phone) return card;
+        setIsSessionLoading(true);
+        try {
+          const response = await fetch('/api/v1/customer/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cafeSlug,
+              displayName: profile.displayName ?? card.customer.displayName,
+              phone: profile.phone ?? card.customer.phone,
+            }),
+          });
+          const body = await readApi<CustomerCard>(response);
+          setCard(body);
+          setCustomerName(body.customer.displayName ?? '');
+          setCustomerPhone(body.customer.phone ?? '');
+          return body;
+        } finally {
+          setIsSessionLoading(false);
+        }
+      }
+
+      setIsSessionLoading(true);
+      try {
+        const response = await fetch('/api/v1/customer/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cafeSlug,
+            displayName: profile?.displayName,
+            phone: profile?.phone,
+          }),
+        });
+        const body = await readApi<CustomerCard>(response);
+        setCard(body);
+        setCustomerName(body.customer.displayName ?? '');
+        setCustomerPhone(body.customer.phone ?? '');
+        return body;
+      } finally {
+        setIsSessionLoading(false);
+      }
+    },
+    [cafeSlug, card]
+  );
+
+  /* ------------------------------ photos ---------------------------------- */
 
   const handleAddSticker = (emoji: string) => {
     if (!emoji.trim()) return;
     const randomOffset = (Math.random() - 0.5) * 20;
-    const newSticker: PlacedSticker = {
-      id: `stk_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      emoji: emoji.trim(),
-      x: Math.max(15, Math.min(85, 50 + randomOffset)),
-      y: Math.max(15, Math.min(85, 40 + randomOffset)),
-      rotation: Math.round((Math.random() - 0.5) * 30),
-      scale: 1,
-    };
-    setStickers((prev) => [...prev, newSticker]);
+    setStickers((prev) => [
+      ...prev,
+      {
+        id: `stk_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        emoji: emoji.trim(),
+        x: Math.max(15, Math.min(85, 50 + randomOffset)),
+        y: Math.max(15, Math.min(85, 40 + randomOffset)),
+        rotation: Math.round((Math.random() - 0.5) * 30),
+        scale: 1,
+      },
+    ]);
   };
 
-  // Customer Onboarding / Registration Form State
-  const [regName, setRegName] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regSuccessNotice, setRegSuccessNotice] = useState<string | null>(null);
-
-  // Hydrate persisted session from storage
-  useEffect(() => {
-    const handleSettingsUpdate = () => {
-      setSettings(BusinessSettingsService.getSettings(cafeSlug));
-    };
-    window.addEventListener('memories-settings-updated', handleSettingsUpdate);
-    return () => window.removeEventListener('memories-settings-updated', handleSettingsUpdate);
-  }, [cafeSlug]);
-
-  useEffect(() => {
-    const hydrateSession = () => {
-      const storedName = localStorage.getItem('memories_customer_name') || '';
-      const storedPhone = localStorage.getItem('memories_customer_phone') || '';
-      const storedRole = localStorage.getItem('memories_customer_role') || '';
-      if (storedName) setCustomerName(storedName);
-      if (storedPhone) setCustomerPhone(storedPhone);
-      if (storedRole) setCustomerProfession(storedRole);
-
-      // Restore loyalty data
-      const loyalty = LoyaltyPurseService.getData(storedPhone, cafeSlug, loyaltyMaxVisits);
-      setLoyaltyData(loyalty);
-
-      // Check wall consent answer
-      const consentAnswered = localStorage.getItem(`memories_wall_consent_${cafeSlug}_${storedPhone || 'guest'}`);
-      if (consentAnswered) {
-        setHasAnsweredWallConsent(true);
-        setLiveWallConsent(consentAnswered === 'true');
-      }
-
-      // Restore saved photos for this customer
-      if (storedPhone) {
-        const clean = storedPhone.trim().replace(/[^0-9]/g, '');
-        const saved = localStorage.getItem(`memories_card_photos_${cafeSlug}_${clean}`);
-        if (saved) {
-          try {
-            const list = JSON.parse(saved);
-            if (Array.isArray(list) && list.length > 0) {
-              setAccumulatedPhotos(list);
-            }
-          } catch {}
-        }
-      }
-    };
-    requestAnimationFrame(hydrateSession);
-  }, [cafeSlug, loyaltyMaxVisits]);
-
-  // Current photos to display: customer's actual captured photos
-  const currentDisplayPhotos = todayPhoto
-    ? [...accumulatedPhotos, todayPhoto]
-    : accumulatedPhotos;
-
-  // Check completion
-  const isCardCompleted = accumulatedPhotos.length >= totalCardSlots || (todayPhoto && accumulatedPhotos.length + 1 >= totalCardSlots);
-
-  // Direct Staff Stamp Handler
-  const handleStaffStampSuccess = () => {
-    const res = LoyaltyPurseService.addDirectStamp(customerPhone, cafeSlug, loyaltyMaxVisits);
-    const updated = LoyaltyPurseService.getData(customerPhone, cafeSlug, loyaltyMaxVisits);
-    setLoyaltyData(updated);
-    if (res.isCardComplete) {
-      const issued = VoucherService.issueVoucher({
-        cafeSlug,
-        customerPhone,
-        customerName: customerName || 'ضيف مميز',
-        giftTitle: settings.freeGiftOffer.title,
-        giftSubtitle: settings.freeGiftOffer.subtitle,
-      });
-      setGiftCode(issued.code);
-      setIsCompletionRewardOpen(true);
-    }
-  };
-
-  // Customer Registration & Check-in Handler
-  const handleRegisterCustomer = (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = regPhone.trim().replace(/[^0-9]/g, '');
-    const name = regName.trim();
-    if (!clean || clean.length < 8 || !name) return;
-
-    CustomerRegistryService.registerCustomer(clean, name, 'vip_guest', cafeSlug);
-    setCustomerPhone(clean);
-    setCustomerName(name);
-    const updatedLoyalty = LoyaltyPurseService.getData(clean, cafeSlug, loyaltyMaxVisits);
-    setLoyaltyData(updatedLoyalty);
-    setRegSuccessNotice(`تم تثبيت كارت الولاء بنجاح للعميل (${name})! يمكنك الآن التقاط صورك وختم زياراتك.`);
-    setTimeout(() => setRegSuccessNotice(null), 4000);
-  };
-
-  const handleClearCustomer = () => {
-    setCustomerPhone('');
-    setCustomerName('');
-    localStorage.removeItem('memories_customer_phone');
-    localStorage.removeItem('memories_customer_name');
-    setLoyaltyData(LoyaltyPurseService.getData('', cafeSlug, loyaltyMaxVisits));
-  };
-
-  // Add or Replace Photo Handler (from camera or file upload)
-  const handleCommitPhoto = (photoBase64: string, targetSlot?: number) => {
-    const slotIdx = targetSlot !== undefined ? targetSlot : (activeCaptureSlot !== null ? activeCaptureSlot : accumulatedPhotos.length);
-    let updated: string[];
-    if (slotIdx < accumulatedPhotos.length) {
-      updated = [...accumulatedPhotos];
-      updated[slotIdx] = photoBase64;
-    } else {
-      updated = [...accumulatedPhotos, photoBase64];
-    }
-    setAccumulatedPhotos(updated);
+  const handleCommitPhoto = (photo: string, targetSlot?: number) => {
+    const slot = targetSlot ?? (activeCaptureSlot ?? accumulatedPhotos.length);
+    setAccumulatedPhotos((previous) => {
+      const next = [...previous];
+      next[slot] = photo;
+      return next.filter(Boolean).slice(0, totalCardSlots);
+    });
     setActiveCaptureSlot(null);
+  };
 
-    const clean = customerPhone.trim().replace(/[^0-9]/g, '') || 'guest';
+  const isCardComplete = accumulatedPhotos.filter(Boolean).length >= totalCardSlots;
+
+  const composeStrip = useCallback(async () => {
+    if (!settings) throw new Error('الإعدادات غير جاهزة');
+    return StripComposerService.composeStrip({
+      photos: accumulatedPhotos,
+      totalSlots: totalCardSlots,
+      frame: {
+        ...selectedFrame,
+        shotCount: totalCardSlots,
+        cardMode,
+        bgColor: cardMode === 'spotify_player' ? spotifyBg : selectedFrame.bgColor,
+        songTitle: spotifyTrack.title,
+        songArtist: spotifyTrack.artist,
+        ticketSeat,
+      },
+      branding: settings.branding,
+      freeGiftOffer: settings.freeGiftOffer,
+      giftCode: '',
+      cardMode,
+      stickers,
+    });
+  }, [
+    accumulatedPhotos,
+    totalCardSlots,
+    selectedFrame,
+    cardMode,
+    spotifyBg,
+    spotifyTrack,
+    ticketSeat,
+    settings,
+    stickers,
+  ]);
+
+  const uploadAndCapture = useCallback(
+    async (liveWallConsent: boolean) => {
+      if (!settings) throw new Error('الإعدادات غير جاهزة');
+      if (capturedMemoryRef.current) return capturedMemoryRef.current;
+
+      setIsSubmitting(true);
+      setSubmitError(null);
+      try {
+        const dataUrl = await composeStrip();
+        const file = await dataUrlToImageFile(dataUrl, `strip-${Date.now()}`);
+
+        const form = new FormData();
+        form.append('file', file);
+        form.append('cafeSlug', cafeSlug);
+        const uploadResponse = await fetch('/api/v1/memories/upload', {
+          method: 'POST',
+          body: form,
+        });
+        const upload = await readApi<{
+          storageKey: string;
+          optimizedKey: string;
+          thumbnailKey: string;
+        }>(uploadResponse);
+
+        const captureResponse = await fetch('/api/v1/photobooth/capture', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cafeSlug,
+            storageKey: upload.storageKey,
+            optimizedUrl: upload.optimizedKey,
+            thumbnailUrl: upload.thumbnailKey,
+            caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name}`,
+            liveWallConsent,
+            socialShareConsent: false,
+            marketingConsent: false,
+            idempotencyKey: captureIdempotencyRef.current,
+          }),
+        });
+        const capture = await readApi<{
+          memory: { id: string } | null;
+          duplicate: boolean;
+          balance: { availableRewards?: number } | null;
+        }>(captureResponse);
+
+        if (!capture.memory?.id) throw new Error('لم يتم حفظ الذكرى');
+        capturedMemoryRef.current = {
+          memoryId: capture.memory.id,
+          storageKey: upload.storageKey,
+        };
+
+        const updated = await refreshCard();
+        const unlocked = updated?.rewards ?? [];
+        setCompletionTitle(
+          unlocked[0]?.name ||
+            updated?.loyalty.rewardName ||
+            settings.freeGiftOffer?.title ||
+            'هدية ترحيبية'
+        );
+        return capturedMemoryRef.current;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [cafeSlug, composeStrip, customerName, refreshCard, settings]
+  );
+
+  const requestPrint = useCallback(async (memoryId: string) => {
+    const response = await fetch('/api/v1/customer/print-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memoryId }),
+    });
+    if (!response.ok && response.status !== 409) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(body.error || 'تعذر إرسال طلب الطباعة');
+    }
+  }, []);
+
+  const handleDownloadStrip = useCallback(async () => {
     try {
-      localStorage.setItem(`memories_card_photos_${cafeSlug}_${clean}`, JSON.stringify(updated));
-      CustomerRegistryService.registerCustomer(clean, customerName || 'ضيف مميز', 'vip_guest', cafeSlug);
-    } catch {}
-
-    // Check if card just completed!
-    if (updated.length >= totalCardSlots) {
-      const issued = VoucherService.issueVoucher({
-        cafeSlug,
-        customerPhone: clean,
-        customerName: customerName || 'ضيف مميز',
-        giftTitle: settings.freeGiftOffer.title,
-        giftSubtitle: settings.freeGiftOffer.subtitle,
+      const dataUrl = await composeStrip();
+      const saveResult = await ImageSaveService.saveImage({
+        dataUrl,
+        filename: `${settings?.branding.name ?? 'stampy'}-photostrip-${Date.now()}.png`,
+        title: `شريط صور ${customerName || settings?.branding.name || ''}`,
       });
-      setGiftCode(issued.code);
+      if (saveResult.method === 'fallback') {
+        setIosSaveModalImage(saveResult.blobUrl || dataUrl);
+      }
+    } catch {
+      PrintService.printElement('printable-strip');
+    }
+  }, [composeStrip, customerName, settings]);
 
-      // Trigger 1-time TV Wall Consent if not answered yet
-      if (!hasAnsweredWallConsent) {
+  const handlePrintOrDownload = useCallback(async () => {
+    try {
+      const saved = capturedMemoryRef.current ?? (await uploadAndCapture(false));
+      await requestPrint(saved.memoryId);
+      await handleDownloadStrip();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'تعذر تجهيز الصورة');
+    }
+  }, [handleDownloadStrip, requestPrint, uploadAndCapture]);
+
+  const handleWallConsent = async (consent: boolean) => {
+    setPendingConsent(consent);
+    setIsWallConsentModalOpen(false);
+    try {
+      const saved = await uploadAndCapture(consent);
+      if (saved) setIsCompletionRewardOpen(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'تعذر حفظ الذكرى');
+    }
+  };
+
+  const handleCompleteCard = async () => {
+    try {
+      await ensureSession();
+      if (!capturedMemoryRef.current) {
         setIsWallConsentModalOpen(true);
       } else {
         setIsCompletionRewardOpen(true);
       }
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'تعذر بدء الجلسة');
     }
   };
 
-  // Handle Wall Consent Answer
-  const handleWallConsent = (consent: boolean) => {
-    setLiveWallConsent(consent);
-    setHasAnsweredWallConsent(true);
-    const clean = customerPhone.trim().replace(/[^0-9]/g, '') || 'guest';
-    localStorage.setItem(`memories_wall_consent_${cafeSlug}_${clean}`, consent ? 'true' : 'false');
-    setIsWallConsentModalOpen(false);
+  /* --------------------------- registration ------------------------------- */
 
-    // If consent given, broadcast to wall feed and notify connected TV screens
-    if (consent) {
-      try {
-        const wallItem = {
-          id: createTrackedId('wall'),
-          customerName: customerName || 'ضيف مميز',
-          photoUrl: accumulatedPhotos[0] || '',
-          caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'stampy.'} ✨🏛️`,
-          timeFormatted: 'الآن',
-          visitNumber: loyaltyData.stampedCount || 1,
-          createdAt: new Date().toISOString(),
-          visibility: 'live_wall',
-          status: 'approved',
-        };
-        const existingFeed = JSON.parse(localStorage.getItem(`memories_wall_feed_${cafeSlug}`) || '[]');
-        const newFeed = [wallItem, ...existingFeed].slice(0, 20);
-        localStorage.setItem(`memories_wall_feed_${cafeSlug}`, JSON.stringify(newFeed));
-        localStorage.setItem('memories_wall_cache_screen-1', JSON.stringify(newFeed));
-        window.dispatchEvent(new CustomEvent('memories-wall-updated', { detail: newFeed }));
-
-        // Sync live memory directly to server database
-        try {
-          fetch('/api/v1/memories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              originalUrl: accumulatedPhotos[0] || '',
-              caption: `ذكريات ${customerName || 'ضيف مميز'} في ${settings.branding.name || 'stampy.'} ✨`,
-              venueSlug: cafeSlug,
-              customerPhone: clean,
-              status: 'approved',
-              consents: {
-                saveConsent: true,
-                liveWallConsent: true,
-                socialShareConsent: true,
-                marketingConsent: false,
-              },
-            }),
-          }).catch(() => {});
-        } catch {}
-
-        try {
-          const channel = new BroadcastChannel('memories_screens_channel');
-          channel.postMessage({ type: 'WALL_NEW_PHOTO', item: wallItem, feed: newFeed });
-          channel.close();
-        } catch {}
-      } catch {}
+  const handleRegister = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setFormError(null);
+    const name = regName.trim();
+    const phone = regPhone.trim();
+    if (name.length < 2) {
+      setFormError('اكتب اسمك الكريم');
+      return;
     }
-
-    // Now open completion gift reward modal
-    setIsCompletionRewardOpen(true);
-  };
-
-  // Direct 300 DPI Print or Download
-  const handlePrintOrDownload = async () => {
+    if (phone.replace(/\D/g, '').length < 8) {
+      setFormError('اكتب رقم جوال صحيح');
+      return;
+    }
     try {
-      const highRes = await StripComposerService.composeStrip({
-        photos: currentDisplayPhotos,
-        totalSlots: totalCardSlots,
-        frame: {
-          ...selectedFrame,
-          shotCount: totalCardSlots,
-          cardMode,
-          bgColor: cardMode === 'spotify_player' ? spotifyBg : selectedFrame.bgColor,
-          songTitle: spotifyTrack.title,
-          songArtist: spotifyTrack.artist,
-          ticketSeat,
-        },
-        branding: settings.branding,
-        freeGiftOffer: settings.freeGiftOffer,
-        giftCode: giftCode || 'GIFT-2026',
-        cardMode,
-        stickers,
-      });
-
-      // Queue in isolated merchant print station
-      try {
-        const queueKey = `memories_print_queue_${cafeSlug}`;
-        const existingQueue = JSON.parse(localStorage.getItem(queueKey) || '[]');
-        const newPrintJob = {
-          id: createTrackedId('print'),
-          name: customerName || 'عميل مميز',
-          phone: customerPhone || 'guest',
-          role: 'loyal_customer',
-          totalVisits: loyaltyData.stampedCount,
-          lastVisit: new Date().toISOString(),
-          photoStripUrl: highRes,
-          format: ((selectedFrame.dimensionsPreset as string) === 'grid_4x6' || (selectedFrame.dimensionsPreset as string) === 'postcard_4x6') ? 'postcard-4x6' : 'standard-2x6',
-          createdAt: new Date().toISOString(),
-        };
-        localStorage.setItem(queueKey, JSON.stringify([newPrintJob, ...existingQueue].slice(0, 30)));
-        window.dispatchEvent(new CustomEvent('memories-print-queue-updated'));
-
-        // Dispatch to real-time server print queue for staff terminal
-        try {
-          fetch('/api/v1/print/jobs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...newPrintJob,
-              venueSlug: cafeSlug,
-            }),
-          }).catch(() => {});
-        } catch {}
-
-        try {
-          const printChannel = new BroadcastChannel('memories_print_channel');
-          printChannel.postMessage({ type: 'NEW_PRINT_JOB', job: newPrintJob, cafeSlug });
-          printChannel.close();
-        } catch {}
-      } catch {}
-
-      // Cross-platform & Safari-compliant Image Save / Share
-      const saveResult = await ImageSaveService.saveImage({
-        dataUrl: highRes,
-        filename: `${settings.branding.name}-photostrip-${Date.now()}.png`,
-        title: `شريط صور ${customerName || settings.branding.name}`,
-      });
-
-      if (saveResult.method === 'fallback') {
-        // Open iOS Save Modal for iPhone / Safari
-        setIosSaveModalImage(saveResult.blobUrl || highRes);
-      }
-    } catch {
-      window.print();
+      await ensureSession({ displayName: name, phone });
+      setRegNotice('تم حفظ بطاقتك وأختامك على هذا الجهاز.');
+      setTimeout(() => setRegNotice(null), 4000);
+    } catch (error) {
+      const code = (error as Error & { code?: string }).code;
+      setFormError(
+        code === 'phone_in_use'
+          ? 'هذا الرقم مرتبط ببطاقة أخرى. استخدم بطاقة المحفظة أو اطلب من الموظف.'
+          : error instanceof Error
+            ? error.message
+            : 'تعذر حفظ البطاقة'
+      );
     }
   };
+
+  const handleSwitchAccount = async () => {
+    await fetch('/api/v1/customer/session', { method: 'DELETE' });
+    setCard(null);
+    setCustomerName('');
+    setCustomerPhone('');
+    setAccumulatedPhotos([]);
+    setStickers([]);
+    capturedMemoryRef.current = null;
+    captureIdempotencyRef.current = crypto.randomUUID();
+  };
+
+  const loyaltyData = useMemo(
+    () => ({
+      customerPhone: card?.customer.phone ?? customerPhone,
+      cafeSlug,
+      stampedCount: card?.loyalty.stampedCount ?? 0,
+      maxSlots: card?.loyalty.maxSlots ?? loyaltyMaxVisits,
+      lastStampedAt: card?.loyalty.lastStampedAt ?? undefined,
+      completedCardsCount: card?.loyalty.completedCardsCount ?? 0,
+    }),
+    [card, cafeSlug, customerPhone, loyaltyMaxVisits]
+  );
+
+  /* -------------------------------- render -------------------------------- */
+
+  if (!settings) {
+    return (
+      <div className="min-h-screen bg-[#12100E] text-white flex items-center justify-center p-6">
+        {loadError ? (
+          <div className="max-w-sm text-center space-y-3">
+            <AlertCircle className="w-10 h-10 text-rose-400 mx-auto" />
+            <h1 className="text-lg font-bold">المنشأة غير متاحة</h1>
+            <p className="text-sm text-stone-400">{loadError}</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-[#DFAB56]" />
+            <span className="text-xs text-stone-400">جاري تحميل الاستوديو...</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const currentDisplayPhotos = accumulatedPhotos;
 
   return (
     <div className="w-full min-h-screen bg-transparent text-white flex flex-col items-center selection:bg-[#DFAB56] selection:text-[#12100E] pb-16 apple-font">
-      {/* 1. CO-BRANDING HEADER: memories × Business */}
       <div className="w-full pt-3 px-3 sm:px-4">
         <CoBrandingHeader branding={settings.branding} />
       </div>
 
       <main className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-3 flex flex-col items-center space-y-4">
-        {/* Registration Success Toast */}
-        {regSuccessNotice && (
-          <div className="w-full p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200 shadow-lg backdrop-blur-md">
+        {regNotice && (
+          <div className="w-full p-3.5 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 text-xs font-bold flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{regSuccessNotice}</span>
+            <span>{regNotice}</span>
+          </div>
+        )}
+        {submitError && (
+          <div className="w-full p-3.5 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs font-bold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>{submitError}</span>
           </div>
         )}
 
-        {/* TOP LEVEL SEGMENTED NAVIGATION: Clear separation between Photobooth Studio and Loyalty Pass */}
-        <div className="w-full grid grid-cols-2 p-1.5 bg-white rounded-xl border border-[#EADDC4] shadow-2xl backdrop-blur-xl">
+        <div className="w-full grid grid-cols-2 p-1.5 bg-white rounded-xl border border-[#EADDC4] shadow-2xl">
           <button
             type="button"
             onClick={() => setActiveTab('studio')}
-            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
               activeTab === 'studio'
-                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] font-black'
-                : 'text-[#3D2314]/70 hover:text-[#FAF5EB] hover:bg-white/[0.04]'
+                ? 'bg-[#DFAB56] text-[#12100E] font-black'
+                : 'text-[#3D2314]/70'
             }`}
           >
-            <Camera className="w-4 h-4 text-[#FAF5EB]" />
+            <Camera className="w-4 h-4" />
             <span>استوديو الصور ({totalCardSlots} لقطات)</span>
           </button>
-
           <button
             type="button"
             onClick={() => setActiveTab('loyalty')}
-            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
               activeTab === 'loyalty'
-                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_20px_-4px_rgba(221,2,0,0.5)] font-black'
-                : 'text-[#3D2314]/70 hover:text-[#FAF5EB] hover:bg-white/[0.04]'
+                ? 'bg-[#DFAB56] text-[#12100E] font-black'
+                : 'text-[#3D2314]/70'
             }`}
           >
-            <Award className="w-4 h-4 text-[#FAF5EB]" />
-            <span>كارت الولاء ({loyaltyData.stampedCount}/{loyaltyMaxVisits})</span>
+            <Award className="w-4 h-4" />
+            <span>
+              كارت الولاء ({loyaltyData.stampedCount}/{loyaltyMaxVisits})
+            </span>
           </button>
         </div>
 
-        {/* VIEW 1: PHOTOBOOTH STUDIO (Focused 100% on capturing & customizing the strip) */}
         {activeTab === 'studio' && (
-          <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in duration-200">
-            {/* Header Strip: Title and slots badge */}
+          <div className="w-full flex flex-col items-center space-y-4">
             <div className="w-full flex items-center justify-between px-1 pt-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-bold text-white">
-                  شريط الذكريات
-                </h2>
+                <h2 className="text-sm sm:text-base font-bold text-white">شريط الذكريات</h2>
                 <span className="text-[10px] font-mono text-[#D9D9D9] bg-white/10 border border-white/15 px-2.5 py-0.5 rounded-full font-bold">
-                  {totalCardSlots} لقطات • {selectedFrame.widthCm === 10 ? 'بوستكارد 4×6' : 'شريط 2×6'}
+                  {totalCardSlots} لقطات
                 </span>
               </div>
-
               <div className="flex items-center gap-1.5 text-xs text-[#D9D9D9]/80 font-bold">
                 <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
-                <span>{accumulatedPhotos.length} من {totalCardSlots} لقطات موثقة</span>
+                <span>
+                  {accumulatedPhotos.filter(Boolean).length} من {totalCardSlots}
+                </span>
               </div>
             </div>
 
-            {/* Hero Photobooth Card */}
-            <div className="w-full flex justify-center py-1 animate-in zoom-in-95 duration-200">
+            <div className="w-full flex justify-center py-1">
               <PhotoboothResponsiveCard
                 photos={currentDisplayPhotos}
                 frame={{
@@ -562,26 +712,38 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                 cardMode={cardMode}
                 stickers={stickers}
                 onUpdateStickers={setStickers}
-                isStickersInteractive={true}
+                isStickersInteractive
                 onSlotClick={(slotIdx) => {
                   setActiveCaptureSlot(slotIdx);
                   setIsCameraModalOpen(true);
                 }}
-                dimensionPreset={selectedFrame.dimensionsPreset || (selectedFrame.widthCm === 10 ? 'grid_4x6' : 'strip_2x6')}
+                dimensionPreset={
+                  selectedFrame.dimensionsPreset ||
+                  (selectedFrame.widthCm === 10 ? 'grid_4x6' : 'strip_2x6')
+                }
               />
             </div>
 
-            {/* Action: Take Photo Or Upload */}
             <PhotoCaptureOrUpload
-              canShoot={true}
-              onOpenLiveCamera={() => {
-                setActiveCaptureSlot(accumulatedPhotos.length < totalCardSlots ? accumulatedPhotos.length : 0);
-                setIsCameraModalOpen(true);
+              canShoot={!isSubmitting}
+              onOpenLiveCamera={async () => {
+                try {
+                  await ensureSession();
+                  setActiveCaptureSlot(
+                    accumulatedPhotos.filter(Boolean).length < totalCardSlots
+                      ? accumulatedPhotos.filter(Boolean).length
+                      : 0
+                  );
+                  setIsCameraModalOpen(true);
+                } catch (error) {
+                  setSubmitError(error instanceof Error ? error.message : 'تعذر بدء الجلسة');
+                }
               }}
-              onUploadPhoto={(b64) => handleCommitPhoto(b64)}
+              onUploadPhoto={(photo) => {
+                void ensureSession().then(() => handleCommitPhoto(photo));
+              }}
             />
 
-            {/* Viral Theme Pills Selector */}
             <div className="w-full space-y-2 pt-1">
               <div className="flex items-center justify-between px-1">
                 <span className="text-[11px] font-bold text-[#D9D9D9]/80">طابع وإطار الكارت:</span>
@@ -589,7 +751,7 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
               </div>
               <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none touch-pan-x">
                 {[
-                  { id: 'luxury_glass', label: 'جلاسي فاخر (Luxury Glass)', icon: '💎' },
+                  { id: 'luxury_glass', label: 'جلاسي فاخر', icon: '💎' },
                   { id: 'polaroid_vintage', label: 'بولارويد كلاسيك', icon: '🎞️' },
                   { id: 'korean_noir', label: 'نوار كوري عاجي', icon: '🏛️' },
                   { id: 'ticket_express', label: 'تذكرة الزيارة', icon: '🎟️' },
@@ -598,16 +760,21 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                   { id: 'ios_gallery_light', label: 'ألبوم آيفون', icon: '🖼️' },
                   { id: 'ios_imessage', label: 'آي مسج', icon: '💬' },
                 ].map((mode) => {
+                  const isAllowed =
+                    !settings.lockFrameForCustomers ||
+                    settings.allowCustomerModeChoice ||
+                    settings.allowedModes?.includes(mode.id as PhotoboothCardMode);
                   const isActive = cardMode === mode.id;
                   return (
                     <button
                       key={mode.id}
                       type="button"
+                      disabled={!isAllowed}
                       onClick={() => setCardMode(mode.id as PhotoboothCardMode)}
-                      className={`px-3 py-2 rounded-lg border text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+                      className={`px-3 py-2 rounded-lg border text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 disabled:opacity-40 ${
                         isActive
-                          ? 'bg-[#DFAB56] text-[#12100E] border-[#DFAB56] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_6px_16px_-4px_rgba(221,2,0,0.5)] font-black'
-                          : 'bg-[#1C1B1B]/70 hover:bg-[#211F1F] text-[#3D2314]/70 hover:text-[#FAF5EB] border-[#EADDC4]'
+                          ? 'bg-[#DFAB56] text-[#12100E] border-[#DFAB56] font-black'
+                          : 'bg-[#1C1B1B]/70 text-[#D9D9D9] border-[#EADDC4]'
                       }`}
                     >
                       <span className="text-sm">{mode.icon}</span>
@@ -617,171 +784,171 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
                 })}
               </div>
 
-              {/* Sub-customizer for Spotify */}
               {cardMode === 'spotify_player' && (
                 <div className="p-4 bg-white border border-[#EADDC4] rounded-2xl space-y-3 text-xs shadow-2xl">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[11px] font-bold text-[#3D2314]">لون الخلفية:</span>
                     {[
-                      { id: '#384C5A', name: 'Slate Blue', hex: '#384C5A' },
-                      { id: '#4E483E', name: 'Warm Taupe', hex: '#4E483E' },
-                      { id: '#161618', name: 'OLED Charcoal', hex: '#161618' },
-                      { id: '#8B3A2B', name: 'Terracotta', hex: '#8B3A2B' },
-                    ].map((c) => (
+                      { id: '#384C5A', name: 'Slate Blue' },
+                      { id: '#4E483E', name: 'Warm Taupe' },
+                      { id: '#161618', name: 'OLED Charcoal' },
+                      { id: '#8B3A2B', name: 'Terracotta' },
+                    ].map((color) => (
                       <button
-                        key={c.id}
+                        key={color.id}
                         type="button"
-                        onClick={() => setSpotifyBg(c.hex)}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold transition cursor-pointer ${
-                          spotifyBg === c.hex ? 'border-[#DFAB56] ring-1 ring-[#DFAB56]/40 text-[#FAF5EB] bg-[#3D2314]/30' : 'border-[#EADDC4] text-[#3D2314]/70 bg-[#1C1B1B]'
+                        onClick={() => setSpotifyBg(color.id)}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold ${
+                          spotifyBg === color.id
+                            ? 'border-[#DFAB56] ring-1 ring-[#DFAB56]/40'
+                            : 'border-[#EADDC4]'
                         }`}
                       >
-                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c.hex }} />
-                        <span>{c.name}</span>
+                        <span
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: color.id }}
+                        />
+                        <span>{color.name}</span>
                       </button>
                     ))}
                   </div>
-
-                  <div className="space-y-2 pt-2 border-t border-[#EADDC4]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-[#3D2314]">الأغنية المفضلة للكارت:</span>
-                      <span className="text-[10px] text-[#DFAB56] font-mono font-bold">SPOTIFY DOCK</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {[
-                        { title: 'Morning Resonance', artist: 'Atelier Beats' },
-                        { title: 'Nobody Gets Me', artist: 'SZA • SOS' },
-                        { title: 'صباح ومساء', artist: 'فيروز' },
-                        { title: 'Golden Hour', artist: 'JVKE' },
-                        { title: 'نسم علينا الهوى', artist: 'فيروز' },
-                      ].map((preset) => (
-                        <button
-                          key={preset.title}
-                          type="button"
-                          onClick={() => setSpotifyTrack(preset)}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
-                            spotifyTrack.title === preset.title
-                              ? 'bg-[#3D2314]/60 text-[#FAF5EB] border-[#DFAB56]/50 font-black'
-                              : 'bg-[#1C1B1B] border-[#EADDC4] text-[#3D2314]/70 hover:text-[#FAF5EB]'
-                          }`}
-                        >
-                          🎵 {preset.title}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
-                      <input
-                        type="text"
-                        value={spotifyTrack.title}
-                        onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, title: e.target.value }))}
-                        placeholder="اسم الأغنية..."
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-[#FAF5EB] focus:bg-white focus:outline-none focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 font-bold placeholder-[#A19E9B]/50"
-                      />
-                      <input
-                        type="text"
-                        value={spotifyTrack.artist}
-                        onChange={(e) => setSpotifyTrack((prev) => ({ ...prev, artist: e.target.value }))}
-                        placeholder="اسم الفنان / الألبوم..."
-                        className="w-full px-3 py-2 text-xs rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-[#FAF5EB] focus:bg-white focus:outline-none focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 font-bold placeholder-[#A19E9B]/50"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={spotifyTrack.title}
+                      onChange={(event) =>
+                        setSpotifyTrack((previous) => ({ ...previous, title: event.target.value }))
+                      }
+                      placeholder="اسم الأغنية..."
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-[#3D2314]"
+                    />
+                    <input
+                      type="text"
+                      value={spotifyTrack.artist}
+                      onChange={(event) =>
+                        setSpotifyTrack((previous) => ({ ...previous, artist: event.target.value }))
+                      }
+                      placeholder="اسم الفنان..."
+                      className="w-full px-3 py-2 text-xs rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-[#3D2314]"
+                    />
                   </div>
                 </div>
               )}
 
-              {/* Sub-customizer for Location / Seat */}
               {cardMode === 'ticket_express' && (
                 <div className="p-4 bg-white border border-[#EADDC4] rounded-2xl space-y-2 text-xs shadow-2xl">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-[#3D2314]">موقع الجلسة أو الركن:</span>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {['طاولة 04 • صالة', 'جلسة VIP', 'ركن الاستقبال', 'الفرع الرئيسي'].map((seat) => (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {['طاولة 04 • صالة', 'جلسة VIP', 'ركن الاستقبال', 'الفرع الرئيسي'].map(
+                      (seat) => (
                         <button
                           key={seat}
                           type="button"
                           onClick={() => setTicketSeat(seat)}
-                          className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
+                          className={`px-2 py-1 rounded-lg text-[10px] font-mono font-bold border ${
                             ticketSeat === seat
-                              ? 'bg-[#3D2314]/60 text-[#FAF5EB] border-[#DFAB56]/50 font-black'
-                              : 'bg-[#1C1B1B] border-[#EADDC4] text-[#3D2314]/70 hover:text-[#FAF5EB]'
+                              ? 'bg-[#3D2314]/60 text-[#FAF5EB] border-[#DFAB56]/50'
+                              : 'bg-[#1C1B1B] border-[#EADDC4] text-[#D9D9D9]'
                           }`}
                         >
                           {seat}
                         </button>
-                      ))}
-                    </div>
+                      )
+                    )}
                   </div>
                   <input
                     type="text"
                     value={ticketSeat}
-                    onChange={(e) => setTicketSeat(e.target.value)}
-                    placeholder="رقم الطاولة أو الموقع (مثال: طاولة VIP 12 أو الركن 03)..."
-                    className="w-full px-3 py-2 text-xs rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-[#FAF5EB] focus:bg-white focus:outline-none focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 font-bold placeholder-[#A19E9B]/50"
+                    onChange={(event) => setTicketSeat(event.target.value)}
+                    placeholder="رقم الطاولة أو الموقع..."
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-[#3D2314]"
                   />
                 </div>
               )}
             </div>
 
-            {/* Stickers & Doodles Decoration Tray */}
             <div className="w-full space-y-2">
               <button
                 type="button"
                 onClick={() => setIsStickerTrayOpen(!isStickerTrayOpen)}
-                className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#1C1B1B] border border-[#EADDC4] text-[#FAF5EB] font-bold text-xs shadow-xl transition flex items-center justify-between cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#1C1B1B] border border-[#EADDC4] text-[#3D2314] font-bold text-xs shadow-xl transition flex items-center justify-between"
               >
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-[#DFAB56]" />
-                  <span>تزيين الكارت بالملصقات والإيموجي (Stickers &amp; Doodles)</span>
+                  <span>تزيين الكارت بالملصقات والإيموجي</span>
                 </div>
-                <span className="text-[10px] font-mono text-[#FAF5EB] bg-[#3D2314]/60 px-2.5 py-0.5 rounded-md border border-[#DFAB56]/40 font-bold uppercase tracking-wider">
-                  {stickers.length > 0 ? `${stickers.length} ملصق بالكارت` : 'إضافة ملصقات +'}
+                <span className="text-[10px] font-mono bg-[#3D2314]/60 px-2.5 py-0.5 rounded-md border border-[#DFAB56]/40 text-[#FAF5EB] font-bold">
+                  {stickers.length > 0 ? `${stickers.length} ملصق` : 'إضافة +'}
                 </span>
               </button>
-
               {isStickerTrayOpen && (
-                <div className="animate-in fade-in duration-200">
-                  <StickerControlTray
-                    onAddSticker={handleAddSticker}
-                    onClearAll={() => setStickers([])}
-                    stickersCount={stickers.length}
-                  />
-                </div>
+                <StickerControlTray
+                  onAddSticker={handleAddSticker}
+                  onClearAll={() => setStickers([])}
+                  stickersCount={stickers.length}
+                />
               )}
             </div>
 
-            {/* High Res Download Direct Action */}
-            <button
-              type="button"
-              onClick={handlePrintOrDownload}
-              className="w-full max-w-md py-3 px-4 rounded-lg bg-white hover:bg-[#1C1B1B] border border-[#EADDC4] hover:border-[#DFAB56]/30 text-[#FAF5EB] font-bold text-xs shadow-xl transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-            >
-              <Download className="w-4 h-4 text-[#DFAB56]" />
-              <span>تحميل شريط الذكريات عالي الدقة (300 DPI)</span>
-            </button>
+            {isCardComplete ? (
+              <button
+                type="button"
+                onClick={handleCompleteCard}
+                disabled={isSubmitting || isSessionLoading}
+                className="w-full max-w-md py-3 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="w-4 h-4" />
+                )}
+                <span>{isSubmitting ? 'جاري حفظ الذكرى...' : 'إتمام الذكرى واستلام المكافأة'}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleDownloadStrip}
+                className="w-full max-w-md py-3 px-4 rounded-lg bg-white hover:bg-[#1C1B1B] border border-[#EADDC4] text-[#3D2314] font-bold text-xs shadow-xl transition flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4 text-[#DFAB56]" />
+                <span>تحميل شريط الذكريات عالي الدقة</span>
+              </button>
+            )}
 
-            {/* Instagram Mention Prompt */}
+            {isCardComplete && (
+              <button
+                type="button"
+                onClick={handlePrintOrDownload}
+                disabled={isSubmitting}
+                className="w-full max-w-md py-3 px-4 rounded-lg bg-white hover:bg-[#1C1B1B] border border-[#EADDC4] text-[#3D2314] font-bold text-xs shadow-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Download className="w-4 h-4 text-[#DFAB56]" />
+                <span>طلب الطباعة + تحميل الصورة</span>
+              </button>
+            )}
+
             <InstagramMentionPrompt
-              instagramHandle={settings.branding.instagramHandle || '@stampy.app'}
+              instagramHandle={settings.branding.instagramHandle || ''}
               businessName={settings.branding.name}
             />
 
-            {/* Contextual Link to Loyalty */}
             <div className="w-full p-4 rounded-2xl bg-white border border-[#EADDC4] flex items-center justify-between gap-3 text-right shadow-2xl mt-2">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center shrink-0 font-bold shadow-xs">
+                <div className="w-9 h-9 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center shrink-0">
                   <Award className="w-5 h-5 text-[#DFAB56]" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-[#FAF5EB]">هل أنت من رواد {settings.branding.name}؟</p>
-                  <p className="text-[11px] text-[#3D2314]/70">اجمع أختام زياراتك واستلم هديتك المجانية في كارت ولاء هاتفك</p>
+                  <p className="text-xs font-black text-[#3D2314]">
+                    هل أنت من رواد {settings.branding.name}؟
+                  </p>
+                  <p className="text-[11px] text-[#3D2314]/70">
+                    اجمع أختام زياراتك واستلم هديتك المجانية
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveTab('loyalty')}
-                className="px-3.5 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shrink-0 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] cursor-pointer"
+                className="px-3.5 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shrink-0"
               >
                 عرض كارت الولاء
               </button>
@@ -789,125 +956,197 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
           </div>
         )}
 
-        {/* VIEW 2: LOYALTY PASS & WALLET (Focused 100% on Visits, Stamps, Wallet Passes, and Free Gifts) */}
         {activeTab === 'loyalty' && (
-          <div className="w-full flex flex-col items-center space-y-4 animate-in fade-in duration-200">
-            {/* Header: Title and Visits Status */}
+          <div className="w-full flex flex-col items-center space-y-4">
             <div className="w-full flex items-center justify-between px-1 pt-1">
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-[#FAF5EB]" style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}>
+                <h2 className="text-sm sm:text-base font-bold text-[#FAF5EB]">
                   كارت الولاء والمحفظة الرقمية
                 </h2>
-                <p className="text-[11px] text-[#3D2314]/70">
+                <p className="text-[11px] text-[#D9D9D9]/70">
                   أختام زياراتك المعتمدة وهديتك الفورية في {settings.branding.name}
                 </p>
               </div>
-
               <span className="text-[11px] font-mono text-[#FAF5EB] bg-[#3D2314]/60 border border-[#DFAB56]/40 px-2.5 py-1 rounded-md font-bold">
                 {loyaltyData.stampedCount} من {loyaltyMaxVisits} أختام
               </span>
             </div>
 
-            {/* Customer Profile & Digital Wallet Pass */}
-            <div className="w-full">
-              {customerPhone ? (
-                <div className="space-y-3">
-                  <div className="w-full p-3 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center font-bold">
-                        <CheckCircle className="w-4 h-4 text-[#DFAB56]" />
-                      </div>
-                      <div>
-                        <span className="font-bold text-[#FAF5EB]">{customerName || 'ضيف مميز'}</span>
-                        <span className="text-[10px] text-[#3D2314]/70 font-mono block" dir="ltr">{customerPhone}</span>
-                      </div>
+            {card ? (
+              <div className="w-full space-y-3">
+                <div className="w-full p-3 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center font-bold">
+                      <CheckCircle className="w-4 h-4 text-[#DFAB56]" />
                     </div>
+                    <div>
+                      <span className="font-bold text-[#3D2314]">
+                        {card.customer.displayName || 'ضيف مميز'}
+                      </span>
+                      <span className="text-[10px] text-[#3D2314]/70 font-mono block" dir="ltr">
+                        {card.customer.phone ?? 'بطاقة بدون رقم'}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSwitchAccount}
+                    className="text-[10px] text-[#3D2314]/70 hover:text-[#3D2314] underline"
+                  >
+                    تغيير الحساب
+                  </button>
+                </div>
+
+                <CustomerLoyaltyCard
+                  loyaltyData={loyaltyData}
+                  giftTitle={card.loyalty.rewardName || settings.freeGiftOffer.title}
+                  brandName={settings.branding.name}
+                  customerName={card.customer.displayName}
+                  instagramHandle={settings.branding.instagramHandle}
+                />
+
+                {card.rewards.length > 0 && (
+                  <div className="w-full p-4 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl space-y-2">
+                    <div className="flex items-center gap-2 text-[#3D2314] font-bold text-xs">
+                      <Gift className="w-4 h-4 text-[#DFAB56]" />
+                      <span>مكافآتك الجاهزة للاستلام</span>
+                    </div>
+                    {card.rewards.map((reward) => (
+                      <div
+                        key={reward.id}
+                        className="flex items-center justify-between text-xs p-2 rounded-lg bg-[#FAF5EB] border border-[#EADDC4]"
+                      >
+                        <span className="font-bold text-[#3D2314]">{reward.name}</span>
+                        <span className="text-[10px] text-[#3D2314]/60">
+                          أظهر بطاقتك للموظف
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {card.vouchers.length > 0 && (
+                  <div className="w-full p-4 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl space-y-2">
+                    <div className="flex items-center gap-2 text-[#3D2314] font-bold text-xs">
+                      <Gift className="w-4 h-4 text-[#DFAB56]" />
+                      <span>قسائمك</span>
+                    </div>
+                    {card.vouchers.map((voucher) => (
+                      <div
+                        key={voucher.code}
+                        className="flex items-center justify-between text-xs p-2 rounded-lg bg-[#FAF5EB] border border-[#EADDC4]"
+                      >
+                        <span className="font-bold text-[#3D2314]">{voucher.title}</span>
+                        <span className="font-mono text-[10px] text-[#3D2314]/70" dir="ltr">
+                          {voucher.code} • {voucher.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {card.stamps.length > 0 && (
+                  <div className="w-full p-4 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl space-y-2">
+                    <div className="flex items-center gap-2 text-[#3D2314] font-bold text-xs">
+                      <Clock className="w-4 h-4 text-[#DFAB56]" />
+                      <span>آخر لقطاتك</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {card.stamps.slice(0, 8).map((stamp) => (
+                        <div
+                          key={stamp.memoryId}
+                          className="aspect-square rounded-lg overflow-hidden border border-[#EADDC4] bg-[#FAF5EB]"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={stamp.thumbnailUrl}
+                            alt="ذكرى"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="w-full p-4 sm:p-5 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl text-[#3D2314] space-y-3">
+                <div className="flex items-center gap-2.5 border-b border-[#EADDC4] pb-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center font-bold">
+                    <UserCheck className="w-4 h-4 text-[#DFAB56]" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm">احفظ أختامك وصورك</h3>
+                    <p className="text-[11px] text-[#3D2314]/70">
+                      سجّل اسمك ورقمك لحفظ أختام كارتك على هذا الجهاز
+                    </p>
+                  </div>
+                </div>
+
+                {formError && (
+                  <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold">
+                    {formError}
+                  </div>
+                )}
+
+                <form onSubmit={handleRegister} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="text-[11px] font-bold block mb-1">الاسم أو اللقب:</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: أحمد، سارة..."
+                      value={regName}
+                      onChange={(event) => setRegName(event.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#3D2314] focus:border-[#DFAB56] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold block mb-1">رقم الموبايل:</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="01xxxxxxxxx"
+                      value={regPhone}
+                      onChange={(event) => setRegPhone(event.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#3D2314] font-mono focus:border-[#DFAB56] focus:outline-none"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 pt-1">
                     <button
-                      type="button"
-                      onClick={handleClearCustomer}
-                      className="text-[10px] text-[#3D2314]/70 hover:text-[#FAF5EB] underline cursor-pointer"
+                      type="submit"
+                      disabled={isSessionLoading}
+                      className="w-full py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                      تغيير الحساب
+                      {isSessionLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
+                      <span>حفظ كارت الولاء والأختام</span>
                     </button>
                   </div>
+                </form>
+              </div>
+            )}
 
-                  <CustomerLoyaltyCard
-                    loyaltyData={loyaltyData}
-                    giftTitle={settings.freeGiftOffer.title}
-                    brandName={settings.branding.name}
-                    instagramHandle={settings.branding.instagramHandle}
-                    onOpenStaffStamp={() => setIsStaffStampModalOpen(true)}
-                  />
-                </div>
-              ) : (
-                <div className="w-full p-4 sm:p-5 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl text-[#3D2314] space-y-3">
-                  <div className="flex items-center gap-2.5 border-b border-[#EADDC4] pb-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center font-bold shadow-xs">
-                      <UserCheck className="w-4 h-4 text-[#DFAB56]" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm text-[#FAF5EB]">
-                        احفظ أختامك وصورك في محفظة هاتفك
-                      </h3>
-                      <p className="text-[11px] text-[#3D2314]/70">
-                        سجّل رقمك لحفظ أختام كارتك واستلام هديتك الفورية عند اكتماله
-                      </p>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleRegisterCustomer} className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="text-[11px] font-bold text-[#3D2314] block mb-1">الاسم أو اللقب:</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="مثال: أحمد، سارة، ضيفنا المميز..."
-                        value={regName}
-                        onChange={(e) => setRegName(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#FAF5EB] focus:bg-white focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none placeholder-[#A19E9B]/50"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-[#3D2314] block mb-1">رقم الموبايل:</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="01xxxxxxxxx"
-                        value={regPhone}
-                        onChange={(e) => setRegPhone(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#FAF5EB] focus:bg-white focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none font-mono placeholder-[#A19E9B]/50"
-                        dir="ltr"
-                      />
-                    </div>
-                    <div className="sm:col-span-2 pt-1">
-                      <button
-                        type="submit"
-                        className="w-full py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_25px_-5px_rgba(221,2,0,0.4)] cursor-pointer"
-                      >
-                        <CheckCircle2 className="w-4 h-4 text-[#FAF5EB]" />
-                        <span>حفظ كارت الولاء والأختام</span>
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-            </div>
-
-            {/* Contextual Link to Studio */}
             <div className="w-full p-4 rounded-2xl bg-white border border-[#EADDC4] shadow-2xl flex items-center justify-between gap-3 text-right mt-2">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center shrink-0">
                   <Camera className="w-5 h-5 text-[#DFAB56]" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-[#FAF5EB]">وثّق زيارتك الحالية بصورة في الاستوديو</p>
-                  <p className="text-[11px] text-[#3D2314]/70">التقط لقطة تذكارية بالكاميرا وأضف نغمتك والملصقات المفضلة</p>
+                  <p className="text-xs font-black text-[#3D2314]">وثّق زيارتك الحالية بصورة</p>
+                  <p className="text-[11px] text-[#3D2314]/70">
+                    التقط لقطة تذكارية وأضف ملصقاتك المفضلة
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveTab('studio')}
-                className="px-3.5 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shrink-0 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] cursor-pointer"
+                className="px-3.5 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shrink-0"
               >
                 فتح استوديو الصور
               </button>
@@ -916,110 +1155,21 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
         )}
       </main>
 
-      {/* 9. MODALS */}
-      {/* First-Visit Customer Onboarding Modal (Phone then Name) */}
-      {!customerPhone && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3D2314]/70 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-sm bg-white rounded-2xl p-6 border-2 border-[#3D2314] shadow-stamp-hover relative text-center">
-            <div className="w-12 h-12 rounded-xl bg-[#E5A836] border-2 border-[#3D2314] shadow-stamp-resting flex items-center justify-center mx-auto mb-3">
-              <span className="text-xl">🎟️</span>
-            </div>
-            <h3 className="text-xl font-black text-[#3D2314]">
-              أهلاً بك في {settings.branding.name || 'المنشأة'}!
-            </h3>
-            <p className="text-xs text-[#3D2314]/70 mt-1 mb-5 font-semibold">
-              أدخل رقم جوالك واسمك لإنشاء كرتك الرقمي وبدء جمع الأختام والمكافآت
-            </p>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!regPhone.trim()) return;
-                const phone = regPhone.trim();
-                const name = regName.trim() || 'عميل مميز';
-                setCustomerPhone(phone);
-                setCustomerName(name);
-
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('memories_customer_phone', phone);
-                  localStorage.setItem('memories_customer_name', name);
-
-                  // Register in CRM
-                  try {
-                    const crmRaw = localStorage.getItem('stampy_crm_customers');
-                    let list = crmRaw ? JSON.parse(crmRaw) : [];
-                    if (!list.some((c: any) => c.phone === phone)) {
-                      list.unshift({
-                        id: `cust-${Date.now()}`,
-                        name,
-                        phone,
-                        stamps: 1, // Welcome initial stamp!
-                        totalGoal: loyaltyMaxVisits,
-                        redeemedCount: 0,
-                        firstVisit: 'اليوم',
-                        lastVisit: 'الآن',
-                      });
-                      localStorage.setItem('stampy_crm_customers', JSON.stringify(list));
-                    }
-                  } catch {}
-                }
-
-                const fresh = LoyaltyPurseService.addStamp(phone, cafeSlug, 'ختم الانضمام والترحيب', loyaltyMaxVisits);
-                setLoyaltyData(fresh);
-              }}
-              className="space-y-3.5 text-right"
-            >
-              <div>
-                <label className="block text-xs font-bold text-[#3D2314] mb-1">
-                  1. رقم الجوال:
-                </label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="05xxxxxxxx"
-                  value={regPhone}
-                  onChange={(e) => setRegPhone(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#3D2314] focus:border-[#B83A26] focus:bg-white focus:outline-none font-mono"
-                  dir="ltr"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#3D2314] mb-1">
-                  2. اسمك الكريم:
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="مثال: عبدالله"
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#EADDC4] bg-[#FAF5EB] text-xs text-[#3D2314] focus:border-[#B83A26] focus:bg-white focus:outline-none"
-                />
-              </div>
-
-              <TicketButton type="submit" variant="primary" size="md" className="w-full mt-2">
-                <span>تفعيل كرت الأختام وبدء الزيارة ✦</span>
-              </TicketButton>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Live Camera Viewfinder Modal */}
       {isCameraModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md bg-white rounded-2xl p-4 overflow-hidden border border-[#EADDC4] shadow-[0_0_50px_-10px_rgba(221,2,0,0.3)] relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-md bg-white rounded-2xl p-4 overflow-hidden border border-[#EADDC4] relative">
             <button
               type="button"
               onClick={() => setIsCameraModalOpen(false)}
-              className="absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-black/60 hover:bg-[#DFAB56] text-[#12100E] flex items-center justify-center transition cursor-pointer border border-[#EADDC4]"
+              className="absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-black/60 hover:bg-[#DFAB56] text-white flex items-center justify-center"
             >
               <X className="w-4 h-4" />
             </button>
             <CameraViewfinder
               brandName={settings.branding.name}
-              visitNumber={(activeCaptureSlot !== null ? activeCaptureSlot : accumulatedPhotos.length) + 1}
+              visitNumber={
+                (activeCaptureSlot ?? accumulatedPhotos.filter(Boolean).length) + 1
+              }
               onCaptureComplete={(photo: string) => {
                 handleCommitPhoto(photo);
                 setIsCameraModalOpen(false);
@@ -1029,35 +1179,26 @@ export function CustomerClient({ cafeSlug: propCafeSlug }: { cafeSlug: string })
         </div>
       )}
 
-      {/* Staff Quick Stamp Modal */}
-      <StaffQuickStampModal
-        isOpen={isStaffStampModalOpen}
-        onClose={() => setIsStaffStampModalOpen(false)}
-        onStampSuccess={handleStaffStampSuccess}
-        staffLabel={staffLabel}
-      />
-
-      {/* TV Wall Display Consent Modal (Triggered ONCE on 100% completion) */}
       <WallConsentModal
         isOpen={isWallConsentModalOpen}
         businessName={settings.branding.name}
-        onConsent={handleWallConsent}
-        onClose={() => setIsWallConsentModalOpen(false)}
+        onConsent={(consent) => void handleWallConsent(consent)}
+        onClose={() => {
+          setIsWallConsentModalOpen(false);
+          void handleWallConsent(false);
+        }}
       />
 
-      {/* Completion Gift Reward Voucher Modal */}
       <CompletionGiftRewardModal
         isOpen={isCompletionRewardOpen}
-        giftTitle={settings.freeGiftOffer.title}
-        giftSubtitle={settings.freeGiftOffer.subtitle}
-        giftCode={giftCode || 'GIFT-2026'}
+        giftTitle={completionTitle || settings.freeGiftOffer.title}
+        giftSubtitle="أظهر بطاقة الولاء للموظف لاستلام مكافأتك، واحتفظ بشريط ذكرياتك على هاتفك."
         onClose={() => setIsCompletionRewardOpen(false)}
-        onPrintStrip={handlePrintOrDownload}
+        onPrintStrip={() => void handlePrintOrDownload()}
       />
 
-      {/* Safari / iOS Save Image Sheet Modal */}
       <IosSaveImageModal
-        open={!!iosSaveModalImage}
+        open={Boolean(iosSaveModalImage)}
         imageUrl={iosSaveModalImage}
         filename={`${settings.branding.name}-photostrip.png`}
         onClose={() => setIosSaveModalImage(null)}

@@ -230,7 +230,7 @@ export function CardStudioTab({ businessSlug = 'store' }: { businessSlug?: strin
               </div>
 
               <div className="mt-3 text-[10px] font-mono text-center opacity-80" dir="ltr">
-                "Every moment is a stamp in time."
+                &ldquo;Every moment is a stamp in time.&rdquo;
               </div>
             </div>
           </div>

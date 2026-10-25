@@ -1,55 +1,80 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { z } from 'zod';
+/**
+ * POST /api/v1/screens/pairing-code
+ *
+ * A merchant generates a short-lived code, then the TV screen submits it to
+ * `/api/v1/screens/pair`. The code is single-use and expires after ten minutes.
+ */
 
-const generateCodeSchema = z.object({
-  organizationId: z.string().uuid(),
-  branchId: z.string().uuid(),
-  screenName: z.string().max(100).optional().default('Main Live Wall'),
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { requireOperator, defaultBranchId } from '@/lib/server/context';
+import { contextFailure, jsonError, jsonOk, readJson } from '@/lib/server/route-helpers';
+import { consumeRateLimit, rateLimitKey, rateLimitResponse } from '@/lib/rate-limit';
+
+export const runtime = 'nodejs';
+
+const schema = z.object({
+  branchId: z.string().uuid().optional(),
+  screenName: z.string().trim().max(100).optional(),
 });
 
+const TTL_MINUTES = 10;
+
 export async function POST(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = generateCodeSchema.safeParse(rawBody);
+  const result = await requireOperator(request, { roles: ['owner', 'admin', 'manager'] });
+  if (!result.context) return contextFailure(result.error!);
+  const operator = result.context;
 
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
+  const parsed = schema.safeParse((await readJson(request)) ?? {});
+  if (!parsed.success) return jsonError(400, 'invalid_payload', 'Invalid pairing request');
 
-    const { organizationId, branchId, screenName } = parsed.data;
-    const supabase = createAdminClient();
+  const limit = await consumeRateLimit(
+    rateLimitKey(request, 'pairing-code', operator.organization.id),
+    10,
+    60 * 60
+  );
+  if (!limit.allowed) return rateLimitResponse(limit);
 
-    // Generate random 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
+  const branchId = await defaultBranchId(
+    operator.organization.id,
+    parsed.data.branchId ?? operator.branchId
+  );
+  if (!branchId) return jsonError(409, 'branch_required', 'No active branch');
 
-    // Store in screen_pairing_codes
-    const { data: pairingRecord, error } = await supabase
+  const admin = createAdminClient();
+  await admin
+    .from('screen_pairing_codes')
+    .update({ is_used: true })
+    .eq('organization_id', operator.organization.id)
+    .eq('is_used', false)
+    .lte('expires_at', new Date().toISOString());
+
+  const expiresAt = new Date(Date.now() + TTL_MINUTES * 60 * 1000).toISOString();
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const random = crypto.getRandomValues(new Uint32Array(1))[0];
+    const code = String(100_000 + (random % 900_000));
+    const { data, error } = await admin
       .from('screen_pairing_codes')
       .insert({
-        organization_id: organizationId,
+        organization_id: operator.organization.id,
         branch_id: branchId,
         code,
-        screen_name: screenName,
+        screen_name: parsed.data.screenName ?? null,
         expires_at: expiresAt,
-        is_used: false,
-        attempts: 0,
       })
-      .select()
+      .select('id,code,expires_at')
       .single();
 
-    if (error) {
-      return NextResponse.json({ error: 'Failed to generate pairing code', details: error.message }, { status: 500 });
+    if (!error && data) {
+      return jsonOk({ pairingCode: data.code, expiresAt: data.expires_at });
     }
-
-    return NextResponse.json({
-      success: true,
-      code,
-      expiresAt,
-      screenName,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    if (error?.code !== '23505') {
+      console.error('pairing code insert failed:', error?.code ?? 'unknown');
+      return jsonError(503, 'pairing_unavailable', 'Could not create a pairing code');
+    }
   }
+
+  return jsonError(503, 'pairing_unavailable', 'Could not allocate a unique pairing code');
 }

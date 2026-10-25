@@ -141,6 +141,7 @@ export interface WallDisplaySettings {
   mode: WallDisplayMode;
   slideIntervalSeconds: number; // e.g. 5, 10, 15, 30
   boardTheme?: 'warm_cork' | 'dark_slate' | 'espresso_wood';
+  blackout?: boolean;
 }
 
 export interface BusinessSettings {

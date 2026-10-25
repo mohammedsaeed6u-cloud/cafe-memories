@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
       if (!isMounted) return;
       setIsRedirecting(true);
       // Hard navigation to guarantee fresh cookies and state in the dashboard
-      window.location.href = '/dashboard';
+      window.location.assign('/dashboard');
     };
 
     // 1. Check if session is already active (immediate check)

@@ -59,7 +59,7 @@ export function PhotoboothStrip({
         </span>
         {storyNote && (
           <p className="text-[11px] text-[#3D2314]/80 italic mt-1 font-serif">
-            "{storyNote}"
+            «{storyNote}»
           </p>
         )}
       </div>

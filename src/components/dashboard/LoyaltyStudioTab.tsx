@@ -142,7 +142,7 @@ export const LoyaltyStudioTab: React.FC<LoyaltyStudioTabProps> = ({
       isGrandPrize: newMilestoneIsGrand || newMilestoneSlot === template.slotCount,
     };
 
-    let updatedMilestones = [...template.milestones];
+    const updatedMilestones = [...template.milestones];
     if (existingIndex >= 0) {
       updatedMilestones[existingIndex] = newMilestone;
     } else {

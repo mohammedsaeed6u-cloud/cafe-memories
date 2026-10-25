@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 
 interface RealOutsourcedQrProps {
@@ -11,6 +11,14 @@ interface RealOutsourcedQrProps {
   onDataUrlReady?: (dataUrl: string) => void;
 }
 
+/**
+ * QR renderer.
+ *
+ * The QR is generated locally with the `qrcode` package. Nothing about the
+ * venue or customer URL leaves the browser, the code still renders when a
+ * third-party service is down, and the same data URL can be downloaded for
+ * print.
+ */
 export const RealOutsourcedQr: React.FC<RealOutsourcedQrProps> = ({
   value,
   size = 200,
@@ -18,60 +26,70 @@ export const RealOutsourcedQr: React.FC<RealOutsourcedQrProps> = ({
   alt = 'Scan QR Code',
   onDataUrlReady,
 }) => {
-  // 1. Primary: Established high-speed outsourced QR API
-  const outsourcedApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(
-    value
-  )}&margin=1&format=svg`;
+  const [generated, setGenerated] = useState<{ value: string; src: string } | null>(null);
+  const [failedValue, setFailedValue] = useState<string | null>(null);
+  const onReadyRef = useRef(onDataUrlReady);
 
-  const [currentSrc, setCurrentSrc] = useState<string>(outsourcedApiUrl);
-  const [hasError, setHasError] = useState(false);
-
-  // 2. Client-side local fallback generation with npm 'qrcode' (Zero-fail offline resilience)
   useEffect(() => {
-    let isMounted = true;
+    onReadyRef.current = onDataUrlReady;
+  }, [onDataUrlReady]);
+
+  // Derive the visible state from the current value instead of clearing it with
+  // a synchronous setState at the start of the generation effect.
+  const src = generated?.value === value ? generated.src : null;
+  const failed = failedValue === value;
+
+  useEffect(() => {
+    let cancelled = false;
     QRCode.toDataURL(value, {
       width: size,
       margin: 1,
       errorCorrectionLevel: 'H',
-      color: {
-        dark: '#18181B',
-        light: '#FFFFFF',
-      },
+      color: { dark: '#18181B', light: '#FFFFFF' },
     })
       .then((dataUrl) => {
-        if (isMounted) {
-          onDataUrlReady?.(dataUrl);
-          // If the external network failed, switch to the locally generated dataUrl
-          if (hasError) {
-            setCurrentSrc(dataUrl);
-          }
-        }
+        if (cancelled) return;
+        setGenerated({ value, src: dataUrl });
+        setFailedValue(null);
+        onReadyRef.current?.(dataUrl);
       })
-      .catch((err) => {
-        console.warn('Local QR fallback generation note:', err);
+      .catch(() => {
+        if (!cancelled) setFailedValue(value);
       });
-
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
-  }, [value, size, hasError, onDataUrlReady]);
+  }, [value, size]);
+
+  if (failed) {
+    return (
+      <div
+        className={`flex items-center justify-center rounded-md border border-dashed border-stone-400 text-center text-[10px] text-stone-500 ${className}`}
+        style={{ width: size, height: size }}
+      >
+        تعذر إنشاء رمز QR
+      </div>
+    );
+  }
+
+  if (!src) {
+    return (
+      <div
+        className={`animate-pulse rounded-md bg-stone-200 ${className}`}
+        style={{ width: size, height: size }}
+        aria-label="جاري إنشاء رمز QR"
+      />
+    );
+  }
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={currentSrc}
+      src={src}
       alt={alt}
       width={size}
       height={size}
-      onError={() => {
-        setHasError(true);
-        // Fallback to local DataURL
-        QRCode.toDataURL(value, { width: size, margin: 1, errorCorrectionLevel: 'H' })
-          .then((localUrl) => setCurrentSrc(localUrl))
-          .catch(() => {});
-      }}
-      className={`block object-contain transition-opacity duration-200 ${className}`}
-      style={{ imageRendering: 'pixelated' }}
+      className={`block object-contain ${className}`}
     />
   );
 };

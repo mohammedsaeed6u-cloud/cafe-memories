@@ -108,7 +108,10 @@ export const CameraViewfinder: React.FC<CameraViewfinderProps> = ({
   }, [facingMode]);
 
   useEffect(() => {
-    startCamera();
+    const boot = async () => {
+      await startCamera();
+    };
+    void boot();
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());

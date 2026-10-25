@@ -1,71 +1,114 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * POST /api/v1/memories/upload
+ *
+ * Receives the guest's composed strip, stores it privately, and returns storage
+ * keys. The keys are later passed to `capture_guest_memory`; no URL is ever
+ * trusted from the browser.
+ *
+ * Only a signed customer session may upload, the venue must be active, and the
+ * file must really be an image (magic bytes, not the client-supplied MIME).
+ *
+ * There is no server-side re-encoding: Workers cannot run native image codecs,
+ * the browser already encoded the strip, and a second lossy pass would only
+ * hurt quality. Metadata is stripped before the bytes reach storage.
+ */
+
+import { NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { readCustomerSession } from '@/lib/customer-session';
+import { loadPublicVenue } from '@/lib/server/public-venue';
 import { processImageDerivatives } from '@/lib/services/images';
+import { signedMemoryUrl } from '@/lib/server/memory-urls';
+import { jsonError, jsonOk } from '@/lib/server/route-helpers';
+import { consumeRateLimit, rateLimitKey, rateLimitResponse } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
+const MAX_BYTES = 10 * 1024 * 1024;
+
 export async function POST(request: NextRequest) {
+  const session = await readCustomerSession(request);
+  if (!session) return jsonError(401, 'unauthenticated', 'Customer session required');
+
+  const limit = await consumeRateLimit(rateLimitKey(request, 'memory-upload'), 30, 60 * 60);
+  if (!limit.allowed) return rateLimitResponse(limit);
+
+  let form: FormData;
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File | null;
-    const organizationId = formData.get('organizationId') as string | null;
-
-    if (!file) {
-      return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
-    }
-
-    // Max 10MB upload guard
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size exceeds 10MB limit' }, { status: 413 });
-    }
-
-    const arrayBuffer = await file.arrayBuffer();
-    const inputBuffer = Buffer.from(arrayBuffer);
-
-    // 1. Process WebP Derivatives via Sharp
-    const derivatives = await processImageDerivatives(inputBuffer);
-
-    const supabase = createAdminClient();
-    const timestamp = Date.now();
-    const orgPrefix = organizationId ? `${organizationId}/` : 'general/';
-    const baseFilename = `${orgPrefix}${timestamp}_${Math.random().toString(36).substring(2, 8)}`;
-
-    // 2. Upload original, optimized, and thumbnail to Supabase Storage
-    const [origRes, optRes, thumbRes] = await Promise.all([
-      supabase.storage.from('memories').upload(`${baseFilename}_orig.webp`, inputBuffer, {
-        contentType: file.type || 'image/jpeg',
-        upsert: false,
-      }),
-      supabase.storage.from('memories').upload(`${baseFilename}_opt.webp`, derivatives.optimizedBuffer, {
-        contentType: 'image/webp',
-        upsert: false,
-      }),
-      supabase.storage.from('memories').upload(`${baseFilename}_thumb.webp`, derivatives.thumbnailBuffer, {
-        contentType: 'image/webp',
-        upsert: false,
-      }),
-    ]);
-
-    if (optRes.error || thumbRes.error) {
-      return NextResponse.json(
-        { error: 'Failed to upload derivative images to storage', details: (optRes.error || thumbRes.error)?.message },
-        { status: 500 }
-      );
-    }
-
-    const { data: optPublic } = supabase.storage.from('memories').getPublicUrl(`${baseFilename}_opt.webp`);
-    const { data: thumbPublic } = supabase.storage.from('memories').getPublicUrl(`${baseFilename}_thumb.webp`);
-    const { data: origPublic } = supabase.storage.from('memories').getPublicUrl(`${baseFilename}_orig.webp`);
-
-    return NextResponse.json({
-      success: true,
-      originalUrl: origPublic.publicUrl,
-      optimizedUrl: optPublic.publicUrl,
-      thumbnailUrl: thumbPublic.publicUrl,
-      width: derivatives.width,
-      height: derivatives.height,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Image processing failed' }, { status: 500 });
+    form = await request.formData();
+  } catch {
+    return jsonError(400, 'invalid_form', 'Expected multipart form data');
   }
+
+  const file = form.get('file');
+  const cafeSlug = form.get('cafeSlug');
+  if (!(file instanceof File)) return jsonError(400, 'file_required', 'No image file provided');
+  if (typeof cafeSlug !== 'string' || !cafeSlug.trim()) {
+    return jsonError(400, 'cafe_slug_required', 'cafeSlug is required');
+  }
+  if (file.size === 0) return jsonError(400, 'empty_file', 'The uploaded file is empty');
+  if (file.size > MAX_BYTES) return jsonError(413, 'file_too_large', 'File exceeds 10MB');
+
+  let venue;
+  try {
+    venue = await loadPublicVenue(cafeSlug);
+  } catch {
+    return jsonError(503, 'venue_unavailable', 'Venue lookup failed');
+  }
+  if (!venue) return jsonError(404, 'venue_not_found', 'Venue not available');
+
+  const admin = createAdminClient();
+  const { data: customer } = await admin
+    .from('customers')
+    .select('id,organization_id')
+    .eq('id', session.customerId)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (
+    !customer ||
+    (customer.organization_id && customer.organization_id !== venue.organization.id)
+  ) {
+    return jsonError(403, 'customer_scope', 'Session does not belong to this venue');
+  }
+
+  const inputBuffer = Buffer.from(await file.arrayBuffer());
+
+  let derivatives;
+  try {
+    derivatives = processImageDerivatives(inputBuffer);
+  } catch {
+    return jsonError(415, 'unsupported_image', 'Only JPEG, PNG, and WebP images are allowed');
+  }
+
+  const id = crypto.randomUUID();
+  const prefix = `${venue.organization.id}/${new Date().toISOString().slice(0, 7)}/${id}`;
+  // One stored object serves as original, optimized, and thumbnail until a
+  // transforming image service (e.g. Cloudflare Images) is introduced.
+  const storageKey = `${prefix}.${derivatives.extension}`;
+
+  const bucket = admin.storage.from('memories');
+  const { error } = await bucket.upload(storageKey, derivatives.optimizedBuffer, {
+    contentType: derivatives.mimeType,
+    upsert: false,
+  });
+
+  if (error) {
+    await bucket.remove([storageKey]);
+    return jsonError(503, 'upload_failed', 'Image storage is unavailable');
+  }
+
+  const url = await signedMemoryUrl(storageKey);
+
+  return jsonOk({
+    storageKey,
+    optimizedKey: storageKey,
+    thumbnailKey: storageKey,
+    originalUrl: url,
+    optimizedUrl: url,
+    thumbnailUrl: url,
+    width: derivatives.width,
+    height: derivatives.height,
+    format: derivatives.extension,
+  });
 }

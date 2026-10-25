@@ -1,487 +1,616 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import {
+  Loader2,
+  AlertCircle,
+  Store,
+  RefreshCw,
+  Sparkles,
+  ArrowRight,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { StaffMember } from '@/types/staff';
-import { BusinessSettings } from '@/types/photobooth';
-import { BusinessSettingsService } from '@/lib/services/business-settings.service';
-import { CustomerRegistryService } from '@/lib/services/customer-registry.service';
-import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-auth.service';
+import type { BusinessSettings } from '@/types/photobooth';
 
-// Modular Dashboard Feature Components
-import { DashboardNavBar, DashboardTab } from '@/components/dashboard/DashboardNavBar';
-import { DashboardOverviewTab, OverviewMetrics } from '@/components/dashboard/DashboardOverviewTab';
-import { DashboardMemoriesTab, MemoryItem } from '@/components/dashboard/DashboardMemoriesTab';
-import { DashboardCustomersTab, CustomerRecord } from '@/components/dashboard/DashboardCustomersTab';
-import { DashboardWallTab, ScreenRecord } from '@/components/dashboard/DashboardWallTab';
-import { DashboardRewardsTab } from '@/components/dashboard/DashboardRewardsTab';
+import { DashboardNavBar, type DashboardTab } from '@/components/dashboard/DashboardNavBar';
+import {
+  DashboardOverviewTab,
+  type OverviewMetrics,
+} from '@/components/dashboard/DashboardOverviewTab';
+import {
+  DashboardMemoriesTab,
+  type MemoryItem,
+} from '@/components/dashboard/DashboardMemoriesTab';
+import { DashboardWallTab, type ScreenRecord } from '@/components/dashboard/DashboardWallTab';
+import {
+  DashboardRewardsTab,
+  type RewardRule,
+} from '@/components/dashboard/DashboardRewardsTab';
 import { DashboardQrTab } from '@/components/dashboard/DashboardQrTab';
-import { DashboardSettingsTab } from '@/components/dashboard/DashboardSettingsTab';
-import { StaffManagementTab } from '@/components/dashboard/StaffManagementTab';
-import { CardStudioTab } from '@/components/dashboard/CardStudioTab';
-import { CustomerCRMTab } from '@/components/dashboard/CustomerCRMTab';
+import { CustomersTab } from '@/components/dashboard/CustomersTab';
+import { StaffTab } from '@/components/dashboard/StaffTab';
+import { PrintTab } from '@/components/dashboard/PrintTab';
+import { SettingsTab } from '@/components/dashboard/SettingsTab';
 
-// Lazy Loaded Heavy Tabs
-const PrintStationTab = dynamic(
-  () => import('@/components/dashboard/PrintStationTab').then((m) => ({ default: m.PrintStationTab })),
-  { loading: () => <div className="p-12 text-center text-stone-400 font-bold text-xs">جاري تحميل محطة الطباعة...</div> }
-);
-const FrameStudioTab = dynamic(
-  () => import('@/components/dashboard/FrameStudioTab').then((m) => ({ default: m.FrameStudioTab })),
-  { loading: () => <div className="p-12 text-center text-stone-400 font-bold text-xs">جاري تحميل استوديو الإطارات...</div> }
-);
-const RetentionAnalyticsTab = dynamic(
-  () => import('@/components/dashboard/RetentionAnalyticsTab').then((m) => ({ default: m.RetentionAnalyticsTab })),
-  { loading: () => <div className="p-12 text-center text-stone-400 font-bold text-xs">جاري تحميل التحليلات...</div> }
-);
-const SubscriptionBillingTab = dynamic(
-  () => import('@/components/dashboard/SubscriptionBillingTab').then((m) => ({ default: m.SubscriptionBillingTab })),
-  { loading: () => <div className="p-12 text-center text-stone-400 font-bold text-xs">جاري تحميل الباقة والاشتراك...</div> }
-);
+interface BranchRecord {
+  id: string;
+  slug: string;
+  name: string;
+  address: string | null;
+}
 
-// Modals
-import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
-import { MerchantQuickSetupModal } from '@/components/dashboard/MerchantQuickSetupModal';
-import { BaristaRedeemModal } from '@/components/dashboard/BaristaRedeemModal';
+interface OrganizationRecord {
+  id: string;
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+  tagline: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  frameStyle: string | null;
+  walletColorPreset: string | null;
+  socialLinks: Record<string, string> | null;
+  timezone: string;
+  currency: string;
+}
+
+interface MerchantContextResponse {
+  source: 'merchant' | 'staff';
+  memberId: string | null;
+  role: 'owner' | 'admin' | 'manager' | 'staff';
+  organization: OrganizationRecord;
+  branch: BranchRecord | null;
+  branches: BranchRecord[];
+  settings: BusinessSettings;
+  rewardRule: {
+    id: string;
+    name: string;
+    threshold: number;
+    reward_type: string;
+    reward_value: string | null;
+    reward_description: string | null;
+    is_active: boolean;
+  } | null;
+}
+
+interface ApiErrorBody {
+  error?: string;
+  message?: string;
+  code?: string;
+}
+
+async function getJson<T>(url: string): Promise<{ ok: boolean; status: number; body: T & ApiErrorBody }> {
+  const response = await fetch(url, { cache: 'no-store' });
+  const body = (await response.json().catch(() => ({}))) as T & ApiErrorBody;
+  return { ok: response.ok, status: response.status, body };
+}
 
 export default function MerchantDashboardPage() {
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
-  const [activeStaff, setActiveStaff] = useState<StaffMember | null>(null);
-  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
-  const [isQuickSetupOpen, setIsQuickSetupOpen] = useState(false);
-  const [isBaristaRedeemOpen, setIsBaristaRedeemOpen] = useState(false);
+  const [context, setContext] = useState<MerchantContextResponse | null>(null);
+  const [branchId, setBranchId] = useState<string>('');
 
-  // Business settings state (dynamic tenant)
-  const [settings, setSettings] = useState<BusinessSettings>(() => {
-    let merchantSlug = 'memories';
-    let merchantName = '';
-    if (typeof window !== 'undefined') {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        merchantSlug = urlParams.get('cafe') || localStorage.getItem('memories_active_merchant_slug') || 'memories';
-        merchantName = localStorage.getItem('memories_active_merchant_name') || '';
-      } catch {}
-    }
-    const base = BusinessSettingsService.getSettings(merchantSlug);
-    if (merchantName && (!base.branding?.name || base.branding.name === 'stampy.')) {
-      base.branding = { ...base.branding, name: merchantName };
-    }
-    return base;
-  });
+  const [isBooting, setIsBooting] = useState(true);
+  const [bootError, setBootError] = useState<string | null>(null);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
-  const handleSettingsUpdated = (newSettings: BusinessSettings) => {
-    setSettings(newSettings);
-    BusinessSettingsService.saveSettings(newSettings);
-  };
-
-  // Live Metrics & Data States
   const [metrics, setMetrics] = useState<OverviewMetrics | null>(null);
-  const [isLoadingMetrics, setIsLoadingMetrics] = useState(true);
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
+
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [isLoadingMemories, setIsLoadingMemories] = useState(false);
-  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
-  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
-  const [screens, setScreens] = useState<ScreenRecord[]>([
-    {
-      id: 'screen-1',
-      name: 'شاشة الصالة الرئيسية',
-      status: 'online',
-      orientation: 'landscape',
-      lastHeartbeatAt: new Date().toISOString(),
-    },
-  ]);
-  const [printQueue, setPrintQueue] = useState<any[]>([]);
+  const [memoryNotice, setMemoryNotice] = useState<string | null>(null);
 
-  // Action feedback states
-  const [batchActionMsg, setBatchActionMsg] = useState<string | null>(null);
+  const [screens, setScreens] = useState<ScreenRecord[]>([]);
+  const [isLoadingScreens, setIsLoadingScreens] = useState(false);
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
+  const [pairingExpiresAt, setPairingExpiresAt] = useState<string | null>(null);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [isSavingWall, setIsSavingWall] = useState(false);
+  const [wallNotice, setWallNotice] = useState<string | null>(null);
+  const [wallError, setWallError] = useState<string | null>(null);
+
+  const [rewardRule, setRewardRule] = useState<RewardRule | null>(null);
+  const [isSavingReward, setIsSavingReward] = useState(false);
+  const [rewardNotice, setRewardNotice] = useState<string | null>(null);
+  const [rewardError, setRewardError] = useState<string | null>(null);
+
+  const [printQueueCount, setPrintQueueCount] = useState(0);
   const [copiedUrl, setCopiedUrl] = useState(false);
-  const [isTvBlackout, setIsTvBlackout] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('memories_wall_blackout') === 'true';
+
+  const branchQuery = branchId ? `?branchId=${encodeURIComponent(branchId)}` : '';
+  const branchQueryJoin = branchId ? `&branchId=${encodeURIComponent(branchId)}` : '';
+
+  const handleUnauthorized = useCallback((status: number) => {
+    if (status === 401) {
+      window.location.assign('/login');
+      return true;
     }
     return false;
-  });
-  const [tvSlideDuration, setTvSlideDuration] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('memories_wall_duration');
-      return saved ? Number(saved) : 8000;
-    }
-    return 8000;
-  });
-  const [tvSyncNotice, setTvSyncNotice] = useState<string | null>(null);
-  const [isPairingScreen, setIsPairingScreen] = useState(false);
-  const [pairScreenSuccess, setPairScreenSuccess] = useState<string | null>(null);
-  const [pairScreenError, setPairScreenError] = useState<string | null>(null);
-  const [isSavingRewards, setIsSavingRewards] = useState(false);
-  const [saveRewardsSuccess, setSaveRewardsSuccess] = useState(false);
-  const [autoApproveWall, setAutoApproveWall] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(`memories_auto_approve_${settings.cafeSlug || 'memories'}`) === 'true';
-    }
-    return false;
-  });
-
-  const customerLiveUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/c?cafe=${settings.cafeSlug || 'memories'}`
-      : `https://memories-d9l.pages.dev/c?cafe=${settings.cafeSlug || 'memories'}`;
-
-  const handleCopyUrl = () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(customerLiveUrl);
-      setCopiedUrl(true);
-      setTimeout(() => setCopiedUrl(false), 2000);
-    }
-  };
-
-  // Print Queue Synced per Cafe
-  useEffect(() => {
-    const loadQueue = () => {
-      try {
-        const queueKey = `memories_print_queue_${settings.cafeSlug || 'memories'}`;
-        const stored = localStorage.getItem(queueKey);
-        setPrintQueue(stored ? JSON.parse(stored) : []);
-      } catch {}
-    };
-    loadQueue();
-    window.addEventListener('memories-print-queue-updated', loadQueue);
-    return () => window.removeEventListener('memories-print-queue-updated', loadQueue);
-  }, [settings.cafeSlug]);
-
-  // Sync staff auth
-  useEffect(() => {
-    setActiveStaff(getActiveStaff());
-    const handleStaffChange = () => setActiveStaff(getActiveStaff());
-    window.addEventListener('memories-active-staff-changed', handleStaffChange);
-    return () => window.removeEventListener('memories-active-staff-changed', handleStaffChange);
   }, []);
 
-  const handleSignOut = async () => {
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-    } catch {}
-    clearActiveStaffSession();
-    try {
-      document.cookie = 'memories_staff_session=; path=/; max-age=0';
-    } catch {}
-    window.location.href = '/login';
-  };
+  /* ------------------------------- bootstrap ------------------------------ */
 
-  // Fetch Live Overview Metrics
-  const fetchMetrics = async () => {
-    setIsLoadingMetrics(true);
-    try {
-      const slug = settings.cafeSlug || 'memories';
-      const localCustomers = CustomerRegistryService.getRegisteredCustomers(slug);
-      const totalVisits = localCustomers.reduce((acc, c) => acc + (c.totalVisits || 1), 0);
-      const returning = localCustomers.filter((c) => (c.totalVisits || 1) > 1).length;
-      let localPhotosCount = 0;
+  useEffect(() => {
+    let cancelled = false;
+
+    const boot = async () => {
+      setIsBooting(true);
+      setBootError(null);
       try {
-        const photosRaw = localStorage.getItem(`memories_wall_photos_${slug}`);
-        if (photosRaw) localPhotosCount = JSON.parse(photosRaw).length;
-      } catch {}
+        const { ok, status, body } = await getJson<MerchantContextResponse>(
+          '/api/v1/merchant/context'
+        );
+        if (cancelled) return;
+        if (status === 401) {
+          window.location.assign('/login');
+          return;
+        }
+        if (!ok) {
+          if (body.code === 'membership_required') {
+            setNeedsOnboarding(true);
+            return;
+          }
+          throw new Error(body.error || 'تعذر تحميل بيانات المنشأة');
+        }
+        setContext(body);
+        setBranchId(body.branch?.id ?? '');
+        if (body.rewardRule) {
+          setRewardRule({
+            id: body.rewardRule.id,
+            name: body.rewardRule.name,
+            threshold: body.rewardRule.threshold,
+            rewardType: body.rewardRule.reward_type,
+            rewardValue: body.rewardRule.reward_value,
+            rewardDescription: body.rewardRule.reward_description,
+            isActive: body.rewardRule.is_active,
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setBootError(error instanceof Error ? error.message : 'تعذر تحميل البيانات');
+        }
+      } finally {
+        if (!cancelled) setIsBooting(false);
+      }
+    };
 
-      setMetrics({
-        today: {
-          visits: totalVisits,
-          uniqueCustomers: localCustomers.length,
-          returningCustomers: returning,
-          newMemories: localPhotosCount,
-          rewardsRedeemed: Math.floor(totalVisits / (settings.defaultShotCount || 5)),
-        },
-        attentionCenter: {
-          pendingMemories: memories.filter((m) => m.status === 'pending').length,
-          offlineScreens: 0,
-        },
-        liveWall: {
-          totalScreens: screens.length,
-          onlineScreens: screens.filter((s) => s.status === 'online').length,
-        },
-      });
-    } catch (e) {
-      console.error('Error calculating metrics:', e);
+    void boot();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* -------------------------------- loaders ------------------------------- */
+
+  const loadMetrics = useCallback(async () => {
+    setIsLoadingMetrics(true);
+    setMetricsError(null);
+    try {
+      const { ok, status, body } = await getJson<{ metrics: OverviewMetrics }>(
+        `/api/v1/analytics/overview${branchQuery}`
+      );
+      if (handleUnauthorized(status)) return;
+      if (!ok || !body.metrics) throw new Error(body.error || 'تعذر تحميل المؤشرات');
+      setMetrics(body.metrics);
+    } catch (error) {
+      setMetricsError(error instanceof Error ? error.message : 'تعذر تحميل المؤشرات');
     } finally {
       setIsLoadingMetrics(false);
     }
-  };
+  }, [branchQuery, handleUnauthorized]);
 
-  // Fetch Memories
-  const fetchMemories = async () => {
+  const loadMemories = useCallback(async () => {
     setIsLoadingMemories(true);
     try {
-      const slug = settings.cafeSlug || 'memories';
-      const wallKey = `memories_wall_photos_${slug}`;
-      const feedKey = `memories_wall_feed_${slug}`;
-      let localPhotos = JSON.parse(localStorage.getItem(wallKey) || '[]');
-      if (localPhotos.length === 0) {
-        localPhotos = JSON.parse(localStorage.getItem(feedKey) || '[]');
-      }
-      if (localPhotos.length > 0) {
-        setMemories(
-          localPhotos.map((p: any, idx: number) => ({
-            id: p.id || `m_${idx}`,
-            customerName: p.customerName || 'ضيف مميز',
-            originalUrl: p.url || p.photoUrl || (typeof p === 'string' ? p : ''),
-            status: p.status || 'approved',
-            visibility: p.visibility || 'public',
-            caption: p.caption || '',
-            createdAt: p.createdAt || new Date().toISOString(),
-          }))
-        );
-      } else {
-        setMemories([]);
-      }
-    } catch {} finally {
-      setIsLoadingMemories(false);
-    }
-  };
-
-  // Fetch Customers CRM
-  const fetchCustomers = async () => {
-    setIsLoadingCustomers(true);
-    try {
-      const localCustomers = CustomerRegistryService.getRegisteredCustomers(settings.cafeSlug || 'memories');
-      setCustomers(
-        localCustomers.map((c) => ({
-          id: `c_${c.phone}`,
-          displayName: c.name,
-          totalVisits: c.totalVisits || 1,
-          lastSeenAt: c.lastVisit || c.registeredAt || new Date().toISOString(),
-          memoriesCount: 1,
-          rewardsCount: Math.floor((c.totalVisits || 1) / (settings.defaultShotCount || 5)),
+      const { ok, status, body } = await getJson<{
+        memories: Array<{
+          id: string;
+          customerName: string;
+          imageUrl: string | null;
+          thumbnailUrl: string | null;
+          caption: string | null;
+          status: MemoryItem['status'];
+          visibility: string;
+          createdAt: string;
+        }>;
+      }>(`/api/v1/memories?scope=merchant&limit=100${branchQueryJoin}`);
+      if (handleUnauthorized(status)) return;
+      if (!ok) throw new Error(body.error || 'تعذر تحميل الذكريات');
+      setMemories(
+        (body.memories ?? []).map((memory) => ({
+          id: memory.id,
+          customerName: memory.customerName,
+          originalUrl: memory.imageUrl || memory.thumbnailUrl || '',
+          status: memory.status,
+          visibility: memory.visibility,
+          caption: memory.caption ?? undefined,
+          createdAt: memory.createdAt,
         }))
       );
-    } catch {} finally {
-      setIsLoadingCustomers(false);
+    } catch (error) {
+      setMemoryNotice(error instanceof Error ? error.message : 'تعذر تحميل الذكريات');
+    } finally {
+      setIsLoadingMemories(false);
     }
-  };
+  }, [branchQueryJoin, handleUnauthorized]);
+
+  const loadScreens = useCallback(async () => {
+    setIsLoadingScreens(true);
+    try {
+      const { ok, status, body } = await getJson<{ screens: ScreenRecord[] }>(
+        `/api/v1/merchant/screens${branchQuery}`
+      );
+      if (handleUnauthorized(status)) return;
+      if (!ok) throw new Error(body.error || 'تعذر تحميل الشاشات');
+      setScreens(body.screens ?? []);
+    } catch (error) {
+      setWallError(error instanceof Error ? error.message : 'تعذر تحميل الشاشات');
+    } finally {
+      setIsLoadingScreens(false);
+    }
+  }, [branchQuery, handleUnauthorized]);
+
+  const loadReward = useCallback(async () => {
+    try {
+      const { ok, status, body } = await getJson<{ activeRule: RewardRule | null }>(
+        '/api/v1/merchant/rewards'
+      );
+      if (handleUnauthorized(status)) return;
+      if (!ok) throw new Error(body.error || 'تعذر تحميل قاعدة المكافأة');
+      setRewardRule(body.activeRule);
+    } catch (error) {
+      setRewardError(error instanceof Error ? error.message : 'تعذر تحميل قاعدة المكافأة');
+    }
+  }, [handleUnauthorized]);
+
+  const loadPrintCount = useCallback(async () => {
+    try {
+      const { ok, status, body } = await getJson<{ jobs: unknown[] }>(
+        `/api/v1/print/jobs?status=pending&limit=100${branchQueryJoin}`
+      );
+      if (handleUnauthorized(status)) return;
+      if (ok) setPrintQueueCount(body.jobs?.length ?? 0);
+    } catch {
+      /* the badge is best effort */
+    }
+  }, [branchQueryJoin, handleUnauthorized]);
 
   useEffect(() => {
-    fetchMetrics();
-    fetchMemories();
-    fetchCustomers();
-  }, [settings.cafeSlug]);
+    if (!context) return;
+    // Fetching inside a local async function keeps the effect body free of
+    // synchronous setState calls (React's cascading-render rule).
+    const run = async () => {
+      await Promise.allSettled([
+        loadMetrics(),
+        loadMemories(),
+        loadScreens(),
+        loadPrintCount(),
+      ]);
+    };
+    void run();
+  }, [context, branchId, loadMetrics, loadMemories, loadScreens, loadPrintCount]);
 
-  // Helper to persist memories state and sync with connected TV screens
-  const persistMemories = (updated: MemoryItem[]) => {
-    setMemories(updated);
-    if (typeof window !== 'undefined') {
-      const slug = settings.cafeSlug || 'memories';
-      try {
-        localStorage.setItem(`memories_wall_photos_${slug}`, JSON.stringify(updated));
-        // Sync live wall feed with approved items only
-        const approvedOnly = updated
-          .filter((m) => m.status === 'approved')
-          .map((m) => ({
-            id: m.id,
-            customerName: m.customerName,
-            photoUrl: m.originalUrl,
-            caption: m.caption,
-            timeFormatted: 'الآن',
-            visitNumber: 1,
-            createdAt: m.createdAt,
-            visibility: m.visibility,
-            status: m.status,
-          }));
-        localStorage.setItem(`memories_wall_feed_${slug}`, JSON.stringify(approvedOnly));
-        localStorage.setItem('memories_wall_cache_screen-1', JSON.stringify(approvedOnly));
+  /* -------------------------------- actions ------------------------------- */
 
-        // Broadcast force refresh to connected TV screens
-        const channel = new BroadcastChannel('memories_screens_channel');
-        channel.postMessage({ type: 'WALL_COMMAND', command: 'FORCE_REFRESH' });
-        channel.close();
-      } catch {}
+  const moderateMemory = async (
+    id: string,
+    status: 'approved' | 'rejected' | 'hidden'
+  ) => {
+    setMemoryNotice(null);
+    try {
+      const response = await fetch('/api/v1/memories', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memoryId: id, status }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
+      if (!response.ok) throw new Error(body.error || 'تعذر تحديث الذكرى');
+      setMemories((previous) =>
+        previous.map((memory) => (memory.id === id ? { ...memory, status } : memory))
+      );
+      void loadMetrics();
+    } catch (error) {
+      setMemoryNotice(error instanceof Error ? error.message : 'تعذر تحديث الذكرى');
     }
   };
 
-  // Moderation handlers
-  const handleModerateMemory = (memoryId: string, newStatus: 'approved' | 'rejected' | 'hidden') => {
-    const updated = memories.map((m) => (m.id === memoryId ? { ...m, status: newStatus } : m));
-    persistMemories(updated);
-  };
-
-  const handleToggleAutoApprove = (val: boolean) => {
-    setAutoApproveWall(val);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`memories_auto_approve_${settings.cafeSlug || 'memories'}`, String(val));
+  const deleteMemory = async (id: string) => {
+    if (!window.confirm('حذف هذه الذكرى نهائياً من لوحة التحكم؟')) return;
+    setMemoryNotice(null);
+    try {
+      const response = await fetch(`/api/v1/memories?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
+      if (!response.ok) throw new Error(body.error || 'تعذر حذف الذكرى');
+      setMemories((previous) => previous.filter((memory) => memory.id !== id));
+      void loadMetrics();
+    } catch (error) {
+      setMemoryNotice(error instanceof Error ? error.message : 'تعذر حذف الذكرى');
     }
-    setBatchActionMsg(val ? 'تم تفعيل البث التلقائي للشاشات فور التقاط الصور.' : 'تم تفعيل نظام المراجعة والاعتماد اليدوي.');
-    setTimeout(() => setBatchActionMsg(null), 3500);
   };
 
-  const handleBatchApprovePending = () => {
-    const updated = memories.map((m) => ({ ...m, status: 'approved' as const }));
-    persistMemories(updated);
-    setBatchActionMsg('تم اعتماد كافة الصور المعلقة للبث على الشاشات بنجاح!');
-    setTimeout(() => setBatchActionMsg(null), 3500);
-  };
-
-  const handleBatchHideAll = () => {
-    const updated = memories.map((m) => ({ ...m, status: 'hidden' as const }));
-    persistMemories(updated);
-    setBatchActionMsg('تم إخفاء جميع الصور المعروضة من شاشات الصالة فوراً.');
-    setTimeout(() => setBatchActionMsg(null), 3500);
-  };
-
-  const handleDeleteMemory = (memoryId: string) => {
-    const updated = memories.filter((m) => m.id !== memoryId);
-    persistMemories(updated);
-    setBatchActionMsg('تم حذف الصورة وسجلها نهائياً.');
-    setTimeout(() => setBatchActionMsg(null), 2500);
-  };
-
-  // Customers CRM handlers
-  const handleAddDirectStamp = (c: CustomerRecord) => {
-    const rawPhone = c.id.replace('c_', '');
-    CustomerRegistryService.addDirectStamp(rawPhone, settings.cafeSlug || 'memories');
-    fetchCustomers();
-    fetchMetrics();
-  };
-
-  const handleExportCsv = () => {
-    if (customers.length === 0) return;
-    const headers = ['اسم العميل', 'رقم الهاتف', 'عدد الزيارات', 'المكافآت المستحقة', 'آخر ظهور'];
-    const rows = customers.map((c) => [
-      `"${c.displayName}"`,
-      `"${c.id.replace('c_', '')}"`,
-      c.totalVisits,
-      c.rewardsCount,
-      `"${new Date(c.lastSeenAt).toLocaleDateString('ar-EG')}"`,
-    ]);
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `customers-${settings.cafeSlug || 'memories'}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // TV Wall Remote Handlers
-  const handleToggleBlackout = () => {
-    const next = !isTvBlackout;
-    setIsTvBlackout(next);
-    try {
-      localStorage.setItem('memories_wall_blackout', String(next));
-      const channel = new BroadcastChannel('memories_screens_channel');
-      channel.postMessage({ type: 'WALL_COMMAND', command: 'BLACKOUT', blackout: next });
-      channel.close();
-    } catch {}
-    setTvSyncNotice(next ? 'تم تفعيل وضع التعتيم على شاشات الصالة' : 'تم استئناف البث الحي للذكريات');
-    setTimeout(() => setTvSyncNotice(null), 3000);
-  };
-
-  const handleChangeSlideDuration = (durationMs: number) => {
-    setTvSlideDuration(durationMs);
-    try {
-      localStorage.setItem('memories_wall_duration', String(durationMs));
-      const channel = new BroadcastChannel('memories_screens_channel');
-      channel.postMessage({ type: 'WALL_COMMAND', command: 'SET_SPEED', durationMs });
-      channel.close();
-    } catch {}
-    setTvSyncNotice(`تم ضبط سرعة الانتقال على (${durationMs / 1000} ثوانٍ)`);
-    setTimeout(() => setTvSyncNotice(null), 3000);
-  };
-
-  const handleForceRefreshTv = () => {
-    try {
-      const channel = new BroadcastChannel('memories_screens_channel');
-      channel.postMessage({ type: 'WALL_COMMAND', command: 'FORCE_REFRESH' });
-      channel.close();
-    } catch {}
-    setTvSyncNotice('تم إرسال أمر التحديث الفوري لكافة شاشات التلفزيون المتصلة');
-    setTimeout(() => setTvSyncNotice(null), 3000);
-  };
-
-  const handleUnpairScreen = (screenId: string) => {
-    setScreens((prev) => prev.filter((s) => s.id !== screenId));
-    setTvSyncNotice(`تم فصل الشاشة (${screenId}) بنجاح.`);
-    setTimeout(() => setTvSyncNotice(null), 3000);
-  };
-
-  const handlePairScreenSubmit = async (cleanCode: string, locationName: string) => {
-    if (cleanCode.length !== 6) {
-      setPairScreenError('يرجى إدخال الرمز المكون من 6 أرقام الظاهر على شاشة التلفزيون.');
+  const batchModerate = async (status: 'approved' | 'hidden') => {
+    const targets = memories.filter((memory) =>
+      status === 'approved' ? memory.status === 'pending' : memory.status !== 'hidden'
+    );
+    if (targets.length === 0) {
+      setMemoryNotice('لا توجد ذكريات تحتاج هذا الإجراء');
       return;
     }
-    setIsPairingScreen(true);
-    setPairScreenError(null);
+    setMemoryNotice(`جاري تحديث ${targets.length} ذكرى...`);
+    for (const memory of targets) {
+      await moderateMemory(memory.id, status);
+    }
+    setMemoryNotice(`تم تحديث ${targets.length} ذكرى`);
+    void loadMetrics();
+  };
+
+  const generatePairingCode = async () => {
+    setIsGeneratingCode(true);
+    setWallNotice(null);
+    setWallError(null);
     try {
-      const newScreen: ScreenRecord = {
-        id: `screen-${cleanCode.slice(-3)}`,
-        name: locationName,
-        status: 'online',
-        orientation: 'landscape',
-        lastHeartbeatAt: new Date().toISOString(),
+      const response = await fetch('/api/v1/screens/pairing-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(branchId ? { branchId } : {}),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        code?: string;
+        expiresAt?: string;
       };
-      setScreens((prev) => [newScreen, ...prev.filter((s) => s.id !== newScreen.id)]);
-      setPairScreenSuccess(`تم ربط شاشة (${locationName}) بنجاح!`);
-      setTimeout(() => setPairScreenSuccess(null), 5000);
-    } catch {
-      setPairScreenError('تعذر ربط الشاشة.');
+      if (!response.ok || !body.code) throw new Error(body.error || 'تعذر توليد رمز الاقتران');
+      setPairingCode(body.code);
+      setPairingExpiresAt(body.expiresAt ?? null);
+    } catch (error) {
+      setWallError(error instanceof Error ? error.message : 'تعذر توليد رمز الاقتران');
     } finally {
-      setIsPairingScreen(false);
+      setIsGeneratingCode(false);
     }
   };
 
-  // Rewards Save Handler
-  const handleSaveRewards = (visits: number, title: string, subtitle: string) => {
-    setIsSavingRewards(true);
-    const updated: BusinessSettings = {
-      ...settings,
-      defaultShotCount: visits,
-      freeGiftOffer: {
-        title,
-        subtitle,
-        icon: settings.freeGiftOffer?.icon || 'gift',
-      },
-    };
-    handleSettingsUpdated(updated);
-    setIsSavingRewards(false);
-    setSaveRewardsSuccess(true);
-    setTimeout(() => setSaveRewardsSuccess(false), 3000);
+  const unpairScreen = async (screenId: string) => {
+    if (!window.confirm('إلغاء اقتران هذه الشاشة؟ ستحتاج إلى رمز جديد لإعادة ربطها.')) return;
+    setWallNotice(null);
+    setWallError(null);
+    try {
+      const response = await fetch(
+        `/api/v1/merchant/screens?id=${encodeURIComponent(screenId)}`,
+        { method: 'DELETE' }
+      );
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
+      if (!response.ok) throw new Error(body.error || 'تعذر إلغاء الاقتران');
+      setWallNotice('تم إلغاء اقتران الشاشة');
+      await loadScreens();
+    } catch (error) {
+      setWallError(error instanceof Error ? error.message : 'تعذر إلغاء الاقتران');
+    }
   };
 
+  const patchWallSettings = async (updates: {
+    blackout?: boolean;
+    slideIntervalSeconds?: number;
+  }) => {
+    if (!context) return;
+    const currentWall = context.settings.wallSettings;
+    setIsSavingWall(true);
+    setWallNotice(null);
+    setWallError(null);
+    try {
+      const response = await fetch('/api/v1/merchant/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settings: {
+            wallSettings: {
+              mode: currentWall?.mode ?? 'slideshow',
+              slideIntervalSeconds:
+                updates.slideIntervalSeconds ?? currentWall?.slideIntervalSeconds ?? 8,
+              blackout: updates.blackout ?? currentWall?.blackout ?? false,
+            },
+          },
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        settings?: BusinessSettings;
+      };
+      if (!response.ok || !body.settings) {
+        throw new Error(body.error || 'تعذر حفظ إعدادات الشاشة');
+      }
+      setContext({ ...context, settings: body.settings });
+      setWallNotice('تم تحديث إعدادات الشاشة');
+    } catch (error) {
+      setWallError(error instanceof Error ? error.message : 'تعذر حفظ إعدادات الشاشة');
+    } finally {
+      setIsSavingWall(false);
+    }
+  };
+
+  const saveReward = async (rule: Omit<RewardRule, 'id' | 'isActive'>) => {
+    setIsSavingReward(true);
+    setRewardNotice(null);
+    setRewardError(null);
+    try {
+      const response = await fetch('/api/v1/merchant/rewards', {
+        method: rewardRule?.id ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...(rewardRule?.id ? { id: rewardRule.id } : {}),
+          name: rule.name,
+          description: rule.description,
+          threshold: rule.threshold,
+          rewardType: rule.rewardType,
+          rewardValue: rule.rewardValue,
+          rewardDescription: rule.rewardDescription,
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        rule?: RewardRule;
+      };
+      if (!response.ok || !body.rule) {
+        throw new Error(body.error || 'تعذر حفظ قاعدة المكافأة');
+      }
+      setRewardRule(body.rule);
+      setRewardNotice('تم حفظ قاعدة المكافأة');
+      await loadMetrics();
+    } catch (error) {
+      setRewardError(error instanceof Error ? error.message : 'تعذر حفظ قاعدة المكافأة');
+    } finally {
+      setIsSavingReward(false);
+    }
+  };
+
+  const copyCustomerUrl = async () => {
+    if (!context) return;
+    const url = `${window.location.origin}/c/${context.organization.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+    } catch {
+      setCopiedUrl(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await fetch('/api/v1/staff-session', { method: 'DELETE' });
+    } catch {
+      /* the cookie is cleared server-side when possible */
+    }
+    try {
+      await createClient().auth.signOut();
+    } catch {
+      /* redirect anyway */
+    }
+    window.location.assign('/login');
+  };
+
+  const canManage = useMemo(
+    () => Boolean(context && ['owner', 'admin', 'manager'].includes(context.role)),
+    [context]
+  );
+
+  const customerLiveUrl = useMemo(
+    () => (context ? `${window.location.origin}/c/${context.organization.slug}` : ''),
+    [context]
+  );
+
+  /* -------------------------------- render -------------------------------- */
+
+  if (isBooting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0B0A0A] text-[#FAF5EB]">
+        <div className="flex items-center gap-2 text-xs text-[#A19E9B]">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          جاري تحميل لوحة التحكم...
+        </div>
+      </div>
+    );
+  }
+
+  if (needsOnboarding) {
+    return <OnboardingPanel onDone={() => window.location.reload()} />;
+  }
+
+  if (bootError || !context) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0B0A0A] p-6 text-[#FAF5EB]">
+        <div className="max-w-md space-y-4 rounded-2xl border border-rose-500/30 bg-[#141212] p-6 text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-rose-300" />
+          <h1 className="text-base font-bold">تعذر تحميل لوحة التحكم</h1>
+          <p className="text-xs text-[#A19E9B]">{bootError ?? 'حدث خطأ غير متوقع'}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mx-auto flex items-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2 text-xs font-bold text-[#12100E]"
+          >
+            <RefreshCw className="h-4 w-4" />
+            إعادة المحاولة
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#FAF5EB] text-[#3D2314] flex flex-col font-sans selection:bg-[#DFAB56] selection:text-white">
-      {/* Top Navbar Component */}
+    <div className="min-h-screen bg-[#0B0A0A] pb-16 font-sans text-[#FAF5EB]">
       <DashboardNavBar
-        settings={settings}
+        settings={context.settings}
         activeTab={activeTab}
         onSelectTab={setActiveTab}
-        activeStaff={activeStaff}
-        onOpenStaffModal={() => setIsStaffModalOpen(true)}
-        onOpenQuickSetup={() => setIsQuickSetupOpen(true)}
-        onOpenBaristaRedeem={() => setIsBaristaRedeemOpen(true)}
-        onSignOut={handleSignOut}
-        printQueueCount={printQueue.length}
-        pendingMemoriesCount={memories.filter((m) => m.status === 'pending').length}
+        onSignOut={signOut}
+        printQueueCount={printQueueCount}
+        pendingMemoriesCount={
+          metrics?.attentionCenter.pendingMemories ??
+          memories.filter((memory) => memory.status === 'pending').length
+        }
+        role={context.role}
       />
 
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+      <main className="mx-auto max-w-7xl space-y-5 px-4 pt-5 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-white/10 bg-[#141212] px-4 py-3 sm:flex-row sm:items-center">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="flex items-center gap-1.5 font-bold text-[#FAF5EB]">
+              <Store className="h-3.5 w-3.5 text-[#DFAB56]" />
+              {context.organization.name}
+            </span>
+            <span className="font-mono text-[10px] text-[#A19E9B]" dir="ltr">
+              /c/{context.organization.slug}
+            </span>
+            <span className="rounded-md border border-white/10 bg-[#1C1B1B] px-2 py-0.5 font-mono text-[10px] text-[#A19E9B]">
+              {context.organization.currency} • {context.organization.timezone}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {context.branches.length > 0 && (
+              <label className="flex items-center gap-2 text-[11px] text-[#A19E9B]">
+                الفرع
+                <select
+                  value={branchId}
+                  onChange={(event) => setBranchId(event.target.value)}
+                  className="rounded-lg border border-white/10 bg-[#1C1B1B] px-2.5 py-1.5 text-[11px] font-bold text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+                >
+                  <option value="">كل الفروع</option>
+                  {context.branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                void loadMetrics();
+                void loadMemories();
+                void loadScreens();
+                void loadPrintCount();
+              }}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] px-2.5 py-1.5 text-[11px] font-bold text-[#FAF5EB] hover:bg-[#211F1F]"
+            >
+              <RefreshCw className="h-3 w-3" />
+              تحديث
+            </button>
+          </div>
+        </div>
+
         {activeTab === 'overview' && (
           <DashboardOverviewTab
-            settings={settings}
+            settings={context.settings}
             metrics={metrics}
             isLoadingMetrics={isLoadingMetrics}
-            onRefreshMetrics={fetchMetrics}
+            onRefreshMetrics={() => void loadMetrics()}
             customerLiveUrl={customerLiveUrl}
             copiedUrl={copiedUrl}
-            onCopyUrl={handleCopyUrl}
-            onOpenQuickSetup={() => setIsQuickSetupOpen(true)}
+            onCopyUrl={() => void copyCustomerUrl()}
             onNavigateTab={setActiveTab}
-          />
-        )}
-
-        {activeTab === 'print' && (
-          <PrintStationTab
-            queue={printQueue}
-            brandName={settings.branding?.name}
           />
         )}
 
@@ -489,135 +618,221 @@ export default function MerchantDashboardPage() {
           <DashboardMemoriesTab
             memories={memories}
             isLoadingMemories={isLoadingMemories}
-            autoApproveWall={autoApproveWall}
-            onToggleAutoApprove={handleToggleAutoApprove}
-            onModerateMemory={handleModerateMemory}
-            onDeleteMemory={handleDeleteMemory}
-            onBatchApprove={handleBatchApprovePending}
-            onBatchHideAll={handleBatchHideAll}
-            onRefresh={fetchMemories}
-            batchActionMsg={batchActionMsg}
+            onModerateMemory={(id, status) => void moderateMemory(id, status)}
+            onDeleteMemory={(id) => void deleteMemory(id)}
+            onBatchApprove={() => void batchModerate('approved')}
+            onBatchHideAll={() => void batchModerate('hidden')}
+            onRefresh={() => void loadMemories()}
+            batchActionMsg={memoryNotice}
           />
-        )}
-
-        {activeTab === 'card_studio' && (
-          <CardStudioTab businessSlug={settings.cafeSlug} />
-        )}
-
-        {activeTab === 'staff' && (
-          <StaffManagementTab businessSlug={settings.cafeSlug} />
         )}
 
         {activeTab === 'customers' && (
-          <CustomerCRMTab />
-        )}
-
-        {/* Legacy Customer Table Fallback */ false && (
-          <DashboardCustomersTab
-            customers={customers}
-            isLoadingCustomers={isLoadingCustomers}
-            onAddDirectStamp={handleAddDirectStamp}
-            onExportCsv={handleExportCsv}
-            onRefresh={fetchCustomers}
-            cafeSlug={settings.cafeSlug}
-            requiredVisits={settings.defaultShotCount || 5}
-          />
+          <CustomersTab rewardRuleId={rewardRule?.id ?? null} canManage={canManage} />
         )}
 
         {activeTab === 'wall' && (
           <DashboardWallTab
             screens={screens}
-            isTvBlackout={isTvBlackout}
-            tvSlideDuration={tvSlideDuration}
-            onToggleBlackout={handleToggleBlackout}
-            onChangeSlideDuration={handleChangeSlideDuration}
-            onForceRefresh={handleForceRefreshTv}
-            onUnpairScreen={handleUnpairScreen}
-            onPairScreenSubmit={handlePairScreenSubmit}
-            isPairingScreen={isPairingScreen}
-            pairScreenSuccess={pairScreenSuccess}
-            pairScreenError={pairScreenError}
-            tvSyncNotice={tvSyncNotice}
-            cafeSlug={settings.cafeSlug}
+            isLoadingScreens={isLoadingScreens}
+            pairingCode={pairingCode}
+            pairingExpiresAt={pairingExpiresAt}
+            isGeneratingCode={isGeneratingCode}
+            onGenerateCode={() => void generatePairingCode()}
+            isTvBlackout={Boolean(context.settings.wallSettings?.blackout)}
+            tvSlideDuration={(context.settings.wallSettings?.slideIntervalSeconds ?? 8) * 1000}
+            onToggleBlackout={() =>
+              void patchWallSettings({
+                blackout: !context.settings.wallSettings?.blackout,
+              })
+            }
+            onChangeSlideDuration={(durationMs) =>
+              void patchWallSettings({ slideIntervalSeconds: Math.round(durationMs / 1000) })
+            }
+            onUnpairScreen={(screenId) => void unpairScreen(screenId)}
+            onRefreshScreens={() => void loadScreens()}
+            wallUrl="/wall"
+            notice={wallNotice}
+            error={wallError}
+            isSavingWall={isSavingWall}
           />
         )}
 
         {activeTab === 'rewards' && (
           <DashboardRewardsTab
-            settings={settings}
-            onSaveRewards={handleSaveRewards}
-            isSavingRewards={isSavingRewards}
-            saveRewardsSuccess={saveRewardsSuccess}
+            rule={rewardRule}
+            onSave={saveReward}
+            isSaving={isSavingReward}
+            success={rewardNotice}
+            error={rewardError}
           />
         )}
+
+        {activeTab === 'staff' && (
+          <StaffTab
+            branches={context.branches}
+            currentMemberId={context.memberId}
+            canManage={canManage}
+          />
+        )}
+
+        {activeTab === 'print' && <PrintTab canManage={canManage} />}
 
         {activeTab === 'qrcodes' && (
-          <DashboardQrTab
-            settings={settings}
-            customerLiveUrl={customerLiveUrl}
-            onOpenQuickSetup={() => setIsQuickSetupOpen(true)}
-          />
-        )}
-
-        {activeTab === 'frames' && (
-          <FrameStudioTab
-            settings={settings}
-            onSettingsUpdated={handleSettingsUpdated}
-          />
-        )}
-
-        {activeTab === 'analytics' && (
-          <RetentionAnalyticsTab
-            cafeSlug={settings.cafeSlug}
-            cafeName={settings.branding?.name}
-          />
+          <DashboardQrTab settings={context.settings} customerLiveUrl={customerLiveUrl} />
         )}
 
         {activeTab === 'settings' && (
-          <div className="p-8 bg-[#141212] rounded-2xl border border-white/10 text-center space-y-4 shadow-xl">
-            <h3 className="font-bold text-base text-[#FAF5EB]">إعدادات الهوية والعلامة التجارية</h3>
-            <p className="text-xs text-[#A19E9B] max-w-md mx-auto">
-              اضغط على الزر أدناه لفتح لوحة تخصيص الهوية والشعار ونمط التصوير وأبعاد الكروت.
-            </p>
-            <button
-              onClick={() => setIsQuickSetupOpen(true)}
-              className="px-6 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
-            >
-              فتح لوحة تخصيص الهوية والـ QR
-            </button>
-          </div>
-        )}
-
-        {activeTab === 'billing' && (
-          <SubscriptionBillingTab
-            cafeSlug={settings.cafeSlug || 'memories'}
+          <SettingsTab
+            organization={context.organization}
+            settings={context.settings}
+            canManage={canManage}
+            onSaved={(settings) => setContext({ ...context, settings })}
           />
         )}
       </main>
+    </div>
+  );
+}
 
-      {/* Global Modals */}
-      <StaffPinModal
-        open={isStaffModalOpen}
-        onClose={() => setIsStaffModalOpen(false)}
-        onSuccess={(member) => {
-          setActiveStaff(member);
-          setIsStaffModalOpen(false);
-        }}
-      />
+/* -------------------------------------------------------------------------- */
+/* Onboarding fallback                                                        */
+/* -------------------------------------------------------------------------- */
 
-      <MerchantQuickSetupModal
-        isOpen={isQuickSetupOpen}
-        onClose={() => setIsQuickSetupOpen(false)}
-        currentSettings={settings}
-        onSettingsSaved={handleSettingsUpdated}
-      />
+function OnboardingPanel({ onDone }: { onDone: () => void }) {
+  const [name, setName] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [branchName, setBranchName] = useState('الفرع الرئيسي');
+  const [rewardTitle, setRewardTitle] = useState('هدية ترحيبية عند اكتمال البطاقة');
+  const [totalStamps, setTotalStamps] = useState(5);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-      <BaristaRedeemModal
-        isOpen={isBaristaRedeemOpen}
-        onClose={() => setIsBaristaRedeemOpen(false)}
-        settings={settings}
-        activeStaff={activeStaff}
-      />
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSaving(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/v1/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          businessName: businessName.trim(),
+          slug: slug.trim().toLowerCase(),
+          branchName: branchName.trim(),
+          totalStamps,
+          rewardTitle: rewardTitle.trim(),
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
+      if (!response.ok) throw new Error(body.error || 'تعذر تجهيز المنشأة');
+      onDone();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'تعذر تجهيز المنشأة');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#0B0A0A] p-4 font-sans text-[#FAF5EB]">
+      <form
+        onSubmit={submit}
+        className="w-full max-w-lg space-y-4 rounded-2xl border border-white/10 bg-[#141212] p-6 shadow-2xl"
+      >
+        <div className="space-y-1 border-b border-white/10 pb-3">
+          <h1 className="flex items-center gap-2 text-base font-bold">
+            <Sparkles className="h-4 w-4 text-[#DFAB56]" />
+            جهّز منشأتك
+          </h1>
+          <p className="text-xs text-[#A19E9B]">
+            حسابك جاهز لكنه غير مرتبط بمنشأة بعد. أدخل بيانات المكان لإنشاء أول فرع وبطاقة ولاء.
+          </p>
+        </div>
+
+        {error && (
+          <p className="rounded-lg border border-rose-500/30 bg-rose-950/30 p-3 text-xs text-rose-200">
+            {error}
+          </p>
+        )}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="text-xs font-bold text-[#A19E9B]">
+            اسمك
+            <input
+              required
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3 py-2 text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
+          </label>
+          <label className="text-xs font-bold text-[#A19E9B]">
+            اسم المنشأة
+            <input
+              required
+              value={businessName}
+              onChange={(event) => setBusinessName(event.target.value)}
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3 py-2 text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
+          </label>
+          <label className="text-xs font-bold text-[#A19E9B]">
+            رابط المنشأة
+            <input
+              required
+              dir="ltr"
+              value={slug}
+              onChange={(event) => setSlug(event.target.value.toLowerCase())}
+              placeholder="my-cafe"
+              pattern="[a-z0-9][a-z0-9-]{1,79}"
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3 py-2 font-mono text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
+          </label>
+          <label className="text-xs font-bold text-[#A19E9B]">
+            اسم الفرع
+            <input
+              required
+              value={branchName}
+              onChange={(event) => setBranchName(event.target.value)}
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3 py-2 text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
+          </label>
+          <label className="text-xs font-bold text-[#A19E9B] sm:col-span-2">
+            اسم المكافأة
+            <input
+              required
+              value={rewardTitle}
+              onChange={(event) => setRewardTitle(event.target.value)}
+              className="mt-1 w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3 py-2 text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
+          </label>
+          <label className="text-xs font-bold text-[#A19E9B] sm:col-span-2">
+            عدد الزيارات المطلوبة: {totalStamps}
+            <input
+              type="range"
+              min={2}
+              max={20}
+              value={totalStamps}
+              onChange={(event) => setTotalStamps(Number(event.target.value))}
+              className="mt-2 w-full accent-[#DFAB56]"
+            />
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2.5 text-xs font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
+        >
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+          إنشاء المنشأة
+        </button>
+
+        <Link href="/login" className="block text-center text-[11px] text-[#A19E9B] hover:text-[#FAF5EB]">
+          تسجيل الدخول بحساب آخر
+        </Link>
+      </form>
     </div>
   );
 }

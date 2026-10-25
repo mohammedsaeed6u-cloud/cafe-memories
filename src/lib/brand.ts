@@ -47,6 +47,11 @@ export function validBrandLink(platform: SocialPlatform | 'maps', raw: string): 
 }
 
 const optionalLink = z.string().trim().max(350).nullable().optional();
+const socialLinksSchema = z.object({
+  instagram: optionalLink, facebook: optionalLink, tiktok: optionalLink,
+  x: optionalLink, youtube: optionalLink, whatsapp: optionalLink, website: optionalLink,
+}).strict();
+
 export const brandSchema = z.object({
   name: z.string().trim().min(2).max(100),
   tagline: z.string().trim().max(100),
@@ -54,11 +59,35 @@ export const brandSchema = z.object({
   accentColor: hex,
   frameStyle: z.enum(frameStyles),
   walletColorPreset: z.enum(walletPresets),
-  socialLinks: z.object({
-    instagram: optionalLink, facebook: optionalLink, tiktok: optionalLink,
-    x: optionalLink, youtube: optionalLink, whatsapp: optionalLink, website: optionalLink,
-  }).strict(),
+  socialLinks: socialLinksSchema,
 }).strict().superRefine((input, ctx) => {
+  for (const platform of socialPlatforms) {
+    const value = input.socialLinks[platform];
+    if (value && !validBrandLink(platform, value)) ctx.addIssue({ code: 'custom',
+      path: ['socialLinks', platform], message: 'رابط غير آمن أو ليس من هذه المنصة' });
+  }
+});
+
+/**
+ * Patch variant of `brandSchema`.
+ *
+ * Zod refuses `.partial()` on schemas that carry refinements, so every field is
+ * declared optional here and the contrast/link checks only run on supplied
+ * values. The API merges the patch onto the stored organization row.
+ */
+export const brandPatchSchema = z.object({
+  name: z.string().trim().min(2).max(100).optional(),
+  tagline: z.string().trim().max(100).optional(),
+  primaryColor: hex
+    .refine((value) => whiteContrast(value) >= 4.5,
+      'اختار لونًا داكنًا يقرأ عليه النص الأبيض بوضوح')
+    .optional(),
+  accentColor: hex.optional(),
+  frameStyle: z.enum(frameStyles).optional(),
+  walletColorPreset: z.enum(walletPresets).optional(),
+  socialLinks: socialLinksSchema.optional(),
+}).strict().superRefine((input, ctx) => {
+  if (!input.socialLinks) return;
   for (const platform of socialPlatforms) {
     const value = input.socialLinks[platform];
     if (value && !validBrandLink(platform, value)) ctx.addIssue({ code: 'custom',

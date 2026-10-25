@@ -1,894 +1,1308 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import {
   Store,
-  CheckCircle,
-  Gift,
   Search,
-  Unlock,
-  ShieldCheck,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
   RefreshCw,
-  Users,
-  Award,
-  Sparkles,
-  ArrowRight,
-  Clock,
+  LogOut,
   LayoutDashboard,
-  Check,
-  X,
   Phone,
+  Gift,
+  Ticket,
   Printer,
-  Bell,
-  BellOff,
-  Scissors,
+  Image as ImageIcon,
+  Plus,
+  X,
+  Copy,
+  ArrowRight,
+  ShieldCheck,
+  UserRound,
+  Clock,
+  Sparkles,
 } from 'lucide-react';
-import { CustomerRegistryService, RegisteredCustomer } from '@/lib/services/customer-registry.service';
-import { LoyaltyPurseService, CustomerLoyaltyData } from '@/features/loyalty/loyalty-purse.service';
-import { VoucherService, IssuedVoucher } from '@/lib/services/voucher.service';
-import { BusinessSettingsService } from '@/lib/services/business-settings.service';
-import { getIndustryProfile } from '@/lib/constants/photobooth-presets';
-import { CooldownService } from '@/lib/services/cooldown.service';
-import { SoundEffectsService } from '@/lib/services/sound-effects.service';
-import { StaffPinModal } from '@/components/dashboard/StaffPinModal';
-import { getActiveStaff, clearActiveStaffSession } from '@/lib/services/staff-auth.service';
-import { PrintService } from '@/lib/services/print.service';
-import { StampyLogo, StampyApertureIcon } from '@/components/brand/StampyLogo';
+import { PrintService, type PrintFormat } from '@/lib/services/print.service';
+import type { BusinessSettings } from '@/types/photobooth';
 
-export default function StaffTerminalPage() {
-  const [cafeSlug, setCafeSlug] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlCafe = urlParams.get('cafe');
-        if (urlCafe) return urlCafe;
-        const stored = localStorage.getItem('memories_active_merchant_slug');
-        if (stored) return stored;
-      } catch {}
+/* -------------------------------------------------------------------------- */
+/* API shapes                                                                 */
+/* -------------------------------------------------------------------------- */
+
+interface BranchRecord {
+  id: string;
+  slug: string;
+  name: string;
+  address: string | null;
+}
+
+interface TerminalContext {
+  source: 'merchant' | 'staff';
+  memberId: string | null;
+  role: 'owner' | 'admin' | 'manager' | 'staff';
+  organization: {
+    id: string;
+    slug: string;
+    name: string;
+    logoUrl: string | null;
+    tagline: string | null;
+    primaryColor: string | null;
+    secondaryColor: string | null;
+    timezone: string;
+    currency: string;
+  };
+  branch: BranchRecord | null;
+  branches: BranchRecord[];
+  settings: BusinessSettings;
+  rewardRule: {
+    id: string;
+    name: string;
+    threshold: number;
+    reward_type: string;
+    reward_value: string | null;
+    reward_description: string | null;
+    is_active: boolean;
+  } | null;
+}
+
+interface StaffSession {
+  staffId: string;
+  cafeSlug: string;
+  role: string;
+  expiresAt: string;
+}
+
+interface CustomerSearchResult {
+  id: string;
+  displayName: string;
+  phone: string | null;
+  totalVisits: number;
+  lastVisit: string | null;
+}
+
+interface CustomerCard {
+  customer: {
+    id: string;
+    displayName: string;
+    phone: string | null;
+    persona: string | null;
+    createdAt: string;
+  };
+  loyalty: {
+    stampedCount: number;
+    maxSlots: number;
+    completedCardsCount: number;
+    totalVerifiedVisits: number;
+    lastStampedAt: string | null;
+    rewardName: string | null;
+  };
+  rewards: Array<{ id: string; name: string; threshold: number; unlockedAt: string }>;
+  stamps: Array<{ memoryId: string; takenAt: string; thumbnailUrl: string }>;
+  vouchers: Array<{
+    code: string;
+    title: string;
+    status: string;
+    expiresAt: string | null;
+    createdAt: string;
+  }>;
+  memories: Array<{
+    id: string;
+    originalUrl: string;
+    thumbnailUrl: string;
+    caption: string | null;
+    status: string;
+    visibility: string;
+    createdAt: string;
+  }>;
+  walletPass: { status: string; shareUrl: string | null } | null;
+}
+
+interface PrintJob {
+  id: string;
+  name: string;
+  phone: string;
+  photoStripUrl: string;
+  format: string;
+  copies: number;
+  status: 'pending' | 'printing' | 'printed' | 'failed' | 'dismissed' | string;
+  createdAt: string;
+  printedAt: string | null;
+  error: string | null;
+  memoryId: string | null;
+}
+
+interface ApiErrorBody {
+  error?: string;
+  message?: string;
+  code?: string;
+}
+
+const PRINT_FORMATS: Array<{ id: PrintFormat; label: string }> = [
+  { id: 'standard-2x6', label: 'شريط 2×6' },
+  { id: 'dual-4x6', label: 'مزدوج 4×6' },
+  { id: 'thermal-80mm', label: 'حراري 80mm' },
+  { id: 'thermal-58mm', label: 'حراري 58mm' },
+];
+
+const ROLE_LABELS: Record<string, string> = {
+  owner: 'المالك',
+  admin: 'مدير النظام',
+  manager: 'مدير',
+  staff: 'موظف',
+};
+
+async function getJson<T>(
+  url: string
+): Promise<{ ok: boolean; status: number; body: T & ApiErrorBody }> {
+  const response = await fetch(url, { cache: 'no-store' });
+  const body = (await response.json().catch(() => ({}))) as T & ApiErrorBody;
+  return { ok: response.ok, status: response.status, body };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Page                                                                       */
+/* -------------------------------------------------------------------------- */
+
+export default function TerminalPage() {
+  const [isBooting, setIsBooting] = useState(true);
+  const [context, setContext] = useState<TerminalContext | null>(null);
+  const [bootError, setBootError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
+
+  const [branchId, setBranchId] = useState('');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<CustomerSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [card, setCard] = useState<CustomerCard | null>(null);
+  const [isLoadingCard, setIsLoadingCard] = useState(false);
+  const [cardError, setCardError] = useState<string | null>(null);
+
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+
+  const [voucherTitle, setVoucherTitle] = useState('هدية ترحيبية');
+  const [voucherCode, setVoucherCode] = useState('');
+
+  const [printFormat, setPrintFormat] = useState<PrintFormat>('standard-2x6');
+  const [jobs, setJobs] = useState<PrintJob[]>([]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const branchQuery = branchId ? `branchId=${encodeURIComponent(branchId)}` : '';
+
+  const handleUnauthorized = useCallback((status: number) => {
+    if (status === 401) {
+      setNeedsLogin(true);
+      setContext(null);
+      return true;
     }
-    return 'stampy';
-  });
+    return false;
+  }, []);
 
-  const [settings, setSettings] = useState(() => {
-    let slug = 'stampy';
-    if (typeof window !== 'undefined') {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        slug = urlParams.get('cafe') || localStorage.getItem('memories_active_merchant_slug') || 'stampy';
-      } catch {}
+  /* ------------------------------- bootstrap ------------------------------ */
+
+  const loadContext = useCallback(async () => {
+    const { ok, status, body } = await getJson<TerminalContext>(
+      `/api/v1/merchant/context${branchQuery ? `?${branchQuery}` : ''}`
+    );
+    if (status === 401) {
+      setNeedsLogin(true);
+      setContext(null);
+      return false;
     }
-    return BusinessSettingsService.getSettings(slug);
-  });
+    if (!ok) {
+      if (body.code === 'membership_required') {
+        throw new Error('حسابك غير مرتبط بمنشأة بعد. أكمل التجهيز من لوحة التحكم أولاً.');
+      }
+      throw new Error(body.error || 'تعذر تحميل بيانات المنشأة');
+    }
+    setContext(body);
+    setNeedsLogin(false);
+    setBranchId((previous) => previous || body.branch?.id || '');
+    return true;
+  }, [branchQuery]);
 
-  const industry = getIndustryProfile(settings.businessType);
-
-  const [terminalTab, setTerminalTab] = useState<'queue' | 'stamps'>('queue');
-  const [printQueue, setPrintQueue] = useState<any[]>([]);
-  const [soundAlertEnabled, setSoundAlertEnabled] = useState(true);
-  const prevQueueLengthRef = useRef(0);
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<RegisteredCustomer | null>(null);
-  const [loyaltyData, setLoyaltyData] = useState<CustomerLoyaltyData | null>(null);
-  const [activeVoucher, setActiveVoucher] = useState<IssuedVoucher | null>(null);
-  const [customerVouchers, setCustomerVouchers] = useState<IssuedVoucher[]>([]);
-  const [redeemedCount, setRedeemedCount] = useState(0);
-  const [successNotice, setSuccessNotice] = useState<string | null>(null);
-  const [errorNotice, setErrorNotice] = useState<string | null>(null);
-
-  // Shift telemetry state
-  const [shiftStampsCount, setShiftStampsCount] = useState(0);
-  const [shiftRedeemedCount, setShiftRedeemedCount] = useState(0);
-
-  // Staff authentication state
-  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-  const [staffMember, setStaffMember] = useState<{ id: string; name: string } | null>(null);
-
-  const requiredVisits = settings.loyaltyMaxVisits || 5;
-  const giftTitle = settings.freeGiftOffer?.title || industry.defaultGiftTitle;
-
-  // Load Print Queue & Listen for new prints
   useEffect(() => {
-    const fetchServerQueue = async () => {
+    let cancelled = false;
+    const boot = async () => {
+      setIsBooting(true);
+      setBootError(null);
       try {
-        const res = await fetch(`/api/v1/print/jobs?slug=${encodeURIComponent(cafeSlug)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && Array.isArray(data.jobs)) {
-            const serverJobs = data.jobs;
-            setPrintQueue((prev) => {
-              const map = new Map();
-              serverJobs.forEach((j: any) => map.set(j.id, j));
-              prev.forEach((j: any) => {
-                if (!map.has(j.id)) map.set(j.id, j);
-              });
-              const combined = Array.from(map.values());
-              if (soundAlertEnabled && combined.length > prevQueueLengthRef.current) {
-                SoundEffectsService.playTerminalDing();
-              }
-              prevQueueLengthRef.current = combined.length;
-              return combined;
-            });
-          }
+        await loadContext();
+      } catch (error) {
+        if (!cancelled) {
+          setBootError(error instanceof Error ? error.message : 'تعذر تحميل البيانات');
         }
-      } catch {}
+      } finally {
+        if (!cancelled) setIsBooting(false);
+      }
     };
+    void boot();
+    return () => {
+      cancelled = true;
+    };
+    // The bootstrap runs once; branch changes reload through loadContext below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    const loadQueue = () => {
+  useEffect(() => {
+    if (isBooting || needsLogin || !context) return;
+    const run = async () => {
+      await loadContext();
+    };
+    void run().catch((error) => {
+      setBootError(error instanceof Error ? error.message : 'تعذر تحديث الفرع');
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branchId]);
+
+  /* --------------------------------- search -------------------------------- */
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) return;
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
       try {
-        const queueKey = `memories_print_queue_${cafeSlug}`;
-        const stored = localStorage.getItem(queueKey);
-        if (stored) {
-          const list = JSON.parse(stored);
-          setPrintQueue(list);
-          if (soundAlertEnabled && list.length > prevQueueLengthRef.current) {
-            SoundEffectsService.playTerminalDing();
-          }
-          prevQueueLengthRef.current = list.length;
-        } else {
-          setPrintQueue([]);
-          prevQueueLengthRef.current = 0;
+        const { ok, status, body } = await getJson<{ customers: CustomerSearchResult[] }>(
+          `/api/v1/merchant/customers?query=${encodeURIComponent(trimmed)}`
+        );
+        if (cancelled) return;
+        if (handleUnauthorized(status)) return;
+        if (!ok) throw new Error(body.error || 'تعذر البحث عن العميل');
+        setResults(body.customers ?? []);
+      } catch (error) {
+        if (!cancelled) {
+          setSearchError(error instanceof Error ? error.message : 'تعذر البحث عن العميل');
         }
-      } catch {}
-      fetchServerQueue();
-    };
-
-    loadQueue();
-    window.addEventListener('memories-print-queue-updated', loadQueue);
-    window.addEventListener('storage', loadQueue);
-
-    // Periodic server polling every 4 seconds for cross-device table prints
-    const pollTimer = setInterval(fetchServerQueue, 4000);
-
-    let channel: BroadcastChannel | null = null;
-    try {
-      channel = new BroadcastChannel('memories_print_channel');
-      channel.onmessage = (event) => {
-        if (event.data?.type === 'NEW_PRINT_JOB') {
-          loadQueue();
-          if (soundAlertEnabled) {
-            SoundEffectsService.playTerminalDing();
-          }
-        }
-      };
-    } catch {}
+      } finally {
+        if (!cancelled) setIsSearching(false);
+      }
+    }, 300);
 
     return () => {
-      clearInterval(pollTimer);
-      window.removeEventListener('memories-print-queue-updated', loadQueue);
-      window.removeEventListener('storage', loadQueue);
-      if (channel) {
-        try {
-          channel.close();
-        } catch {}
-      }
+      cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [cafeSlug, soundAlertEnabled]);
+  }, [query, handleUnauthorized]);
+
+  /* ---------------------------------- card --------------------------------- */
+
+  const loadCard = useCallback(
+    async (customerId: string) => {
+      setIsLoadingCard(true);
+      setCardError(null);
+      try {
+        const { ok, status, body } = await getJson<{ card: CustomerCard }>(
+          `/api/v1/merchant/customers/${customerId}/card`
+        );
+        if (handleUnauthorized(status)) return;
+        if (!ok || !body.card) throw new Error(body.error || 'تعذر تحميل بطاقة العميل');
+        setCard(body.card);
+      } catch (error) {
+        setCard(null);
+        setCardError(error instanceof Error ? error.message : 'تعذر تحميل بطاقة العميل');
+      } finally {
+        setIsLoadingCard(false);
+      }
+    },
+    [handleUnauthorized]
+  );
+
+  const selectCustomer = useCallback(
+    (customerId: string) => {
+      setSelectedId(customerId);
+      setNotice(null);
+      setActionError(null);
+      void loadCard(customerId);
+    },
+    [loadCard]
+  );
+
+  /* ---------------------------------- jobs --------------------------------- */
+
+  const loadJobs = useCallback(async () => {
+    setIsLoadingJobs(true);
+    try {
+      const { ok, status, body } = await getJson<{ jobs: PrintJob[] }>(
+        `/api/v1/print/jobs?status=all&limit=40${branchQuery ? `&${branchQuery}` : ''}`
+      );
+      if (handleUnauthorized(status)) return;
+      if (!ok) throw new Error(body.error || 'تعذر تحميل طابور الطباعة');
+      setJobs(body.jobs ?? []);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'تعذر تحميل طابور الطباعة');
+    } finally {
+      setIsLoadingJobs(false);
+    }
+  }, [branchQuery, handleUnauthorized]);
 
   useEffect(() => {
-    const s = BusinessSettingsService.getSettings(cafeSlug);
-    setSettings(s);
+    if (!context) return;
+    const run = async () => {
+      await loadJobs();
+    };
+    void run();
+  }, [context, loadJobs]);
 
-    const active = getActiveStaff();
-    if (active) {
-      setStaffMember(active);
-    }
+  /* -------------------------------- actions -------------------------------- */
 
-    // Load shift stats
+  const registerVisit = async () => {
+    if (!card) return;
+    setBusyAction('visit');
+    setActionError(null);
+    setNotice(null);
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const shiftStamps = localStorage.getItem(`memories_shift_stamps_${cafeSlug}_${today}`);
-      const shiftRedeemed = localStorage.getItem(`memories_shift_redeemed_${cafeSlug}_${today}`);
-      if (shiftStamps) setShiftStampsCount(Number(shiftStamps));
-      if (shiftRedeemed) setShiftRedeemedCount(Number(shiftRedeemed));
-    } catch {}
-  }, [cafeSlug]);
-
-  const recordShiftStamp = () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const next = shiftStampsCount + 1;
-      setShiftStampsCount(next);
-      localStorage.setItem(`memories_shift_stamps_${cafeSlug}_${today}`, String(next));
-    } catch {}
-  };
-
-  const recordShiftRedemption = () => {
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const next = shiftRedeemedCount + 1;
-      setShiftRedeemedCount(next);
-      localStorage.setItem(`memories_shift_redeemed_${cafeSlug}_${today}`, String(next));
-    } catch {}
-  };
-
-  // Instant Print Action
-  const handlePrintItem = (item: any, format: 'standard-2x6' | 'dual-4x6' | 'thermal-80mm' = 'standard-2x6') => {
-    if (item.photoStripUrl) {
-      PrintService.printStripImage(item.photoStripUrl, {
-        format,
-        highContrast: format.startsWith('thermal'),
-        showCutLine: true,
+      const response = await fetch('/api/v1/visits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: card.customer.id,
+          source: 'staff',
+          ...(branchId ? { branchId } : {}),
+          idempotencyKey: crypto.randomUUID(),
+        }),
       });
-      setSuccessNotice(`تم إرسال شريط (${item.name}) إلى الطابعة بنجاح!`);
-      setTimeout(() => setSuccessNotice(null), 3000);
-    }
-  };
-
-  const handleDismissPrint = (id: string) => {
-    const updated = printQueue.filter((p) => p.id !== id);
-    setPrintQueue(updated);
-    try {
-      localStorage.setItem(`memories_print_queue_${cafeSlug}`, JSON.stringify(updated));
-      window.dispatchEvent(new CustomEvent('memories-print-queue-updated'));
-    } catch {}
-
-    // Dismiss from server print queue
-    try {
-      fetch(`/api/v1/print/jobs?id=${encodeURIComponent(id)}&slug=${encodeURIComponent(cafeSlug)}`, {
-        method: 'DELETE',
-      }).catch(() => {});
-    } catch {}
-
-    setSuccessNotice('تم تأكيد تسليم الشريط للعميل.');
-    setTimeout(() => setSuccessNotice(null), 3000);
-  };
-
-  const handleLookup = (query: string) => {
-    setErrorNotice(null);
-    setSuccessNotice(null);
-    setActiveVoucher(null);
-    setCustomerVouchers([]);
-
-    const trimmed = query.trim();
-    if (!trimmed) {
-      setSelectedCustomer(null);
-      setLoyaltyData(null);
-      return;
-    }
-
-    // 1. Check if user typed or scanned a Voucher Code (e.g. GIFT-1234 or 4 digits)
-    const voucherLookup = VoucherService.lookupVoucher(trimmed, cafeSlug);
-    if (voucherLookup.found && voucherLookup.voucher) {
-      const v = voucherLookup.voucher;
-      setActiveVoucher(v);
-      const cust: RegisteredCustomer = {
-        phone: v.customerPhone,
-        name: v.customerName,
-        role: 'vip_guest',
-        registeredAt: v.issuedAt,
-        lastVisit: v.issuedAt,
-        totalVisits: requiredVisits,
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        duplicate?: boolean;
       };
-      setSelectedCustomer(cust);
-      const lData = LoyaltyPurseService.getData(v.customerPhone, cafeSlug, requiredVisits);
-      setLoyaltyData(lData);
-      setCustomerVouchers(VoucherService.getCustomerVouchers(v.customerPhone, cafeSlug));
-      return;
-    }
-
-    // 2. Lookup by phone number
-    const clean = trimmed.replace(/[^0-9]/g, '');
-    if (!clean || clean.length < 6) {
-      setSelectedCustomer(null);
-      setLoyaltyData(null);
-      return;
-    }
-
-    const customers = CustomerRegistryService.getRegisteredCustomers(cafeSlug);
-    const found = customers.find((c) => c.phone.includes(clean) || clean.includes(c.phone));
-
-    if (found) {
-      setSelectedCustomer(found);
-      const lData = LoyaltyPurseService.getData(found.phone, cafeSlug, requiredVisits);
-      setLoyaltyData(lData);
-      const vList = VoucherService.getCustomerVouchers(found.phone, cafeSlug);
-      setCustomerVouchers(vList);
-      const activeOne = vList.find((v) => v.status === 'ACTIVE');
-      if (activeOne) setActiveVoucher(activeOne);
-      try {
-        const stored = localStorage.getItem(`memories_redemptions_${cafeSlug}_${found.phone}`);
-        setRedeemedCount(stored ? Number(stored) : 0);
-      } catch {
-        setRedeemedCount(0);
+      if (handleUnauthorized(response.status)) return;
+      if (response.status === 429) {
+        throw new Error('تم تسجيل زيارة لهذا العميل خلال الساعة الأخيرة');
       }
-    } else {
-      const direct = CustomerRegistryService.lookupCustomer(clean, cafeSlug);
-      if (direct.exists && direct.name) {
-        const cust: RegisteredCustomer = {
-          phone: clean,
-          name: direct.name,
-          role: direct.role || 'vip_guest',
-          registeredAt: new Date().toISOString(),
-          lastVisit: new Date().toISOString(),
-          totalVisits: direct.totalVisits || 1,
-        };
-        setSelectedCustomer(cust);
-        const lData = LoyaltyPurseService.getData(clean, cafeSlug, requiredVisits);
-        setLoyaltyData(lData);
-        const vList = VoucherService.getCustomerVouchers(clean, cafeSlug);
-        setCustomerVouchers(vList);
-        const activeOne = vList.find((v) => v.status === 'ACTIVE');
-        if (activeOne) setActiveVoucher(activeOne);
-        try {
-          const stored = localStorage.getItem(`memories_redemptions_${cafeSlug}_${clean}`);
-          setRedeemedCount(stored ? Number(stored) : 0);
-        } catch {
-          setRedeemedCount(0);
-        }
+      if (!response.ok) throw new Error(body.error || 'تعذر تسجيل الزيارة');
+      setNotice(body.duplicate ? 'الزيارة مسجلة مسبقاً' : 'تم تسجيل الزيارة بنجاح');
+      await loadCard(card.customer.id);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'تعذر تسجيل الزيارة');
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const redeemReward = async (rewardName: string) => {
+    if (!card || !context?.rewardRule) return;
+    if (!window.confirm(`صرف مكافأة «${rewardName}» لهذا العميل؟`)) return;
+    setBusyAction('redeem');
+    setActionError(null);
+    setNotice(null);
+    try {
+      const response = await fetch('/api/v1/rewards/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerId: card.customer.id,
+          rewardRuleId: context.rewardRule.id,
+          ...(branchId ? { branchId } : {}),
+          idempotencyKey: crypto.randomUUID(),
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        rewardName?: string | null;
+      };
+      if (handleUnauthorized(response.status)) return;
+      if (!response.ok) throw new Error(body.message || body.error || 'تعذر صرف المكافأة');
+      setNotice(`تم صرف المكافأة${body.rewardName ? `: ${body.rewardName}` : ''}`);
+      await loadCard(card.customer.id);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'تعذر صرف المكافأة');
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const issueVoucher = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!card) return;
+    const title = voucherTitle.trim();
+    if (title.length < 2) return;
+    setBusyAction('voucher');
+    setActionError(null);
+    setNotice(null);
+    try {
+      const response = await fetch('/api/v1/merchant/vouchers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId: card.customer.id, title }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        voucher?: { code?: string };
+      };
+      if (handleUnauthorized(response.status)) return;
+      if (!response.ok) throw new Error(body.error || 'تعذر إصدار القسيمة');
+      setNotice(
+        body.voucher?.code ? `تم إصدار القسيمة: ${body.voucher.code}` : 'تم إصدار القسيمة'
+      );
+      await loadCard(card.customer.id);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'تعذر إصدار القسيمة');
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const redeemVoucher = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const code = voucherCode.trim().toUpperCase();
+    if (code.length < 6) return;
+    setBusyAction('voucher-redeem');
+    setActionError(null);
+    setNotice(null);
+    try {
+      const response = await fetch('/api/v1/merchant/vouchers/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        voucher?: { title?: string };
+      };
+      if (handleUnauthorized(response.status)) return;
+      if (!response.ok) throw new Error(body.error || 'تعذر استبدال القسيمة');
+      setNotice(`تم استبدال القسيمة${body.voucher?.title ? `: ${body.voucher.title}` : ''}`);
+      setVoucherCode('');
+      if (selectedId) await loadCard(selectedId);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'تعذر استبدال القسيمة');
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const enqueuePrint = async (memoryId: string) => {
+    setBusyAction(`print-${memoryId}`);
+    setActionError(null);
+    setNotice(null);
+    try {
+      const response = await fetch('/api/v1/print/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memoryId, format: printFormat, copies: 1 }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        duplicate?: boolean;
+      };
+      if (handleUnauthorized(response.status)) return;
+      if (!response.ok) throw new Error(body.error || 'تعذر إضافة طلب الطباعة');
+      setNotice(body.duplicate ? 'هذه الصورة في الطابور بالفعل' : 'تمت إضافة الصورة إلى الطابور');
+      await loadJobs();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'تعذر إضافة طلب الطباعة');
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const advanceJob = async (
+    job: PrintJob,
+    status: 'printing' | 'printed' | 'failed'
+  ) => {
+    setBusyAction(job.id);
+    setActionError(null);
+    setNotice(null);
+    try {
+      const response = await fetch('/api/v1/print/jobs', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: job.id,
+          status,
+          ...(status === 'failed' ? { error: 'print_failed' } : {}),
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
+      if (handleUnauthorized(response.status)) return;
+      if (!response.ok) throw new Error(body.error || 'تعذر تحديث طلب الطباعة');
+
+      if (status === 'printing' && job.photoStripUrl) {
+        PrintService.printStripImage(job.photoStripUrl, { format: printFormat });
+        setNotice('أُرسلت الصورة إلى نافذة الطباعة. بعد انتهاء الطبع اضغط «تمت الطباعة».');
       } else {
-        // Query server CRM database for cross-device customer registration
-        fetch(`/api/v1/crm/customers?search=${encodeURIComponent(clean)}&format=json`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data && Array.isArray(data.customers) && data.customers.length > 0) {
-              const c = data.customers[0];
-              const cust: RegisteredCustomer = {
-                phone: clean,
-                name: c.name || 'ضيف مميز',
-                role: c.role || 'vip_guest',
-                registeredAt: c.createdAt || new Date().toISOString(),
-                lastVisit: new Date().toISOString(),
-                totalVisits: c.visitCount || c.memoryCount || 1,
-              };
-              setSelectedCustomer(cust);
-              const lData = LoyaltyPurseService.getData(clean, cafeSlug, requiredVisits);
-              setLoyaltyData(lData);
-              const vList = VoucherService.getCustomerVouchers(clean, cafeSlug);
-              setCustomerVouchers(vList);
-              setErrorNotice(null);
-            } else {
-              setSelectedCustomer(null);
-              setLoyaltyData(null);
-              setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
-            }
-          })
-          .catch(() => {
-            setSelectedCustomer(null);
-            setLoyaltyData(null);
-            setErrorNotice('لم يتم العثور على عميل أو رمز هدية مطابق. تأكد من الرقم أو كود الهدية.');
-          });
+        setNotice(status === 'printed' ? 'تم إغلاق الطلب كمطبوع' : 'تم تعليم الطلب كفاشل');
       }
+      await loadJobs();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'تعذر تحديث طلب الطباعة');
+    } finally {
+      setBusyAction(null);
     }
   };
 
-  const handleKeyPress = (num: string) => {
-    const updated = searchQuery + num;
-    setSearchQuery(updated);
-    if (updated.length >= 8) {
-      handleLookup(updated);
-    }
-  };
-
-  const handleClearKeypad = () => {
-    setSearchQuery('');
-    setSelectedCustomer(null);
-    setLoyaltyData(null);
-    setErrorNotice(null);
-    setSuccessNotice(null);
-  };
-
-  // Stamp Action (+1 Stamp)
-  const handleAddStamp = () => {
-    if (!selectedCustomer) return;
-    LoyaltyPurseService.addDirectStamp(selectedCustomer.phone, cafeSlug, requiredVisits);
-    const updatedLoyalty = LoyaltyPurseService.getData(selectedCustomer.phone, cafeSlug, requiredVisits);
-    setLoyaltyData(updatedLoyalty);
-    setSelectedCustomer((prev) => (prev ? { ...prev, totalVisits: (prev.totalVisits || 0) + 1 } : null));
-
-    // Update CRM list in localStorage for real-time dashboard sync
+  const signOut = async () => {
     try {
-      const crmRaw = localStorage.getItem('stampy_crm_customers');
-      if (crmRaw) {
-        let list = JSON.parse(crmRaw);
-        list = list.map((c: any) => {
-          if (c.phone === selectedCustomer.phone) {
-            return {
-              ...c,
-              stamps: updatedLoyalty.stampedCount,
-              lastVisit: 'الآن',
-            };
-          }
-          return c;
-        });
-        localStorage.setItem('stampy_crm_customers', JSON.stringify(list));
-      }
-    } catch {}
-
-    // Dispatch real-time stamp event
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('stampy-stamp-added'));
-    }
-
-    recordShiftStamp();
-    SoundEffectsService.playStampChime();
-    setSuccessNotice(`✨ تم ختم زيارة جديدة بنجاح للعميل (${selectedCustomer.name})! الرصيد الحالي: ${updatedLoyalty.stampedCount}/${requiredVisits}`);
-    setTimeout(() => setSuccessNotice(null), 4000);
-  };
-
-  // Instant Voucher Redemption
-  const handleRedeemVoucherDirect = (voucherCode: string) => {
-    const res = VoucherService.redeemVoucher(voucherCode, cafeSlug, staffMember?.name || `${industry.staffLabel} المناوب`);
-    if (res.success && res.voucher) {
-      setActiveVoucher(res.voucher);
-      if (selectedCustomer) {
-        setCustomerVouchers(VoucherService.getCustomerVouchers(selectedCustomer.phone, cafeSlug));
-      }
-      recordShiftRedemption();
-      SoundEffectsService.playRewardCelebration();
-      setSuccessNotice(`تم استبدال الهدية بنجاح! تم اعتماد الكود (${res.voucher.code}) وتسليم "${res.voucher.giftTitle}" للعميل (${res.voucher.customerName}).`);
-      setTimeout(() => setSuccessNotice(null), 5000);
-    } else {
-      setErrorNotice(res.error || 'فشل استبدال الهدية.');
-    }
-  };
-
-  // Redeem Action (Claim Free Gift)
-  const handleRedeemGift = () => {
-    if (activeVoucher && activeVoucher.status === 'ACTIVE') {
-      handleRedeemVoucherDirect(activeVoucher.code);
-      return;
-    }
-    if (!selectedCustomer || !loyaltyData) return;
-    try {
-      const nextRedeemed = redeemedCount + 1;
-      setRedeemedCount(nextRedeemed);
-      localStorage.setItem(`memories_redemptions_${cafeSlug}_${selectedCustomer.phone}`, String(nextRedeemed));
-
-      const logKey = `memories_redemption_audit_${cafeSlug}`;
-      const existing = JSON.parse(localStorage.getItem(logKey) || '[]');
-      const newAudit = {
-        id: `red_${Date.now()}`,
-        phone: selectedCustomer.phone,
-        customerName: selectedCustomer.name,
-        rewardTitle: giftTitle,
-        redeemedAt: new Date().toISOString(),
-        baristaName: staffMember?.name || `${industry.staffLabel} المعتمد`,
-      };
-      localStorage.setItem(logKey, JSON.stringify([newAudit, ...existing].slice(0, 50)));
-
-      recordShiftRedemption();
-      SoundEffectsService.playRewardCelebration();
-      setSuccessNotice(`تم استبدال الهدية بنجاح! تم تسليم "${giftTitle}" للعميل (${selectedCustomer.name}).`);
-      setTimeout(() => setSuccessNotice(null), 4500);
+      await fetch('/api/v1/staff-session', { method: 'DELETE' });
     } catch {
-      setErrorNotice('حدث خطأ أثناء تسجيل الاستبدال.');
+      /* the cookie is cleared server-side when possible */
+    }
+    window.location.assign('/login');
+  };
+
+  const copyVoucherCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      window.setTimeout(() => setCopiedCode(null), 1800);
+    } catch {
+      setCopiedCode(null);
     }
   };
 
-  // Unlock Cooldown
-  const handleUnlockCooldown = () => {
-    if (!selectedCustomer) return;
-    CooldownService.unlockForCustomer(selectedCustomer.phone, cafeSlug);
-    setSuccessNotice(`تم فك قفل الـ 24 ساعة للعميل (${selectedCustomer.name}) بنجاح! يمكنه التقاط الصور فوراً.`);
-    setTimeout(() => setSuccessNotice(null), 4000);
-  };
+  const activeJobs = useMemo(
+    () => jobs.filter((job) => job.status === 'pending' || job.status === 'printing'),
+    [jobs]
+  );
 
-  const totalVisits = selectedCustomer?.totalVisits || loyaltyData?.stampedCount || 0;
-  const totalEligible = Math.floor(totalVisits / requiredVisits);
-  const availableToClaim = Math.max(0, totalEligible - redeemedCount);
-  const isEligibleForGift = availableToClaim > 0;
+  const progressSlots = useMemo(() => {
+    if (!card) return [];
+    return Array.from({ length: card.loyalty.maxSlots }, (_, index) => index < card.loyalty.stampedCount);
+  }, [card]);
+
+  /* -------------------------------- render -------------------------------- */
+
+  if (isBooting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0B0A0A] text-[#FAF5EB]">
+        <div className="flex items-center gap-2 text-xs text-[#A19E9B]">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          جاري تجهيز محطة الكاونتر...
+        </div>
+      </div>
+    );
+  }
+
+  if (needsLogin) {
+    return <StaffLogin onDone={() => window.location.reload()} />;
+  }
+
+  if (bootError || !context) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0B0A0A] p-6 text-[#FAF5EB]">
+        <div className="max-w-md space-y-4 rounded-2xl border border-rose-500/30 bg-[#141212] p-6 text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-rose-300" />
+          <h1 className="text-base font-bold">تعذر فتح محطة الكاونتر</h1>
+          <p className="text-xs text-[#A19E9B]">{bootError ?? 'حدث خطأ غير متوقع'}</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="flex items-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2 text-xs font-bold text-[#12100E]"
+            >
+              <RefreshCw className="h-4 w-4" />
+              إعادة المحاولة
+            </button>
+            <Link
+              href="/login"
+              className="rounded-lg border border-white/10 bg-[#1C1B1B] px-4 py-2 text-xs font-bold text-[#FAF5EB]"
+            >
+              تسجيل الدخول
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#12100E] text-[#e6e1e1] flex flex-col font-sans selection:bg-[#DFAB56] selection:text-[#12100E] relative overflow-hidden">
-      {/* Ambient Archival Glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#3D2314]/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
-
-      {/* Top Header */}
-      <header className="bg-[#141212]/95 backdrop-blur-md text-white border-b border-white/10 px-4 sm:px-6 py-3.5 sticky top-0 z-40 shadow-xl relative z-10">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+    <div className="min-h-screen bg-[#0B0A0A] pb-16 font-sans text-[#FAF5EB]">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0E0D0D]/95 px-4 py-3 backdrop-blur sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center shadow-lg shadow-red-950/40 border border-white/10 shrink-0">
-              <StampyApertureIcon size={22} color="#FAF5EB" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#DFAB56]/40 bg-[#3D2314] text-[#DFAB56]">
+              <Store className="h-4 w-4" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-bold text-sm sm:text-base text-[#FAF5EB]">
-                  محطة الخدمة السريعة • {industry.staffLabel}
-                </h1>
-                <span className="px-2 py-0.5 rounded-md bg-[#3D2314]/60 text-[#FAF5EB] text-[10px] font-mono font-bold border border-[#DFAB56]/40 tracking-wider">
-                  STAFF POS TERMINAL
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-sm font-bold text-[#FAF5EB]">{context.organization.name}</h1>
+                <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[10px] text-[#A19E9B]">
+                  {ROLE_LABELS[context.role] ?? context.role}
                 </span>
+                {context.source === 'staff' && (
+                  <span className="flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-950/40 px-2 py-0.5 font-mono text-[10px] text-emerald-200">
+                    <ShieldCheck className="h-3 w-3" />
+                    جلسة طاقم
+                  </span>
+                )}
               </div>
-              <p className="text-[11px] text-[#A19E9B]">
-                {settings.branding.name} • طباعة الصور الفورية وختم زيارات الولاء للعملاء
+              <p className="font-mono text-[10px] text-[#A19E9B]" dir="ltr">
+                /c/{context.organization.slug}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <a
-              href={`/dashboard?cafe=${cafeSlug}`}
-              className="px-3.5 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] font-bold text-xs transition flex items-center gap-1.5"
+          <div className="flex flex-wrap items-center gap-2">
+            {context.branches.length > 0 && (
+              <label className="flex items-center gap-2 text-[11px] text-[#A19E9B]">
+                الفرع
+                <select
+                  value={branchId}
+                  onChange={(event) => setBranchId(event.target.value)}
+                  className="rounded-lg border border-white/10 bg-[#1C1B1B] px-2.5 py-1.5 text-[11px] font-bold text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+                >
+                  <option value="">كل الفروع</option>
+                  {context.branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] px-2.5 py-1.5 text-[11px] font-bold text-[#FAF5EB] hover:bg-[#211F1F]"
             >
-              <LayoutDashboard className="w-3.5 h-3.5 text-[#DFAB56]" />
-              <span className="hidden sm:inline">لوحة الإدارة</span>
-            </a>
+              <LayoutDashboard className="h-3 w-3" />
+              لوحة التحكم
+            </Link>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] px-2.5 py-1.5 text-[11px] font-bold text-[#FAF5EB] hover:bg-[#211F1F]"
+            >
+              <LogOut className="h-3 w-3" />
+              خروج
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main Body */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-5 relative z-10">
-        {/* Primary Segmented Tabs: Print Queue vs Loyalty Stamps */}
-        <div className="grid grid-cols-2 p-1 bg-[#1C1B1B] rounded-xl border border-white/10 shadow-inner">
-          <button
-            type="button"
-            onClick={() => setTerminalTab('queue')}
-            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-              terminalTab === 'queue'
-                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
-                : 'text-[#A19E9B] hover:text-[#FAF5EB]'
-            }`}
-          >
-            <Printer className="w-4 h-4" />
-            <span>طابور طباعة الأشرطة</span>
-            {printQueue.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-[#3D2314] border border-[#DFAB56]/40 text-[#FAF5EB] text-[10px] font-mono font-black animate-pulse">
-                {printQueue.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTerminalTab('stamps')}
-            className={`py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-              terminalTab === 'stamps'
-                ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
-                : 'text-[#A19E9B] hover:text-[#FAF5EB]'
-            }`}
-          >
-            <Award className="w-4 h-4" />
-            <span>كاونتر الأختام والمكافآت</span>
-          </button>
-        </div>
-
-        {/* Shift Stats Ribbon */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div className="p-4 rounded-xl bg-[#141212] border border-white/10 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#1C1B1B] text-[#DFAB56] border border-white/10 flex items-center justify-center font-bold">
-              <Printer className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] text-[#A19E9B] font-bold block uppercase tracking-wider">أشرطة بانتظار الطباعة</span>
-              <span className="text-xl font-bold font-mono text-[#FAF5EB]">{printQueue.length}</span>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-[#141212] border border-white/10 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-950/40 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
-              <Gift className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] text-[#A19E9B] font-bold block uppercase tracking-wider">هدايا مستبدلة اليوم</span>
-              <span className="text-xl font-bold font-mono text-emerald-400">{shiftRedeemedCount}</span>
-            </div>
-          </div>
-
-          <div className="col-span-2 sm:col-span-1 p-4 rounded-xl bg-[#141212] border border-white/10 shadow-lg flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/40 flex items-center justify-center font-bold">
-              <Award className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[10px] text-[#A19E9B] font-bold block uppercase tracking-wider">أختام الشفت الحالية</span>
-              <span className="text-xl font-bold font-mono text-[#FAF5EB]">+{shiftStampsCount}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Success or Error Notice */}
-        {successNotice && (
-          <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 font-bold text-xs flex items-center gap-2.5 shadow-sm animate-in fade-in">
-            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
-            <span>{successNotice}</span>
+      <main className="mx-auto max-w-7xl space-y-4 px-4 pt-4 sm:px-6">
+        {notice && (
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/40 p-3.5 text-xs font-bold text-emerald-200">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <span>{notice}</span>
           </div>
         )}
-        {errorNotice && (
-          <div className="p-4 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 font-bold text-xs flex items-center gap-2.5 shadow-sm animate-in fade-in">
-            <X className="w-5 h-5 text-red-400 shrink-0" />
-            <span>{errorNotice}</span>
+        {actionError && (
+          <div className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-950/40 p-3.5 text-xs font-bold text-rose-200">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{actionError}</span>
           </div>
         )}
 
-        {/* TAB 1: REAL-TIME PRINT QUEUE */}
-        {terminalTab === 'queue' && (
-          <div className="space-y-4 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#FAF5EB] flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#DFAB56]" />
-                <span>طابور الأشرطة الجاهزة للطباعة من الزوار</span>
-              </h3>
-
-              <button
-                type="button"
-                onClick={() => setSoundAlertEnabled(!soundAlertEnabled)}
-                className="px-3 py-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-xs font-bold text-[#FAF5EB] flex items-center gap-1.5 transition cursor-pointer"
+        <div className="grid gap-4 lg:grid-cols-12">
+          {/* ----------------------------- search ----------------------------- */}
+          <section className="space-y-3 lg:col-span-5">
+            <div className="rounded-2xl border border-white/10 bg-[#141212] p-4 shadow-xl">
+              <label
+                htmlFor="customer-search"
+                className="mb-2 flex items-center gap-2 text-xs font-bold text-[#FAF5EB]"
               >
-                {soundAlertEnabled ? <Bell className="w-3.5 h-3.5 text-[#DFAB56]" /> : <BellOff className="w-3.5 h-3.5 text-[#A19E9B]" />}
-                <span>{soundAlertEnabled ? 'جرس التنبيه مفعل' : 'جرس التنبيه مكتوم'}</span>
-              </button>
-            </div>
+                <Search className="h-4 w-4 text-[#DFAB56]" />
+                ابحث عن العميل
+              </label>
+              <div className="relative">
+                <input
+                  id="customer-search"
+                  value={query}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setQuery(next);
+                    setSearchError(null);
+                    if (next.trim().length < 2) {
+                      setResults([]);
+                      setIsSearching(false);
+                    } else {
+                      setIsSearching(true);
+                    }
+                  }}
+                  placeholder="رقم الجوال أو الاسم"
+                  autoComplete="off"
+                  className="w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3.5 py-2.5 pe-9 text-xs text-[#FAF5EB] placeholder:text-[#A19E9B]/60 focus:border-[#DFAB56] focus:outline-none"
+                />
+                {isSearching && (
+                  <Loader2 className="absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#A19E9B]" />
+                )}
+              </div>
+              <p className="mt-2 text-[10px] text-[#A19E9B]">
+                الرقم يُستخدم للبحث فقط. الهوية الحقيقية للعميل هي بطاقة الولاء الخاصة بمنشأتك.
+              </p>
 
-            {printQueue.length === 0 ? (
-              <div className="p-12 rounded-2xl bg-[#141212] border border-white/10 text-center shadow-lg space-y-2">
-                <Printer className="w-10 h-10 text-[#A19E9B]/40 mx-auto" />
-                <h4 className="font-bold text-sm text-[#FAF5EB]">لا توجد طلبات طباعة معلقة حالياً</h4>
-                <p className="text-xs text-[#A19E9B] max-w-md mx-auto leading-relaxed">
-                  عندما يكمل الزوار التقاط شريط الصور ويطلبون طباعته من هواتفهم، سيظهر هنا فوراً مع صوت تنبيه لطاقم العمل.
+              {searchError && (
+                <p className="mt-2 rounded-lg border border-rose-500/30 bg-rose-950/30 p-2 text-[11px] text-rose-200">
+                  {searchError}
                 </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {printQueue.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-5 rounded-2xl bg-[#141212] border border-white/10 hover:border-[#DFAB56]/30 shadow-lg flex items-center justify-between gap-4 transition"
-                  >
-                    <div className="w-16 h-24 rounded-lg overflow-hidden border border-white/10 bg-[#0B0A0A] shrink-0 shadow-inner">
-                      {item.photoStripUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.photoStripUrl}
-                          alt="Strip"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[#A19E9B] text-[10px]">
-                          2x6
-                        </div>
-                      )}
-                    </div>
+              )}
 
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-[#FAF5EB] text-sm truncate">
-                        {item.name || 'عميل مميز'}
-                      </h4>
-                      <p className="text-[11px] text-[#A19E9B] font-mono mt-0.5">
-                        {item.phone || 'طلب فوري'}
-                      </p>
-                      <span className="text-[10px] text-[#FAF5EB] font-bold bg-[#3D2314]/50 px-2 py-0.5 rounded-md border border-[#DFAB56]/40 inline-block mt-2 font-mono uppercase tracking-wider">
-                        {item.format || 'standard-2x6'}
-                      </span>
-                    </div>
+              {query.trim().length >= 2 && !isSearching && results.length === 0 && !searchError && (
+                <p className="mt-2 rounded-lg border border-dashed border-white/15 bg-[#1C1B1B] p-3 text-center text-[11px] text-[#A19E9B]">
+                  لا يوجد عميل مطابق. يمكن للعميل إنشاء بطاقته بمسح رمز الطاولة.
+                </p>
+              )}
 
-                    <div className="flex flex-col items-end gap-2 shrink-0">
+              {results.length > 0 && (
+                <ul className="mt-3 max-h-72 space-y-1.5 overflow-auto pe-1">
+                  {results.map((customer) => (
+                    <li key={customer.id}>
                       <button
                         type="button"
-                        onClick={() => handlePrintItem(item, 'standard-2x6')}
-                        className="px-3.5 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] text-xs font-bold flex items-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition cursor-pointer"
+                        onClick={() => selectCustomer(customer.id)}
+                        className={`flex w-full items-center justify-between gap-2 rounded-xl border p-2.5 text-start transition ${
+                          selectedId === customer.id
+                            ? 'border-[#DFAB56]/60 bg-[#3D2314]/50'
+                            : 'border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F]'
+                        }`}
                       >
-                        <Printer className="w-3.5 h-3.5" />
-                        <span>طباعة 2×6</span>
+                        <span className="flex items-center gap-2.5">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-[#141212] text-[#DFAB56]">
+                            <UserRound className="h-4 w-4" />
+                          </span>
+                          <span>
+                            <span className="block text-xs font-bold text-[#FAF5EB]">
+                              {customer.displayName}
+                            </span>
+                            <span className="block font-mono text-[10px] text-[#A19E9B]" dir="ltr">
+                              {customer.phone ?? 'بدون رقم'}
+                            </span>
+                          </span>
+                        </span>
+                        <span className="shrink-0 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[10px] text-[#A19E9B]">
+                          {customer.totalVisits} زيارة
+                        </span>
                       </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleDismissPrint(item.id)}
-                        className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-emerald-950/40 hover:border-emerald-500/40 text-[#A19E9B] hover:text-emerald-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-                      >
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>تم التسليم</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 2: LOYALTY STAMPS & REWARDS KEYPAD */}
-        {terminalTab === 'stamps' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in duration-200">
-            {/* LEFT/MAIN: Customer Lookup & Action Center */}
-            <div className="lg:col-span-7 space-y-4">
-              {/* Input Form */}
-              <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-lg space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-[#FAF5EB] flex items-center gap-1.5">
-                    <Search className="w-4 h-4 text-[#DFAB56]" />
-                    <span>بحث برقم الجوال أو رمز الهدية (GIFT-XXXX):</span>
-                  </span>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#A19E9B]">PHONE SEARCH</span>
-                </div>
-
-                <div className="relative">
-                  <input
-                    type="tel"
-                    dir="ltr"
-                    placeholder="رقم الهاتف أو كود الهدية GIFT-XXXX"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      if (e.target.value.length >= 8) {
-                        handleLookup(e.target.value);
-                      }
-                    }}
-                    className="w-full text-center text-xl sm:text-2xl font-mono font-bold py-3.5 px-4 rounded-xl bg-[#0B0A0A] border border-white/10 focus:bg-[#0E0D0D] focus:border-[#DFAB56] focus:ring-1 focus:ring-[#DFAB56]/30 focus:outline-none tracking-widest text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={handleClearKeypad}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#1C1B1B] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FAF5EB] flex items-center justify-center transition cursor-pointer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Quick On-Screen Number Keypad for Tablets/Phones */}
-                <div className="grid grid-cols-3 gap-2 pt-1">
-                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '010', '0', '011'].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => handleKeyPress(val)}
-                      className="py-3 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] active:scale-95 text-[#FAF5EB] font-mono font-bold text-base border border-white/10 transition cursor-pointer"
-                    >
-                      {val}
-                    </button>
+                    </li>
                   ))}
-                </div>
-              </div>
-
-              {/* Customer Details & Actions */}
-              {selectedCustomer && loyaltyData && (
-                <div className="p-6 rounded-2xl bg-[#141212] border border-[#DFAB56]/30 shadow-xl space-y-5 animate-in zoom-in-95 duration-200">
-                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#DFAB56] to-[#3D2314] text-white flex items-center justify-center font-bold text-xl shadow-lg border border-white/10">
-                        {selectedCustomer.name.charAt(0) || 'ع'}
-                      </div>
-                      <div>
-                        <h3 className="text-base font-bold text-[#FAF5EB]">{selectedCustomer.name}</h3>
-                        <p className="text-xs text-[#A19E9B] font-mono" dir="ltr">{selectedCustomer.phone}</p>
-                      </div>
-                    </div>
-
-                    <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/40">
-                      {loyaltyData.stampedCount} من {requiredVisits} أختام
-                    </span>
-                  </div>
-
-                  {/* Active Voucher Banner (If customer has an issued voucher or looked up by code) */}
-                  {activeVoucher && (
-                    <div className={`p-4 rounded-xl border transition-all ${
-                      activeVoucher.status === 'ACTIVE'
-                        ? 'bg-gradient-to-r from-emerald-950/40 to-[#141212] border-emerald-500/40 shadow-sm'
-                        : 'bg-[#1C1B1B] border-white/10'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
-                            activeVoucher.status === 'ACTIVE' ? 'bg-emerald-600 text-white' : 'bg-[#211F1F] text-[#A19E9B]'
-                          }`}>
-                            <Gift className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono font-bold text-sm text-[#FAF5EB] tracking-wider">
-                                {activeVoucher.code}
-                              </span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                                activeVoucher.status === 'ACTIVE'
-                                  ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/40'
-                                  : 'bg-[#211F1F] text-[#A19E9B]'
-                              }`}>
-                                {activeVoucher.status === 'ACTIVE' ? 'جاهز للاستبدال 🎁' : 'تم استبداله مسبقاً'}
-                              </span>
-                            </div>
-                            <p className="text-xs text-[#D9D9D9] font-bold mt-0.5">{activeVoucher.giftTitle}</p>
-                          </div>
-                        </div>
-
-                        {activeVoucher.status === 'ACTIVE' && (
-                          <button
-                            type="button"
-                            onClick={() => handleRedeemVoucherDirect(activeVoucher.code)}
-                            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer"
-                          >
-                            صرف الهدية بالكود
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress Visual */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold text-[#A19E9B]">
-                      <span>تقدم بطاقة الولاء الحالية</span>
-                      <span className="font-mono text-[#FAF5EB]">{loyaltyData.stampedCount} / {requiredVisits} زيارات</span>
-                    </div>
-                    <div className="w-full bg-[#0B0A0A] h-3 rounded-full overflow-hidden p-0.5 border border-white/10">
-                      <div
-                        className="bg-gradient-to-r from-[#3D2314] to-[#DFAB56] h-full rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, (loyaltyData.stampedCount / requiredVisits) * 100)}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* 3 Core Instant Action Buttons */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={handleAddStamp}
-                      className="py-3.5 px-4 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                    >
-                      <Award className="w-5 h-5" />
-                      <span>ختم زيارة جديدة (+1)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleRedeemGift}
-                      disabled={!isEligibleForGift}
-                      className={`py-3.5 px-4 rounded-lg font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 ${
-                        isEligibleForGift
-                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white animate-pulse'
-                          : 'bg-[#1C1B1B] text-[#A19E9B]/40 cursor-not-allowed border border-white/10'
-                      }`}
-                    >
-                      <Gift className="w-5 h-5" />
-                      <span>تسليم الهدية ({giftTitle})</span>
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs">
-                    <button
-                      type="button"
-                      onClick={handleUnlockCooldown}
-                      className="text-[#A19E9B] hover:text-[#FAF5EB] font-bold flex items-center gap-1.5 transition cursor-pointer"
-                    >
-                      <Unlock className="w-3.5 h-3.5 text-[#DFAB56]" />
-                      <span>فك قفل الـ 24 ساعة للعميل</span>
-                    </button>
-
-                    <span className="text-[11px] text-[#A19E9B]/60">
-                      هدايا تم استبدالها مسبقاً: {redeemedCount}
-                    </span>
-                  </div>
-                </div>
+                </ul>
               )}
             </div>
 
-            {/* RIGHT: Shift Activity & Guidelines */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-lg space-y-3">
-                <h4 className="font-bold text-sm text-[#FAF5EB] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#DFAB56]" />
-                  <span>إرشادات تشغيل الكاونتر:</span>
-                </h4>
-                <ul className="text-xs text-[#A19E9B] space-y-2 leading-relaxed">
-                  <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-md bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
-                    <span>العميل يحصل على خدمته ويذكر رقم جواله أو يمسح كود الفرع.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-md bg-[#3D2314]/50 text-[#FAF5EB] border border-[#DFAB56]/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
-                    <span>اضغط <strong>«ختم زيارة جديدة»</strong> لإضافة ختم فوري لكارت العميل في محفظة Apple/Google Wallet.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-md bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
-                    <span>عند إكمال {requiredVisits} أختام، يتوهج زر <strong>«تسليم الهدية»</strong> باللون الأخضر للاستبدال الفوري.</span>
-                  </li>
-                </ul>
+            <form
+              onSubmit={redeemVoucher}
+              className="space-y-2 rounded-2xl border border-white/10 bg-[#141212] p-4 shadow-xl"
+            >
+              <h2 className="flex items-center gap-2 text-xs font-bold text-[#FAF5EB]">
+                <Ticket className="h-4 w-4 text-[#DFAB56]" />
+                استبدال قسيمة
+              </h2>
+              <div className="flex gap-2">
+                <input
+                  value={voucherCode}
+                  onChange={(event) => setVoucherCode(event.target.value.toUpperCase())}
+                  placeholder="GIFT-XXXXXXX"
+                  dir="ltr"
+                  className="w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3 py-2 font-mono text-xs tracking-wider text-[#FAF5EB] placeholder:text-[#A19E9B]/60 focus:border-[#DFAB56] focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={busyAction === 'voucher-redeem' || voucherCode.trim().length < 6}
+                  className="flex shrink-0 items-center gap-1.5 rounded-lg bg-[#DFAB56] px-3.5 py-2 text-xs font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
+                >
+                  {busyAction === 'voucher-redeem' ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  )}
+                  استبدال
+                </button>
+              </div>
+              <p className="text-[10px] text-[#A19E9B]">
+                كل رمز يُستهلك مرة واحدة فقط. إعادة المحاولة تعيد نفس النتيجة دون خصم مزدوج.
+              </p>
+            </form>
+
+            <div className="rounded-2xl border border-white/10 bg-[#141212] p-4 shadow-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-xs font-bold text-[#FAF5EB]">
+                  <Printer className="h-4 w-4 text-[#DFAB56]" />
+                  طابور الطباعة
+                  <span className="rounded-md border border-[#DFAB56]/40 bg-[#3D2314]/60 px-1.5 py-0.5 font-mono text-[10px]">
+                    {activeJobs.length}
+                  </span>
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => void loadJobs()}
+                  className="flex items-center gap-1 rounded-lg border border-white/10 bg-[#1C1B1B] px-2 py-1 text-[10px] font-bold text-[#A19E9B] hover:text-[#FAF5EB]"
+                >
+                  <RefreshCw className={`h-3 w-3 ${isLoadingJobs ? 'animate-spin' : ''}`} />
+                  تحديث
+                </button>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-center justify-between text-xs font-bold text-[#FAF5EB]">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>{industry.staffLabel} المسؤول:</span>
-                </div>
-                <span className="font-mono text-[#FAF5EB]">{staffMember?.name || `${industry.staffLabel} المعتمد`}</span>
-              </div>
+              <label className="mb-2 flex items-center gap-2 text-[10px] text-[#A19E9B]">
+                مقاس الطباعة
+                <select
+                  value={printFormat}
+                  onChange={(event) => setPrintFormat(event.target.value as PrintFormat)}
+                  className="rounded-lg border border-white/10 bg-[#1C1B1B] px-2 py-1 text-[10px] font-bold text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+                >
+                  {PRINT_FORMATS.map((format) => (
+                    <option key={format.id} value={format.id}>
+                      {format.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {activeJobs.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-white/15 bg-[#1C1B1B] p-3 text-center text-[11px] text-[#A19E9B]">
+                  لا توجد طلبات نشطة.
+                </p>
+              ) : (
+                <ul className="max-h-64 space-y-1.5 overflow-auto pe-1">
+                  {activeJobs.map((job) => (
+                    <li
+                      key={job.id}
+                      className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-[#1C1B1B] p-2"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="h-9 w-9 overflow-hidden rounded-md border border-white/10 bg-[#141212]">
+                          {job.photoStripUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={job.photoStripUrl}
+                              alt={`صورة ${job.name}`}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-[#A19E9B]">
+                              <ImageIcon className="h-3.5 w-3.5" />
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-[11px]">
+                          <span className="block font-bold text-[#FAF5EB]">{job.name}</span>
+                          <span className="font-mono text-[10px] text-[#A19E9B]">
+                            {job.status === 'printing' ? 'قيد الطباعة' : 'بانتظار الطباعة'}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="flex shrink-0 gap-1">
+                        {job.status === 'pending' && (
+                          <button
+                            type="button"
+                            disabled={busyAction === job.id}
+                            onClick={() => void advanceJob(job, 'printing')}
+                            className="rounded-md bg-[#DFAB56] px-2 py-1 text-[10px] font-bold text-[#12100E] disabled:opacity-50"
+                          >
+                            طباعة
+                          </button>
+                        )}
+                        {job.status === 'printing' && (
+                          <button
+                            type="button"
+                            disabled={busyAction === job.id}
+                            onClick={() => void advanceJob(job, 'printed')}
+                            className="rounded-md bg-emerald-500 px-2 py-1 text-[10px] font-bold text-emerald-950 disabled:opacity-50"
+                          >
+                            تمت
+                          </button>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </div>
-        )}
+          </section>
+
+          {/* ------------------------------ card ------------------------------ */}
+          <section className="lg:col-span-7">
+            {!selectedId && (
+              <div className="flex h-full min-h-[320px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/15 bg-[#141212] p-8 text-center">
+                <Sparkles className="h-7 w-7 text-[#DFAB56]" />
+                <p className="text-sm font-bold text-[#FAF5EB]">ابدأ ببحث العميل</p>
+                <p className="max-w-sm text-xs text-[#A19E9B]">
+                  ابحث برقم الجوال أو الاسم لعرض بطاقة الولاء، تسجيل زيارة، صرف مكافأة، أو طباعة
+                  ذكرى.
+                </p>
+              </div>
+            )}
+
+            {selectedId && isLoadingCard && (
+              <div className="flex min-h-[320px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#141212] text-xs text-[#A19E9B]">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                جاري تحميل البطاقة...
+              </div>
+            )}
+
+            {selectedId && !isLoadingCard && cardError && (
+              <div className="space-y-3 rounded-2xl border border-rose-500/30 bg-[#141212] p-6 text-center">
+                <AlertCircle className="mx-auto h-6 w-6 text-rose-300" />
+                <p className="text-xs text-rose-200">{cardError}</p>
+                <button
+                  type="button"
+                  onClick={() => void loadCard(selectedId)}
+                  className="mx-auto flex items-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2 text-xs font-bold text-[#12100E]"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  إعادة المحاولة
+                </button>
+              </div>
+            )}
+
+            {selectedId && !isLoadingCard && card && (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-white/10 bg-[#141212] p-5 shadow-xl">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[#DFAB56]/30 bg-[#3D2314]/60 text-lg font-bold text-[#DFAB56]">
+                        {card.customer.displayName.slice(0, 1)}
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-[#FAF5EB]">
+                          {card.customer.displayName}
+                        </h2>
+                        <div className="mt-1 flex flex-wrap items-center gap-3 font-mono text-[10px] text-[#A19E9B]">
+                          {card.customer.phone && (
+                            <span className="flex items-center gap-1" dir="ltr">
+                              <Phone className="h-3 w-3" />
+                              {card.customer.phone}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            عضو منذ {new Date(card.customer.createdAt).toLocaleDateString('ar-SA')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => void registerVisit()}
+                      disabled={busyAction === 'visit'}
+                      className="flex items-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2 text-xs font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
+                    >
+                      {busyAction === 'visit' ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Plus className="h-4 w-4" />
+                      )}
+                      تسجيل زيارة
+                    </button>
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-white/10 bg-[#1C1B1B] p-3.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-[#FAF5EB]">
+                        {card.loyalty.rewardName ?? context.rewardRule?.name ?? 'بطاقة الولاء'}
+                      </span>
+                      <span className="font-mono text-[#A19E9B]">
+                        {card.loyalty.stampedCount} / {card.loyalty.maxSlots}
+                      </span>
+                    </div>
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      {progressSlots.map((filled, index) => (
+                        <span
+                          key={index}
+                          className={`h-7 flex-1 rounded-md border ${
+                            filled
+                              ? 'border-[#DFAB56] bg-[#DFAB56]'
+                              : 'border-white/10 bg-[#141212]'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-2.5 flex flex-wrap gap-3 font-mono text-[10px] text-[#A19E9B]">
+                      <span>{card.loyalty.totalVerifiedVisits} زيارة موثقة</span>
+                      <span>{card.loyalty.completedCardsCount} مكافأة مستحقة</span>
+                      {card.loyalty.lastStampedAt && (
+                        <span>
+                          آخر زيارة{' '}
+                          {new Date(card.loyalty.lastStampedAt).toLocaleDateString('ar-SA')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {card.rewards.length > 0 && (
+                    <div className="mt-3 space-y-1.5">
+                      {card.rewards.map((reward) => (
+                        <div
+                          key={reward.id}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#DFAB56]/30 bg-[#3D2314]/40 p-2.5"
+                        >
+                          <span className="flex items-center gap-2 text-[11px] font-bold text-[#FAF5EB]">
+                            <Gift className="h-4 w-4 text-[#DFAB56]" />
+                            {reward.name}
+                            <span className="font-mono text-[10px] text-[#A19E9B]">
+                              ({reward.threshold} زيارات)
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            disabled={!context.rewardRule || busyAction === 'redeem'}
+                            onClick={() => void redeemReward(reward.name)}
+                            className="flex items-center gap-1.5 rounded-lg bg-[#DFAB56] px-3 py-1.5 text-[10px] font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
+                          >
+                            {busyAction === 'redeem' ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Gift className="h-3.5 w-3.5" />
+                            )}
+                            صرف المكافأة
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-white/10 bg-[#141212] p-4 shadow-xl">
+                    <h3 className="flex items-center gap-2 text-xs font-bold text-[#FAF5EB]">
+                      <Ticket className="h-4 w-4 text-[#DFAB56]" />
+                      القسائم المتاحة
+                    </h3>
+                    {card.vouchers.length === 0 ? (
+                      <p className="mt-2 rounded-lg border border-dashed border-white/15 bg-[#1C1B1B] p-3 text-center text-[11px] text-[#A19E9B]">
+                        لا توجد قسائم.
+                      </p>
+                    ) : (
+                      <ul className="mt-2 space-y-1.5">
+                        {card.vouchers.map((voucher) => (
+                          <li
+                            key={voucher.code}
+                            className="rounded-lg border border-white/10 bg-[#1C1B1B] p-2.5 text-[11px]"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold text-[#FAF5EB]">{voucher.title}</span>
+                              <button
+                                type="button"
+                                onClick={() => void copyVoucherCode(voucher.code)}
+                                className="flex items-center gap-1 rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-[#A19E9B] hover:text-[#FAF5EB]"
+                              >
+                                {copiedCode === voucher.code ? (
+                                  <CheckCircle2 className="h-3 w-3 text-emerald-300" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                                {voucher.code}
+                              </button>
+                            </div>
+                            {voucher.expiresAt && (
+                              <p className="mt-1 font-mono text-[10px] text-[#A19E9B]">
+                                تنتهي {new Date(voucher.expiresAt).toLocaleDateString('ar-SA')}
+                              </p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <form onSubmit={issueVoucher} className="mt-3 flex gap-2">
+                      <input
+                        value={voucherTitle}
+                        onChange={(event) => setVoucherTitle(event.target.value)}
+                        placeholder="عنوان القسيمة"
+                        className="w-full rounded-lg border border-white/10 bg-[#1C1B1B] px-2.5 py-2 text-[11px] text-[#FAF5EB] placeholder:text-[#A19E9B]/60 focus:border-[#DFAB56] focus:outline-none"
+                      />
+                      <button
+                        type="submit"
+                        disabled={busyAction === 'voucher' || voucherTitle.trim().length < 2}
+                        className="flex shrink-0 items-center gap-1 rounded-lg bg-[#DFAB56] px-3 py-2 text-[10px] font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
+                      >
+                        {busyAction === 'voucher' ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Plus className="h-3.5 w-3.5" />
+                        )}
+                        إصدار
+                      </button>
+                    </form>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-[#141212] p-4 shadow-xl">
+                    <h3 className="flex items-center gap-2 text-xs font-bold text-[#FAF5EB]">
+                      <ImageIcon className="h-4 w-4 text-[#DFAB56]" />
+                      ذكريات العميل
+                    </h3>
+                    {card.memories.length === 0 ? (
+                      <p className="mt-2 rounded-lg border border-dashed border-white/15 bg-[#1C1B1B] p-3 text-center text-[11px] text-[#A19E9B]">
+                        لا توجد ذكريات بعد.
+                      </p>
+                    ) : (
+                      <div className="mt-2 grid max-h-56 grid-cols-3 gap-1.5 overflow-auto pe-1">
+                        {card.memories.map((memory) => (
+                          <div
+                            key={memory.id}
+                            className="group relative overflow-hidden rounded-lg border border-white/10 bg-[#1C1B1B]"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setPreviewUrl(memory.originalUrl)}
+                              className="block aspect-square w-full"
+                              title="معاينة"
+                            >
+                              {memory.thumbnailUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={memory.thumbnailUrl}
+                                  alt={memory.caption ?? 'ذكرى'}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="flex h-full w-full items-center justify-center text-[#A19E9B]">
+                                  <ImageIcon className="h-4 w-4" />
+                                </span>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busyAction === `print-${memory.id}`}
+                              onClick={() => void enqueuePrint(memory.id)}
+                              className="absolute bottom-1 end-1 rounded-md bg-[#12100E]/85 p-1 text-[#DFAB56] opacity-90 hover:bg-[#12100E] disabled:opacity-50"
+                              title="إضافة إلى طابور الطباعة"
+                            >
+                              {busyAction === `print-${memory.id}` ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Printer className="h-3 w-3" />
+                              )}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
       </main>
+
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4">
+          <div className="relative max-h-[92vh] w-full max-w-2xl overflow-auto rounded-2xl border border-white/10 bg-[#141212] p-3">
+            <button
+              type="button"
+              onClick={() => setPreviewUrl(null)}
+              className="absolute end-3 top-3 rounded-lg border border-white/10 bg-[#1C1B1B] p-1.5 text-[#FAF5EB]"
+              aria-label="إغلاق"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewUrl}
+              alt="معاينة الذكرى"
+              className="max-h-[82vh] w-full rounded-xl object-contain"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Staff login                                                                */
+/* -------------------------------------------------------------------------- */
+
+function StaffLogin({ onDone }: { onDone: () => void }) {
+  const [staffCode, setStaffCode] = useState('');
+  const [pin, setPin] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const pinRef = useRef<HTMLInputElement | null>(null);
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSaving(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/v1/staff-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          staffCode: staffCode.trim(),
+          pin: pin.trim(),
+        }),
+      });
+      const body = (await response.json().catch(() => ({}))) as ApiErrorBody & {
+        staff?: { name?: string };
+      };
+      if (response.status === 429) {
+        throw new Error('محاولات كثيرة. انتظر 15 دقيقة ثم حاول مرة أخرى.');
+      }
+      if (!response.ok) {
+        throw new Error(body.error || 'رمز الدخول غير صحيح');
+      }
+      onDone();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'تعذر تسجيل الدخول');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#0B0A0A] p-4 font-sans text-[#FAF5EB]">
+      <form
+        onSubmit={submit}
+        className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-[#141212] p-6 shadow-2xl"
+      >
+        <div className="space-y-1 border-b border-white/10 pb-3 text-center">
+          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-xl border border-[#DFAB56]/40 bg-[#3D2314] text-[#DFAB56]">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <h1 className="text-base font-bold">محطة الكاونتر</h1>
+          <p className="text-[11px] text-[#A19E9B]">
+            أدخل رمز الموظف ورمز الدخول الذي أنشأه المالك من لوحة التحكم.
+          </p>
+        </div>
+
+        {error && (
+          <p className="rounded-lg border border-rose-500/30 bg-rose-950/30 p-2.5 text-[11px] text-rose-200">
+            {error}
+          </p>
+        )}
+
+        <label className="block text-xs font-bold text-[#A19E9B]">
+          رمز الموظف
+          <input
+            required
+            dir="ltr"
+            autoComplete="username"
+            value={staffCode}
+            onChange={(event) => setStaffCode(event.target.value)}
+            placeholder="SARA-01"
+            className="mt-1 w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3.5 py-2.5 font-mono text-xs text-[#FAF5EB] placeholder:text-[#A19E9B]/60 focus:border-[#DFAB56] focus:outline-none"
+          />
+        </label>
+
+        <label className="block text-xs font-bold text-[#A19E9B]">
+          رمز الدخول (PIN)
+          <input
+            ref={pinRef}
+            required
+            dir="ltr"
+            inputMode="numeric"
+            autoComplete="current-password"
+            value={pin}
+            onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 8))}
+            placeholder="••••"
+            className="mt-1 w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3.5 py-2.5 font-mono text-lg tracking-[0.4em] text-[#FAF5EB] placeholder:text-[#A19E9B]/60 focus:border-[#DFAB56] focus:outline-none"
+          />
+        </label>
+
+        <button
+          type="submit"
+          disabled={isSaving || pin.length < 4 || staffCode.trim().length < 1}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2.5 text-xs font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
+        >
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+          دخول المحطة
+        </button>
+
+        <Link
+          href="/login"
+          className="block text-center text-[11px] text-[#A19E9B] hover:text-[#FAF5EB]"
+        >
+          الدخول بحساب المالك
+        </Link>
+      </form>
     </div>
   );
 }

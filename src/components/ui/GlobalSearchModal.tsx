@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Search, X, ArrowLeft, Tv, Camera, Gift, Calculator, Sparkles, ShieldCheck, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -92,28 +92,53 @@ export function GlobalSearchModal({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = query.trim()
-    ? SEARCH_ITEMS.filter(
-        (item) =>
-          item.title.toLowerCase().includes(query.toLowerCase()) ||
-          item.description.toLowerCase().includes(query.toLowerCase()) ||
-          item.category.toLowerCase().includes(query.toLowerCase())
-      )
-    : SEARCH_ITEMS;
+  const filtered = useMemo(
+    () =>
+      query.trim()
+        ? SEARCH_ITEMS.filter(
+            (item) =>
+              item.title.toLowerCase().includes(query.toLowerCase()) ||
+              item.description.toLowerCase().includes(query.toLowerCase()) ||
+              item.category.toLowerCase().includes(query.toLowerCase())
+          )
+        : SEARCH_ITEMS,
+    [query]
+  );
+
+  // Reset the highlighted row whenever the dialog opens. Adjusting state during
+  // render (guarded by the previous prop value) avoids a setState-in-effect.
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
+    if (isOpen) setSelectedIndex(0);
+  }
+
+  const handleSelect = useCallback(
+    (href: string) => {
+      onClose();
+      if (href.startsWith('#')) {
+        const el = document.querySelector(href);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        router.push(href);
+      }
+    },
+    [onClose, router]
+  );
 
   useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-      setSelectedIndex(0);
-    }
+    if (!isOpen) return undefined;
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 50);
+    return () => window.clearTimeout(timer);
   }, [isOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        if (isOpen) onClose();
-        else onClose(); // parent handles toggle
+        onClose();
       }
       if (!isOpen) return;
 
@@ -134,19 +159,7 @@ export function GlobalSearchModal({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, filtered, selectedIndex, onClose]);
-
-  const handleSelect = (href: string) => {
-    onClose();
-    if (href.startsWith('#')) {
-      const el = document.querySelector(href);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      router.push(href);
-    }
-  };
+  }, [isOpen, filtered, selectedIndex, onClose, handleSelect]);
 
   if (!isOpen) return null;
 

@@ -1,8 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { ImageSaveService } from '@/lib/services/image-save.service';
 
 describe('ImageSaveService: Safari & Cross-Platform Save Engine', () => {
-  const sampleDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const sampleDataUrl =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
 
   it('converts dataUrl to valid Blob with correct mime type and binary content', () => {
     const blob = ImageSaveService.dataUrlToBlob(sampleDataUrl);
@@ -15,15 +21,10 @@ describe('ImageSaveService: Safari & Cross-Platform Save Engine', () => {
     const mockShare = vi.fn().mockResolvedValue(undefined);
     const mockCanShare = vi.fn().mockReturnValue(true);
 
-    const origDesc = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
-    Object.defineProperty(globalThis, 'navigator', {
-      value: {
-        share: mockShare,
-        canShare: mockCanShare,
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
-      },
-      configurable: true,
-      writable: true,
+    vi.stubGlobal('navigator', {
+      share: mockShare,
+      canShare: mockCanShare,
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
     });
 
     const result = await ImageSaveService.saveImage({
@@ -35,22 +36,15 @@ describe('ImageSaveService: Safari & Cross-Platform Save Engine', () => {
     expect(result.success).toBe(true);
     expect(result.method).toBe('share');
     expect(mockShare).toHaveBeenCalled();
-
-    if (origDesc) {
-      Object.defineProperty(globalThis, 'navigator', origDesc);
-    }
   });
 
   it('falls back to modal on iOS when navigator.share is unavailable', async () => {
-    const origDesc = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
-    Object.defineProperty(globalThis, 'navigator', {
-      value: {
-        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
-        platform: 'iPhone',
-      },
-      configurable: true,
-      writable: true,
+    vi.stubGlobal('navigator', {
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+      platform: 'iPhone',
     });
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-ios');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
     const result = await ImageSaveService.saveImage({
       dataUrl: sampleDataUrl,
@@ -58,22 +52,15 @@ describe('ImageSaveService: Safari & Cross-Platform Save Engine', () => {
     });
 
     expect(result.method).toBe('fallback');
-    expect(result.blobUrl).toBeDefined();
-
-    if (origDesc) {
-      Object.defineProperty(globalThis, 'navigator', origDesc);
-    }
+    expect(result.blobUrl).toBe('blob:mock-ios');
   });
 
   it('triggers desktop anchor download for non-iOS environments', async () => {
-    const origDesc = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
-    Object.defineProperty(globalThis, 'navigator', {
-      value: {
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      },
-      configurable: true,
-      writable: true,
+    vi.stubGlobal('navigator', {
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
     });
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-desktop');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
     const clickSpy = vi.fn();
     const mockLink = {
@@ -82,15 +69,15 @@ describe('ImageSaveService: Safari & Cross-Platform Save Engine', () => {
       click: clickSpy,
     } as unknown as HTMLAnchorElement;
 
-    const originalDocument = globalThis.document;
-    // @ts-expect-error mocking document
-    globalThis.document = {
+    const appendSpy = vi.fn();
+    const removeSpy = vi.fn();
+    vi.stubGlobal('document', {
       body: {
-        appendChild: vi.fn(),
-        removeChild: vi.fn(),
+        appendChild: appendSpy,
+        removeChild: removeSpy,
       },
       createElement: (tag: string) => (tag === 'a' ? mockLink : {}),
-    };
+    });
 
     const result = await ImageSaveService.saveImage({
       dataUrl: sampleDataUrl,
@@ -99,11 +86,10 @@ describe('ImageSaveService: Safari & Cross-Platform Save Engine', () => {
 
     expect(result.success).toBe(true);
     expect(result.method).toBe('download');
-    expect(clickSpy).toHaveBeenCalled();
-
-    if (origDesc) {
-      Object.defineProperty(globalThis, 'navigator', origDesc);
-    }
-    globalThis.document = originalDocument;
+    expect(mockLink.href).toBe('blob:mock-desktop');
+    expect(mockLink.download).toBe('desktop-strip.png');
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(appendSpy).toHaveBeenCalledWith(mockLink);
+    expect(removeSpy).toHaveBeenCalledWith(mockLink);
   });
 });

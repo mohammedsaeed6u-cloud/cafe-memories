@@ -1,237 +1,254 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
+/**
+ * Public wall + merchant moderation feed.
+ *
+ * GET  ?cafeSlug=...                  approved, live-wall memories for a venue
+ * GET  ?scope=merchant&status=...     the caller's organization, all statuses
+ * PATCH { memoryId, status }          moderation (merchant or staff tablet)
+ * DELETE ?id=...                      soft delete (merchant or staff tablet)
+ *
+ * The public response never contains phone numbers, customer ids, or raw
+ * storage keys. Images are signed for one hour.
+ */
+
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { requireOperator } from '@/lib/server/context';
+import { loadPublicVenue } from '@/lib/server/public-venue';
+import { signedMemoryUrlMap, pickSigned } from '@/lib/server/memory-urls';
+import { contextFailure, jsonError, jsonOk, readJson, writeAuditLog } from '@/lib/server/route-helpers';
+import { consumeRateLimit, rateLimitKey, rateLimitResponse } from '@/lib/rate-limit';
 
-const createMemoryRequestSchema = z.object({
-  customerId: z.string().uuid().optional(),
-  organizationId: z.string().uuid().optional(),
-  branchId: z.string().uuid().optional(),
-  venueSlug: z.string().optional(),
-  customerPhone: z.string().optional(),
-  visitId: z.string().uuid().optional().nullable(),
-  originalUrl: z.string().min(1),
-  optimizedUrl: z.string().optional().nullable(),
-  thumbnailUrl: z.string().optional().nullable(),
-  caption: z.string().max(280).optional().nullable(),
-  status: z.enum(['pending', 'approved', 'rejected', 'hidden']).default('pending').optional(),
-  consents: z.object({
-    saveConsent: z.boolean().default(true),
-    socialShareConsent: z.boolean().default(false),
-    liveWallConsent: z.boolean().default(false),
-    marketingConsent: z.boolean().default(false),
-  }).default({
-    saveConsent: true,
-    socialShareConsent: false,
-    liveWallConsent: false,
-    marketingConsent: false,
-  }),
-});
+export const runtime = 'nodejs';
 
-const updateMemoryStatusSchema = z.object({
+const STATUSES = ['pending', 'approved', 'rejected', 'hidden', 'deleted'] as const;
+
+const patchSchema = z.object({
   memoryId: z.string().uuid(),
-  status: z.enum(['pending', 'approved', 'rejected', 'hidden', 'deleted']),
-  actorId: z.string().optional(),
+  status: z.enum(STATUSES),
 });
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const branchId = searchParams.get('branchId');
-    const organizationId = searchParams.get('organizationId');
-    const statusParam = searchParams.get('status');
-    const visibilityParam = searchParams.get('visibility');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
-    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
-
-    const supabase = createAdminClient();
-    let query = supabase
-      .from('memories')
-      .select('*, customers(display_name, avatar_url)')
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (branchId) query = query.eq('branch_id', branchId);
-    if (organizationId) query = query.eq('organization_id', organizationId);
-
-    // Guest Privacy & Wall display verification:
-    // Strictly fetch memories where visibility === 'live_wall' AND status === 'approved'
-    // (Only bypassed when explicitly requested with 'all' by authorized dashboard moderation)
-    if (statusParam && statusParam !== 'all') {
-      query = query.eq('status', statusParam);
-    } else if (!statusParam) {
-      query = query.eq('status', 'approved');
-    }
-
-    if (visibilityParam && visibilityParam !== 'all') {
-      query = query.eq('visibility', visibilityParam);
-    } else if (!visibilityParam) {
-      query = query.eq('visibility', 'live_wall');
-    }
-
-    const { data: memories, error, count } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: 'Failed to fetch memories', details: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      memories: memories || [],
-      count: count || (memories ? memories.length : 0),
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
-  }
+function parseLimit(raw: string | null): number {
+  const value = Number.parseInt(raw ?? '24', 10);
+  if (!Number.isFinite(value)) return 24;
+  return Math.min(Math.max(value, 1), 60);
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = createMemoryRequestSchema.safeParse(rawBody);
+interface MemoryRow {
+  id: string;
+  original_url: string;
+  optimized_url: string | null;
+  thumbnail_url: string | null;
+  caption: string | null;
+  status: string;
+  visibility: string;
+  created_at: string;
+  customers?: { display_name: string | null } | { display_name: string | null }[] | null;
+}
 
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
+function customerName(row: MemoryRow): string {
+  const customer = Array.isArray(row.customers) ? row.customers[0] : row.customers;
+  return customer?.display_name?.trim() || 'ضيف مميز';
+}
 
-    const {
-      customerId,
-      organizationId,
-      branchId,
-      venueSlug,
-      customerPhone,
-      visitId,
-      originalUrl,
-      optimizedUrl,
-      thumbnailUrl,
-      caption,
-      status: requestedStatus,
-      consents,
-    } = parsed.data;
+export async function GET(request: NextRequest) {
+  const params = request.nextUrl.searchParams;
+  const scope = params.get('scope');
+  const limit = parseLimit(params.get('limit'));
+  const before = params.get('before');
 
-    const supabase = createAdminClient();
+  const admin = createAdminClient();
 
-    let finalBranchId = branchId;
-    let finalOrgId = organizationId;
-    let finalCustId = customerId;
-
-    if (!finalBranchId || !finalOrgId) {
-      const { data: b } = await supabase
-        .from('branches')
-        .select('id, organization_id')
-        .eq('slug', venueSlug || 'memories')
-        .maybeSingle();
-
-      if (b) {
-        finalBranchId = b.id;
-        finalOrgId = b.organization_id;
-      }
-    }
-
-    if (!finalCustId && customerPhone) {
-      const cleanPhone = customerPhone.trim().replace(/[^0-9]/g, '') || 'guest';
-      const { data: c } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('anonymous_id', cleanPhone)
-        .maybeSingle();
-
-      if (c) {
-        finalCustId = c.id;
-      }
-    }
-
-    if (!finalBranchId || !finalOrgId || !finalCustId) {
-      // In standalone or demo environments, return success with generated memory ID
-      return NextResponse.json({
-        success: true,
-        memory: {
-          id: `mem_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          status: requestedStatus || 'approved',
-          visibility: consents.liveWallConsent ? 'live_wall' : 'private',
-          createdAt: new Date().toISOString(),
-        },
-      });
-    }
-
-    // 1. Insert memory record
-    const { data: memory, error: memoryError } = await supabase
-      .from('memories')
-      .insert({
-        customer_id: finalCustId,
-        organization_id: finalOrgId,
-        branch_id: finalBranchId,
-        visit_id: visitId || null,
-        original_url: originalUrl,
-        optimized_url: optimizedUrl || originalUrl,
-        thumbnail_url: thumbnailUrl || originalUrl,
-        caption: caption || null,
-        status: requestedStatus || 'pending',
-        visibility: consents.liveWallConsent ? 'live_wall' : 'private',
-      })
-      .select()
-      .single();
-
-    if (memoryError) {
-      return NextResponse.json({ error: 'Failed to create memory', details: memoryError.message }, { status: 500 });
-    }
-
-    // 2. Link GDPR/CCPA Consent record
-    if (finalCustId) {
-      await supabase.from('memory_consents').insert({
-        memory_id: memory.id,
-        customer_id: finalCustId,
-        save_consent: consents.saveConsent,
-        social_share_consent: consents.socialShareConsent,
-        live_wall_consent: consents.liveWallConsent,
-        marketing_consent: consents.marketingConsent,
-      });
-    }
-
-    return NextResponse.json({
-      success: true,
-      memory: {
-        id: memory.id,
-        status: memory.status,
-        visibility: memory.visibility,
-        createdAt: memory.created_at,
-      },
+  if (scope === 'merchant') {
+    const context = await requireOperator(request, {
+      branchId: params.get('branchId') ?? undefined,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    if (!context.context) return contextFailure(context.error!);
+    const operator = context.context;
+
+    let query = admin
+      .from('memories')
+      .select(
+        'id,original_url,optimized_url,thumbnail_url,caption,status,visibility,created_at,customers(display_name)'
+      )
+      .eq('organization_id', operator.organization.id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (operator.branchId) query = query.eq('branch_id', operator.branchId);
+    const status = params.get('status');
+    if (status && status !== 'all' && (STATUSES as readonly string[]).includes(status)) {
+      query = query.eq('status', status);
+    }
+    const visibility = params.get('visibility');
+    if (visibility && visibility !== 'all') query = query.eq('visibility', visibility);
+    if (before) query = query.lt('created_at', before);
+
+    const { data, error } = await query;
+    if (error) return jsonError(503, 'memories_unavailable', 'Could not load memories');
+
+    const rows = (data ?? []) as MemoryRow[];
+    const urls = await signedMemoryUrlMap(
+      rows.flatMap((row) => [row.original_url, row.optimized_url, row.thumbnail_url])
+    );
+
+    return jsonOk({
+      memories: rows.map((row) => ({
+        id: row.id,
+        customerName: customerName(row),
+        imageUrl: pickSigned(urls, row.optimized_url, row.original_url),
+        thumbnailUrl: pickSigned(urls, row.thumbnail_url, row.optimized_url, row.original_url),
+        caption: row.caption,
+        status: row.status,
+        visibility: row.visibility,
+        createdAt: row.created_at,
+      })),
+    });
   }
+
+  const cafeSlug = params.get('cafeSlug');
+  if (!cafeSlug) return jsonError(400, 'cafe_slug_required', 'cafeSlug is required');
+
+  const limitResult = await consumeRateLimit(rateLimitKey(request, 'wall-feed'), 120, 60);
+  if (!limitResult.allowed) return rateLimitResponse(limitResult);
+
+  let venue;
+  try {
+    venue = await loadPublicVenue(cafeSlug);
+  } catch {
+    return jsonError(503, 'venue_unavailable', 'Venue lookup failed');
+  }
+  if (!venue) return jsonError(404, 'venue_not_found', 'Venue not available');
+
+  let query = admin
+    .from('memories')
+    .select(
+      'id,original_url,optimized_url,thumbnail_url,caption,status,visibility,created_at,customers(display_name)'
+    )
+    .eq('organization_id', venue.organization.id)
+    .eq('branch_id', venue.branch.id)
+    .eq('status', 'approved')
+    .eq('visibility', 'live_wall')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (before) query = query.lt('created_at', before);
+
+  const { data, error } = await query;
+  if (error) return jsonError(503, 'memories_unavailable', 'Could not load memories');
+
+  const rows = (data ?? []) as MemoryRow[];
+  const urls = await signedMemoryUrlMap(
+    rows.flatMap((row) => [row.original_url, row.optimized_url, row.thumbnail_url])
+  );
+
+  return Response.json(
+    {
+      ok: true,
+      memories: rows.map((row) => ({
+        id: row.id,
+        customerName: customerName(row),
+        imageUrl: pickSigned(urls, row.optimized_url, row.original_url),
+        thumbnailUrl: pickSigned(urls, row.thumbnail_url, row.optimized_url, row.original_url),
+        caption: row.caption,
+        createdAt: row.created_at,
+      })),
+    },
+    {
+      headers: {
+        'Cache-Control': 'public, max-age=15, s-maxage=30, stale-while-revalidate=120',
+      },
+    }
+  );
 }
 
 export async function PATCH(request: NextRequest) {
-  try {
-    const rawBody = await request.json();
-    const parsed = updateMemoryStatusSchema.safeParse(rawBody);
+  const context = await requireOperator(request);
+  if (!context.context) return contextFailure(context.error!);
+  const operator = context.context;
 
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload', details: parsed.error.format() }, { status: 400 });
-    }
+  const parsed = patchSchema.safeParse(await readJson(request));
+  if (!parsed.success) return jsonError(400, 'invalid_payload', 'Invalid memory update');
 
-    const { memoryId, status, actorId } = parsed.data;
-    const supabase = createAdminClient();
+  const admin = createAdminClient();
+  const { data: memory, error: readError } = await admin
+    .from('memories')
+    .select('id,organization_id,branch_id,status')
+    .eq('id', parsed.data.memoryId)
+    .is('deleted_at', null)
+    .maybeSingle();
 
-    const { data: updatedMemory, error } = await supabase
-      .from('memories')
-      .update({
-        status,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', memoryId)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: 'Failed to update memory status', details: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      memory: updatedMemory,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+  if (readError) return jsonError(503, 'memory_unavailable', 'Could not load memory');
+  if (!memory || memory.organization_id !== operator.organization.id) {
+    return jsonError(404, 'memory_not_found', 'Memory not found');
   }
+  if (operator.branchId && memory.branch_id !== operator.branchId) {
+    return jsonError(403, 'branch_scope', 'Memory belongs to another branch');
+  }
+
+  const { error } = await admin
+    .from('memories')
+    .update({ status: parsed.data.status, updated_at: new Date().toISOString() })
+    .eq('id', memory.id);
+
+  if (error) return jsonError(503, 'memory_update_failed', 'Could not update memory');
+
+  await writeAuditLog({
+    actorId: operator.memberId,
+    organizationId: operator.organization.id,
+    action: 'memory.status_changed',
+    entityType: 'memories',
+    entityId: memory.id,
+    metadata: { from: memory.status, to: parsed.data.status, source: operator.source },
+  });
+
+  return jsonOk({ memoryId: memory.id, status: parsed.data.status });
+}
+
+export async function DELETE(request: NextRequest) {
+  const context = await requireOperator(request);
+  if (!context.context) return contextFailure(context.error!);
+  const operator = context.context;
+
+  const id = request.nextUrl.searchParams.get('id');
+  if (!id || !z.string().uuid().safeParse(id).success) {
+    return jsonError(400, 'invalid_id', 'A valid memory id is required');
+  }
+
+  const admin = createAdminClient();
+  const { data: memory, error: readError } = await admin
+    .from('memories')
+    .select('id,organization_id,branch_id')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (readError) return jsonError(503, 'memory_unavailable', 'Could not load memory');
+  if (!memory || memory.organization_id !== operator.organization.id) {
+    return jsonError(404, 'memory_not_found', 'Memory not found');
+  }
+  if (operator.branchId && memory.branch_id !== operator.branchId) {
+    return jsonError(403, 'branch_scope', 'Memory belongs to another branch');
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await admin
+    .from('memories')
+    .update({ status: 'deleted', deleted_at: now, updated_at: now })
+    .eq('id', memory.id);
+
+  if (error) return jsonError(503, 'memory_delete_failed', 'Could not delete memory');
+
+  await writeAuditLog({
+    actorId: operator.memberId,
+    organizationId: operator.organization.id,
+    action: 'memory.deleted',
+    entityType: 'memories',
+    entityId: memory.id,
+    metadata: { source: operator.source },
+  });
+
+  return jsonOk({ memoryId: memory.id });
 }

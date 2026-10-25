@@ -79,17 +79,17 @@ export const LoyaltyCardView: React.FC<LoyaltyCardViewProps> = ({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Sync state if template changes slotCount
-  useEffect(() => {
-    if (activeState.totalSlots !== template.slotCount) {
-      const updated = {
-        ...activeState,
-        totalSlots: template.slotCount,
-        activeStamps: Math.min(activeState.activeStamps, template.slotCount),
-      };
-      setInternalState(updated);
-    }
-  }, [template.slotCount]);
+  // Sync state if template changes slotCount. The guarded render-phase update
+  // avoids a setState-in-effect cascade.
+  const [lastSlotCount, setLastSlotCount] = useState(template.slotCount);
+  if (lastSlotCount !== template.slotCount) {
+    setLastSlotCount(template.slotCount);
+    setInternalState((previous) => ({
+      ...previous,
+      totalSlots: template.slotCount,
+      activeStamps: Math.min(previous.activeStamps, template.slotCount),
+    }));
+  }
 
   // Generate QR Code for Barista Scanner
   useEffect(() => {

@@ -21,6 +21,7 @@ import {
 import { BusinessSettings } from '@/types/photobooth';
 import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
 import { MetricsSkeleton } from '@/components/ui/SkeletonLoader';
+import type { DashboardTab } from './DashboardNavBar';
 
 export interface OverviewMetrics {
   today: {
@@ -48,8 +49,7 @@ interface DashboardOverviewTabProps {
   customerLiveUrl: string;
   copiedUrl: boolean;
   onCopyUrl: () => void;
-  onOpenQuickSetup: () => void;
-  onNavigateTab: (tab: any) => void;
+  onNavigateTab: (tab: DashboardTab) => void;
 }
 
 export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
@@ -60,7 +60,6 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
   customerLiveUrl,
   copiedUrl,
   onCopyUrl,
-  onOpenQuickSetup,
   onNavigateTab,
 }) => {
   return (
@@ -98,7 +97,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             <span>فتح استوديو الزائر</span>
           </a>
           <a
-            href={`/terminal?cafe=${settings.cafeSlug || 'memories'}`}
+            href={`/terminal`}
             target="_blank"
             rel="noreferrer"
             className="px-4 py-2.5 rounded-lg bg-[#141212]/70 hover:bg-[#141212] text-[#FAF5EB] font-bold text-xs border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
@@ -107,7 +106,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             <span>محطة الكاونتر (POS)</span>
           </a>
           <a
-            href={`/wall/screen-1?cafe=${settings.cafeSlug || 'memories'}`}
+            href={`/wall`}
             target="_blank"
             rel="noreferrer"
             className="px-4 py-2.5 rounded-lg bg-[#141212]/70 hover:bg-[#141212] text-[#FAF5EB] font-bold text-xs border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
@@ -185,24 +184,21 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
           {/* Main Actions */}
           <div className="flex flex-wrap items-center gap-2.5 pt-2">
             <button
-              onClick={onOpenQuickSetup}
+              onClick={() => onNavigateTab('qrcodes')}
               className="px-4 py-2.5 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs transition flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>طباعة ستاند الأكريليك للطاولات</span>
             </button>
-            <a
-              href={`https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&data=${encodeURIComponent(customerLiveUrl)}&margin=2&format=svg`}
-              download={`memories-qr-${settings.cafeSlug}.svg`}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              onClick={() => onNavigateTab('qrcodes')}
               className="px-4 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] font-bold text-xs transition flex items-center gap-1.5 border border-white/10 cursor-pointer"
             >
               <Download className="w-4 h-4 text-[#A19E9B]" />
-              <span>تحميل الـ QR بجودة طباعة (SVG)</span>
-            </a>
+              <span>تحميل الـ QR بجودة طباعة</span>
+            </button>
             <button
-              onClick={onOpenQuickSetup}
+              onClick={() => onNavigateTab('settings')}
               className="px-3.5 py-2.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] font-bold text-xs border border-white/10 transition flex items-center gap-1.5 cursor-pointer"
             >
               <Settings className="w-3.5 h-3.5 text-[#A19E9B]" />

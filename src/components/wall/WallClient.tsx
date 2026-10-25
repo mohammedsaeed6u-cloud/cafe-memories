@@ -1,619 +1,607 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Tv,
-  QrCode,
   Sparkles,
   Maximize2,
   Clock,
   Wifi,
   WifiOff,
-  CheckCircle,
   CheckCircle2,
   Play,
   Pause,
-  RefreshCw,
-  Heart,
-  RotateCw,
   Radio,
-  ArrowRight,
+  RotateCw,
+  KeyRound,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
-import { BusinessSettingsService } from '@/lib/services/business-settings.service';
 import { CoBrandingLogos } from '@/components/brand/CoBrandingLogos';
 import { RealOutsourcedQr } from '@/components/ui/RealOutsourcedQr';
 
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
+
 interface WallClientProps {
+  /** Optional screen identifier from the URL. It is only a local cache key. */
+  screenId?: string;
+}
+
+interface PairedScreen {
   screenId: string;
+  deviceToken: string;
+  cafeSlug: string;
+  organizationName: string;
+  branchName: string | null;
+  logoUrl: string | null;
 }
 
 interface WallMemoryItem {
   id: string;
   customerName: string;
-  avatarUrl?: string;
   photoUrl: string;
   caption?: string;
-  visitNumber: number;
-  timeFormatted: string;
   createdAt: string;
 }
 
-const DEFAULT_FEATURED_MEMORIES: WallMemoryItem[] = [
-  {
-    id: 'wall-mem-1',
-    customerName: 'سارة عبد الله',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80',
-    caption: 'أحلى وقت وتوثيق لحظات لا تُنسى مع سارة ✨',
-    visitNumber: 4,
-    timeFormatted: 'منذ ١٠ دقائق',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'wall-mem-2',
-    customerName: 'فيصل وبدر',
-    photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=80',
-    caption: 'احتفال بانتهاء المشروع في مكاننا المفضل!',
-    visitNumber: 7,
-    timeFormatted: 'منذ ٢٥ دقيقة',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'wall-mem-3',
-    customerName: 'نورة المنصور',
-    photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=80',
-    caption: 'أجواء استثنائية وتجربة رايقة كالعادة 🤍',
-    visitNumber: 3,
-    timeFormatted: 'منذ ٤٥ دقيقة',
-    createdAt: new Date().toISOString(),
-  },
-];
+interface VenueSettingsResponse {
+  venue: {
+    organization: {
+      name: string;
+      slug: string;
+      logoUrl: string | null;
+      tagline: string | null;
+    };
+    branch: { slug: string; name: string };
+    settings: {
+      wallSettings?: {
+        mode?: 'board' | 'grid' | 'slideshow';
+        slideIntervalSeconds?: number;
+        blackout?: boolean;
+      };
+    };
+  };
+}
+
+const STORAGE_KEY = 'stampy_paired_screen_v1';
+const TOKEN_KEY = 'stampy_screen_device_token_v1';
+const FEED_CACHE_KEY = 'stampy_wall_feed_cache_v1';
+const HEARTBEAT_MS = 45_000;
+const FEED_POLL_MS = 20_000;
+const SETTINGS_POLL_MS = 60_000;
+
+function randomToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function readPaired(): PairedScreen | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PairedScreen;
+    if (!parsed?.screenId || !parsed?.deviceToken || !parsed?.cafeSlug) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function timeLabel(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  const minutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60_000));
+  if (minutes < 1) return 'الآن';
+  if (minutes < 60) return `منذ ${minutes} دقيقة`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `منذ ${hours} ساعة`;
+  return date.toLocaleDateString('ar-SA');
+}
+
+/* -------------------------------------------------------------------------- */
+/* Component                                                                  */
+/* -------------------------------------------------------------------------- */
 
 export function WallClient({ screenId }: WallClientProps) {
-  // Check if screen is already paired - screen-1 defaults to true for live presentation
-  const [isPaired, setIsPaired] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    const stored = localStorage.getItem(`memories_wall_paired_${screenId}`);
-    if (stored !== null) return stored === 'true';
-    return screenId === 'screen-1' || screenId === 'screen-101';
-  });
+  const [paired, setPaired] = useState<PairedScreen | null>(null);
+  const [booted, setBooted] = useState(false);
 
-  // Dynamic Random 6-Digit Code generated by the TV Screen
-  const [screenPairingCode, setScreenPairingCode] = useState<string>(() => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  });
-  const [pairedSuccessMsg, setPairedSuccessMsg] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+  const [pairError, setPairError] = useState<string | null>(null);
+  const [isPairing, setIsPairing] = useState(false);
 
-  // Content & Playback State - initialized with curated specialty memories
-  const [memories, setMemories] = useState<WallMemoryItem[]>(DEFAULT_FEATURED_MEMORIES);
+  const [memories, setMemories] = useState<WallMemoryItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
-  const [lastSyncTime, setLastSyncTime] = useState<string>('الآن');
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [lastSync, setLastSync] = useState<string | null>(null);
   const [isBlackout, setIsBlackout] = useState(false);
   const [slideIntervalMs, setSlideIntervalMs] = useState(8000);
-  const [newMemoryToast, setNewMemoryToast] = useState<string | null>(null);
+  const [feedError, setFeedError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
-  const [brandName, setBrandName] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('memories_active_merchant_name') || 'stampy.';
-    }
-    return 'stampy.';
-  });
-  const [brandLogoUrl, setBrandLogoUrl] = useState<string | null>(null);
-  const [cafeSlug, setCafeSlug] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryCafe = urlParams.get('cafe') || urlParams.get('slug');
-      if (queryCafe) return decodeURIComponent(queryCafe);
-      return localStorage.getItem('memories_active_merchant_slug') || 'memories';
-    }
-    return 'memories';
-  });
+  const newestIdRef = useRef<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [origin, setOrigin] = useState('https://memories-d9l.pages.dev');
+  // Clamp during render instead of resetting through an effect when the feed
+  // shrinks (moderation, deletion, or a smaller page).
+  const activeIndex = memories.length > 0 ? Math.min(currentIndex, memories.length - 1) : 0;
+
+  const origin = typeof window === 'undefined' ? '' : window.location.origin;
+
+  /* ------------------------------- bootstrap ------------------------------ */
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setOrigin(window.location.origin);
+    const boot = async () => {
+      setPaired(readPaired());
+      setBooted(true);
+      setIsOnline(typeof navigator === 'undefined' ? true : navigator.onLine);
+    };
+    void boot();
+  }, []);
+
+  useEffect(() => {
+    const online = () => setIsOnline(true);
+    const offline = () => setIsOnline(false);
+    window.addEventListener('online', online);
+    window.addEventListener('offline', offline);
+    return () => {
+      window.removeEventListener('online', online);
+      window.removeEventListener('offline', offline);
+    };
+  }, []);
+
+  /* -------------------------------- pairing ------------------------------- */
+
+  const submitCode = useCallback(
+    async (event: React.FormEvent) => {
+      event.preventDefault();
+      const clean = code.replace(/\D/g, '').slice(0, 6);
+      if (clean.length !== 6) {
+        setPairError('أدخل الرمز المكوّن من 6 أرقام');
+        return;
+      }
+      setIsPairing(true);
+      setPairError(null);
+      try {
+        let deviceToken = localStorage.getItem(TOKEN_KEY);
+        if (!deviceToken || deviceToken.length < 32) {
+          deviceToken = randomToken();
+          localStorage.setItem(TOKEN_KEY, deviceToken);
+        }
+
+        const response = await fetch('/api/v1/screens/pair', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: clean,
+            deviceToken,
+            screenName: screenId ? `شاشة ${screenId}` : 'شاشة الصالة',
+            resolution: `${window.screen.width}x${window.screen.height}`,
+            orientation: window.screen.width >= window.screen.height ? 'landscape' : 'portrait',
+          }),
+        });
+        const body = (await response.json().catch(() => ({}))) as {
+          error?: string;
+          screenId?: string;
+          cafeSlug?: string | null;
+          organizationName?: string | null;
+          branchName?: string | null;
+        };
+        if (!response.ok || !body.screenId || !body.cafeSlug) {
+          throw new Error(body.error || 'تعذر إقران الشاشة');
+        }
+
+        const next: PairedScreen = {
+          screenId: body.screenId,
+          deviceToken,
+          cafeSlug: body.cafeSlug,
+          organizationName: body.organizationName ?? body.cafeSlug,
+          branchName: body.branchName ?? null,
+          logoUrl: null,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        setPaired(next);
+        setCode('');
+      } catch (error) {
+        setPairError(error instanceof Error ? error.message : 'تعذر إقران الشاشة');
+      } finally {
+        setIsPairing(false);
+      }
+    },
+    [code, screenId]
+  );
+
+  const unpair = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setPaired(null);
+    setMemories([]);
+    setCurrentIndex(0);
+  }, []);
+
+  /* ------------------------------ heartbeat ------------------------------- */
+
+  useEffect(() => {
+    if (!paired) return;
+    let cancelled = false;
+
+    const beat = async () => {
+      try {
+        const response = await fetch('/api/v1/screens/heartbeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            screenId: paired.screenId,
+            deviceToken: paired.deviceToken,
+            currentMemoryId: memories[activeIndex]?.id ?? null,
+          }),
+        });
+        if (cancelled) return;
+        if (response.status === 401) {
+          unpair();
+          return;
+        }
+        if (!response.ok) {
+          setIsOnline(false);
+          return;
+        }
+        setIsOnline(true);
+        const body = (await response.json()) as {
+          cafeSlug?: string | null;
+          branchName?: string | null;
+        };
+        if (body.cafeSlug && body.cafeSlug !== paired.cafeSlug) {
+          const next = { ...paired, cafeSlug: body.cafeSlug, branchName: body.branchName ?? paired.branchName };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          setPaired(next);
+        }
+      } catch {
+        if (!cancelled) setIsOnline(false);
+      }
+    };
+
+    void beat();
+    const timer = setInterval(beat, HEARTBEAT_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [paired, memories, activeIndex, unpair]);
+
+  /* -------------------------- settings + feed ----------------------------- */
+
+  const loadSettings = useCallback(async (slug: string) => {
+    try {
+      const response = await fetch(`/api/v1/public/settings?cafeSlug=${encodeURIComponent(slug)}`, {
+        cache: 'no-store',
+      });
+      if (!response.ok) return;
+      const body = (await response.json()) as VenueSettingsResponse;
+      const wall = body.venue.settings?.wallSettings;
+      if (typeof wall?.slideIntervalSeconds === 'number') {
+        setSlideIntervalMs(Math.max(3, Math.min(120, wall.slideIntervalSeconds)) * 1000);
+      }
+      setIsBlackout(Boolean(wall?.blackout));
+      setPaired((previous) => {
+        if (!previous) return previous;
+        const next: PairedScreen = {
+          ...previous,
+          organizationName: body.venue.organization.name,
+          branchName: body.venue.branch.name,
+          logoUrl: body.venue.organization.logoUrl,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
+    } catch {
+      /* keep the last known settings */
+    }
+  }, []);
+
+  const loadFeed = useCallback(async (slug: string) => {
+    try {
+      const response = await fetch(
+        `/api/v1/memories?cafeSlug=${encodeURIComponent(slug)}&limit=30`,
+        { cache: 'no-store' }
+      );
+      if (!response.ok) {
+        setFeedError('تعذر تحديث الشاشة');
+        return;
+      }
+      const body = (await response.json()) as {
+        memories?: Array<{
+          id: string;
+          customerName?: string;
+          imageUrl?: string;
+          thumbnailUrl?: string;
+          caption?: string | null;
+          createdAt: string;
+        }>;
+      };
+      const mapped: WallMemoryItem[] = (body.memories ?? [])
+        .filter((item) => Boolean(item.imageUrl || item.thumbnailUrl))
+        .map((item) => ({
+          id: item.id,
+          customerName: item.customerName?.trim() || 'ضيف مميز',
+          photoUrl: (item.imageUrl || item.thumbnailUrl) as string,
+          caption: item.caption ?? undefined,
+          createdAt: item.createdAt,
+        }));
+
+      setFeedError(null);
+      setLastSync(new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }));
+      setMemories(mapped);
+      try {
+        localStorage.setItem(FEED_CACHE_KEY, JSON.stringify(mapped));
+      } catch {
+        /* cache is best effort */
+      }
+
+      const newest = mapped[0]?.id ?? null;
+      if (newest && newestIdRef.current && newest !== newestIdRef.current) {
+        setToast(`وصلت ذكرى جديدة من ${mapped[0].customerName} ✨`);
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = setTimeout(() => setToast(null), 6000);
+      }
+      newestIdRef.current = newest;
+    } catch {
+      setFeedError('تعذر تحديث الشاشة');
+      try {
+        const cached = localStorage.getItem(FEED_CACHE_KEY);
+        if (cached && memories.length === 0) {
+          const parsed = JSON.parse(cached) as WallMemoryItem[];
+          if (Array.isArray(parsed)) setMemories(parsed);
+        }
+      } catch {
+        /* ignore cache errors */
+      }
+    }
+  }, [memories.length]);
+
+  useEffect(() => {
+    if (!paired) return;
+    let cancelled = false;
+    const run = () => {
+      if (cancelled) return;
+      void loadSettings(paired.cafeSlug);
+      void loadFeed(paired.cafeSlug);
+    };
+    run();
+    const feedTimer = setInterval(run, FEED_POLL_MS);
+    const settingsTimer = setInterval(() => void loadSettings(paired.cafeSlug), SETTINGS_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(feedTimer);
+      clearInterval(settingsTimer);
+    };
+  }, [paired, loadFeed, loadSettings]);
+
+  /* ------------------------------ slideshow ------------------------------- */
+
+  useEffect(() => {
+    if (!isPlaying || isBlackout || memories.length <= 1) return;
+    const timer = setInterval(
+      () => setCurrentIndex((previous) => (previous + 1) % memories.length),
+      slideIntervalMs
+    );
+    return () => clearInterval(timer);
+  }, [isPlaying, isBlackout, memories.length, slideIntervalMs]);
+
+  /* ---------------------------- remote controls --------------------------- */
+
+  const toggleFullscreen = useCallback(() => {
+    if (typeof document === 'undefined') return;
+    if (!document.fullscreenElement) {
+      void document.documentElement.requestFullscreen().catch(() => undefined);
+    } else {
+      void document.exitFullscreen().catch(() => undefined);
     }
   }, []);
 
   useEffect(() => {
-    try {
-      const s = BusinessSettingsService.getSettings(cafeSlug);
-      if (s?.branding?.name) setBrandName(s.branding.name);
-      if (s?.branding?.logoUrl) setBrandLogoUrl(s.branding.logoUrl);
-      if (s?.cafeSlug) setCafeSlug(s.cafeSlug);
-    } catch {}
-  }, [cafeSlug]);
-
-  const CACHE_KEY = `memories_wall_cache_${screenId}`;
-
-  // 1. Offline & Heartbeat Detection
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    const heartbeatTimer = setInterval(async () => {
-      try {
-        await fetch('/api/v1/screens/heartbeat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            screenId,
-            status: 'online',
-          }),
-        });
-      } catch {}
-    }, 45000);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      clearInterval(heartbeatTimer);
-    };
-  }, [screenId]);
-
-  // 2. Pair Success Handler
-  const handlePairedSuccess = useCallback((newSlug: string, newName: string) => {
-    setBrandName(newName);
-    setCafeSlug(newSlug);
-    setPairedSuccessMsg(`تم بنجاح! تم اقتران هذه الشاشة مع (${newName})`);
-    try {
-      localStorage.setItem(`memories_wall_paired_${screenId}`, 'true');
-      localStorage.setItem(`memories_wall_cafe_${screenId}`, newSlug);
-    } catch {}
-
-    setTimeout(() => {
-      setIsPaired(true);
-      setPairedSuccessMsg(null);
-      fetchApprovedMemories();
-    }, 1200);
-  }, [screenId]);
-
-  // 3. Fetch Live Approved Memories with Offline Cache Fallback
-  const fetchApprovedMemories = useCallback(async () => {
-    try {
-      const res = await fetch('/api/v1/memories?status=approved&visibility=live_wall&limit=30');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.memories && data.memories.length > 0) {
-          const mapped: WallMemoryItem[] = data.memories.map((m: any, idx: number) => ({
-            id: m.id,
-            customerName: m.customers?.display_name || 'عميل مميز',
-            avatarUrl: m.customers?.avatar_url,
-            photoUrl: m.optimized_url || m.original_url,
-            caption: m.caption,
-            visitNumber: m.customers?.total_visits || idx + 1,
-            timeFormatted: new Date(m.created_at).toLocaleTimeString('ar-SA', {
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-            createdAt: m.created_at,
-          }));
-
-          setMemories(mapped);
-          setLastSyncTime(new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }));
-          try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(mapped));
-          } catch {}
-          return;
-        }
-      }
-    } catch {
-      console.warn('API fetch failed, falling back to local storage cache');
-    }
-
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMemories(parsed);
-          return;
-        }
-      }
-    } catch {}
-    setMemories(DEFAULT_FEATURED_MEMORIES);
-  }, [CACHE_KEY]);
-
-  // 4. Real-Time Pairing & Remote TV Commands Listener (BroadcastChannel + Storage Event)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      localStorage.setItem('memories_active_tv_code', screenPairingCode);
-      localStorage.setItem('memories_active_tv_screen', screenId);
-    } catch {}
-
-    let channel: BroadcastChannel | null = null;
-    try {
-      channel = new BroadcastChannel('memories_screens_channel');
-      channel.onmessage = (event) => {
-        const data = event.data;
-        if (data?.type === 'SCREEN_PAIRED' && (data.code === screenPairingCode || data.code === 'all')) {
-          handlePairedSuccess(data.cafeSlug || 'memories', data.cafeName || 'stampy.');
-        }
-        if (data?.type === 'WALL_NEW_PHOTO' && data.item) {
-          setMemories((prev) => [data.item, ...prev.filter((m) => m.id !== data.item.id)]);
-          setCurrentIndex(0);
-          setNewMemoryToast(`وصلت ذكرى جديدة للتو من ${data.item.customerName || 'أحد الزوار المميزين'}! ✨`);
-          setTimeout(() => setNewMemoryToast(null), 6000);
-        }
-        if (data?.type === 'WALL_COMMAND') {
-          if (data.command === 'BLACKOUT') {
-            setIsBlackout(Boolean(data.blackout));
-          } else if (data.command === 'SET_SPEED' && data.durationMs) {
-            setSlideIntervalMs(data.durationMs);
-          } else if (data.command === 'FORCE_REFRESH') {
-            fetchApprovedMemories();
-          } else if (data.command === 'UNPAIR') {
-            try {
-              localStorage.removeItem(`memories_wall_paired_${screenId}`);
-              localStorage.removeItem(`memories_wall_cafe_${screenId}`);
-            } catch {}
-            setIsPaired(false);
-          }
-        }
-      };
-    } catch {}
-
-    const handleCustomWallUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail && Array.isArray(customEvent.detail) && customEvent.detail.length > 0) {
-        setMemories(customEvent.detail);
-        setCurrentIndex(0);
-        const newest = customEvent.detail[0];
-        setNewMemoryToast(`وصلت ذكرى جديدة للتو من ${newest.customerName || 'أحد الزوار المميزين'}! ✨`);
-        setTimeout(() => setNewMemoryToast(null), 6000);
-      }
-    };
-    window.addEventListener('memories-wall-updated', handleCustomWallUpdate);
-
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === `memories_paired_screen_${screenPairingCode}` && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          handlePairedSuccess(parsed.cafeSlug || 'memories', parsed.cafeName || 'stampy.');
-        } catch {}
-      }
-      if (e.key === `memories_wall_feed_${cafeSlug}` && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setMemories(parsed);
-            setCurrentIndex(0);
-            const newest = parsed[0];
-            setNewMemoryToast(`وصلت ذكرى جديدة للتو من ${newest.customerName || 'أحد الزوار المميزين'}! ✨`);
-            setTimeout(() => setNewMemoryToast(null), 6000);
-          }
-        } catch {}
-      }
-      if (e.key === 'memories_wall_command' && e.newValue) {
-        try {
-          const cmd = JSON.parse(e.newValue);
-          if (cmd.command === 'BLACKOUT') setIsBlackout(Boolean(cmd.blackout));
-          if (cmd.command === 'SET_SPEED' && cmd.durationMs) setSlideIntervalMs(cmd.durationMs);
-          if (cmd.command === 'FORCE_REFRESH') fetchApprovedMemories();
-          if (cmd.command === 'UNPAIR') {
-            try {
-              localStorage.removeItem(`memories_wall_paired_${screenId}`);
-              localStorage.removeItem(`memories_wall_cafe_${screenId}`);
-            } catch {}
-            setIsPaired(false);
-          }
-        } catch {}
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-
-    // Periodic live sync from server every 8 seconds for cross-device memory updates
-    const liveSyncTimer = setInterval(fetchApprovedMemories, 8000);
-
-    return () => {
-      clearInterval(liveSyncTimer);
-      if (channel) channel.close();
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('memories-wall-updated', handleCustomWallUpdate);
-    };
-  }, [screenPairingCode, screenId, cafeSlug, handlePairedSuccess, fetchApprovedMemories]);
-
-  useEffect(() => {
-    fetchApprovedMemories();
-    const pollInterval = setInterval(fetchApprovedMemories, 30000);
-    return () => clearInterval(pollInterval);
-  }, [fetchApprovedMemories]);
-
-  // 5. Slideshow Transition Timer (Remotely Adjustable Speed)
-  useEffect(() => {
-    if (!isPlaying || memories.length <= 1) return;
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % memories.length);
-    }, slideIntervalMs);
-    return () => clearInterval(timer);
-  }, [isPlaying, memories.length, slideIntervalMs]);
-
-  // 6. Smart TV Remote Control & Keyboard Navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
-        return;
-      }
-
-      if (e.code === 'Space') {
-        e.preventDefault();
-        setIsPlaying((prev) => !prev);
-      } else if (e.key === 'f' || e.key === 'F') {
-        e.preventDefault();
+    const onKey = (event: KeyboardEvent) => {
+      const tag = (event.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (event.code === 'Space') {
+        event.preventDefault();
+        setIsPlaying((previous) => !previous);
+      } else if (event.key.toLowerCase() === 'f') {
+        event.preventDefault();
         toggleFullscreen();
-      } else if (e.key === 'b' || e.key === 'B') {
-        e.preventDefault();
-        setIsBlackout((prev) => !prev);
-      } else if (e.key === 'r' || e.key === 'R') {
-        e.preventDefault();
-        fetchApprovedMemories();
-      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        setCurrentIndex((prev) => (prev + 1) % (memories.length || 1));
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        setCurrentIndex((prev) => (prev - 1 + (memories.length || 1)) % (memories.length || 1));
+      } else if (event.key.toLowerCase() === 'r' && paired) {
+        event.preventDefault();
+        void loadFeed(paired.cafeSlug);
+      } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        setCurrentIndex((previous) => (memories.length ? (previous + 1) % memories.length : 0));
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        setCurrentIndex((previous) =>
+          memories.length ? (previous - 1 + memories.length) % memories.length : 0
+        );
       }
     };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [memories.length, paired, loadFeed, toggleFullscreen]);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [memories.length, fetchApprovedMemories]);
+  useEffect(
+    () => () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    },
+    []
+  );
 
-  // Refresh pairing code
-  const handleRegenerateCode = () => {
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setScreenPairingCode(newCode);
-    try {
-      localStorage.setItem('memories_active_tv_code', newCode);
-    } catch {}
-  };
+  const currentMemory = useMemo(
+    () => memories[activeIndex] ?? null,
+    [memories, activeIndex]
+  );
 
-  // Toggle Fullscreen
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen().catch(() => {});
-      setIsFullscreen(false);
-    }
-  };
+  /* -------------------------------- render -------------------------------- */
 
-  const currentMemory = memories[currentIndex] || memories[0];
+  if (!booted) {
+    return <div className="min-h-screen bg-[#141313]" />;
+  }
 
-  // -------------------------------------------------------------
-  // 1. UNPAIRED STATE: استامبي • Stampy Studio Vitrine TV Display
-  // -------------------------------------------------------------
-  if (!isPaired) {
+  if (!paired) {
     return (
       <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col items-center justify-between p-6 sm:p-12 select-none font-sans relative overflow-hidden">
-        {/* Subtle Archival Glows */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#3D2314]/20 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
 
-        {/* Top Header Bar */}
         <div className="w-full max-w-5xl flex items-center justify-between z-10 border-b border-white/10 pb-5">
-          <CoBrandingLogos
-            cafeName={brandName}
-            cafeLogoUrl={brandLogoUrl}
-            size="lg"
-            theme="dark"
-            showTagline={true}
-          />
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#3D2314]/50 border border-[#DFAB56]/40 text-xs font-mono font-bold text-[#FAF5EB] shadow-sm">
+          <CoBrandingLogos cafeName="stampy." size="lg" theme="dark" showTagline />
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#3D2314]/50 border border-[#DFAB56]/40 text-xs font-mono font-bold text-[#FAF5EB]">
             <Radio className="w-3.5 h-3.5 text-[#DFAB56] animate-pulse" />
-            <span className="uppercase tracking-wider">بث الشاشة الذكية • جاهز للإقران</span>
+            <span className="uppercase tracking-wider">SMART TV • جاهز للإقران</span>
           </div>
         </div>
 
-        {/* Main Pairing Card */}
-        <div className="max-w-2xl w-full p-8 sm:p-12 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl text-center space-y-6 z-10 backdrop-blur-xl">
-          {pairedSuccessMsg ? (
-            <div className="p-8 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 space-y-3 animate-in zoom-in-95 duration-300">
-              <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto animate-bounce" />
-              <h3 className="text-2xl font-bold font-serif">{pairedSuccessMsg}</h3>
-              <p className="text-xs text-emerald-300 font-bold">جاري فتح شاشة العرض الحية وبث الذكريات فوراً...</p>
+        <form
+          onSubmit={submitCode}
+          className="max-w-xl w-full p-8 sm:p-12 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl text-center space-y-6 z-10"
+        >
+          <div className="w-16 h-16 rounded-xl bg-[#3D2314]/40 text-[#DFAB56] flex items-center justify-center mx-auto border border-[#DFAB56]/30">
+            <Tv className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-[11px] font-mono uppercase tracking-[0.08em] text-[#DFAB56] font-bold block">
+              SMART TV LIVE SIGNAGE
+            </span>
+            <h1
+              style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+              className="text-2xl sm:text-3xl font-bold text-[#FAF5EB] tracking-tight"
+            >
+              إقران شاشة الصالة
+            </h1>
+            <p className="text-xs sm:text-sm text-[#A19E9B] max-w-md mx-auto leading-relaxed">
+              اطلب من المسؤول رمز الاقتران المكوّن من 6 أرقام من لوحة التحكم، ثم أدخله هنا لربط
+              الشاشة بفرعك.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold text-[#A19E9B] flex items-center gap-1.5 justify-center">
+              <KeyRound className="w-3.5 h-3.5" /> رمز الاقتران
+            </label>
+            <input
+              value={code}
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              dir="ltr"
+              placeholder="000000"
+              className="w-full max-w-xs mx-auto block px-4 py-3 rounded-xl bg-[#0B0A0A] border-2 border-[#DFAB56]/40 text-center font-mono text-3xl tracking-[0.4em] text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
+          </div>
+
+          {pairError && (
+            <div className="flex items-center justify-center gap-2 text-xs font-bold text-rose-300">
+              <AlertCircle className="w-4 h-4" />
+              <span>{pairError}</span>
             </div>
-          ) : (
-            <>
-              <div className="w-16 h-16 rounded-xl bg-[#3D2314]/40 text-[#DFAB56] flex items-center justify-center mx-auto border border-[#DFAB56]/30 shadow-lg shadow-red-950/30">
-                <Tv className="w-8 h-8" />
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-[11px] font-mono uppercase tracking-[0.08em] text-[#DFAB56] font-bold block">
-                  SMART TV LIVE SIGNAGE
-                </span>
-                <h1
-                  style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-                  className="text-2xl sm:text-3xl font-bold text-[#FAF5EB] tracking-tight"
-                >
-                  اقتران شاشة التلفزيون الذكية
-                </h1>
-                <p className="text-xs sm:text-sm text-[#A19E9B] max-w-lg mx-auto leading-relaxed">
-                  أدخل هذا الرقم المكون من 6 أرقام في <strong className="text-[#FAF5EB] font-bold underline decoration-[#DFAB56]">لوحة تحكم التاجر</strong> لربط هذه الشاشة مع فرعك ونشاطك التجاري وبث ذكريات الصالة فوراً:
-                </p>
-              </div>
-
-              {/* Huge 6-Digit Screen Code */}
-              <div className="py-2" dir="ltr">
-                <div className="flex items-center justify-center gap-2.5 sm:gap-4 font-mono font-black text-4xl sm:text-7xl">
-                  {screenPairingCode.split('').map((digit, idx) => (
-                    <div
-                      key={idx}
-                      className="w-12 h-16 sm:w-20 sm:h-26 rounded-xl bg-[#0B0A0A] border-2 border-[#DFAB56]/40 text-[#FAF5EB] flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] font-mono"
-                    >
-                      {digit}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Step-by-Step Guide */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right pt-2">
-                <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-xs text-[#A19E9B]">
-                  <span className="font-mono font-black text-[#DFAB56] block mb-1">الخطوة 1:</span>
-                  افتح لوحة تحكم التاجر على هاتفك أو حاسوبك.
-                </div>
-                <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-xs text-[#A19E9B]">
-                  <span className="font-mono font-black text-[#DFAB56] block mb-1">الخطوة 2:</span>
-                  انتقل إلى تبويب «شاشات الصالة».
-                </div>
-                <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 text-xs text-[#A19E9B]">
-                  <span className="font-mono font-black text-[#DFAB56] block mb-1">الخطوة 3:</span>
-                  اكتب الرمز ({screenPairingCode}) واضغط «تأكيد وربط الشاشة».
-                </div>
-              </div>
-
-              {/* Listening Status & Actions */}
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-white/10 text-xs">
-                <div className="flex items-center gap-2 text-[#A19E9B] font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#DFAB56] animate-ping" />
-                  <span>بانتظار إدخال الكود من التاجر...</span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleRegenerateCode}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] border border-white/10 transition font-bold text-xs cursor-pointer"
-                >
-                  <RotateCw className="w-3.5 h-3.5 text-[#A19E9B]" />
-                  <span>توليد كود جديد</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsPaired(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold transition text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] cursor-pointer"
-                >
-                  <span>معاينة الشاشة مباشرة ←</span>
-                </button>
-              </div>
-            </>
           )}
-        </div>
 
-        {/* Footer */}
+          <button
+            type="submit"
+            disabled={isPairing || code.length !== 6}
+            className="w-full max-w-xs mx-auto py-3 rounded-xl bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            {isPairing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            <span>{isPairing ? 'جاري الإقران...' : 'تأكيد وربط الشاشة'}</span>
+          </button>
+        </form>
+
         <div className="text-center text-xs text-[#A19E9B]/60 font-mono z-10">
-          Screen ID: {screenId} • Memories Smart TV Live Signage
+          Memories Digital Signage • جاهز للاقتران
         </div>
       </div>
     );
   }
 
-  // -------------------------------------------------------------
-  // 1.5. BLACKOUT / STANDBY STATE (Merchant Emergency or Pause)
-  // -------------------------------------------------------------
-  if (isPaired && isBlackout) {
+  if (isBlackout) {
     return (
       <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col items-center justify-between p-8 select-none font-sans relative overflow-hidden">
-        {/* Archival Ambient Glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#3D2314]/20 rounded-full blur-[140px] pointer-events-none" />
-
         <div className="w-full max-w-5xl flex items-center justify-between z-10 border-b border-white/10 pb-5">
           <CoBrandingLogos
-            cafeName={brandName}
-            cafeLogoUrl={brandLogoUrl}
+            cafeName={paired.organizationName}
+            cafeLogoUrl={paired.logoUrl}
             size="lg"
             theme="dark"
-            showTagline={true}
+            showTagline
           />
           <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#3D2314]/60 border border-[#DFAB56]/40 text-[#FAF5EB] text-xs font-bold font-mono">
             <span className="w-2 h-2 rounded-full bg-[#DFAB56] animate-ping" />
             <span className="uppercase tracking-wider">استراحة مؤقتة • STANDBY</span>
           </div>
         </div>
-
         <div className="text-center space-y-5 max-w-md z-10">
           <div className="w-24 h-24 rounded-2xl bg-[#141212] border border-white/10 text-[#DFAB56] flex items-center justify-center mx-auto shadow-2xl animate-pulse">
             <Sparkles className="w-12 h-12 text-[#DFAB56]" />
           </div>
-          <div className="space-y-2">
-            <h2
-              style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-              className="text-3xl font-bold text-[#FAF5EB] tracking-tight"
-            >
-              {brandName}
-            </h2>
-            <p className="text-sm text-[#A19E9B] leading-relaxed">
-              شاشة العرض في وضع الاستراحة المؤقتة.
-              <br />
-              التقط لقطتك اليوم واطبع شريط ذكرياتك عبر مسح كود الطاولة بالهاتف!
-            </p>
-          </div>
+          <h2
+            style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
+            className="text-3xl font-bold text-[#FAF5EB] tracking-tight"
+          >
+            {paired.organizationName}
+          </h2>
+          <p className="text-sm text-[#A19E9B] leading-relaxed">
+            شاشة العرض في وضع الاستراحة المؤقتة.
+            <br />
+            التقط لقطتك اليوم واطبع شريط ذكرياتك عبر مسح كود الطاولة بالهاتف!
+          </p>
         </div>
-
-        <div className="text-center text-xs text-[#A19E9B]/60 font-mono z-10">
-          Screen ID: {screenId} • Standby Mode
-        </div>
+        <div className="text-center text-xs text-[#A19E9B]/60 font-mono z-10">Standby Mode</div>
       </div>
     );
   }
 
-  // -------------------------------------------------------------
-  // 2. PAIRED STATE: استامبي • Stampy Live Wall Broadcast Display
-  // -------------------------------------------------------------
   return (
     <div className="min-h-screen bg-[#141313] text-[#e6e1e1] flex flex-col justify-between p-6 sm:p-10 select-none overflow-hidden font-sans relative">
-      {/* Real-time Celebration Toast Banner */}
-      {newMemoryToast && (
+      {toast && (
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#DFAB56] to-[#3D2314] text-[#FAF5EB] font-bold shadow-2xl border border-white/20 backdrop-blur-md">
-            <Sparkles className="w-5 h-5 text-[#FAF5EB] animate-spin" />
-            <span className="text-sm sm:text-base tracking-wide drop-shadow-sm">{newMemoryToast}</span>
+          <div className="flex items-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#DFAB56] to-[#3D2314] text-[#FAF5EB] font-bold shadow-2xl border border-white/20">
+            <Sparkles className="w-5 h-5 animate-spin" />
+            <span className="text-sm sm:text-base tracking-wide">{toast}</span>
           </div>
         </div>
       )}
 
-      {/* Background Ambient Archival Glows */}
       <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-[#3D2314]/15 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-[#DFAB56]/10 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Top Header Bar: MEMORIES × BRAND Side-by-Side */}
       <header className="relative z-20 flex items-center justify-between border-b border-white/10 pb-5 max-w-6xl mx-auto w-full">
         <CoBrandingLogos
-          cafeName={brandName}
-          cafeLogoUrl={brandLogoUrl}
+          cafeName={paired.organizationName}
+          cafeLogoUrl={paired.logoUrl}
           size="lg"
           theme="dark"
-          showTagline={true}
+          showTagline
         />
-
-        {/* Status indicators & subtle controls */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141212] border border-white/10 text-xs font-mono shadow-xs">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141212] border border-white/10 text-xs font-mono">
             {isOnline ? (
               <Wifi className="w-3.5 h-3.5 text-emerald-400" />
             ) : (
               <WifiOff className="w-3.5 h-3.5 text-[#DFAB56]" />
             )}
             <span className="text-[#FAF5EB] font-bold">
-              {isOnline ? 'LIVE 4K' : 'OFFLINE CACHE'}
+              {isOnline ? 'LIVE' : 'OFFLINE CACHE'}
             </span>
           </div>
-
           <button
-            onClick={() => setIsPaired(false)}
-            className="px-3 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] text-xs transition cursor-pointer font-bold shadow-xs"
-            title="إعادة اقتران الشاشة"
+            onClick={unpair}
+            className="px-3 py-1.5 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] text-xs font-bold"
+            title="إلغاء اقتران الشاشة"
           >
-            كود الشاشة
+            إلغاء الاقتران
           </button>
-
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] transition cursor-pointer shadow-xs"
+            className="p-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB]"
             title="ملء الشاشة"
           >
             <Maximize2 className="w-4 h-4" />
@@ -621,44 +609,38 @@ export function WallClient({ screenId }: WallClientProps) {
         </div>
       </header>
 
-      {/* Main Community Board Stage */}
       <main className="relative z-10 flex-1 my-6 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-14 max-w-6xl mx-auto w-full">
         {currentMemory ? (
           <>
-            {/* The Photo Vitrine Frame */}
-            <div className="relative group max-w-md w-full aspect-[3/4] max-h-[70vh] rounded-2xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] border border-white/15 bg-[#141212] flex items-center justify-center ring-1 ring-white/10">
+            <div className="relative max-w-md w-full aspect-[3/4] max-h-[70vh] rounded-2xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] border border-white/15 bg-[#141212] flex items-center justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                key={currentMemory.id}
                 src={currentMemory.photoUrl}
                 alt={currentMemory.customerName}
                 className="w-full h-full object-cover animate-in fade-in zoom-in-95 duration-700"
               />
-
-              {/* Bottom Memory Caption Overlay */}
-              <div className="absolute bottom-0 inset-x-0 p-6 text-right space-y-1 z-10 bg-gradient-to-t from-[#0E0D0D] via-[#0E0D0D]/75 to-transparent text-[#FAF5EB]">
+              <div className="absolute bottom-0 inset-x-0 p-6 text-right space-y-1 bg-gradient-to-t from-[#0E0D0D] via-[#0E0D0D]/75 to-transparent text-[#FAF5EB]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-[#FAF5EB] font-bold px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 backdrop-blur-sm border border-[#DFAB56]/40">
-                    الزيارة رقم #{currentMemory.visitNumber}
-                  </span>
                   <span className="text-xs font-mono text-[#A19E9B]">
-                    {currentMemory.timeFormatted}
+                    {timeLabel(currentMemory.createdAt)}
+                  </span>
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 border border-[#DFAB56]/40">
+                    {paired.branchName ?? paired.organizationName}
                   </span>
                 </div>
                 <h3
                   style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
-                  className="text-xl font-bold text-[#FAF5EB] drop-shadow-md"
+                  className="text-xl font-bold drop-shadow-md"
                 >
                   {currentMemory.customerName}
                 </h3>
                 {currentMemory.caption && (
-                  <p className="text-sm text-[#D9D9D9] drop-shadow-sm font-medium">
-                    "{currentMemory.caption}"
-                  </p>
+                  <p className="text-sm text-[#D9D9D9] font-medium">&quot;{currentMemory.caption}&quot;</p>
                 )}
               </div>
             </div>
 
-            {/* Side Call-to-Action & Community QR */}
             <div className="flex flex-col items-center lg:items-start text-center lg:text-right space-y-6 max-w-sm">
               <div className="space-y-2">
                 <span className="px-3.5 py-1 rounded-md bg-[#3D2314]/50 text-[#FAF5EB] font-mono text-xs font-bold border border-[#DFAB56]/40 inline-block uppercase tracking-wider">
@@ -671,15 +653,15 @@ export function WallClient({ screenId }: WallClientProps) {
                   شارك ذكرياتك لتظهر هنا على شاشة العرض الحية
                 </h2>
                 <p className="text-sm text-[#A19E9B] leading-relaxed font-medium">
-                  امسح الرمز بكاميرا هاتفك، التقط صورك في استوديو الذكريات، واختم كارت ولائك للحصول على هديتك.
+                  امسح الرمز بكاميرا هاتفك، التقط صورك في استوديو الذكريات، واختم كارت ولائك
+                  للحصول على هديتك.
                 </p>
               </div>
 
-              {/* Real Scannable QR Code Vitrine */}
               <div className="p-5 rounded-2xl bg-[#141212] border border-white/10 shadow-2xl flex flex-col items-center gap-2.5">
                 <div className="p-3 bg-white rounded-xl">
                   <RealOutsourcedQr
-                    value={`${origin}/c/${cafeSlug}?source=live_wall`}
+                    value={`${origin}/c/${paired.cafeSlug}?source=live_wall`}
                     size={144}
                     alt="Live Wall QR"
                     className="w-36 h-36 object-contain"
@@ -698,14 +680,16 @@ export function WallClient({ screenId }: WallClientProps) {
               style={{ fontFamily: 'var(--font-playfair), Georgia, serif' }}
               className="text-xl font-bold text-[#FAF5EB]"
             >
-              بانتظار اللقطة الأولى اليوم
+              {feedError ? 'تعذر تحميل الذكريات' : 'بانتظار اللقطة الأولى اليوم'}
             </h3>
             <p className="text-xs text-[#A19E9B] leading-relaxed">
-              امسح الرمز عند طاولتك أو الكاونتر لتكون صورتك أول ذكرى تضيء شاشة الصالة اليوم!
+              {feedError
+                ? 'سيتم إعادة المحاولة تلقائيًا. تحقق من اتصال الشاشة بالإنترنت.'
+                : 'امسح الرمز عند طاولتك أو الكاونتر لتكون صورتك أول ذكرى تضيء شاشة الصالة اليوم!'}
             </p>
             <div className="p-3 bg-white rounded-xl w-32 h-32 mx-auto flex items-center justify-center">
               <RealOutsourcedQr
-                value={`${origin}/c/${cafeSlug}?source=live_wall`}
+                value={`${origin}/c/${paired.cafeSlug}?source=live_wall`}
                 size={112}
                 alt="Live Wall QR"
               />
@@ -714,24 +698,28 @@ export function WallClient({ screenId }: WallClientProps) {
         )}
       </main>
 
-      {/* Bottom Footer Ticker */}
       <footer className="relative z-20 flex items-center justify-between border-t border-white/10 pt-4 text-xs text-[#A19E9B] font-mono max-w-6xl mx-auto w-full">
         <div className="flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5 text-[#A19E9B]" />
-          <span>آخر تحديث: {lastSyncTime}</span>
+          <Clock className="w-3.5 h-3.5" />
+          <span>{lastSync ? `آخر تحديث: ${lastSync}` : 'جاري المزامنة...'}</span>
         </div>
-
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] transition text-[11px] cursor-pointer font-bold shadow-xs"
+            onClick={() => setIsPlaying((previous) => !previous)}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] text-[11px] font-bold"
           >
             {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
             <span>{isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}</span>
           </button>
-
+          <button
+            onClick={() => void loadFeed(paired.cafeSlug)}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] text-[11px] font-bold"
+          >
+            <RotateCw className="w-3 h-3" />
+            <span>تحديث</span>
+          </button>
           <span className="hidden sm:inline text-[#A19E9B]/60">
-            Memories Digital Signage • {cafeSlug}
+            {memories.length > 0 ? `${activeIndex + 1} / ${memories.length}` : 'لا ذكريات'}
           </span>
         </div>
       </footer>

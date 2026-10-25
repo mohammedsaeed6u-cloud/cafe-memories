@@ -1,18 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Tv,
-  Radio,
   Power,
   RefreshCw,
   ExternalLink,
   CheckCircle,
-  SlidersHorizontal,
   Clock,
   Sparkles,
   AlertCircle,
   Trash2,
+  KeyRound,
+  Loader2,
 } from 'lucide-react';
 
 export interface ScreenRecord {
@@ -20,272 +20,231 @@ export interface ScreenRecord {
   name: string;
   status: string;
   orientation: string;
-  lastHeartbeatAt?: string;
+  lastHeartbeatAt?: string | null;
+  online?: boolean;
 }
 
 interface DashboardWallTabProps {
   screens: ScreenRecord[];
+  isLoadingScreens: boolean;
+  pairingCode: string | null;
+  pairingExpiresAt: string | null;
+  isGeneratingCode: boolean;
+  onGenerateCode: () => void;
   isTvBlackout: boolean;
   tvSlideDuration: number;
   onToggleBlackout: () => void;
   onChangeSlideDuration: (durationMs: number) => void;
-  onForceRefresh: () => void;
   onUnpairScreen: (screenId: string) => void;
-  onPairScreenSubmit: (code: string, locationName: string) => Promise<void>;
-  isPairingScreen: boolean;
-  pairScreenSuccess: string | null;
-  pairScreenError: string | null;
-  tvSyncNotice: string | null;
-  cafeSlug: string;
+  onRefreshScreens: () => void;
+  wallUrl: string;
+  notice: string | null;
+  error: string | null;
+  isSavingWall: boolean;
 }
 
 export const DashboardWallTab: React.FC<DashboardWallTabProps> = ({
   screens,
+  isLoadingScreens,
+  pairingCode,
+  pairingExpiresAt,
+  isGeneratingCode,
+  onGenerateCode,
   isTvBlackout,
   tvSlideDuration,
   onToggleBlackout,
   onChangeSlideDuration,
-  onForceRefresh,
   onUnpairScreen,
-  onPairScreenSubmit,
-  isPairingScreen,
-  pairScreenSuccess,
-  pairScreenError,
-  tvSyncNotice,
-  cafeSlug,
+  onRefreshScreens,
+  wallUrl,
+  notice,
+  error,
+  isSavingWall,
 }) => {
-  const [screenCode, setScreenCode] = useState('');
-  const [locationName, setLocationName] = useState('شاشة الصالة الرئيسية');
-
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await onPairScreenSubmit(screenCode, locationName);
-    setScreenCode('');
-  };
+  const onlineCount = screens.filter((screen) => screen.online).length;
 
   return (
     <div className="space-y-6">
-      {/* Sync / Pairing Notices */}
-      {tvSyncNotice && (
-        <div className="p-4 rounded-xl bg-[#1A0706] border border-[#DFAB56]/40 text-[#FAF5EB] text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-lg">
-          <Sparkles className="w-4 h-4 text-[#DFAB56] shrink-0" />
-          <span>{tvSyncNotice}</span>
+      {notice && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/40 p-4 text-xs font-bold text-emerald-200">
+          <CheckCircle className="w-4 h-4 shrink-0" />
+          <span>{notice}</span>
+        </div>
+      )}
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-950/40 p-4 text-xs font-bold text-rose-200">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      {pairScreenSuccess && (
-        <div className="p-4 rounded-xl bg-[#141212] border border-emerald-500/40 text-emerald-300 text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-lg">
-          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>{pairScreenSuccess}</span>
-        </div>
-      )}
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div className="space-y-5 rounded-2xl border border-white/10 bg-[#141212] p-6 shadow-xl lg:col-span-7">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <h3 className="flex items-center gap-2 font-serif text-base font-bold text-[#FAF5EB]">
+              <KeyRound className="w-5 h-5 text-[#DFAB56]" />
+              <span>اقتران شاشة جديدة</span>
+            </h3>
+            <span className="rounded-md border border-[#DFAB56]/40 bg-[#3D2314]/70 px-2 py-0.5 font-mono text-[10px] font-bold text-[#FAF5EB]">
+              CODE PAIRING
+            </span>
+          </div>
 
-      {pairScreenError && (
-        <div className="p-4 rounded-xl bg-[#1A0706] border border-rose-500/40 text-rose-300 text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-lg">
-          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span>{pairScreenError}</span>
-        </div>
-      )}
+          <ol className="space-y-2 text-xs leading-relaxed text-[#A19E9B]">
+            <li>1. افتح رابط شاشة الصالة على جهاز التلفزيون.</li>
+            <li>2. اضغط «توليد رمز» هنا واكتب الرمز على الشاشة خلال 10 دقائق.</li>
+            <li>3. بعد الاقتران ستظهر الشاشة هنا وتبدأ باستقبال الذكريات.</li>
+          </ol>
 
-      {/* Main Grid: Screen Pairing + Remote Console */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT: Smart TV Pairing Card */}
-        <div className="lg:col-span-6 p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <div>
-              <h3 className="font-bold text-sm text-[#FAF5EB] flex items-center gap-2 font-serif">
-                <Tv className="w-4 h-4 text-[#DFAB56]" />
-                <span>ربط واقتران شاشة ذكية (Smart TV Pairing)</span>
-              </h3>
-              <p className="text-xs text-[#A19E9B] mt-0.5">
-                افتح الرابط على تلفزيون الصالة وأدخل كود الـ 6 أرقام الظاهر على الشاشة.
-              </p>
+          {pairingCode ? (
+            <div className="space-y-2 text-center">
+              <div className="text-[11px] font-bold text-[#A19E9B]">الرمز الحالي</div>
+              <div className="font-mono text-4xl font-black tracking-[0.35em] text-[#FAF5EB]" dir="ltr">
+                {pairingCode}
+              </div>
+              {pairingExpiresAt && (
+                <div className="flex items-center justify-center gap-1.5 font-mono text-[10px] text-[#A19E9B]">
+                  <Clock className="w-3 h-3" />
+                  صالح حتى {new Date(pairingExpiresAt).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              )}
             </div>
+          ) : (
+            <p className="rounded-xl border border-dashed border-white/15 bg-[#1C1B1B] p-4 text-center text-xs text-[#A19E9B]">
+              لا يوجد رمز نشط. ولّد رمزًا جديدًا ثم أدخله على شاشة التلفزيون.
+            </p>
+          )}
 
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onGenerateCode}
+              disabled={isGeneratingCode}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#DFAB56] px-4 py-2 text-xs font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
+            >
+              {isGeneratingCode ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+              {pairingCode ? 'توليد رمز بديل' : 'توليد رمز الاقتران'}
+            </button>
             <a
-              href={`/wall/screen-1?cafe=${cafeSlug}`}
+              href={wallUrl}
               target="_blank"
               rel="noreferrer"
-              className="p-2 rounded-lg bg-[#1C1B1B] hover:bg-[#211F1F] border border-white/10 text-[#FAF5EB] text-xs font-bold transition flex items-center gap-1.5"
-              title="فتح الشاشة في نافذة جديدة"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[#1C1B1B] px-4 py-2 text-xs font-bold text-[#FAF5EB] hover:bg-[#211F1F]"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-4 h-4" />
+              فتح شاشة الصالة
             </a>
           </div>
-
-          <form onSubmit={handleFormSubmit} className="space-y-3.5">
-            <div>
-              <label className="block text-xs font-bold text-[#A19E9B] mb-1">
-                رمز الاقتران الظاهر على شاشة التلفزيون (6 أرقام):
-              </label>
-              <input
-                type="text"
-                maxLength={6}
-                required
-                placeholder="123456"
-                value={screenCode}
-                onChange={(e) => setScreenCode(e.target.value.replace(/[^0-9]/g, ''))}
-                className="w-full text-center text-2xl font-mono font-black py-2.5 px-4 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DFAB56] focus:outline-none tracking-[0.3em] text-[#DFAB56] placeholder:text-[#A19E9B]/30"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#A19E9B] mb-1">
-                تسمية موقع شاشة العرض بالصالة:
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="شاشة الصالة الرئيسية، شاشة الطابق الثاني..."
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DFAB56] focus:outline-none text-xs text-[#FAF5EB] font-bold placeholder:text-[#A19E9B]/40"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isPairingScreen || screenCode.length !== 6}
-              className="w-full py-3 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
-            >
-              <Radio className="w-4 h-4" />
-              <span>{isPairingScreen ? 'جاري الربط...' : 'إتمام ربط الشاشة وبدء البث'}</span>
-            </button>
-          </form>
         </div>
 
-        {/* RIGHT: Remote Controls Console */}
-        <div className="lg:col-span-6 p-6 rounded-2xl bg-[#141212] border border-white/10 shadow-xl space-y-4">
-          <div className="pb-3 border-b border-white/10">
-            <h3 className="font-bold text-sm text-[#FAF5EB] flex items-center gap-2 font-serif">
-              <SlidersHorizontal className="w-4 h-4 text-[#DFAB56]" />
-              <span>لوحة التحكم عن بعد بشاشات الصالة (TV Remote)</span>
-            </h3>
-            <p className="text-xs text-[#A19E9B] mt-0.5">
-              أوامر فورية متزامنة تصل لكافة شاشات التلفزيون المتصلة بدون إعادة تحميل الصفحة.
-            </p>
+        <div className="space-y-4 rounded-2xl border border-white/10 bg-[#141212] p-6 shadow-xl lg:col-span-5">
+          <h3 className="flex items-center gap-2 border-b border-white/10 pb-3 font-serif text-base font-bold text-[#FAF5EB]">
+            <Tv className="w-5 h-5 text-[#DFAB56]" />
+            <span>التحكم بالبث</span>
+          </h3>
+
+          <button
+            type="button"
+            onClick={onToggleBlackout}
+            disabled={isSavingWall}
+            className={`flex w-full items-center justify-between rounded-xl border p-3.5 text-xs font-bold transition disabled:opacity-50 ${
+              isTvBlackout
+                ? 'border-[#DFAB56]/40 bg-[#3D2314]/60 text-[#FAF5EB]'
+                : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B]'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <Power className="w-4 h-4" />
+              وضع الاستراحة (Blackout)
+            </span>
+            <span
+              className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] ${
+                isTvBlackout ? 'bg-[#DFAB56] text-[#12100E]' : 'bg-white/10 text-[#A19E9B]'
+              }`}
+            >
+              {isTvBlackout ? 'مفعّل' : 'متوقف'}
+            </span>
+          </button>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold text-[#A19E9B]">
+              مدة عرض كل ذكرى: {(tvSlideDuration / 1000).toFixed(0)} ثانية
+            </label>
+            <input
+              type="range"
+              min={3}
+              max={30}
+              step={1}
+              value={Math.round(tvSlideDuration / 1000)}
+              onChange={(event) => onChangeSlideDuration(Number(event.target.value) * 1000)}
+              disabled={isSavingWall}
+              className="w-full accent-[#DFAB56]"
+            />
           </div>
 
-          <div className="space-y-3">
-            {/* Blackout Toggle */}
-            <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-center justify-between">
-              <div>
-                <span className="font-bold text-xs text-[#FAF5EB] block">وضع التعتيم (شاشة التوقف):</span>
-                <span className="text-[11px] text-[#A19E9B]">
-                  {isTvBlackout ? 'الشاشات معتمة حالياً (شاشة سوداء هادئة)' : 'البث المباشر للصور نشط حالياً'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={onToggleBlackout}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                  isTvBlackout
-                    ? 'bg-[#3D2314] border border-[#DFAB56]/50 text-[#FAF5EB] shadow-xs'
-                    : 'bg-[#141212] hover:bg-[#211F1F] text-[#A19E9B] hover:text-[#FAF5EB] border border-white/10'
-                }`}
-              >
-                <Power className="w-3.5 h-3.5" />
-                <span>{isTvBlackout ? 'استئناف البث' : 'تعتيم الشاشات'}</span>
-              </button>
-            </div>
-
-            {/* Slide Duration Selector */}
-            <div className="p-3.5 rounded-xl bg-[#1C1B1B] border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-xs text-[#FAF5EB] flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#DFAB56]" />
-                  <span>سرعة تقليب الصور على الشاشة:</span>
-                </span>
-                <span className="text-[10px] font-mono text-[#A19E9B] font-bold">
-                  {tvSlideDuration / 1000} ثوانٍ
-                </span>
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: '4 ثوانٍ', ms: 4000 },
-                  { label: '8 ثوانٍ', ms: 8000 },
-                  { label: '12 ثانية', ms: 12000 },
-                  { label: '16 ثانية', ms: 16000 },
-                ].map((speed) => (
-                  <button
-                    key={speed.ms}
-                    type="button"
-                    onClick={() => onChangeSlideDuration(speed.ms)}
-                    className={`py-2 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      tvSlideDuration === speed.ms
-                        ? 'bg-[#DFAB56] text-[#12100E] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
-                        : 'bg-[#141212] text-[#A19E9B] border border-white/10 hover:bg-[#211F1F] hover:text-[#FAF5EB]'
-                    }`}
-                  >
-                    {speed.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Force Refresh Button */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={onForceRefresh}
-                className="w-full py-2.5 px-4 rounded-lg border border-white/10 bg-[#1C1B1B] hover:bg-[#211F1F] text-[#FAF5EB] text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-[#DFAB56]" />
-                <span>إرسال أمر تحديث فوري لكافة الشاشات (Force Sync)</span>
-              </button>
-            </div>
+          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-[#1C1B1B] p-3 text-xs">
+            <span className="text-[#A19E9B]">الشاشات المتصلة</span>
+            <span className="font-mono font-bold text-[#FAF5EB]">
+              {onlineCount} / {screens.length}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Connected Screens Table */}
-      <div className="bg-[#141212] rounded-2xl border border-white/10 shadow-xl p-6 space-y-4">
-        <h4 className="font-bold text-sm text-[#FAF5EB] flex items-center gap-2 font-serif">
-          <Tv className="w-4 h-4 text-emerald-400" />
-          <span>الشاشات المقترنة والنشطة حالياً ({screens.length})</span>
-        </h4>
+      <div className="rounded-2xl border border-white/10 bg-[#141212] p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
+          <h3 className="flex items-center gap-2 font-serif text-base font-bold text-[#FAF5EB]">
+            <Sparkles className="w-5 h-5 text-[#DFAB56]" />
+            <span>الشاشات المقترنة</span>
+          </h3>
+          <button
+            type="button"
+            onClick={onRefreshScreens}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-[#1C1B1B] px-3 py-1.5 text-[11px] font-bold text-[#FAF5EB] hover:bg-[#211F1F]"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingScreens ? 'animate-spin' : ''}`} />
+            تحديث
+          </button>
+        </div>
 
         {screens.length === 0 ? (
-          <div className="py-8 text-center text-[#A19E9B]/50 text-xs">
-            لا توجد شاشات مقترنة حالياً. استخدم نموذج الاقتران أعلاه لربط أول شاشة.
-          </div>
+          <p className="rounded-xl border border-dashed border-white/15 bg-[#1C1B1B] p-6 text-center text-xs text-[#A19E9B]">
+            لا توجد شاشات مقترنة بعد. استخدم رمز الاقتران أعلاه لربط أول شاشة.
+          </p>
         ) : (
-          <div className="divide-y divide-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <ul className="space-y-2">
             {screens.map((screen) => (
-              <div
+              <li
                 key={screen.id}
-                className="p-4 flex items-center justify-between gap-4 hover:bg-[#1C1B1B]/50 transition text-xs"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#1C1B1B] p-3 text-xs"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-[#3D2314] border border-[#DFAB56]/30 text-[#DFAB56] flex items-center justify-center font-bold">
-                    <Tv className="w-5 h-5" />
-                  </div>
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full ${
+                      screen.online ? 'bg-emerald-400' : 'bg-stone-500'
+                    }`}
+                  />
                   <div>
-                    <span className="font-bold text-[#FAF5EB] block">{screen.name}</span>
-                    <span className="text-[10px] text-[#A19E9B] font-mono block">
-                      ID: {screen.id} • {screen.orientation === 'landscape' ? 'عرضي 16:9' : 'طولي 9:16'}
-                    </span>
+                    <div className="font-bold text-[#FAF5EB]">{screen.name}</div>
+                    <div className="font-mono text-[10px] text-[#A19E9B]">
+                      {screen.orientation} •{' '}
+                      {screen.lastHeartbeatAt
+                        ? new Date(screen.lastHeartbeatAt).toLocaleString('ar-SA')
+                        : 'لم تتصل بعد'}
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 border border-[#DFAB56]/40 text-[#FAF5EB] text-[10px] font-bold flex items-center gap-1 font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>متصلة وتبث الآن</span>
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => onUnpairScreen(screen.id)}
-                    className="p-1.5 rounded-lg hover:bg-rose-950/40 text-[#A19E9B]/60 hover:text-rose-400 transition cursor-pointer"
-                    title="فصل وإلغاء اقتران الشاشة"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+                <button
+                  type="button"
+                  onClick={() => onUnpairScreen(screen.id)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-950/30 px-3 py-1.5 text-[11px] font-bold text-rose-200 hover:bg-rose-950/60"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  إلغاء الاقتران
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </div>

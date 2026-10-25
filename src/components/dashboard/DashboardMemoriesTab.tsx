@@ -29,8 +29,6 @@ export interface MemoryItem {
 interface DashboardMemoriesTabProps {
   memories: MemoryItem[];
   isLoadingMemories: boolean;
-  autoApproveWall: boolean;
-  onToggleAutoApprove: (val: boolean) => void;
   onModerateMemory: (id: string, status: 'approved' | 'rejected' | 'hidden') => void;
   onDeleteMemory: (id: string) => void;
   onBatchApprove: () => void;
@@ -42,8 +40,6 @@ interface DashboardMemoriesTabProps {
 export const DashboardMemoriesTab: React.FC<DashboardMemoriesTabProps> = ({
   memories,
   isLoadingMemories,
-  autoApproveWall,
-  onToggleAutoApprove,
   onModerateMemory,
   onDeleteMemory,
   onBatchApprove,
@@ -82,18 +78,8 @@ export const DashboardMemoriesTab: React.FC<DashboardMemoriesTabProps> = ({
           </p>
         </div>
 
-        {/* Auto-Approve Toggle & Quick Actions */}
+        {/* Moderation quick actions */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#1C1B1B] border border-white/10 text-xs font-bold text-[#FAF5EB] cursor-pointer hover:bg-[#211F1F] transition">
-            <input
-              type="checkbox"
-              checked={autoApproveWall}
-              onChange={(e) => onToggleAutoApprove(e.target.checked)}
-              className="rounded accent-[#DFAB56] w-4 h-4 cursor-pointer"
-            />
-            <span>بث تلقائي فوري للشاشات</span>
-          </label>
-
           <button
             type="button"
             onClick={onBatchApprove}
@@ -236,7 +222,7 @@ export const DashboardMemoriesTab: React.FC<DashboardMemoriesTabProps> = ({
                   <h4 className="font-bold text-xs text-[#FAF5EB] truncate">{m.customerName}</h4>
                   {m.caption && (
                     <p className="text-[11px] text-[#D9D9D9] line-clamp-1 italic">
-                      "{m.caption}"
+                      «{m.caption}»
                     </p>
                   )}
                   <span className="text-[10px] text-[#A19E9B] font-mono block">
@@ -308,7 +294,7 @@ export const DashboardMemoriesTab: React.FC<DashboardMemoriesTabProps> = ({
 
             {previewMemory.caption && (
               <p className="text-xs text-[#D9D9D9] text-center italic">
-                "{previewMemory.caption}"
+                «{previewMemory.caption}»
               </p>
             )}
 

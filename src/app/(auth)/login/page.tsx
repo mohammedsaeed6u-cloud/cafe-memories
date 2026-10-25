@@ -51,33 +51,25 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        // Fallback for demo/offline accounts
-        if (email.includes('@') && password.length >= 6) {
-          setSuccessMsg('تم تسجيل الدخول بنجاح! جاري الانتقال للوحة التحكم...');
-          document.cookie = 'memories_merchant_session=1; path=/; max-age=86400; SameSite=Lax';
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 600);
-          return;
-        }
-        setErrorMsg(error.message || 'بيانات الدخول غير صحيحة.');
+        setErrorMsg(
+          error.message === 'Invalid login credentials'
+            ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
+            : error.message
+        );
         setLoading(false);
         return;
       }
 
       setSuccessMsg('تم تسجيل الدخول بنجاح! جاري التوجيه...');
-      document.cookie = 'memories_merchant_session=1; path=/; max-age=86400; SameSite=Lax';
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 500);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'تعذر تسجيل الدخول.');
+      window.location.assign('/dashboard');
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'تعذر تسجيل الدخول.');
       setLoading(false);
     }
   };

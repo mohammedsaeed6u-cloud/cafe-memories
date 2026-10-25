@@ -1,126 +1,101 @@
-import { NextRequest, NextResponse } from 'next/server';
+/**
+ * GET /api/v1/crm/customers
+ *
+ * Cursor-paginated customer list built only from verified visits. The SQL
+ * function never scans private photo content, pending uploads, phone numbers,
+ * or unconfirmed presences. The caller's organization and branch come from the
+ * verified operator session.
+ *
+ * Query: limit, before (ISO), beforeCustomer (uuid), search
+ */
+
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { requireOperator } from '@/lib/server/context';
+import { contextFailure, jsonError, jsonOk } from '@/lib/server/route-helpers';
+
+export const runtime = 'nodejs';
+
+const cursorSchema = z.object({
+  before: z.string().datetime(),
+  beforeCustomer: z.string().uuid(),
+});
 
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const format = searchParams.get('format');
-    const search = searchParams.get('search')?.toLowerCase();
-    const roleFilter = searchParams.get('role');
+  const params = request.nextUrl.searchParams;
+  const branchId = params.get('branchId') ?? undefined;
 
-    const supabase = createAdminClient();
+  const result = await requireOperator(request, {
+    branchId,
+    roles: ['owner', 'admin', 'manager'],
+  });
+  if (!result.context) return contextFailure(result.error!);
+  const operator = result.context;
 
-    // Fetch customers with related memories and visits
-    const { data: customersData, error } = await supabase
-      .from('customers')
-      .select('*, memories(*), visits(*)')
-      .order('last_seen_at', { ascending: false });
+  const rawLimit = Number.parseInt(params.get('limit') ?? '30', 10);
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 30;
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+  const before = params.get('before');
+  const beforeCustomer = params.get('beforeCustomer');
+  let cursor: { before: string; beforeCustomer: string } | null = null;
+  if (before || beforeCustomer) {
+    const parsed = cursorSchema.safeParse({ before, beforeCustomer });
+    if (!parsed.success) {
+      return jsonError(400, 'invalid_cursor', 'before and beforeCustomer must be supplied together');
     }
-
-    const customers = (customersData || []).map(c => {
-      const memoryCount = c.memories ? c.memories.length : 0;
-      const visitCount = c.visits ? c.visits.length : 0;
-      const totalEngagements = Math.max(memoryCount, visitCount);
-      
-      let tier: 'VIP' | 'Regular' | 'New' = 'New';
-      if (totalEngagements >= 3) tier = 'VIP';
-      else if (totalEngagements >= 2) tier = 'Regular';
-
-      const phone = c.anonymous_id || '';
-      
-      // Extract persona role from email if present, or fallback
-      let role = 'عميل مميز ووفِي';
-      if (c.email && c.email.includes('@persona.memories')) {
-        role = decodeURIComponent(c.email.replace('@persona.memories', ''));
-      } else if (c.email && !c.email.includes('@')) {
-        role = c.email;
-      }
-
-      // Map visits tied to their specific memories
-      const visitsWithStrips = (c.visits || []).map((v: any) => {
-        const matchingMemory = (c.memories || []).find((m: any) => m.visit_id === v.id);
-        return {
-          id: v.id,
-          date: v.created_at,
-          source: v.source || 'table',
-          photoUrl: matchingMemory?.optimized_url || matchingMemory?.original_url || (c.memories?.[0]?.optimized_url) || null,
-          caption: matchingMemory?.caption || 'Specialty Memory',
-        };
-      });
-
-      return {
-        id: c.id,
-        name: c.display_name || 'Guest Regular',
-        phone,
-        role,
-        tier,
-        memoryCount,
-        visitCount,
-        firstSeenAt: c.created_at,
-        lastSeenAt: c.last_seen_at,
-        visitsWithStrips,
-        recentStrips: (c.memories || []).slice(0, 4).map((m: any) => ({
-          id: m.id,
-          img: m.optimized_url || m.original_url,
-          caption: m.caption,
-          createdAt: m.created_at,
-        })),
-      };
-    });
-
-    // Filter
-    let filtered = customers;
-    if (search) {
-      filtered = filtered.filter(
-        c =>
-          c.name.toLowerCase().includes(search) ||
-          c.phone.toLowerCase().includes(search) ||
-          c.role.toLowerCase().includes(search)
-      );
-    }
-    if (roleFilter && roleFilter !== 'all') {
-      filtered = filtered.filter(c => c.role.includes(roleFilter));
-    }
-
-    // CSV format
-    if (format === 'csv') {
-      const csvHeader = 'اسم العميل,رقم الموبايل,التصنيف / المجال,عدد أشرطة الصور,عدد الزيارات,تاريخ أول زيارة,تاريخ آخر زيارة,فئة العميل\n';
-      const csvRows = filtered.map(c => {
-        const safeName = `"${c.name.replace(/"/g, '""')}"`;
-        const safePhone = `"${c.phone.replace(/"/g, '""')}"`;
-        const safeRole = `"${c.role.replace(/"/g, '""')}"`;
-        const firstSeen = new Date(c.firstSeenAt).toLocaleDateString('ar-EG');
-        const lastSeen = new Date(c.lastSeenAt).toLocaleDateString('ar-EG');
-        return `${safeName},${safePhone},${safeRole},${c.memoryCount},${c.visitCount},${firstSeen},${lastSeen},${c.tier}`;
-      });
-
-      const csvContent = '\uFEFF' + csvHeader + csvRows.join('\n');
-
-      return new NextResponse(csvContent, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/csv; charset=utf-8',
-          'Content-Disposition': `attachment; filename="memories-crm-contacts-${new Date().toISOString().slice(0, 10)}.csv"`,
-        },
-      });
-    }
-
-    const stats = {
-      totalCustomers: customers.length,
-      totalStrips: customers.reduce((sum, c) => sum + c.memoryCount, 0),
-      vipCustomers: customers.filter(c => c.tier === 'VIP' || c.tier === 'Regular').length,
-      phoneCount: customers.filter(c => c.phone && c.phone.length > 5).length,
-    };
-
-    return NextResponse.json({
-      success: true,
-      customers: filtered,
-      stats,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
+    cursor = parsed.data;
   }
+
+  const search = params.get('search')?.trim() ?? null;
+  if (search && search.length > 80) {
+    return jsonError(400, 'search_too_long', 'Search is limited to 80 characters');
+  }
+
+  const { data, error } = await createAdminClient().rpc('merchant_crm_customers', {
+    p_org: operator.organization.id,
+    p_branch: operator.branchId,
+    p_limit: limit,
+    p_before: cursor?.before ?? null,
+    p_before_customer: cursor?.beforeCustomer ?? null,
+    p_search: search,
+  });
+
+  if (error) {
+    if (error.code === '42501') {
+      return jsonError(403, 'crm_forbidden', 'CRM access required');
+    }
+    console.error('merchant_crm_customers failed:', error.code ?? 'unknown');
+    return jsonError(503, 'crm_unavailable', 'Customer data is temporarily unavailable');
+  }
+
+  type Row = {
+    customer_id: string;
+    display_name: string;
+    last_visit_at: string;
+    verified_visits: number | string;
+    rewards_redeemed: number | string;
+    wallet_issued: boolean;
+    wallet_marketing_opt_in: boolean;
+  };
+
+  const rows = (data ?? []) as Row[];
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const last = page[page.length - 1];
+
+  return jsonOk({
+    customers: page.map((row) => ({
+      id: row.customer_id,
+      displayName: row.display_name,
+      totalVisits: Number(row.verified_visits) || 0,
+      lastSeenAt: row.last_visit_at,
+      rewardsCount: Number(row.rewards_redeemed) || 0,
+      memoriesCount: 0,
+      walletIssued: Boolean(row.wallet_issued),
+      marketingOptIn: Boolean(row.wallet_marketing_opt_in),
+    })),
+    nextCursor:
+      hasMore && last ? { before: last.last_visit_at, beforeCustomer: last.customer_id } : null,
+  });
 }

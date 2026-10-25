@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { secret } from '@/lib/env';
 
 export interface AntiFraudCheckParams {
   customerId: string;
@@ -24,7 +25,13 @@ const VELOCITY_THRESHOLD_BURST = 5;
 const VELOCITY_WINDOW_MINUTES = 10;
 
 export function hashIpAddress(ip: string): string {
-  const salt = process.env.ANTI_FRAUD_SALT || 'cafe-memories-anti-fraud-salt-2026';
+  // A predictable salt would let an attacker reverse a small IPv4 space.
+  // Production must configure ANTI_FRAUD_SALT; development keeps a fixed value.
+  const salt = secret(
+    'ANTI_FRAUD_SALT',
+    'development-anti-fraud-salt-not-for-production',
+    16
+  );
   return crypto.createHmac('sha256', salt).update(ip.trim()).digest('hex');
 }
 

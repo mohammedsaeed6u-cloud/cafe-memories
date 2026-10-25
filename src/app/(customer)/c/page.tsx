@@ -6,7 +6,21 @@ import { CustomerClient } from '@/components/customer/CustomerClient';
 
 function CustomerQueryWrapper() {
   const searchParams = useSearchParams();
-  const cafeSlug = searchParams.get('cafe') || searchParams.get('slug') || 'stampy';
+  const cafeSlug = searchParams.get('cafe') || searchParams.get('slug') || '';
+
+  if (!cafeSlug) {
+    return (
+      <div className="min-h-screen bg-[#FAF5EB] flex items-center justify-center p-6 text-center font-sans">
+        <div className="max-w-sm space-y-3">
+          <h1 className="text-lg font-bold text-[#3D2314]">امسح رمز الطاولة</h1>
+          <p className="text-sm text-[#3D2314]/70">
+            هذا الرابط يحتاج إلى رمز المنشأة. امسح رمز QR الموجود على طاولتك أو عند الكاونتر
+            لبدء تجربة الذكريات.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return <CustomerClient cafeSlug={cafeSlug} />;
 }

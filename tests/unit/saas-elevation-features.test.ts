@@ -7,7 +7,6 @@ import { GlobalSearchModal } from '@/components/ui/GlobalSearchModal';
 import { MobileNavMenu } from '@/components/ui/MobileNavMenu';
 import { FloatingContactButton } from '@/components/ui/FloatingContactButton';
 import { FaqAccordion } from '@/components/ui/FaqAccordion';
-import { NewsletterSignup } from '@/components/ui/NewsletterSignup';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { CookieConsentBanner } from '@/components/ui/CookieConsentBanner';
 import { DestructiveConfirmModal } from '@/components/ui/DestructiveConfirmModal';
@@ -45,7 +44,7 @@ describe('SaaS Elevation - UTM Utilities & Tracking', () => {
 });
 
 describe('SaaS Elevation - UI Components Definitions', () => {
-  it('exports all 15 newly created vibe-coded UI components cleanly', () => {
+  it('exports every landing UI component without import errors', () => {
     expect(DarkModeToggle).toBeDefined();
     expect(ScrollProgressBar).toBeDefined();
     expect(ScrollToTopButton).toBeDefined();
@@ -53,7 +52,6 @@ describe('SaaS Elevation - UI Components Definitions', () => {
     expect(MobileNavMenu).toBeDefined();
     expect(FloatingContactButton).toBeDefined();
     expect(FaqAccordion).toBeDefined();
-    expect(NewsletterSignup).toBeDefined();
     expect(PasswordInput).toBeDefined();
     expect(CookieConsentBanner).toBeDefined();
     expect(DestructiveConfirmModal).toBeDefined();

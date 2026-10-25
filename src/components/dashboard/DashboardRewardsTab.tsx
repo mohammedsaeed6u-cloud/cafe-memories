@@ -1,158 +1,199 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Gift,
-  Star,
-  CheckCircle,
-  Save,
-  Sparkles,
-  Award,
-} from 'lucide-react';
-import { BusinessSettings } from '@/types/photobooth';
+import { Gift, CheckCircle, Save, AlertCircle, Loader2 } from 'lucide-react';
 
-interface DashboardRewardsTabProps {
-  settings: BusinessSettings;
-  onSaveRewards: (visits: number, title: string, subtitle: string) => void;
-  isSavingRewards: boolean;
-  saveRewardsSuccess: boolean;
+export interface RewardRule {
+  id?: string;
+  name: string;
+  description?: string | null;
+  threshold: number;
+  rewardType: string;
+  rewardValue?: string | null;
+  rewardDescription?: string | null;
+  isActive: boolean;
 }
 
-export const DashboardRewardsTab: React.FC<DashboardRewardsTabProps> = ({
-  settings,
-  onSaveRewards,
-  isSavingRewards,
-  saveRewardsSuccess,
-}) => {
-  const [rewardVisits, setRewardVisits] = useState<number>(
-    () => settings.defaultShotCount || 5
-  );
-  const [rewardGiftTitle, setRewardGiftTitle] = useState<string>(
-    () => settings.freeGiftOffer?.title || 'كوب سبيشالتي مجاني من اختيارك'
-  );
-  const [rewardGiftSubtitle, setRewardGiftSubtitle] = useState<string>(
-    () => settings.freeGiftOffer?.subtitle || 'مكافأة الزائر الوفي'
-  );
+interface DashboardRewardsTabProps {
+  rule: RewardRule | null;
+  onSave: (rule: Omit<RewardRule, 'id' | 'isActive'>) => Promise<void>;
+  isSaving: boolean;
+  success: string | null;
+  error: string | null;
+}
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSaveRewards(Number(rewardVisits), rewardGiftTitle, rewardGiftSubtitle);
+const REWARD_TYPES: Array<{ id: string; label: string }> = [
+  { id: 'free_item', label: 'منتج مجاني' },
+  { id: 'discount_percentage', label: 'خصم نسبة' },
+  { id: 'fixed_discount', label: 'خصم مبلغ' },
+  { id: 'free_print', label: 'طباعة مجانية' },
+  { id: 'bonus_visit', label: 'زيارة إضافية' },
+  { id: 'custom', label: 'مكافأة مخصصة' },
+];
+
+export const DashboardRewardsTab: React.FC<DashboardRewardsTabProps> = ({
+  rule,
+  onSave,
+  isSaving,
+  success,
+  error,
+}) => {
+  const [threshold, setThreshold] = useState(rule?.threshold ?? 5);
+  const [name, setName] = useState(rule?.name ?? '');
+  const [description, setDescription] = useState(rule?.description ?? '');
+  const [rewardType, setRewardType] = useState(rule?.rewardType ?? 'free_item');
+  const [rewardValue, setRewardValue] = useState(rule?.rewardValue ?? '');
+  const [rewardDescription, setRewardDescription] = useState(rule?.rewardDescription ?? '');
+
+  // Re-seed the form when a different rule arrives from the server. The
+  // guarded render-phase update replaces a setState-in-effect cascade.
+  const [lastRule, setLastRule] = useState(rule);
+  if (lastRule !== rule) {
+    setLastRule(rule);
+    setThreshold(rule?.threshold ?? 5);
+    setName(rule?.name ?? '');
+    setDescription(rule?.description ?? '');
+    setRewardType(rule?.rewardType ?? 'free_item');
+    setRewardValue(rule?.rewardValue ?? '');
+    setRewardDescription(rule?.rewardDescription ?? '');
+  }
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await onSave({
+      name: name.trim(),
+      description: description.trim() || null,
+      threshold,
+      rewardType,
+      rewardValue: rewardValue.trim() || null,
+      rewardDescription: rewardDescription.trim() || null,
+    });
   };
 
   return (
     <div className="space-y-6">
-      {saveRewardsSuccess && (
-        <div className="p-4 rounded-xl bg-[#141212] border border-emerald-500/40 text-emerald-300 text-xs font-bold animate-in fade-in flex items-center gap-2 shadow-lg">
-          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>تم حفظ وتحديث إعدادات المكافآت بنجاح لكافة بطاقات الولاء!</span>
+      {success && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-950/40 p-4 text-xs font-bold text-emerald-200">
+          <CheckCircle className="w-4 h-4 shrink-0" />
+          <span>{success}</span>
+        </div>
+      )}
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-950/40 p-4 text-xs font-bold text-rose-200">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT: Rewards Settings Form */}
-        <div className="lg:col-span-7 p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-5">
-          <div className="pb-3 border-b border-white/10">
-            <h3 className="font-bold text-base text-[#FAF5EB] flex items-center gap-2 font-serif">
-              <Gift className="w-5 h-5 text-[#DFAB56]" />
-              <span>إعدادات حوافز ومكافآت الولاء (Loyalty Rewards Program)</span>
-            </h3>
-            <p className="text-xs text-[#A19E9B] mt-1">
-              حدد عدد الزيارات المطلوبة والهدية التي يستلمها العميل فور إكمال بطاقته.
-            </p>
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-5 rounded-2xl border border-white/10 bg-[#141212] p-6 shadow-xl"
+      >
+        <div className="border-b border-white/10 pb-3">
+          <h3 className="flex items-center gap-2 font-serif text-base font-bold text-[#FAF5EB]">
+            <Gift className="w-5 h-5 text-[#DFAB56]" />
+            <span>برنامج الولاء</span>
+          </h3>
+          <p className="mt-1 text-xs text-[#A19E9B]">
+            قاعدة واحدة نشطة لكل منشأة. كل زيارة معتمدة تحتسب ختمًا واحدًا، وعند بلوغ الحد
+            تُصدر بطاقة مكافأة جاهزة للاستبدال من محطة الطاقم.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-xs font-bold text-[#A19E9B]">اسم المكافأة</label>
+            <input
+              required
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="مثال: قهوة مجانية"
+              className="w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3.5 py-2.5 text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
-                عدد الزيارات المطلوبة لاستحقاق الهدية المجانية:
-              </label>
-              <div className="grid grid-cols-5 gap-2">
-                {[3, 4, 5, 6, 7].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setRewardVisits(num)}
-                    className={`py-2.5 rounded-lg text-xs font-bold border transition cursor-pointer ${
-                      rewardVisits === num
-                        ? 'bg-[#DFAB56] text-[#12100E] border-[#DFAB56] shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] font-bold'
-                        : 'bg-[#1C1B1B] border-white/10 text-[#A19E9B] hover:text-[#FAF5EB] hover:bg-[#211F1F]'
-                    }`}
-                  >
-                    <span>{num} زيارات</span>
-                  </button>
-                ))}
-              </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-xs font-bold text-[#A19E9B]">
+              عدد الزيارات المطلوبة
+            </label>
+            <div className="grid grid-cols-6 gap-2">
+              {[3, 4, 5, 6, 8, 10].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setThreshold(value)}
+                  className={`rounded-lg border py-2.5 text-xs font-bold transition ${
+                    threshold === value
+                      ? 'border-[#DFAB56] bg-[#DFAB56] text-[#12100E]'
+                      : 'border-white/10 bg-[#1C1B1B] text-[#A19E9B] hover:text-[#FAF5EB]'
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
-                عنوان الهدية المجانية:
-              </label>
-              <input
-                type="text"
-                required
-                value={rewardGiftTitle}
-                onChange={(e) => setRewardGiftTitle(e.target.value)}
-                placeholder="مثال: كوب فلات وايت مجاني، حلى مجاني..."
-                className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DFAB56] focus:outline-none text-xs font-bold text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#A19E9B] mb-1.5">
-                الوصف المساعد للهدية:
-              </label>
-              <input
-                type="text"
-                required
-                value={rewardGiftSubtitle}
-                onChange={(e) => setRewardGiftSubtitle(e.target.value)}
-                placeholder="مثال: مكافأة خاصة لزوار مقهانا الأوفياء..."
-                className="w-full px-3.5 py-2.5 rounded-lg border border-white/10 bg-[#0B0A0A] focus:border-[#DFAB56] focus:outline-none text-xs text-[#FAF5EB] placeholder:text-[#A19E9B]/40"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSavingRewards}
-              className="w-full py-3 rounded-lg bg-[#DFAB56] hover:bg-[#C99645] text-[#12100E] font-bold text-xs shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#A19E9B]">نوع المكافأة</label>
+            <select
+              value={rewardType}
+              onChange={(event) => setRewardType(event.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3.5 py-2.5 text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
             >
-              <Save className="w-4 h-4" />
-              <span>{isSavingRewards ? 'جاري الحفظ...' : 'حفظ ونشر التعديلات'}</span>
-            </button>
-          </form>
-        </div>
+              {REWARD_TYPES.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* RIGHT: Live Interactive Preview */}
-        <div className="lg:col-span-5 p-6 bg-[#141212] rounded-2xl border border-white/10 shadow-xl space-y-4">
-          <span className="text-[11px] font-bold text-[#A19E9B] block font-mono uppercase tracking-wider">
-            معاينة كارت الهدية الظاهر للعميل:
-          </span>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-[#A19E9B]">
+              القيمة (اختياري)
+            </label>
+            <input
+              value={rewardValue}
+              onChange={(event) => setRewardValue(event.target.value)}
+              placeholder="مثال: 20% أو 10 SAR"
+              className="w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3.5 py-2.5 text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
+          </div>
 
-          <div className="p-6 rounded-xl bg-[#1C1B1B] border border-white/10 shadow-lg space-y-4 text-center">
-            <div className="w-12 h-12 rounded-xl bg-[#3D2314] border border-[#DFAB56]/40 text-[#DFAB56] flex items-center justify-center mx-auto shadow-md">
-              <Gift className="w-6 h-6" />
-            </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-xs font-bold text-[#A19E9B]">وصف المكافأة</label>
+            <textarea
+              rows={2}
+              value={rewardDescription}
+              onChange={(event) => setRewardDescription(event.target.value)}
+              placeholder="ما الذي يحصل عليه العميل عند الاستبدال؟"
+              className="w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3.5 py-2.5 text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
+          </div>
 
-            <div>
-              <span className="px-2.5 py-0.5 rounded-md bg-[#3D2314]/70 border border-[#DFAB56]/40 text-[#FAF5EB] text-[10px] font-bold font-mono tracking-wider">
-                COMPLETION REWARD
-              </span>
-              <h4 className="text-base font-bold text-[#FAF5EB] mt-1.5 font-serif">{rewardGiftTitle}</h4>
-              <p className="text-xs text-[#A19E9B] mt-0.5">{rewardGiftSubtitle}</p>
-            </div>
-
-            <div className="p-3 bg-[#0B0A0A] rounded-lg border border-white/10 text-xs text-[#A19E9B] font-medium">
-              يستحقها العميل تلقائياً عند إكمال <strong className="text-[#FAF5EB]">{rewardVisits}</strong> أختام معتمدة.
-            </div>
-
-            <div className="p-2.5 rounded-lg bg-[#141212] border border-white/10 text-[11px] font-bold text-[#FAF5EB] flex items-center justify-center gap-1.5 font-mono">
-              <span className="text-[#A19E9B]">كود الصرف:</span>
-              <span className="text-[#DFAB56]">#GIFT-XXXX</span>
-            </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-xs font-bold text-[#A19E9B]">
+              وصف داخلي (اختياري)
+            </label>
+            <input
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="ملاحظات للفريق"
+              className="w-full rounded-xl border border-white/10 bg-[#1C1B1B] px-3.5 py-2.5 text-xs text-[#FAF5EB] focus:border-[#DFAB56] focus:outline-none"
+            />
           </div>
         </div>
-      </div>
+
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#DFAB56] px-5 py-2.5 text-xs font-bold text-[#12100E] hover:bg-[#C99645] disabled:opacity-50"
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {rule ? 'حفظ التعديلات' : 'إنشاء قاعدة المكافأة'}
+        </button>
+      </form>
     </div>
   );
 };

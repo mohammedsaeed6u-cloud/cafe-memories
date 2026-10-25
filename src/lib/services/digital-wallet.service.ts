@@ -373,7 +373,7 @@ export class DigitalWalletService {
 
     // On iOS Safari, direct navigation to HTTP route is required for PassKit MIME handling
     if (isIOS) {
-      window.location.href = this.getApplePassUrl(data);
+      window.location.assign(this.getApplePassUrl(data));
       return;
     }
 
@@ -389,7 +389,7 @@ export class DigitalWalletService {
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 10_000);
     } catch {
-      window.location.href = this.getApplePassUrl(data);
+      window.location.assign(this.getApplePassUrl(data));
     }
   }
 }

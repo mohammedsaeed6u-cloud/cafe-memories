@@ -47,7 +47,7 @@ export function DatePass({
       </div>
 
       <div className="text-[10px] text-center font-mono text-[#3D2314]/80 pt-3 border-t border-[#3D2314]/20 mt-3">
-        "Every moment is a stamp in time."
+        &ldquo;Every moment is a stamp in time.&rdquo;
       </div>
     </div>
   );
