@@ -4,6 +4,7 @@ import { publicBrand } from '@/lib/brand';
 import { walletPassPayload, safeSiteOrigin } from '@/lib/wallet-pass';
 import { openWalletKey } from '@/lib/server/wallet-crypto';
 import { issueWalletWalletPass, updateWalletWalletPass } from '@/lib/server/walletwallet';
+import { issuePassStudioPass, updatePassStudioPass } from '@/lib/server/passstudio';
 import { optionalEnv, requireEnv } from '@/lib/env';
 
 export type WalletSyncResult = { state: 'idle' | 'synced' | 'pending' | 'failed'; processed: number };
@@ -20,8 +21,10 @@ function platformPlan(): WalletPlan {
 }
 
 function platformKey(): string {
+  const psKey = optionalEnv('PASSSTUDIO_API_KEY');
+  if (psKey && /^ps_live_[A-Za-z0-9_-]+$/.test(psKey)) return psKey;
   const key = requireEnv('WALLETWALLET_API_KEY');
-  if (!/^ww_live_[0-9a-f]{32}$/.test(key)) throw new Error('WALLETWALLET_API_KEY is invalid');
+  if (!/^(ww_live_[0-9a-f]{32}|ps_live_[A-Za-z0-9_-]+)$/.test(key)) throw new Error('WALLETWALLET_API_KEY is invalid');
   return key;
 }
 
@@ -55,12 +58,6 @@ export async function walletMessagingAvailable(organizationId: string): Promise<
   );
 }
 
-interface PayloadOptions {
-  apiKey: string;
-  plan: WalletPlan;
-  verifiedAt: string | null;
-  connectorId: string | null;
-}
 
 /**
  * Build the provider payload for one customer.
@@ -268,7 +265,26 @@ export async function issuePlatformWalletPass(
     ' ',
     existing?.status === 'issued' ? platformPlan() : null
   );
-  const issued = await issueWalletWalletPass(source.apiKey, source.payload);
+
+  let issued: { serialNumber: string; shareUrl: string; reused?: boolean };
+  if (source.apiKey.startsWith('ps_live_')) {
+    const passTemplateId = optionalEnv('PASSSTUDIO_PASS_ID') || '33Y6RNao9ccZyHufuSEc';
+    const stampsField =
+      source.payload.secondaryFields?.find((f) => f.label === 'الأختام')?.value || '0/5';
+    const rewardField =
+      source.payload.secondaryFields?.find((f) => f.label === 'المكافأة')?.value || 'قيد الإعداد';
+    const memberName = source.payload.primaryFields?.[0]?.value || 'عميل ستامبي';
+
+    issued = await issuePassStudioPass(source.apiKey, passTemplateId, {
+      barcodeValue: source.payload.barcodeValue,
+      memberName,
+      memberId: customerId.slice(0, 8).toUpperCase(),
+      points: stampsField,
+      tier: rewardField,
+    });
+  } else {
+    issued = await issueWalletWalletPass(source.apiKey, source.payload);
+  }
 
   const { error: updateError } = await admin
     .from('wallet_passes')
@@ -355,7 +371,23 @@ export async function processWalletSync(
     let success = false;
     try {
       const source = await sourceForPass(claim.pass_id);
-      await updateWalletWalletPass(source.apiKey, source.serial, source.payload);
+      if (source.apiKey.startsWith('ps_live_')) {
+        const stampsField =
+          source.payload.secondaryFields?.find((f) => f.label === 'الأختام')?.value || '0/5';
+        const rewardField =
+          source.payload.secondaryFields?.find((f) => f.label === 'المكافأة')?.value || 'قيد الإعداد';
+        await updatePassStudioPass(
+          source.apiKey,
+          source.serial,
+          {
+            points: stampsField,
+            tier: rewardField,
+          },
+          'تم تحديث أختامك بنجاح!'
+        );
+      } else {
+        await updateWalletWalletPass(source.apiKey, source.serial, source.payload);
+      }
       success = true;
     } catch {
       // A timeout has an unknown delivery outcome. Idempotent provider PUTs

@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
   const session = await readCustomerSession(request);
   if (!session) return jsonError(401, 'unauthenticated', 'Customer session required');
 
-  const cafeSlug = request.nextUrl.searchParams.get('cafeSlug');
+  const cafeSlug =
+    request.nextUrl.searchParams.get('cafeSlug') || request.nextUrl.searchParams.get('cafe');
   if (!cafeSlug) return jsonError(400, 'cafe_slug_required', 'cafeSlug is required');
 
   const venue = await loadPublicVenue(cafeSlug).catch(() => null);

@@ -163,7 +163,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@opennextjs/aws@4.1.4': fe8cd4374f29fdd3a1c751d88ac6fe2a8384dff1d5ba3d88bb5707d1cf1af0ba
+  '@opennextjs/aws@4.1.4': 5f10f6a47169dc4c76f874d504629ed058f13e1f2bc96e45ccdb3c57250571c9
 
 importers:
 
@@ -6065,7 +6065,7 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@opennextjs/aws@4.1.4(patch_hash=fe8cd4374f29fdd3a1c751d88ac6fe2a8384dff1d5ba3d88bb5707d1cf1af0ba)(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(supports-color@7.2.0)':
+  '@opennextjs/aws@4.1.4(patch_hash=5f10f6a47169dc4c76f874d504629ed058f13e1f2bc96e45ccdb3c57250571c9)(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(supports-color@7.2.0)':
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@aws-sdk/client-cloudfront': 3.984.0
@@ -6092,7 +6092,7 @@ snapshots:
     dependencies:
       '@ast-grep/napi': 0.40.5
       '@dotenvx/dotenvx': 1.31.0
-      '@opennextjs/aws': 4.1.4(patch_hash=fe8cd4374f29fdd3a1c751d88ac6fe2a8384dff1d5ba3d88bb5707d1cf1af0ba)(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(supports-color@7.2.0)
+      '@opennextjs/aws': 4.1.4(patch_hash=5f10f6a47169dc4c76f874d504629ed058f13e1f2bc96e45ccdb3c57250571c9)(next@16.3.5(@babel/core@7.29.7(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(supports-color@7.2.0)
       ci-info: 4.4.0
       cloudflare: 4.5.0
       comment-json: 4.6.2

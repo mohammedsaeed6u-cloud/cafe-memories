@@ -38,7 +38,10 @@ interface WalletWalletRequestBody {
 
 /** Outsourcing is live the moment an API key exists — one env var, zero flags. */
 export function isWalletOutsourcingEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.NEXT_PUBLIC_WALLETWALLET_ENABLED === '1' && Boolean(env.WALLETWALLET_API_KEY);
+  return (
+    env.NEXT_PUBLIC_WALLETWALLET_ENABLED === '1' &&
+    Boolean(env.WALLETWALLET_API_KEY || env.PASSSTUDIO_API_KEY)
+  );
 }
 
 /**

@@ -1,5 +1,5 @@
 diff --git a/dist/build/copyTracedFiles.js b/dist/build/copyTracedFiles.js
-index c847154da1464b71bbd871ba668336ae0078cfed..52eea86c815c678c85aff7bd302d51d77dceb2b7 100644
+index c847154da1464b71bbd871ba668336ae0078cfed..7050e6f94efa3f9de6eeb38cf884a50da104c8f5 100644
 --- a/dist/build/copyTracedFiles.js	
 +++ b/dist/build/copyTracedFiles.js	
 @@ -1,5 +1,5 @@
@@ -31,11 +31,29 @@ index c847154da1464b71bbd871ba668336ae0078cfed..52eea86c815c678c85aff7bd302d51d7
                  }
              }
          }
+diff --git a/dist/core/routing/matcher.js b/dist/core/routing/matcher.js
+index 69e4822853971e3adbfb16bb68bf048378974637..22d55ef6a268046dab2c1a684dcf045f2ce7982f 100644
+--- a/dist/core/routing/matcher.js	
++++ b/dist/core/routing/matcher.js	
+@@ -15,9 +15,10 @@ const routeHasMatcher = (headers, cookies, query) => (redirect) => {
+             return (!!cookies?.[redirect.key] &&
+                 new RegExp(redirect.value ?? "").test(cookies[redirect.key] ?? ""));
+         case "query":
+-            return query[redirect.key] && Array.isArray(redirect.value)
+-                ? redirect.value.reduce((prev, current) => prev || new RegExp(current).test(query[redirect.key]), false)
+-                : new RegExp(redirect.value ?? "").test(query[redirect.key] ?? "");
++            return (!!query?.[redirect.key] &&
++                (Array.isArray(redirect.value)
++                    ? redirect.value.reduce((prev, current) => prev || new RegExp(current).test(query[redirect.key]), false)
++                    : new RegExp(redirect.value ?? "").test(query[redirect.key] ?? "")));
+         case "host":
+             return (headers?.host !== "" &&
+                 new RegExp(redirect.value ?? "").test(headers.host));
 diff --git a/dist/core/util.js b/dist/core/util.js
-index 4558e65..6779b2a 100644
---- a/dist/core/util.js
-+++ b/dist/core/util.js
-@@ -17,5 +17,8 @@ applyNextjsRequireHooksOverride();
+index a740d2bd250a8e1f67a04d1968bed71f47b92236..6c7af9dafaa32392199539d7621e59143cb2f2bc 100644
+--- a/dist/core/util.js	
++++ b/dist/core/util.js	
+@@ -17,6 +17,9 @@ applyNextjsRequireHooksOverride();
  const cacheHandlerPath = require.resolve("./cache.cjs");
  const composableCacheHandlerPath = require.resolve("./composable-cache.cjs");
  // @ts-ignore
@@ -44,3 +62,4 @@ index 4558e65..6779b2a 100644
 +};
  const nextServer = new NextServer.default({
      //#override requestHandlerHost
+     hostname: "localhost",
