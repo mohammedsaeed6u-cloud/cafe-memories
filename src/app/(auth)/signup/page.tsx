@@ -122,7 +122,12 @@ export default function SignUpPage() {
 
       setStep(4);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'تعذر إكمال التسجيل.');
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch')) {
+        setErrorMsg('تعذر الاتصال بقاعدة البيانات (Supabase). يرجى التأكد من استئناف المشروع (Unpause) في لوحة تحكم Supabase.');
+      } else {
+        setErrorMsg(msg || 'تعذر إكمال التسجيل.');
+      }
     } finally {
       setLoading(false);
     }

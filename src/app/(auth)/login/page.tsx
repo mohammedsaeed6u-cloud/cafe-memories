@@ -69,7 +69,12 @@ export default function LoginPage() {
       setSuccessMsg('تم تسجيل الدخول بنجاح! جاري التوجيه...');
       window.location.assign('/dashboard');
     } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : 'تعذر تسجيل الدخول.');
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch')) {
+        setErrorMsg('تعذر الاتصال بقاعدة البيانات (Supabase). يرجى التأكد من استئناف المشروع (Unpause) في لوحة تحكم Supabase.');
+      } else {
+        setErrorMsg(msg || 'تعذر تسجيل الدخول.');
+      }
       setLoading(false);
     }
   };
